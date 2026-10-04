@@ -28,3 +28,26 @@ This is a behavior-preserving first structural pass. The central simulation stil
 All JavaScript files were syntax checked. The supplied validation harness checks browser startup, run reset, pointer drawing, ink accounting, upgrade selection, pause/resume, and simulation/rendering against the original using deterministic randomness.
 
 Run `node tests/validate.cjs` to repeat the deterministic comparison. The original v8 source is included only as a test fixture. The harness uses a simulated DOM/canvas; it does not replace a visual check in a real browser.
+
+## Play online and deploy
+
+GitHub Pages hosts this static game over HTTPS, including on mobile browsers.
+The expected URL after the first successful deployment is
+https://shootyq.github.io/SaveStevie/.
+
+One-time setup:
+
+1. In this repository on GitHub, open **Settings → Pages**.
+2. Under **Build and deployment**, set **Source** to **GitHub Actions**.
+3. Merge the deployment workflow into `main`. The push automatically validates
+   the game and deploys it. Check **Actions → Deploy game to GitHub Pages** for
+   the result and published URL.
+
+Every subsequent push to `main` updates the site automatically. You can also
+redeploy from the workflow's **Run workflow** button, selecting `main`.
+Pull requests run validation without publishing. No package installation,
+custom server, or additional secrets are needed. Only `index.html`, `styles.css`,
+`game.js`, and `js/` are published; test fixtures stay out of the site.
+
+Open the deployed URL on your phone. Best-wave records are saved in that
+browser's local storage and are not synced between devices.
