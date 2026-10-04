@@ -1,0 +1,1436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Doodle Defender v4</title>
+<style>
+:root{
+  --paper:#f7f1df; --ink:#1f2a33; --red:#d95050; --green:#4a9b66;
+  --blue:#4b79d8; --gold:#d8a72e; --purple:#8456c9; --orange:#d67a35;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;font-family:"Trebuchet MS",system-ui,sans-serif;background:#d8d0bc;color:#25313a}
+body{
+  display:grid;place-items:center;padding:10px;
+  background:radial-gradient(circle at 20% 10%,rgba(255,255,255,.92),transparent 30%),linear-gradient(#d9d2bf,#c9c0ab)
+}
+#app{width:min(98vw,930px);height:min(97vh,950px);display:flex;flex-direction:column;gap:8px}
+.top{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.title h1{margin:0;font-size:clamp(22px,4vw,34px);letter-spacing:.5px}
+.title small{color:#6f766f}
+.stats{display:flex;gap:6px;flex-wrap:wrap}
+.pill{
+  background:rgba(255,255,255,.76);border:2px solid rgba(31,42,51,.14);
+  padding:7px 10px;border-radius:999px;font-size:13px;font-weight:900;box-shadow:0 2px 0 rgba(0,0,0,.05)
+}
+.panel{
+  position:relative;flex:1;min-height:0;background:var(--paper);border-radius:18px;
+  border:3px solid #3d4952;overflow:hidden;box-shadow:0 12px 34px rgba(56,48,33,.2)
+}
+canvas{
+  width:100%;height:100%;display:block;touch-action:none;
+  background:
+    linear-gradient(rgba(76,132,183,.12) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(76,132,183,.08) 1px,transparent 1px),
+    var(--paper);
+  background-size:28px 28px
+}
+.hud{
+  position:absolute;left:12px;right:12px;top:10px;display:grid;
+  grid-template-columns:1fr 1fr 160px;gap:10px;align-items:start;pointer-events:none
+}
+.box{
+  background:rgba(255,255,255,.86);border:2px solid rgba(31,42,51,.16);
+  border-radius:14px;padding:5px 7px;box-shadow:0 2px 0 rgba(0,0,0,.04)
+}
+.bar{height:14px;border-radius:999px;transition:width .12s}
+#inkBar{background:linear-gradient(90deg,#202a33,#566673)}
+#hpBar{background:linear-gradient(90deg,#d95050,#e87878)}
+#timeBar{background:linear-gradient(90deg,#4b79d8,#74a2ff)}
+.barlabel{font-size:11px;font-weight:1000;margin-bottom:3px;color:#3d4850}
+.timer .barlabel{text-align:center}
+.bottom{display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap}
+button{
+  border:0;background:#26333c;color:white;border-radius:11px;padding:10px 14px;
+  font-weight:900;cursor:pointer;box-shadow:0 3px 0 #141b20
+}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 #141b20}
+button.secondary{background:#68747b}
+button.gold{background:#b38720}
+button.red{background:#9c4545}
+#message{font-size:13px;font-weight:900;color:#4d565a;flex:1;text-align:center}
+.overlay{
+  position:absolute;inset:0;background:rgba(20,27,32,.66);display:grid;place-items:center;
+  padding:18px;z-index:9
+}
+.cardbox{
+  width:min(95%,790px);background:#fbf7e9;border:3px solid #2b343a;border-radius:18px;
+  padding:18px;box-shadow:0 18px 60px rgba(0,0,0,.34)
+}
+.cardbox h2{margin:0 0 5px;text-align:center;font-size:30px}
+.cardbox p{text-align:center;margin:0 0 14px;color:#667078}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cards.four{grid-template-columns:repeat(4,1fr)}
+.ucard{
+  min-height:172px;background:#fffdf5;border:3px solid #aaa;border-radius:14px;padding:13px;
+  cursor:pointer;display:flex;flex-direction:column;transition:.12s;box-shadow:0 4px 0 rgba(0,0,0,.09)
+}
+.ucard:hover{transform:translateY(-3px)}
+.ucard .rarity{font-size:11px;font-weight:1000;text-transform:uppercase;letter-spacing:1px}
+.ucard h3{margin:7px 0 5px;font-size:18px}
+.ucard p{text-align:left;margin:0;color:#58636a;font-size:13px;line-height:1.35}
+.ucard .stack{margin-top:auto;padding-top:8px;font-size:11px;color:#7b8589;font-weight:800}
+.common{border-color:#9ca4aa}.common .rarity{color:#6e767b}
+.uncommon{border-color:#4a9b66}.uncommon .rarity{color:#388653}
+.rare{border-color:#4b79d8}.rare .rarity{color:#3562be}
+.epic{border-color:#8456c9}.epic .rarity{color:#7141ba}
+.legendary{border-color:#d8a72e;box-shadow:0 0 0 2px rgba(216,167,46,.18),0 4px 0 rgba(0,0,0,.09)}
+.legendary .rarity{color:#a27610}
+.specialize{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px
+}
+.scard{
+  padding:18px;border-radius:14px;background:#fffdf5;border:3px solid #8d989e;cursor:pointer;
+  min-height:160px;box-shadow:0 4px 0 rgba(0,0,0,.09)
+}
+.scard:hover{transform:translateY(-2px)}
+.scard h3{margin:0 0 8px}.scard p{text-align:left;margin:0;font-size:13px}
+.cardactions{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.startbox{text-align:center}
+.startbox h2{font-size:38px;margin:0 0 8px}
+.startbox p{max-width:600px;margin:0 auto 14px;line-height:1.45}
+.startbox .mini{font-size:12px;color:#68737a;margin-top:12px}
+#upgradeList{
+  position:absolute;right:10px;bottom:10px;max-width:320px;pointer-events:none;
+  display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end
+}
+.badge{
+  background:rgba(255,255,255,.87);border:1px solid rgba(0,0,0,.1);
+  border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900
+}
+.inktags{
+  position:absolute;left:10px;bottom:10px;max-width:320px;pointer-events:none;
+  display:flex;gap:5px;flex-wrap:wrap
+}
+.inktag{
+  background:rgba(31,42,51,.88);color:white;border-radius:999px;padding:4px 7px;font-size:10px;font-weight:900
+}
+.summary{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:12px 0}
+.summary div{background:#f0ead9;border-radius:10px;padding:9px;font-weight:800;font-size:13px}
+.bigscore{font-size:42px;font-weight:1000;color:#2d3a42;margin:6px 0}
+.synergy{
+  margin:10px auto 0;padding:9px 12px;background:#efe5ff;border:2px solid #8b60c9;
+  border-radius:12px;font-size:13px;font-weight:900;max-width:520px
+}
+@media(max-width:760px){
+  .hud{grid-template-columns:1fr 1fr;grid-template-areas:"ink hp" "time time"}
+  .inkbox{grid-area:ink}.hpbox{grid-area:hp}.timer{grid-area:time}
+  .cards,.cards.four,.specialize{grid-template-columns:1fr}
+  .ucard{min-height:108px}.ucard p{font-size:12px}
+  .cardbox{max-height:89vh;overflow:auto}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="top">
+    <div class="title">
+      <h1>Doodle Defender v4</h1>
+      <small>Fresh page. Bigger builds. Steve remains alarmingly dependent on you.</small>
+    </div>
+    <div class="stats">
+      <div class="pill">Wave <span id="wave">1</span></div>
+      <div class="pill">Score <span id="score">0</span></div>
+      <div class="pill">Kills <span id="kills">0</span></div>
+      <div class="pill">Luck <span id="luck">0</span></div>
+      <div class="pill">Best <span id="best">1</span></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <canvas id="game"></canvas>
+
+    <div class="hud">
+      <div class="box inkbox">
+        <div class="barlabel">INK <span id="inkText"></span></div>
+        <div id="inkBar" class="bar"></div>
+      </div>
+      <div class="box hpbox">
+        <div class="barlabel">STEVE <span id="hpText"></span></div>
+        <div id="hpBar" class="bar"></div>
+      </div>
+      <div class="box timer">
+        <div class="barlabel">SURVIVE <span id="timeText">25</span>s</div>
+        <div id="timeBar" class="bar"></div>
+      </div>
+    </div>
+
+    <div class="inktags" id="inkTags"></div>
+    <div id="freehandMeter" style="display:none;position:absolute;left:10px;top:92px;width:190px;
+      background:rgba(255,255,255,.9);border:2px solid rgba(31,42,51,.15);border-radius:12px;padding:6px 8px;
+      pointer-events:none;box-shadow:0 2px 0 rgba(0,0,0,.04)">
+      <div style="font-size:10px;font-weight:1000;margin-bottom:4px">FREEHAND <span id="freehandText"></span></div>
+      <div style="height:9px;background:rgba(31,42,51,.1);border-radius:999px;overflow:hidden">
+        <div id="freehandBar" style="height:100%;width:0%;background:#8456c9"></div>
+      </div>
+    </div>
+    <div id="upgradeList"></div>
+    <div id="synergySplash" style="display:none;position:absolute;left:50%;top:24%;transform:translate(-50%,-50%);z-index:7;
+      background:rgba(34,28,48,.94);color:white;border:3px solid #d8a72e;border-radius:16px;padding:14px 20px;
+      text-align:center;box-shadow:0 12px 35px rgba(0,0,0,.28);pointer-events:none;min-width:260px">
+      <div style="font-size:11px;font-weight:1000;letter-spacing:1.4px;color:#f0c95c">SYNERGY UNLOCKED</div>
+      <div id="synergySplashName" style="font-size:24px;font-weight:1000;margin-top:3px"></div>
+      <div id="synergySplashDesc" style="font-size:12px;color:#ddd5f2;margin-top:3px"></div>
+    </div>
+
+    <div class="overlay" id="startOverlay">
+      <div class="cardbox startbox">
+        <h2>Protect Steve.</h2>
+        <p>Every wave starts on a fresh page with a full ink tank. Survive 60 seconds. Wave 1 starts gently, then pressure ramps up. Longer doodles are tougher, old walls slowly fade, and certain upgrade combinations unlock entirely new synergy effects. Freehand now charges from real ink spent, not stroke-count cheese.</p>
+        <button id="startBtn">Start Run</button>
+        <div class="mini">Boss every 5 waves. Beat Wave 20 and defeat The Eraser to win.</div>
+      </div>
+    </div>
+
+    <div class="overlay" id="upgradeOverlay" style="display:none">
+      <div class="cardbox">
+        <h2>Choose an Upgrade</h2>
+        <p id="rewardText">Pick one. Build weird.</p>
+        <div class="cards" id="cards"></div>
+        <div id="synergyNote"></div>
+        <div class="cardactions">
+          <button class="secondary" id="rerollBtn">Reroll (<span id="rerolls">1</span>)</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="specializeOverlay" style="display:none">
+      <div class="cardbox">
+        <h2>Choose a Direction</h2>
+        <p>This only weights future upgrade rolls. It does not lock you into a class.</p>
+        <div class="specialize">
+          <div class="scard" data-spec="defense">
+            <h3>Fortress</h3><p>More wall durability, repair, geometry, and defensive cards.</p>
+          </div>
+          <div class="scard" data-spec="ink">
+            <h3>Ink Alchemist</h3><p>More elemental inks, damage effects, and synergy pieces.</p>
+          </div>
+          <div class="scard" data-spec="chaos">
+            <h3>Chaos</h3><p>Better rarity odds and stranger cards, but enemies become 8% tougher.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="waveOverlay" style="display:none">
+      <div class="cardbox startbox">
+        <h2>Wave Cleared!</h2>
+        <div class="bigscore">+<span id="waveScore">0</span></div>
+        <div class="summary">
+          <div>Survival <span id="survivalBonus">+100</span></div>
+          <div>Kills <span id="killBonus">+0</span></div>
+          <div>Ink Bonus <span id="inkBonus">+0</span></div>
+          <div>HP Bonus <span id="hpBonus">+0</span></div>
+        </div>
+        <button id="continueBtn">Continue</button>
+      </div>
+    </div>
+
+    <div class="overlay" id="victoryOverlay" style="display:none">
+      <div class="cardbox startbox">
+        <h2>STEVE SURVIVED THE NOTEBOOK</h2>
+        <p>You defeated The Eraser. This is, somehow, Steve's greatest accomplishment.</p>
+        <div class="bigscore"><span id="victoryScore">0</span></div>
+        <div class="cardactions">
+          <button id="endlessBtn">Continue Endless Mode</button>
+          <button class="secondary" id="newRunBtn">New Run</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="overlay" id="gameOverOverlay" style="display:none">
+      <div class="cardbox startbox">
+        <h2>They Got Steve.</h2>
+        <p>You reached wave <b id="finalWave">1</b> with <b id="finalKills">0</b> kills.</p>
+        <div class="bigscore"><span id="finalScore">0</span></div>
+        <button id="againBtn">New Run</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <button class="secondary" id="clearBtn">Erase All Walls</button>
+    <div id="message">Fresh page every wave. Ink fully refills.</div>
+    <button id="pauseBtn">Pause</button>
+  </div>
+</div>
+
+<script>
+(() => {
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const $ = id => document.getElementById(id);
+
+const waveEl=$('wave'),scoreEl=$('score'),killsEl=$('kills'),luckEl=$('luck'),bestEl=$('best');
+const inkBar=$('inkBar'),hpBar=$('hpBar'),timeBar=$('timeBar');
+const inkText=$('inkText'),hpText=$('hpText'),timeText=$('timeText');
+const message=$('message'),startOverlay=$('startOverlay'),upgradeOverlay=$('upgradeOverlay');
+const specializeOverlay=$('specializeOverlay'),gameOverOverlay=$('gameOverOverlay');
+const waveOverlay=$('waveOverlay'),victoryOverlay=$('victoryOverlay');
+const cardsEl=$('cards'),rerollsEl=$('rerolls'),upgradeList=$('upgradeList'),inkTags=$('inkTags');
+const rewardText=$('rewardText'),synergyNote=$('synergyNote');
+
+let W=800,H=700,dpr=1,last=0,spawnTimer=0;
+let running=false,paused=false,inUpgrade=false,betweenWaves=false,endless=false,awaitingSpec=false;
+let wave=1,kills=0,score=0,waveKills=0,waveTime=25,timeLeft=25;
+let best=+(localStorage.getItem('doodleDefenderBestV4')||1);
+let walls=[],enemies=[],particles=[],floaters=[],projectiles=[];
+let drawing=false,currentWall=null,rerolls=1,specialization='none';
+let pendingNextWave=false,finalOvertime=false,finalBossDefeated=false;
+
+const player={x:400,y:350,r:17,maxHp:100,hp:100,rockCd:0};
+
+const stats={
+  maxInk:250,ink:250,inkRegen:8,wallHp:95,wallDamage:10,wallSlow:0,wallStun:0,
+  refund:0,luck:0,playerRegen:0,doubleLine:false,tripleLine:false,explode:false,
+  repairOnKill:0,freehandLevel:0,freehandCharge:0,freehandThreshold:80,freehandBank:0,freehandBankSize:40,strokeCount:0,closedBonus:1,killHeal:0,
+  lineCost:.31,lineWidth:8,wallLife:72,intersectBonus:0,repairDraw:0,firstFree:false,
+  firstStrokeUsed:false,playerArmor:0,rockDamage:0,rockRate:0,enemyScale:1,
+  extraChoice:false,uncommonFloor:false,newCardBias:false
+};
+
+const inks={
+  fire:0,frost:0,electric:0,poison:0,blast:0,vampire:0,gravity:0,repulsion:0,void:0,chaos:0
+};
+const synergies=new Set();
+const discoveredSynergies=new Set();
+let synergySplashTimer=null;
+const stacks={};
+
+function resize(){
+  const r=canvas.getBoundingClientRect();
+  dpr=Math.min(2,window.devicePixelRatio||1);
+  canvas.width=Math.floor(r.width*dpr);canvas.height=Math.floor(r.height*dpr);
+  W=r.width;H=r.height;ctx.setTransform(dpr,0,0,dpr,0,0);
+  player.x=W/2;player.y=H/2;
+}
+window.addEventListener('resize',resize);
+
+function clamp(v,a,b){return Math.max(a,Math.min(b,v))}
+function rand(a,b){return a+Math.random()*(b-a)}
+function dist(ax,ay,bx,by){return Math.hypot(ax-bx,ay-by)}
+function setMsg(t){message.textContent=t}
+function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
+
+function updateUI(){
+  waveEl.textContent=wave;scoreEl.textContent=score;killsEl.textContent=kills;luckEl.textContent=stats.luck;bestEl.textContent=best;
+  inkBar.style.width=(100*stats.ink/stats.maxInk)+'%';
+  hpBar.style.width=(100*player.hp/player.maxHp)+'%';
+  timeBar.style.width=(100*timeLeft/waveTime)+'%';
+  inkText.textContent=Math.ceil(stats.ink)+' / '+Math.ceil(stats.maxInk);
+  hpText.textContent=Math.ceil(player.hp)+' / '+Math.ceil(player.maxHp);
+  timeText.textContent=Math.max(0,Math.ceil(timeLeft));
+  rerollsEl.textContent=rerolls;
+  const fhm=$('freehandMeter'), fhb=$('freehandBar'), fht=$('freehandText');
+  if(stats.freehandLevel>0){
+    fhm.style.display='block';
+    if(stats.freehandBank>0){
+      fhb.style.width=(100*stats.freehandBank/stats.freehandBankSize)+'%';
+      fht.textContent=Math.ceil(stats.freehandBank)+' free ink ready';
+    }else{
+      fhb.style.width=(100*stats.freehandCharge/stats.freehandThreshold)+'%';
+      fht.textContent=Math.floor(stats.freehandCharge)+' / '+stats.freehandThreshold;
+    }
+  }else{
+    fhm.style.display='none';
+  }
+
+  upgradeList.innerHTML='';
+  Object.entries(stacks).slice(-9).forEach(([k,v])=>{
+    const b=document.createElement('div');b.className='badge';b.textContent=k+(v>1?' ×'+v:'');upgradeList.appendChild(b);
+  });
+
+  inkTags.innerHTML='';
+  const names={fire:'🔥 Fire',frost:'❄ Frost',electric:'⚡ Electric',poison:'☠ Poison',blast:'💥 Blast',vampire:'🩸 Vampire',gravity:'🧲 Gravity',repulsion:'↔ Repulsion',void:'◉ Void',chaos:'🌈 Chaos'};
+  Object.keys(inks).forEach(k=>{
+    if(inks[k]>0){
+      const t=document.createElement('div');t.className='inktag';t.textContent=names[k]+' '+roman(inks[k]);inkTags.appendChild(t)
+    }
+  });
+}
+function roman(n){return ['','I','II','III','IV','V'][Math.min(5,n)]||n}
+
+function waveDuration(){
+  return 60;
+}
+function resetRun(){
+  wave=1;kills=0;score=0;waveKills=0;rerolls=1;endless=false;specialization='none';finalOvertime=false;finalBossDefeated=false;
+  walls=[];enemies=[];particles=[];floaters=[];projectiles=[];synergies.clear();
+  Object.assign(stats,{
+    maxInk:250,ink:250,inkRegen:8,wallHp:95,wallDamage:10,wallSlow:0,wallStun:0,
+    refund:0,luck:0,playerRegen:0,doubleLine:false,tripleLine:false,explode:false,
+    repairOnKill:0,freehandLevel:0,freehandCharge:0,freehandThreshold:80,freehandBank:0,freehandBankSize:40,strokeCount:0,closedBonus:1,killHeal:0,
+    lineCost:.31,lineWidth:8,wallLife:72,intersectBonus:0,repairDraw:0,firstFree:false,
+    firstStrokeUsed:false,playerArmor:0,rockDamage:0,rockRate:0,enemyScale:1,
+    extraChoice:false,uncommonFloor:false,newCardBias:false
+  });
+  Object.keys(inks).forEach(k=>inks[k]=0);
+  for(const k in stacks)delete stacks[k];
+  player.maxHp=100;player.hp=100;player.rockCd=0;
+  running=true;paused=false;inUpgrade=false;betweenWaves=false;awaitingSpec=false;
+  startOverlay.style.display='none';gameOverOverlay.style.display='none';upgradeOverlay.style.display='none';
+  waveOverlay.style.display='none';victoryOverlay.style.display='none';specializeOverlay.style.display='none';
+  startWave();
+}
+function startWave(){
+  walls=[];enemies=[];projectiles=[];particles=[];floaters=[];
+  finalOvertime=false; finalBossDefeated=false;
+  stats.ink=stats.maxInk;
+  stats.firstStrokeUsed=false;
+  waveKills=0;waveTime=waveDuration();timeLeft=waveTime;spawnTimer=.5;
+  player.hp=Math.min(player.maxHp,player.hp+stats.playerRegen+5);
+  setMsg(wave===20&&!endless?'THE ERASER approaches. This seems personal.':wave%5===0?'Boss wave. Fresh page, full ink.':'Wave '+wave+'. Fresh page, full ink.');
+  updateUI();
+}
+function enemyType(){
+  const pool=['grunt','grunt'];
+  if(wave>=3)pool.push('fast');
+  if(wave>=5)pool.push('bouncer');
+  if(wave>=5)pool.push('tank');
+  if(wave>=7)pool.push('flanker');
+  if(wave>=7)pool.push('splitter');
+  if(wave>=9)pool.push('sniper');
+  if(wave>=12)pool.push('gnawer');
+  if(wave>=14)pool.push('brute');
+  if(wave>=16)pool.push('elite');
+  return pick(pool);
+}
+function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
+  let side=Math.floor(Math.random()*4),px,py;
+  if(x!==null){px=x;py=y}else{
+    if(side===0){px=rand(20,W-20);py=-26}
+    if(side===1){px=W+26;py=rand(20,H-20)}
+    if(side===2){px=rand(20,W-20);py=H+26}
+    if(side===3){px=-26;py=rand(20,H-20)}
+  }
+  let type=typeOverride||enemyType();
+  if(forceBoss)type=(wave===20&&!endless)?'eraser':'boss';
+  const scale=(1+(wave-1)*.024)*stats.enemyScale;
+  const defs={
+    grunt:{r:11,hp:20,speed:30,dmg:6,color:'#cf5b51'},
+    fast:{r:8,hp:18,speed:60,dmg:7,color:'#d8893c'},
+    bouncer:{r:10,hp:28,speed:44,dmg:8,color:'#2e9f92'},
+    flanker:{r:10,hp:30,speed:39,dmg:9,color:'#6b8bd8'},
+    tank:{r:16,hp:70,speed:23,dmg:15,color:'#6d6b73'},
+    splitter:{r:13,hp:40,speed:31,dmg:10,color:'#8456c9'},
+    sniper:{r:12,hp:36,speed:27,dmg:7,color:'#4b79d8'},
+    gnawer:{r:12,hp:42,speed:30,dmg:18,color:'#86563d'},
+    brute:{r:19,hp:105,speed:20,dmg:22,color:'#51634a'},
+    elite:{r:13,hp:68,speed:42,dmg:13,color:'#b34e82'},
+    mini:{r:7,hp:12,speed:49,dmg:5,color:'#a56cc1'},
+    boss:{r:28,hp:270+wave*15,speed:18,dmg:27,color:'#962f3d'},
+    eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'}
+  };
+  const d=defs[type];
+  enemies.push({
+    x:px,y:py,type,r:d.r,hp:d.hp*scale,maxHp:d.hp*scale,speed:d.speed*(1+wave*.006),
+    dmg:d.dmg,color:d.color,attackCd:0,shootCd:rand(1.3,2.1),stun:0,burn:0,burnDps:0,
+    poison:0,poisonDps:0,freeze:0,chainCd:0,eraseCd:1.7,gravitySlow:0,thermalCd:0,charged:0,
+    bounces:type==='bouncer'?3:0,bounceTime:0,bounceVX:0,bounceVY:0,
+    flankAngle:Math.random()*Math.PI*2,flankCd:rand(1.0,2.0)
+  });
+}
+function pointSegDist(px,py,x1,y1,x2,y2){
+  const vx=x2-x1,vy=y2-y1,wx=px-x1,wy=py-y1,c1=vx*wx+vy*wy;
+  if(c1<=0)return dist(px,py,x1,y1);
+  const c2=vx*vx+vy*vy;if(c2<=c1)return dist(px,py,x2,y2);
+  const b=c1/c2;return dist(px,py,x1+b*vx,y1+b*vy);
+}
+function nearestWallHit(e){
+  for(const wall of walls){
+    for(let i=1;i<wall.pts.length;i++){
+      const a=wall.pts[i-1],b=wall.pts[i];
+      if(pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<e.r+wall.thick/2)return {wall,seg:i};
+    }
+  }
+  return null;
+}
+function wallNear(x,y,r){
+  for(const w of walls){
+    for(const p of w.pts)if(dist(x,y,p.x,p.y)<r)return true;
+  }
+  return false;
+}
+function burst(x,y,color,n=10){
+  for(let i=0;i<n;i++)particles.push({x,y,vx:rand(-90,90),vy:rand(-90,90),life:rand(.3,.8),color});
+}
+function floatText(x,y,text,color='#444'){
+  floaters.push({x,y,t:.7,text,color});
+}
+function damageWall(wall,amount,x,y){
+  wall.hp-=amount;
+  if(wall.hp<=0){
+    if(stats.explode||inks.blast>0){
+      let radius=70+inks.blast*12;
+      let dmg=35+inks.blast*20;
+
+      if(synergies.has('Heavy Artillery')){
+        radius+=wall.thick*3;
+        dmg+=wall.thick*2.2;
+      }
+      if(synergies.has('Demolition Grid')&&wall.intersections>0){
+        radius+=30+wall.intersections*8;
+        dmg+=25+wall.intersections*10;
+      }
+
+      for(const e of enemies){
+        const md=Math.min(...wall.pts.map(p=>dist(p.x,p.y,e.x,e.y)));
+        if(md<radius){
+          if(synergies.has('Singularity Ink')){
+            const dx=x-e.x,dy=y-e.y,m=Math.hypot(dx,dy)||1;
+            e.x+=dx/m*24;e.y+=dy/m*24;
+          }
+          e.hp-=dmg;
+
+          if(synergies.has('Cannon Ink')||synergies.has('INFERNO')){
+            const dx=e.x-x,dy=e.y-y,m=Math.hypot(dx,dy)||1;
+            e.x+=dx/m*(35+inks.repulsion*12);
+            e.y+=dy/m*(35+inks.repulsion*12);
+          }
+          if(synergies.has('INFERNO')||synergies.has('Napalm Scribbles')){
+            e.burn=Math.max(e.burn,2.8);
+            e.burnDps=Math.max(e.burnDps,10+inks.fire*4);
+          }
+        }
+      }
+      burst(x,y,synergies.has('INFERNO')?'#ff8b3d':'#d8a72e',synergies.has('INFERNO')?28:18);
+    }
+    walls=walls.filter(w=>w!==wall);
+  }
+}
+function segmentIntersection(a,b,c,d){
+  const den=(a.x-b.x)*(c.y-d.y)-(a.y-b.y)*(c.x-d.x);
+  if(Math.abs(den)<.001)return false;
+  const t=((a.x-c.x)*(c.y-d.y)-(a.y-c.y)*(c.x-d.x))/den;
+  const u=-((a.x-b.x)*(a.y-c.y)-(a.y-b.y)*(a.x-c.x))/den;
+  return t>0&&t<1&&u>0&&u<1;
+}
+function countIntersections(points){
+  let n=0;
+  if(!stats.intersectBonus)return 0;
+  for(const w of walls){
+    for(let i=1;i<points.length;i++){
+      for(let j=1;j<w.pts.length;j++){
+        if(segmentIntersection(points[i-1],points[i],w.pts[j-1],w.pts[j]))n++;
+      }
+    }
+  }
+  return n;
+}
+function repairTouchedWalls(points){
+  if(!stats.repairDraw)return;
+  for(const w of walls){
+    let touched=false;
+    outer: for(const p of points){
+      for(let i=1;i<w.pts.length;i++){
+        if(pointSegDist(p.x,p.y,w.pts[i-1].x,w.pts[i-1].y,w.pts[i].x,w.pts[i].y)<10){touched=true;break outer}
+      }
+    }
+    if(touched){
+      const before=w.hp;
+      w.hp=Math.min(w.maxHp,w.hp+stats.repairDraw);
+      if(synergies.has('Blood Patch')){
+        const repaired=Math.max(0,w.hp-before);
+        player.hp=Math.min(player.maxHp,player.hp+repaired*.08);
+      }
+    }
+  }
+}
+function createWall(points){
+  if(points.length<2)return;
+  let length=0;
+  for(let i=1;i<points.length;i++)length+=dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
+  if(length<8)return;
+
+  stats.strokeCount++;
+
+  let cost=length*stats.lineCost;
+  const firstStrokeFree=stats.firstFree&&!stats.firstStrokeUsed;
+  stats.firstStrokeUsed=true;
+
+  // FREEHAND: normal ink spending charges the meter. Once charged, it grants a
+  // finite bank of free ink. Tiny strokes cannot meaningfully charge the meter.
+  let bankUsed=0;
+  let paidCost=cost;
+
+  if(firstStrokeFree){
+    paidCost=0;
+  }else if(stats.freehandLevel>0&&stats.freehandBank>0){
+    bankUsed=Math.min(cost,stats.freehandBank);
+    stats.freehandBank-=bankUsed;
+    paidCost=cost-bankUsed;
+  }
+
+  if(paidCost>stats.ink){
+    const available=stats.ink+bankUsed;
+    const ratio=available/Math.max(cost,1);
+    const cut=Math.max(2,Math.floor(points.length*ratio));
+    points=points.slice(0,cut);
+
+    // Recalculate the actual surviving stroke length so a truncated doodle
+    // cannot inherit the durability of the giant line the player attempted.
+    length=0;
+    for(let i=1;i<points.length;i++)length+=dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
+
+    cost=length*stats.lineCost;
+    bankUsed=Math.min(cost,bankUsed);
+    paidCost=Math.max(0,cost-bankUsed);
+  }
+
+  const actualPaid=Math.min(stats.ink,paidCost);
+  stats.ink=Math.max(0,stats.ink-actualPaid);
+
+  if(stats.freehandLevel>0&&actualPaid>=5){
+    stats.freehandCharge+=actualPaid;
+    if(stats.freehandCharge>=stats.freehandThreshold&&stats.freehandBank<=0){
+      stats.freehandCharge-=stats.freehandThreshold;
+      stats.freehandBank=stats.freehandBankSize;
+      setMsg('FREE INK READY — '+stats.freehandBankSize+' ink banked!');
+      floatText(player.x,player.y-55,'FREE INK!','#8456c9');
+    }
+  }
+
+  repairTouchedWalls(points);
+
+  const closed=dist(points[0].x,points[0].y,points.at(-1).x,points.at(-1).y)<22&&points.length>6;
+  const intersections=countIntersections(points);
+
+  // Longer doodles are sturdier. Tiny lines are quick emergency barriers;
+  // long strokes cost more ink but can take much more punishment.
+  const lengthFactor=clamp(length/180,.35,2.4);
+  const hp=stats.wallHp*lengthFactor*(closed?stats.closedBonus:1)*(1+intersections*stats.intersectBonus);
+  const life=stats.wallLife;
+  const base={pts:points.map(p=>({...p})),hp,maxHp:hp,thick:stats.lineWidth,life,maxLife:life,closed,intersections};
+  walls.push(base);
+
+  if(stats.doubleLine||stats.tripleLine){
+    const copies=stats.tripleLine?2:1;
+    for(let c=1;c<=copies;c++){
+      const off=12*c;
+      const shifted=points.map((p,i)=>{
+        let n={x:0,y:0};
+        if(i<points.length-1){n.x=points[i+1].y-p.y;n.y=-(points[i+1].x-p.x)}
+        else{n.x=p.y-points[i-1].y;n.y=-(p.x-points[i-1].x)}
+        const m=Math.hypot(n.x,n.y)||1;
+        return{x:p.x+n.x/m*off,y:p.y+n.y/m*off};
+      });
+      walls.push({pts:shifted,hp:hp*.82,maxHp:hp*.82,thick:base.thick,life,maxLife:life,closed:false,intersections:0});
+    }
+  }
+  updateUI();
+}
+function applyInkContact(e,dt,wall=null){
+  let dps=stats.wallDamage;
+
+  if(synergies.has('Ring of Fire')&&wall&&wall.closed){
+    e.burn=Math.max(e.burn,2.3);
+    e.burnDps=Math.max(e.burnDps,8+inks.fire*3);
+  }
+
+  if(synergies.has('Needlepoint')&&stacks['Fine Tip']){
+    e.poison=Math.min(6,e.poison+dt*(1.8+inks.poison*.85));
+    e.poisonDps=Math.max(e.poisonDps,4+inks.poison*3);
+  }
+
+  if(synergies.has('Event Horizon')&&e.gravitySlow>.12&&inks.void>0){
+    const c=.006*inks.void*dt*60;
+    if(Math.random()<c){
+      if(e.type==='boss'||e.type==='eraser')e.hp-=65+inks.void*30;
+      else e.hp=0;
+      burst(e.x,e.y,'#46345e',14);
+    }
+  }
+
+  if(inks.chaos>0){
+    const roll=Math.random();
+    if(roll<.003*inks.chaos){
+      const randomInk=pick(['fire','frost','electric','poison','blast','vampire','gravity','repulsion','void']);
+      applyOneInk(randomInk,e,dt,true);
+    }
+  }
+
+  if(inks.fire>0){
+    e.burn=Math.max(e.burn,1.5+inks.fire*.6);
+    e.burnDps=Math.max(e.burnDps,3+inks.fire*3);
+  }
+  if(inks.poison>0){
+    e.poison=Math.min(6,e.poison+dt*(1+inks.poison*.55));
+    e.poisonDps=2+inks.poison*2.5;
+  }
+  if(inks.frost>0){
+    e.gravitySlow=Math.max(e.gravitySlow,.12*inks.frost);
+    if(inks.frost>=3&&Math.random()<.08*dt*inks.frost)e.freeze=Math.max(e.freeze,.7);
+  }
+  if(inks.electric>0&&e.chainCd<=0){
+    chainLightning(e,inks.electric);
+    e.chainCd=Math.max(.22,.8-inks.electric*.12);
+  }
+  if(inks.vampire>0){
+    player.hp=Math.min(player.maxHp,player.hp+dps*dt*(.015*inks.vampire));
+  }
+  if(inks.repulsion>0){
+    const dx=e.x-player.x,dy=e.y-player.y,m=Math.hypot(dx,dy)||1;
+    e.x+=dx/m*(15+inks.repulsion*7)*dt;
+    e.y+=dy/m*(15+inks.repulsion*7)*dt;
+    if(synergies.has('Rail Ink'))e.charged=Math.max(e.charged,1.1);
+  }
+  if(inks.void>0){
+    const chance=.0025*inks.void*dt*60;
+    if(Math.random()<chance){
+      if(e.type==='boss'||e.type==='eraser')e.hp-=40+inks.void*25;
+      else e.hp=0;
+      burst(e.x,e.y,'#46345e',12);
+    }
+  }
+  return dps;
+}
+function applyOneInk(kind,e,dt,chaos=false){
+  if(kind==='fire'){e.burn=Math.max(e.burn,1.3);e.burnDps=Math.max(e.burnDps,6)}
+  if(kind==='frost')e.freeze=Math.max(e.freeze,.35);
+  if(kind==='electric')chainLightning(e,1);
+  if(kind==='poison'){e.poison=Math.min(6,e.poison+.7);e.poisonDps=Math.max(e.poisonDps,5)}
+  if(kind==='repulsion'){
+    const dx=e.x-player.x,dy=e.y-player.y,m=Math.hypot(dx,dy)||1;e.x+=dx/m*6;e.y+=dy/m*6
+  }
+  if(kind==='void'&&!chaos)e.hp-=18;
+}
+function chainLightning(source,level){
+  let count=1+Math.floor(level/2);
+  let range=110+level*18;
+  let mult=1;
+  if(synergies.has('Cryoshock')&&source.freeze>0){range+=70;count+=2;mult+=.55}
+  if(synergies.has('Tesla Well')&&source.gravitySlow>.15){range+=45;count+=1;mult+=.35}
+  if(synergies.has('THE STORM')){range+=65;count+=2;mult+=.45}
+  const nearby=enemies.filter(e=>e!==source&&dist(e.x,e.y,source.x,source.y)<range).slice(0,count);
+  source.hp-=(3+level*2)*mult;
+  nearby.forEach(e=>{e.hp-=(4+level*3)*mult;burst(e.x,e.y,'#7ea7ff',4)});
+  burst(source.x,source.y,'#7ea7ff',5);
+}
+const synergyDefs=[
+  {name:'Plaguefire', req:()=>inks.fire&&inks.poison, desc:'Burning poisoned enemies spread infection and leave toxic fire bursts.'},
+  {name:'Cryoshock', req:()=>inks.frost&&inks.electric, desc:'Frozen enemies conduct boosted chain lightning.'},
+  {name:'Singularity Ink', req:()=>inks.gravity&&inks.blast, desc:'Broken walls pull enemies inward before exploding.'},
+  {name:'Black Ice', req:()=>inks.repulsion&&inks.frost, desc:'Frozen enemies are shoved harder and stay slowed.'},
+  {name:'Leech Ink', req:()=>inks.vampire&&inks.poison, desc:'Poison damage slowly heals Steve.'},
+  {name:'Thermal Shock', req:()=>inks.fire&&inks.frost, desc:'Burning frozen enemies crack for burst damage and stun.'},
+  {name:'Tesla Well', req:()=>inks.electric&&inks.gravity, desc:'Gravity-packed enemies amplify electric chaining.'},
+  {name:'Event Horizon', req:()=>inks.void&&inks.gravity, desc:'Enemies near gravity walls have much higher Void proc chance.'},
+  {name:'Cannon Ink', req:()=>inks.blast&&inks.repulsion, desc:'Wall explosions violently launch nearby enemies outward.'},
+  {name:'Napalm Scribbles', req:()=>inks.fire&&inks.blast, desc:'Destroyed burning walls leave a short-lived fire patch.'},
+  {name:'Venom Ice', req:()=>inks.poison&&inks.frost, desc:'Poison decays much more slowly while enemies are chilled.'},
+  {name:'Rail Ink', req:()=>inks.electric&&inks.repulsion, desc:'Repelled enemies become charged and zap nearby targets.'},
+  {name:'Gravity Trap', req:()=>stacks['Closed Loop']&&inks.gravity, desc:'Closed loops pull nearby enemies toward their perimeter.'},
+  {name:'Ring of Fire', req:()=>stacks['Closed Loop']&&inks.fire, desc:'Closed loops radiate heat and ignite enemies nearby.'},
+  {name:'Circuit Board', req:()=>stacks['Architect']&&inks.electric, desc:'Wall intersections become electrical nodes.'},
+  {name:'Demolition Grid', req:()=>stacks['Architect']&&inks.blast, desc:'Intersections make wall explosions larger and stronger.'},
+  {name:'Ice Corridor', req:()=>stats.doubleLine&&inks.frost, desc:'The space between parallel walls chills nearby enemies.'},
+  {name:'Power Lines', req:()=>stats.tripleLine&&inks.electric, desc:'Triple walls pulse electricity into enemies caught nearby.'},
+  {name:'Blood Patch', req:()=>stacks['Patchwork']&&inks.vampire, desc:'Repairing walls also heals Steve.'},
+  {name:'Needlepoint', req:()=>stacks['Fine Tip']&&inks.poison, desc:'Cheap thin lines stack poison much faster.'},
+  {name:'Heavy Artillery', req:()=>stacks['Fat Marker']&&inks.blast, desc:'Thicker walls create larger explosions.'},
+  {name:'Hot Rocks', req:()=>stacks['Pocket Rocks']&&inks.fire, desc:'Steve\'s rocks ignite enemies.'},
+  {name:'Snowball Fight', req:()=>stacks['Pocket Rocks']&&inks.frost, desc:'Steve\'s rocks chill and sometimes freeze enemies.'},
+  {name:'Thunderstones', req:()=>stacks['Pocket Rocks']&&inks.electric, desc:'Steve\'s rocks can chain lightning.'},
+  {name:'Steve the Unreasonable', req:()=>stacks['Steve Has Had Enough']&&inks.vampire, desc:'Steve heals from his own attacks.'},
+  {name:'Human Pinball', req:()=>stacks['Helmet']&&inks.repulsion, desc:'Enemies that touch Steve are knocked backward.'},
+
+  // Major three-part build transformations
+  {name:'THE STORM', req:()=>inks.electric&&inks.frost&&inks.gravity, desc:'Gravity clusters, frost holds, lightning shreds the whole pack.', major:true},
+  {name:'INFERNO', req:()=>inks.fire&&inks.blast&&inks.repulsion, desc:'Burning explosions launch enemies across the page.', major:true},
+  {name:'THE BLACK HOLE', req:()=>inks.gravity&&inks.void&&stacks['Closed Loop'], desc:'Closed loops become miniature event horizons.', major:true},
+  {name:'NECROTIC ENGINE', req:()=>inks.poison&&inks.vampire&&inks.gravity, desc:'Pinned poisoned enemies continuously feed Steve health.', major:true},
+  {name:'ABSOLUTE ZERO', req:()=>inks.frost&&inks.repulsion&&stats.doubleLine, desc:'Parallel walls become freezing launch rails.', major:true},
+  {name:'TESLA CAGE', req:()=>inks.electric&&stacks['Architect']&&stacks['Closed Loop'], desc:'Closed intersecting geometry becomes a powered electric circuit.', major:true}
+];
+
+function showSynergySplash(name,desc,major=false){
+  const box=$('synergySplash'), n=$('synergySplashName'), d=$('synergySplashDesc');
+  n.textContent=(major?'★ ':'')+name+(major?' ★':'');
+  d.textContent=desc;
+  box.style.display='block';
+  box.style.borderColor=major?'#ffd166':'#b892ff';
+  box.style.transform='translate(-50%,-50%) scale(1.05)';
+  setTimeout(()=>box.style.transform='translate(-50%,-50%) scale(1)',60);
+  clearTimeout(synergySplashTimer);
+  synergySplashTimer=setTimeout(()=>box.style.display='none',2200);
+}
+
+function checkSynergies(){
+  const newly=[];
+  for(const def of synergyDefs){
+    if(def.req()&&!synergies.has(def.name)){
+      synergies.add(def.name);
+      discoveredSynergies.add(def.name);
+      newly.push(def);
+    }
+  }
+  if(newly.length){
+    const def=newly[newly.length-1];
+    synergyNote.innerHTML='<div class="synergy">'+(def.major?'MAJOR ':'')+'SYNERGY: '+def.name+' — '+def.desc+'</div>';
+    showSynergySplash(def.name,def.desc,!!def.major);
+  }else synergyNote.innerHTML='';
+}
+
+function applySynergies(e,dt){
+  if(synergies.has('Plaguefire')&&e.burn>0&&e.poison>1){
+    for(const n of enemies){
+      if(n!==e&&dist(n.x,n.y,e.x,e.y)<72)n.poison=Math.min(6,n.poison+dt*.9)
+    }
+  }
+
+  if(synergies.has('Cryoshock')&&e.freeze>0)e.hp-=Math.max(4,inks.electric*7)*dt;
+  if(synergies.has('Black Ice')&&e.freeze>0)e.gravitySlow=Math.max(e.gravitySlow,.62);
+  if(synergies.has('Leech Ink')&&e.poison>0)player.hp=Math.min(player.maxHp,player.hp+e.poisonDps*dt*.018);
+
+  if(synergies.has('Thermal Shock')&&e.freeze>0&&e.burn>0){
+    if(!e.thermalCd||e.thermalCd<=0){
+      e.hp-=18+4*(inks.fire+inks.frost);
+      e.stun=Math.max(e.stun,.55);
+      e.thermalCd=1.25;
+      burst(e.x,e.y,'#ffcf7a',8);
+      floatText(e.x,e.y,'CRACK','#b96c24');
+    }
+  }
+
+  if(synergies.has('Tesla Well')&&e.gravitySlow>.15){
+    e.hp-=Math.max(2,inks.electric*4)*dt;
+  }
+
+  if(synergies.has('Venom Ice')&&e.freeze>0){
+    e.poison=Math.min(6,e.poison+dt*.18);
+  }
+
+  if(synergies.has('NECROTIC ENGINE')&&e.poison>0&&e.gravitySlow>.15){
+    player.hp=Math.min(player.maxHp,player.hp+e.poisonDps*dt*.02);
+  }
+
+  if(synergies.has('THE STORM')&&e.freeze>0&&e.gravitySlow>.1){
+    e.hp-=Math.max(4,inks.electric*5)*dt;
+    if(Math.random()<.9*dt)burst(e.x,e.y,'#a8c3ff',3);
+  }
+}
+function killEnemy(e){
+  kills++;waveKills++;score+=10;
+  stats.ink=Math.min(stats.maxInk,stats.ink+stats.refund);
+  player.hp=Math.min(player.maxHp,player.hp+stats.killHeal);
+  if(stats.repairOnKill)walls.forEach(w=>w.hp=Math.min(w.maxHp,w.hp+stats.repairOnKill));
+  burst(e.x,e.y,e.color,12);
+
+  if(e.type==='eraser') finalBossDefeated=true;
+  if(e.type==='splitter'){
+    spawnEnemy(false,e.x+6,e.y+3,'mini');spawnEnemy(false,e.x-6,e.y-3,'mini');
+  }
+  if(synergies.has('Plaguefire')&&e.burn>0){
+    for(const n of enemies)if(n!==e&&dist(n.x,n.y,e.x,e.y)<75)n.poison=Math.min(6,n.poison+2)
+  }
+  enemies=enemies.filter(x=>x!==e);
+}
+function waveComplete(){
+  if(betweenWaves||inUpgrade||!running)return;
+  betweenWaves=true;
+  for(const e of enemies)burst(e.x,e.y,'#d9d2bf',8);
+  enemies=[];projectiles=[];
+
+  const survival=100,killBonus=waveKills*10;
+  const inkBonus=Math.floor(75*(stats.ink/stats.maxInk));
+  const hpBonus=Math.floor(75*(player.hp/player.maxHp));
+  const total=survival+killBonus+inkBonus+hpBonus;
+  score+=total;
+
+  $('survivalBonus').textContent='+'+survival;
+  $('killBonus').textContent='+'+killBonus;
+  $('inkBonus').textContent='+'+inkBonus;
+  $('hpBonus').textContent='+'+hpBonus;
+  $('waveScore').textContent=total;
+
+  if(wave===20&&!endless){
+    running=false;$('victoryScore').textContent=score;victoryOverlay.style.display='grid';
+    if(wave>best){best=wave;localStorage.setItem('doodleDefenderBestV4',best)}
+    updateUI();return;
+  }
+  waveOverlay.style.display='grid';updateUI();
+}
+function proceedAfterWave(){
+  waveOverlay.style.display='none';
+  if(wave%5===0&&!endless){
+    awaitingSpec=true;specializeOverlay.style.display='grid';
+  }else openUpgrade();
+}
+function openUpgrade(){
+  inUpgrade=true;betweenWaves=false;awaitingSpec=false;
+  rerolls=Math.min(3,rerolls+1);
+  upgradeOverlay.style.display='grid';
+  const boss=wave%5===0;
+  rewardText.textContent=boss?'Boss reward: four choices, all Rare or better.':'Choose one upgrade.';
+  rollCards(boss);
+}
+function rarityRoll(forceRare=false){
+  if(forceRare){
+    const r=Math.random()*100;
+    if(r<8+stats.luck*.08)return'legendary';
+    if(r<38+stats.luck*.12)return'epic';
+    return'rare';
+  }
+  const bonus=stats.luck+(specialization==='chaos'?12:0);
+  const r=Math.random()*100;
+  const leg=.8+bonus*.06,epic=6+bonus*.12,rare=18+bonus*.18,unc=33+bonus*.16;
+  if(r<leg)return'legendary';
+  if(r<leg+epic)return'epic';
+  if(r<leg+epic+rare)return'rare';
+  if(stats.uncommonFloor)return'uncommon';
+  if(r<leg+epic+rare+unc)return'uncommon';
+  return'common';
+}
+
+const upgrades=[
+  // Core / drawing
+  {name:'Bigger Ink Tank',rarity:'common',cat:'draw',desc:'+35 max ink.',apply:()=>stats.maxInk+=35},
+  {name:'Quick Refill',rarity:'common',cat:'draw',desc:'+3 ink per second during waves.',apply:()=>stats.inkRegen+=3},
+  {name:'Thick Ink',rarity:'common',cat:'defense',desc:'+20 base wall durability. Long strokes multiply this further.',apply:()=>stats.wallHp+=20},
+  {name:'First Aid',rarity:'common',cat:'steve',desc:'+18 max HP and heal 18.',apply:()=>{player.maxHp+=18;player.hp+=18}},
+  {name:'Fine Tip',rarity:'uncommon',cat:'draw',desc:'Lines cost 12% less ink.',apply:()=>stats.lineCost*=.88},
+  {name:'Fat Marker',rarity:'uncommon',cat:'defense',desc:'+2 line width and +15 wall HP.',apply:()=>{stats.lineWidth+=2;stats.wallHp+=15}},
+  {name:'Lucky Scribble',rarity:'uncommon',cat:'economy',desc:'+8 Luck.',apply:()=>stats.luck+=8},
+  {name:'Recycling',rarity:'uncommon',cat:'economy',desc:'Kills refund 5 ink.',apply:()=>stats.refund+=5},
+  {name:'Closed Loop',rarity:'uncommon',cat:'defense',desc:'Closed shapes gain +40% durability.',apply:()=>stats.closedBonus+=.4},
+  {name:'Permanent Marker',rarity:'uncommon',cat:'defense',desc:'Walls fade 10 seconds more slowly.',apply:()=>stats.wallLife+=10},
+  {name:'Archival Ink',rarity:'epic',cat:'defense',desc:'Walls fade 25 seconds more slowly.',apply:()=>stats.wallLife+=25},
+  {name:'Architect',rarity:'rare',cat:'defense',desc:'Each wall intersection adds 15% durability.',apply:()=>stats.intersectBonus+=.15},
+  {name:'Patchwork',rarity:'rare',cat:'defense',desc:'Drawing across an old wall repairs 18 HP.',apply:()=>stats.repairDraw+=18},
+  {name:'Double Stroke',rarity:'rare',cat:'draw',desc:'Each stroke creates a parallel second wall.',apply:()=>stats.doubleLine=true},
+  {name:'Quick Sketch',rarity:'rare',cat:'draw',desc:'Your first stroke every wave is free.',apply:()=>stats.firstFree=true},
+  {name:'Shock Ink',rarity:'rare',cat:'defense',desc:'Wall contact can briefly stun enemies.',apply:()=>stats.wallStun=Math.min(.55,stats.wallStun+.16)},
+  {name:'Patch Job',rarity:'rare',cat:'defense',desc:'Every kill repairs all walls by 3 HP.',apply:()=>stats.repairOnKill+=3},
+  {name:'Freehand',rarity:'epic',cat:'draw',desc:'Spend 80 real ink to charge a limited free-ink bank. Stacking increases the free bank.',apply:()=>{stats.freehandLevel++;stats.freehandBankSize=40+(stats.freehandLevel-1)*20;stats.freehandCharge=Math.min(stats.freehandCharge,stats.freehandThreshold)}},
+  {name:'Living Fountain Pen',rarity:'epic',cat:'draw',desc:'Ink regenerates 50% faster during a wave.',apply:()=>stats.inkRegen*=1.5},
+  {name:'Triple Stroke',rarity:'legendary',cat:'draw',desc:'Every stroke creates TWO extra parallel walls.',apply:()=>{stats.doubleLine=true;stats.tripleLine=true}},
+  {name:'Bottomless Pen',rarity:'legendary',cat:'draw',desc:'+120 max ink and +8 ink regen.',apply:()=>{stats.maxInk+=120;stats.inkRegen+=8}},
+  {name:'Fortress Geometry',rarity:'legendary',cat:'defense',desc:'Closed shapes gain enormous durability.',apply:()=>stats.closedBonus+=1.5},
+
+  // Steve
+  {name:'Bandages',rarity:'uncommon',cat:'steve',desc:'Heal 8 extra HP between waves.',apply:()=>stats.playerRegen+=8},
+  {name:'Helmet',rarity:'uncommon',cat:'steve',desc:'Steve takes 10% less contact damage.',apply:()=>stats.playerArmor=Math.min(.55,stats.playerArmor+.1)},
+  {name:'Pocket Rocks',rarity:'rare',cat:'steve',desc:'Steve starts throwing rocks at nearby enemies.',apply:()=>{stats.rockDamage+=9;stats.rockRate=Math.max(stats.rockRate,1.25)}},
+  {name:'Better Rocks',rarity:'rare',cat:'steve',desc:'+12 rock damage and faster throws.',apply:()=>{stats.rockDamage+=12;stats.rockRate=Math.max(.45,(stats.rockRate||1.2)-.12)}},
+  {name:'Emergency Medicine',rarity:'rare',cat:'steve',desc:'Heal 2 HP per kill.',apply:()=>stats.killHeal+=2},
+  {name:'Really Good Rocks',rarity:'epic',cat:'steve',desc:'+24 rock damage.',apply:()=>{stats.rockDamage+=24;stats.rockRate=Math.max(.35,(stats.rockRate||1)-.1)}},
+  {name:'Steve Has Had Enough',rarity:'legendary',cat:'steve',desc:'Steve attacks rapidly with an extremely questionable pencil.',apply:()=>{stats.rockDamage+=45;stats.rockRate=.28}},
+
+  // Economy / luck
+  {name:'Loaded Deck',rarity:'rare',cat:'economy',desc:'Future normal rewards cannot roll below Uncommon.',apply:()=>stats.uncommonFloor=true},
+  {name:'Reroll Coupon',rarity:'uncommon',cat:'economy',desc:'+2 rerolls immediately.',apply:()=>rerolls=Math.min(5,rerolls+2)},
+  {name:'Collector',rarity:'rare',cat:'economy',desc:'Slightly favors upgrades you have not taken yet.',apply:()=>stats.newCardBias=true},
+  {name:'Greedy Goblin',rarity:'epic',cat:'economy',desc:'Normal rewards show a fourth choice.',apply:()=>stats.extraChoice=true},
+
+  // Ink families
+  {name:'Fire Ink',rarity:'uncommon',cat:'ink',desc:'Wall contact ignites enemies for damage over time.',apply:()=>inks.fire++},
+  {name:'Frost Ink',rarity:'uncommon',cat:'ink',desc:'Wall contact slows enemies. Higher levels can freeze.',apply:()=>inks.frost++},
+  {name:'Poison Ink',rarity:'uncommon',cat:'ink',desc:'Enemies build stacking poison while touching walls.',apply:()=>inks.poison++},
+  {name:'Repulsion Ink',rarity:'uncommon',cat:'ink',desc:'Walls shove enemies away from Steve.',apply:()=>inks.repulsion++},
+  {name:'Electric Ink',rarity:'rare',cat:'ink',desc:'Wall contact arcs damage into nearby enemies.',apply:()=>inks.electric++},
+  {name:'Blast Ink',rarity:'rare',cat:'ink',desc:'Destroyed walls explode and damage nearby enemies.',apply:()=>inks.blast++},
+  {name:'Vampire Ink',rarity:'rare',cat:'ink',desc:'A fraction of wall damage heals Steve.',apply:()=>inks.vampire++},
+  {name:'Gravity Ink',rarity:'rare',cat:'ink',desc:'Enemies near walls are pulled toward them.',apply:()=>inks.gravity++},
+  {name:'Void Ink',rarity:'epic',cat:'ink',desc:'Wall contact has a small chance to erase non-boss enemies.',apply:()=>inks.void++},
+  {name:'Chaos Ink',rarity:'legendary',cat:'ink',desc:'Walls occasionally trigger random ink effects.',apply:()=>inks.chaos++},
+  {name:'Death Ink',rarity:'legendary',cat:'ink',desc:'+20 base wall damage per second.',apply:()=>stats.wallDamage+=20},
+];
+
+function upgradeWeight(u){
+  let w=1;
+  if(specialization==='defense'&&u.cat==='defense')w*=3;
+  if(specialization==='ink'&&u.cat==='ink')w*=3;
+  if(specialization==='chaos'&&(u.rarity==='epic'||u.rarity==='legendary'))w*=1.5;
+  if(stats.newCardBias&&!stacks[u.name])w*=1.8;
+  return w;
+}
+function weightedPick(pool){
+  const weighted=[];
+  pool.forEach(u=>{
+    const n=Math.max(1,Math.round(upgradeWeight(u)*10));
+    for(let i=0;i<n;i++)weighted.push(u);
+  });
+  return pick(weighted);
+}
+function getUpgrade(forceRare=false){
+  for(let tries=0;tries<40;tries++){
+    const rar=rarityRoll(forceRare);
+    const pool=upgrades.filter(u=>u.rarity===rar);
+    if(pool.length)return weightedPick(pool);
+  }
+  return upgrades[0];
+}
+function rollCards(forceRare=false){
+  synergyNote.innerHTML='';
+  cardsEl.innerHTML='';
+  const count=forceRare?4:(stats.extraChoice?4:3);
+  cardsEl.className='cards '+(count===4?'four':'');
+  const picks=[];
+  while(picks.length<count){
+    const u=getUpgrade(forceRare);
+    if(!picks.includes(u))picks.push(u);
+  }
+  picks.forEach(u=>{
+    const c=document.createElement('div');c.className='ucard '+u.rarity;
+    const stack=stacks[u.name]||0;
+    let hint='';
+    const related=synergyDefs.filter(def=>{
+      if(discoveredSynergies.has(def.name))return false;
+      const n=u.name;
+      if(n.includes('Fire')&&def.name==='Plaguefire')return inks.poison>0;
+      if(n.includes('Poison')&&def.name==='Plaguefire')return inks.fire>0;
+      if(n.includes('Frost')&&def.name==='Cryoshock')return inks.electric>0;
+      if(n.includes('Electric')&&def.name==='Cryoshock')return inks.frost>0;
+      return false;
+    });
+    if(related.length)hint='<div style="margin-top:7px;font-size:10px;font-weight:900;color:#8456c9">Potential synergy nearby…</div>';
+    c.innerHTML=`<div class="rarity">${u.rarity}</div><h3>${u.name}</h3><p>${u.desc}</p>${hint}<div class="stack">${stack?'Owned ×'+stack:'New upgrade'}</div>`;
+    c.onclick=()=>chooseUpgrade(u);cardsEl.appendChild(c)
+  });
+}
+function chooseUpgrade(u){
+  stacks[u.name]=(stacks[u.name]||0)+1;u.apply();checkSynergies();
+  wave++;
+  if(wave>best){best=wave;localStorage.setItem('doodleDefenderBestV4',best)}
+  inUpgrade=false;upgradeOverlay.style.display='none';startWave();updateUI()
+}
+function reroll(){if(rerolls<=0)return;rerolls--;rollCards(wave%5===0);updateUI()}
+
+function chooseSpecialization(spec){
+  specialization=spec;
+  if(spec==='chaos')stats.enemyScale*=1.08;
+  specializeOverlay.style.display='none';
+  openUpgrade();
+  setMsg('Specialization: '+({defense:'Fortress',ink:'Ink Alchemist',chaos:'Chaos'}[spec]))
+}
+
+function nearestEnemy(x,y,maxD){
+  let bestE=null,bestD=maxD;
+  for(const e of enemies){
+    const d=dist(x,y,e.x,e.y);if(d<bestD){bestD=d;bestE=e}
+  }
+  return bestE;
+}
+function updateSteve(dt){
+  if(!stats.rockDamage||!stats.rockRate)return;
+  player.rockCd-=dt;
+  if(player.rockCd<=0){
+    const e=nearestEnemy(player.x,player.y,210);
+    if(e){
+      projectiles.push({x:player.x,y:player.y-8,target:e,speed:290,damage:stats.rockDamage,life:1.2});
+      player.rockCd=stats.rockRate;
+    }
+  }
+}
+function updateProjectiles(dt){
+  for(const p of [...projectiles]){
+    p.life-=dt;
+    if(!p.target||!enemies.includes(p.target)||p.life<=0){projectiles=projectiles.filter(q=>q!==p);continue}
+    const dx=p.target.x-p.x,dy=p.target.y-p.y,d=Math.hypot(dx,dy)||1;
+    p.x+=dx/d*p.speed*dt;p.y+=dy/d*p.speed*dt;
+    if(d<10+p.target.r){
+      p.target.hp-=p.damage;
+      if(synergies.has('Hot Rocks')){
+        p.target.burn=Math.max(p.target.burn,2);
+        p.target.burnDps=Math.max(p.target.burnDps,8+inks.fire*3);
+      }
+      if(synergies.has('Snowball Fight')){
+        p.target.gravitySlow=Math.max(p.target.gravitySlow,.35);
+        if(Math.random()<.22)p.target.freeze=Math.max(p.target.freeze,.55);
+      }
+      if(synergies.has('Thunderstones'))chainLightning(p.target,Math.max(1,inks.electric));
+      if(synergies.has('Steve the Unreasonable'))player.hp=Math.min(player.maxHp,player.hp+p.damage*.08);
+      burst(p.target.x,p.target.y,'#5f5a53',5);
+      projectiles=projectiles.filter(q=>q!==p)
+    }
+  }
+}
+function eraserAttack(e,dt){
+  if(e.type!=='eraser')return;
+  e.eraseCd-=dt;
+  if(e.eraseCd<=0&&walls.length){
+    const w=pick(walls);
+    walls=walls.filter(x=>x!==w);
+    const mid=w.pts[Math.floor(w.pts.length/2)]||{x:e.x,y:e.y};
+    burst(mid.x,mid.y,'#ef8ba6',18);
+    floatText(mid.x,mid.y,'ERASED','#b84768');
+    e.eraseCd=Math.max(.55,1.7-wave*.015);
+  }
+}
+function gameOver(){
+  running=false;
+  $('finalWave').textContent=wave;$('finalKills').textContent=kills;$('finalScore').textContent=score;
+  gameOverOverlay.style.display='grid';
+  if(wave>best){best=wave;localStorage.setItem('doodleDefenderBestV4',best)}
+}
+function update(dt){
+  if(!running||paused||inUpgrade||betweenWaves||awaitingSpec)return;
+
+  if(!finalOvertime) timeLeft-=dt;
+  if(timeLeft<=0){
+    timeLeft=0;
+    if(wave===20&&!endless&&!finalBossDefeated){
+      finalOvertime=true;
+      setMsg('TIME SURVIVED. NOW DEFEAT THE ERASER!');
+    }else{
+      waveComplete();return;
+    }
+  }
+
+  if(wave===20&&!endless&&finalBossDefeated){
+    waveComplete();return;
+  }
+
+  stats.ink=Math.min(stats.maxInk,stats.ink+stats.inkRegen*dt);
+
+  // Ink slowly fades even when nobody is touching it.
+  // It remains solid for most of its life, then visibly ghosts out before disappearing.
+  for(const w of [...walls]){
+    w.life-=dt;
+    if(w.life<=0)walls=walls.filter(x=>x!==w);
+  }
+
+  updateSteve(dt);updateProjectiles(dt);
+
+  spawnTimer-=dt;
+  const spawnGap =
+    wave===1 ? 2.35 :
+    wave===2 ? 2.05 :
+    wave===3 ? 1.78 :
+    wave===4 ? 1.58 :
+    wave===5 ? 1.42 :
+    Math.max(.34,1.48-wave*.034);
+  if(spawnTimer<=0){
+    const bossDue=wave%5===0&&!enemies.some(e=>e.type==='boss'||e.type==='eraser')&&timeLeft<waveTime-2;
+    spawnEnemy(bossDue);spawnTimer=spawnGap;
+  }
+
+  // Geometry-based synergies pulse continuously.
+  for(const w of walls){
+    if(!w.closed)continue;
+    let cx=0,cy=0;
+    for(const p of w.pts){cx+=p.x;cy+=p.y}
+    cx/=w.pts.length;cy/=w.pts.length;
+
+    if(synergies.has('Gravity Trap')||synergies.has('THE BLACK HOLE')){
+      for(const e of enemies){
+        const d=dist(e.x,e.y,cx,cy);
+        if(d<135){
+          const dx=cx-e.x,dy=cy-e.y,m=Math.hypot(dx,dy)||1;
+          const pull=(synergies.has('THE BLACK HOLE')?20:10)+(inks.gravity*4);
+          e.x+=dx/m*pull*dt;e.y+=dy/m*pull*dt;
+          e.gravitySlow=Math.max(e.gravitySlow,.18);
+        }
+      }
+    }
+
+    if(synergies.has('Ring of Fire')){
+      for(const e of enemies){
+        if(dist(e.x,e.y,cx,cy)<115){
+          e.burn=Math.max(e.burn,1.4);
+          e.burnDps=Math.max(e.burnDps,5+inks.fire*2.5);
+        }
+      }
+    }
+
+    if(synergies.has('TESLA CAGE')&&w.intersections>0){
+      for(const e of enemies){
+        if(dist(e.x,e.y,cx,cy)<145){
+          e.hp-=Math.max(3,inks.electric*5)*dt;
+          if(Math.random()<.8*dt)burst(e.x,e.y,'#90b3ff',2);
+        }
+      }
+    }
+  }
+
+  // Parallel-wall field synergies.
+  if(synergies.has('Ice Corridor')||synergies.has('Power Lines')||synergies.has('ABSOLUTE ZERO')){
+    for(const e of enemies){
+      if(wallNear(e.x,e.y,42)){
+        if(synergies.has('Ice Corridor')||synergies.has('ABSOLUTE ZERO')){
+          e.gravitySlow=Math.max(e.gravitySlow,.42);
+          if(synergies.has('ABSOLUTE ZERO')&&Math.random()<.04*dt*60)e.freeze=Math.max(e.freeze,.4);
+        }
+        if(synergies.has('Power Lines'))e.hp-=Math.max(4,inks.electric*4)*dt;
+      }
+    }
+  }
+
+  for(const e of [...enemies]){
+    if(e.hp<=0){killEnemy(e);continue}
+    e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
+    e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
+
+    if(e.burn>0){e.burn-=dt;e.hp-=e.burnDps*dt}
+    if(e.poison>0){
+      const decay=(synergies.has('Venom Ice')&&e.freeze>0)?.08:.28;
+      e.poison=Math.max(0,e.poison-dt*decay);
+      e.hp-=e.poisonDps*e.poison*.24*dt
+    }
+    if(e.charged>0&&synergies.has('Rail Ink')){
+      for(const n of enemies){
+        if(n!==e&&dist(n.x,n.y,e.x,e.y)<38){
+          n.hp-=12*dt;e.hp-=6*dt;
+          if(Math.random()<1.5*dt)burst(n.x,n.y,'#91b6ff',2)
+        }
+      }
+    }
+    applySynergies(e,dt);
+    eraserAttack(e,dt);
+
+    if(e.hp<=0){killEnemy(e);continue}
+    if(e.stun>0||e.freeze>0)continue;
+
+    // Gravity ink pulls nearby enemies toward the closest nearby wall point
+    if(inks.gravity>0&&walls.length){
+      let bp=null,bd=120+inks.gravity*20;
+      for(const w of walls)for(const p of w.pts){
+        const d=dist(e.x,e.y,p.x,p.y);
+        if(d<bd){bd=d;bp=p}
+      }
+      if(bp){
+        const gx=bp.x-e.x,gy=bp.y-e.y,m=Math.hypot(gx,gy)||1;
+        e.x+=gx/m*(8+inks.gravity*5)*dt;e.y+=gy/m*(8+inks.gravity*5)*dt
+      }
+    }
+
+    // Bouncers ricochet off a wall a few times and try another angle before
+    // eventually giving up and attacking the barrier normally.
+    if(e.type==='bouncer'&&e.bounceTime>0){
+      e.x+=e.bounceVX*dt;
+      e.y+=e.bounceVY*dt;
+      e.bounceTime-=dt;
+      continue;
+    }
+
+    let targetX=player.x,targetY=player.y;
+    if(e.type==='flanker'){
+      e.flankCd-=dt;
+      if(e.flankCd<=0){
+        e.flankAngle+=rand(.65,1.35)*(Math.random()<.5?-1:1);
+        e.flankCd=rand(1.0,1.7);
+      }
+      targetX=player.x+Math.cos(e.flankAngle)*68;
+      targetY=player.y+Math.sin(e.flankAngle)*68;
+    }
+
+    const dx=targetX-e.x,dy=targetY-e.y,d=Math.hypot(dx,dy)||1;
+    const playerDist=dist(e.x,e.y,player.x,player.y);
+    const hit=nearestWallHit(e);
+    if(hit){
+      if(e.type==='bouncer'&&e.bounces>0&&e.attackCd<=0){
+        const i=hit.seg,a=hit.wall.pts[i-1],b=hit.wall.pts[i];
+        let tx=b.x-a.x,ty=b.y-a.y,tm=Math.hypot(tx,ty)||1;
+        tx/=tm;ty/=tm;
+        let nx=-ty,ny=tx;
+        const incomingX=dx/d,incomingY=dy/d;
+        if(incomingX*nx+incomingY*ny>0){nx=-nx;ny=-ny}
+        // Blend reflection with a little tangent motion so it actually searches for another route.
+        const tangentDir=Math.random()<.5?-1:1;
+        e.bounceVX=(nx*.78+tx*.62*tangentDir)*e.speed*1.45;
+        e.bounceVY=(ny*.78+ty*.62*tangentDir)*e.speed*1.45;
+        e.bounceTime=.72;
+        e.bounces--;
+        e.attackCd=.35;
+        floatText(e.x,e.y,'BOING','#2e7f77');
+        continue;
+      }
+
+      e.attackCd-=dt;
+      const dps=applyInkContact(e,dt,hit.wall);
+      e.hp-=dps*dt;
+      if(stats.wallStun>0&&Math.random()<stats.wallStun*dt*.9)e.stun=.45;
+      if(e.attackCd<=0){
+        damageWall(hit.wall,e.dmg,e.x,e.y);
+        e.attackCd=e.type==='gnawer'?.24:.42
+      }
+      continue;
+    }
+
+    let speed=e.speed*(1-clamp(e.gravitySlow,0,.7));
+    if(e.type==='sniper'&&playerDist<190){
+      e.shootCd-=dt;
+      if(e.shootCd<=0){
+        const dmg=7*(1-stats.playerArmor);player.hp-=dmg;
+        floatText(player.x,player.y-28,'-'+Math.round(dmg),'#b44141');e.shootCd=1.7
+      }
+    }else{
+      e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt
+    }
+    if(playerDist<player.r+e.r+2){
+      player.hp-=e.dmg*dt*.9*(1-stats.playerArmor);
+      if(synergies.has('Human Pinball')){
+        const dx=e.x-player.x,dy=e.y-player.y,m=Math.hypot(dx,dy)||1;
+        e.x+=dx/m*65*dt;e.y+=dy/m*65*dt;
+      }
+    }
+  }
+
+  for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.96;p.vy*=.96}
+  particles=particles.filter(p=>p.life>0);
+  for(const f of floaters){f.y-=22*dt;f.t-=dt}
+  floaters=floaters.filter(f=>f.t>0);
+
+  if(player.hp<=0)gameOver();
+  updateUI();
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);ctx.save();
+  ctx.strokeStyle='rgba(212,76,76,.35)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(47,0);ctx.lineTo(47,H);ctx.stroke();
+
+  for(const w of walls){
+    const hpRatio=clamp(w.hp/w.maxHp,0,1);
+    const lifeRatio=clamp(w.life/w.maxLife,0,1);
+    const visualRatio=Math.min(hpRatio,lifeRatio);
+    let col=`rgba(31,42,51,${.08+.92*visualRatio})`;
+    if(inks.chaos>0)col=`hsla(${(performance.now()/30+w.hp)%360},55%,30%,${.12+.88*visualRatio})`;
+    ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=w.thick;ctx.strokeStyle=col;
+    ctx.beginPath();ctx.moveTo(w.pts[0].x,w.pts[0].y);
+    for(let i=1;i<w.pts.length;i++)ctx.lineTo(w.pts[i].x,w.pts[i].y);
+    ctx.stroke();
+
+    if(w.closed&&synergies.has('THE BLACK HOLE')){
+      let cx=0,cy=0;for(const p of w.pts){cx+=p.x;cy+=p.y}cx/=w.pts.length;cy/=w.pts.length;
+      ctx.save();ctx.globalAlpha=.16;ctx.fillStyle='#493468';ctx.beginPath();ctx.arc(cx,cy,34+Math.sin(performance.now()/220)*5,0,Math.PI*2);ctx.fill();ctx.restore()
+    }
+    if(w.closed&&synergies.has('TESLA CAGE')&&w.intersections>0){
+      ctx.save();ctx.globalAlpha=.18;ctx.strokeStyle='#6f98ff';ctx.lineWidth=3;
+      ctx.beginPath();ctx.arc(w.pts[0].x,w.pts[0].y,16+Math.sin(performance.now()/180)*4,0,Math.PI*2);ctx.stroke();ctx.restore()
+    }
+  }
+  if(currentWall&&currentWall.length>1){
+    ctx.lineWidth=stats.lineWidth;ctx.strokeStyle='rgba(31,42,51,.72)';ctx.lineCap='round';ctx.lineJoin='round';
+    ctx.beginPath();ctx.moveTo(currentWall[0].x,currentWall[0].y);currentWall.slice(1).forEach(p=>ctx.lineTo(p.x,p.y));ctx.stroke()
+  }
+
+  // Steve
+  ctx.translate(player.x,player.y);
+  ctx.fillStyle='#f3d7b5';ctx.strokeStyle='#24323a';ctx.lineWidth=3;
+  ctx.beginPath();ctx.arc(0,-7,13,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#3f75b7';ctx.fillRect(-12,7,24,27);
+  ctx.fillStyle='#25313a';ctx.beginPath();ctx.arc(-4,-9,1.8,0,Math.PI*2);ctx.arc(4,-9,1.8,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#25313a';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,-4,5,.25,Math.PI-.25);ctx.stroke();
+  ctx.restore();
+
+  for(const e of enemies){
+    const hpRatio=clamp(e.hp/e.maxHp,0,1);
+    ctx.save();ctx.translate(e.x,e.y);
+
+    if(e.type==='eraser'){
+      ctx.rotate(Math.sin(performance.now()/350)*.08);
+      ctx.strokeStyle='#81344d';ctx.lineWidth=3;
+
+      // Empty paper-colored body first, then fill upward according to remaining HP.
+      ctx.fillStyle='#f7e7e9';ctx.fillRect(-32,-20,64,40);
+      ctx.save();
+      ctx.beginPath();ctx.rect(-32,20-40*hpRatio,64,40*hpRatio);ctx.clip();
+      ctx.fillStyle='#ef8ba6';ctx.fillRect(-32,-20,64,40);
+      ctx.restore();
+      ctx.strokeRect(-32,-20,64,40);
+
+      ctx.fillStyle='#fff';ctx.fillRect(-12,-5,7,7);ctx.fillRect(5,-5,7,7);
+      ctx.fillStyle='#3b2630';ctx.fillRect(-4,9,8,3);
+    }else{
+      ctx.strokeStyle='#2a3135';ctx.lineWidth=2.5;
+
+      // Enemy body is now the health meter: its color drains from top to bottom.
+      ctx.fillStyle='rgba(255,255,255,.42)';
+      ctx.beginPath();ctx.arc(0,0,e.r,0,Math.PI*2);ctx.fill();
+
+      ctx.save();
+      ctx.beginPath();ctx.arc(0,0,e.r,0,Math.PI*2);ctx.clip();
+      ctx.fillStyle=e.color;
+      ctx.fillRect(-e.r,e.r-(2*e.r*hpRatio),e.r*2,2*e.r*hpRatio);
+      ctx.restore();
+
+      ctx.beginPath();ctx.arc(0,0,e.r,0,Math.PI*2);ctx.stroke();
+
+      ctx.fillStyle='#fff';
+      ctx.beginPath();ctx.arc(-e.r*.25,-2,2,0,Math.PI*2);ctx.arc(e.r*.25,-2,2,0,Math.PI*2);ctx.fill();
+      ctx.strokeStyle='#222';ctx.beginPath();ctx.moveTo(-4,5);ctx.lineTo(4,5);ctx.stroke();
+      if(e.type==='boss'){ctx.fillStyle='#d8a72e';ctx.fillRect(-11,-e.r-8,22,5)}
+      if(e.type==='bouncer'){
+        ctx.strokeStyle='#e8fffb';ctx.lineWidth=2;
+        ctx.beginPath();ctx.arc(0,0,e.r+4,0,Math.PI*1.2);ctx.stroke()
+      }
+      if(e.type==='flanker'){
+        ctx.strokeStyle='#dbe5ff';ctx.lineWidth=2;
+        ctx.beginPath();ctx.moveTo(-e.r-4,0);ctx.lineTo(-e.r-9,-5);ctx.moveTo(-e.r-4,0);ctx.lineTo(-e.r-9,5);ctx.stroke()
+      }
+    }
+    ctx.restore();
+  }
+
+  for(const p of projectiles){
+    ctx.fillStyle='#5f5a53';ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fill()
+  }
+  for(const p of particles){
+    ctx.globalAlpha=clamp(p.life*1.8,0,1);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,3,3);ctx.globalAlpha=1
+  }
+  for(const f of floaters){
+    ctx.globalAlpha=clamp(f.t*2,0,1);ctx.fillStyle=f.color;ctx.font='bold 13px system-ui';
+    ctx.textAlign='center';ctx.fillText(f.text,f.x,f.y);ctx.globalAlpha=1
+  }
+  if(paused){
+    ctx.fillStyle='rgba(20,25,28,.38)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font='900 38px system-ui';ctx.fillText('PAUSED',W/2,H/2)
+  }
+}
+function loop(t){
+  const dt=Math.min(.033,(t-last)/1000||0);last=t;update(dt);draw();requestAnimationFrame(loop)
+}
+function pointerPos(e){
+  const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}
+}
+canvas.addEventListener('pointerdown',e=>{
+  if(!running||paused||inUpgrade||betweenWaves||awaitingSpec)return;
+  drawing=true;currentWall=[pointerPos(e)];canvas.setPointerCapture(e.pointerId)
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!drawing||!currentWall)return;
+  const p=pointerPos(e),q=currentWall.at(-1);
+  if(dist(p.x,p.y,q.x,q.y)>6)currentWall.push(p)
+});
+function endDraw(){
+  if(!drawing)return;drawing=false;if(currentWall)createWall(currentWall);currentWall=null
+}
+canvas.addEventListener('pointerup',endDraw);
+canvas.addEventListener('pointercancel',endDraw);
+
+$('startBtn').onclick=resetRun;
+$('againBtn').onclick=resetRun;
+$('newRunBtn').onclick=resetRun;
+$('continueBtn').onclick=proceedAfterWave;
+$('rerollBtn').onclick=reroll;
+$('endlessBtn').onclick=()=>{
+  endless=true;running=true;victoryOverlay.style.display='none';
+  wave=21;betweenWaves=false;inUpgrade=false;awaitingSpec=false;startWave();updateUI()
+};
+document.querySelectorAll('[data-spec]').forEach(el=>el.onclick=()=>chooseSpecialization(el.dataset.spec));
+$('clearBtn').onclick=()=>{
+  const refund=Math.min(stats.maxInk*.18,walls.reduce((a,w)=>a+w.pts.length,0)*.1);
+  walls=[];stats.ink=Math.min(stats.maxInk,stats.ink+refund);
+  setMsg('Walls erased. Reclaimed a little ink.')
+};
+$('pauseBtn').onclick=()=>{
+  if(!running||inUpgrade||betweenWaves||awaitingSpec)return;
+  paused=!paused;$('pauseBtn').textContent=paused?'Resume':'Pause'
+};
+
+bestEl.textContent=best;resize();updateUI();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

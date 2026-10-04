@@ -1,0 +1,221 @@
+/* loop: original v8 behavior, with explicit shared game dependencies. */
+DoodleDefender.systems.loop = function createLoopSystem(game) {
+function update(dt){
+  if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
+
+  if(!game.state.finalOvertime) game.state.timeLeft-=dt;
+  if(game.state.timeLeft<=0){
+    game.state.timeLeft=0;
+    if(game.state.wave===20&&!game.state.endless&&!game.state.finalBossDefeated){
+      game.state.finalOvertime=true;
+      game.api.setMsg('TIME SURVIVED. NOW DEFEAT THE ERASER!');
+    }else{
+      game.api.waveComplete();return;
+    }
+  }
+
+  if(game.state.wave===20&&!game.state.endless&&game.state.finalBossDefeated){
+    game.api.waveComplete();return;
+  }
+
+  game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.inkRegen*dt);
+
+  // Ink slowly fades even when nobody is touching it.
+  // It remains solid for most of its life, then visibly ghosts out before disappearing.
+  for(const w of [...game.state.walls]){
+    w.life-=dt;
+    if(w.life<=0)game.state.walls=game.state.walls.filter(x=>x!==w);
+  }
+
+  game.api.updateSteve(dt);game.api.updateProjectiles(dt);
+
+  game.state.spawnTimer-=dt;
+  const spawnGap =
+    game.state.wave===1 ? 2.35 :
+    game.state.wave===2 ? 2.05 :
+    game.state.wave===3 ? 1.78 :
+    game.state.wave===4 ? 1.58 :
+    game.state.wave===5 ? 1.42 :
+    Math.max(.34,1.48-game.state.wave*.034);
+  if(game.state.spawnTimer<=0){
+    const bossDue=game.state.wave%5===0&&!game.state.enemies.some(e=>e.type==='boss'||e.type==='eraser')&&game.state.timeLeft<game.state.waveTime-2;
+    game.api.spawnEnemy(bossDue);game.state.spawnTimer=spawnGap;
+  }
+
+  // Geometry-based synergies pulse continuously.
+  for(const w of game.state.walls){
+    if(!w.closed)continue;
+    let cx=0,cy=0;
+    for(const p of w.pts){cx+=p.x;cy+=p.y}
+    cx/=w.pts.length;cy/=w.pts.length;
+
+    if(game.state.synergies.has('Gravity Trap')||game.state.synergies.has('THE BLACK HOLE')){
+      for(const e of game.state.enemies){
+        const d=game.api.dist(e.x,e.y,cx,cy);
+        if(d<135){
+          const dx=cx-e.x,dy=cy-e.y,m=Math.hypot(dx,dy)||1;
+          const pull=(game.state.synergies.has('THE BLACK HOLE')?20:10)+(game.state.inks.gravity*4);
+          e.x+=dx/m*pull*dt;e.y+=dy/m*pull*dt;
+          e.gravitySlow=Math.max(e.gravitySlow,.18);
+        }
+      }
+    }
+
+    if(game.state.synergies.has('Ring of Fire')){
+      for(const e of game.state.enemies){
+        if(game.api.dist(e.x,e.y,cx,cy)<115){
+          e.burn=Math.max(e.burn,1.4);
+          e.burnDps=Math.max(e.burnDps,5+game.state.inks.fire*2.5);
+        }
+      }
+    }
+
+    if(game.state.synergies.has('TESLA CAGE')&&w.intersections>0){
+      for(const e of game.state.enemies){
+        if(game.api.dist(e.x,e.y,cx,cy)<145){
+          e.hp-=Math.max(3,game.state.inks.electric*5)*dt;
+          if(Math.random()<.8*dt)game.api.burst(e.x,e.y,'#90b3ff',2);
+        }
+      }
+    }
+  }
+
+  // Parallel-wall field synergies.
+  if(game.state.synergies.has('Ice Corridor')||game.state.synergies.has('Power Lines')||game.state.synergies.has('ABSOLUTE ZERO')){
+    for(const e of game.state.enemies){
+      if(game.api.wallNear(e.x,e.y,42)){
+        if(game.state.synergies.has('Ice Corridor')||game.state.synergies.has('ABSOLUTE ZERO')){
+          e.gravitySlow=Math.max(e.gravitySlow,.42);
+          if(game.state.synergies.has('ABSOLUTE ZERO')&&Math.random()<.04*dt*60)e.freeze=Math.max(e.freeze,.4);
+        }
+        if(game.state.synergies.has('Power Lines'))e.hp-=Math.max(4,game.state.inks.electric*4)*dt;
+      }
+    }
+  }
+
+  for(const e of [...game.state.enemies]){
+    if(e.hp<=0){game.api.killEnemy(e);continue}
+    e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
+    e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
+
+    if(e.burn>0){e.burn-=dt;e.hp-=e.burnDps*dt}
+    if(e.poison>0){
+      const decay=(game.state.synergies.has('Venom Ice')&&e.freeze>0)?.08:.28;
+      e.poison=Math.max(0,e.poison-dt*decay);
+      e.hp-=e.poisonDps*e.poison*.24*dt
+    }
+    if(e.charged>0&&game.state.synergies.has('Rail Ink')){
+      for(const n of game.state.enemies){
+        if(n!==e&&game.api.dist(n.x,n.y,e.x,e.y)<38){
+          n.hp-=12*dt;e.hp-=6*dt;
+          if(Math.random()<1.5*dt)game.api.burst(n.x,n.y,'#91b6ff',2)
+        }
+      }
+    }
+    game.api.applySynergies(e,dt);
+    game.api.eraserAttack(e,dt);
+
+    if(e.hp<=0){game.api.killEnemy(e);continue}
+    if(e.stun>0||e.freeze>0)continue;
+
+    // Gravity ink pulls nearby enemies toward the closest nearby wall point
+    if(game.state.inks.gravity>0&&game.state.walls.length){
+      let bp=null,bd=120+game.state.inks.gravity*20;
+      for(const w of game.state.walls)for(const p of w.pts){
+        const d=game.api.dist(e.x,e.y,p.x,p.y);
+        if(d<bd){bd=d;bp=p}
+      }
+      if(bp){
+        const gx=bp.x-e.x,gy=bp.y-e.y,m=Math.hypot(gx,gy)||1;
+        e.x+=gx/m*(8+game.state.inks.gravity*5)*dt;e.y+=gy/m*(8+game.state.inks.gravity*5)*dt
+      }
+    }
+
+    // Bouncers ricochet off a wall a few times and try another angle before
+    // eventually giving up and attacking the barrier normally.
+    if(e.type==='bouncer'&&e.bounceTime>0){
+      e.x+=e.bounceVX*dt;
+      e.y+=e.bounceVY*dt;
+      e.bounceTime-=dt;
+      continue;
+    }
+
+    let targetX=game.state.player.x,targetY=game.state.player.y;
+    if(e.type==='flanker'){
+      e.flankCd-=dt;
+      if(e.flankCd<=0){
+        e.flankAngle+=game.api.rand(.65,1.35)*(Math.random()<.5?-1:1);
+        e.flankCd=game.api.rand(1.0,1.7);
+      }
+      targetX=game.state.player.x+Math.cos(e.flankAngle)*68;
+      targetY=game.state.player.y+Math.sin(e.flankAngle)*68;
+    }
+
+    const dx=targetX-e.x,dy=targetY-e.y,d=Math.hypot(dx,dy)||1;
+    const playerDist=game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y);
+    const hit=game.api.nearestWallHit(e);
+    if(hit){
+      if(e.type==='bouncer'&&e.bounces>0&&e.attackCd<=0){
+        const i=hit.seg,a=hit.wall.pts[i-1],b=hit.wall.pts[i];
+        let tx=b.x-a.x,ty=b.y-a.y,tm=Math.hypot(tx,ty)||1;
+        tx/=tm;ty/=tm;
+        let nx=-ty,ny=tx;
+        const incomingX=dx/d,incomingY=dy/d;
+        if(incomingX*nx+incomingY*ny>0){nx=-nx;ny=-ny}
+        // Blend reflection with a little tangent motion so it actually searches for another route.
+        const tangentDir=Math.random()<.5?-1:1;
+        e.bounceVX=(nx*.78+tx*.62*tangentDir)*e.speed*1.45;
+        e.bounceVY=(ny*.78+ty*.62*tangentDir)*e.speed*1.45;
+        e.bounceTime=.72;
+        e.bounces--;
+        e.attackCd=.35;
+        game.api.floatText(e.x,e.y,'BOING','#2e7f77');
+        continue;
+      }
+
+      e.attackCd-=dt;
+      const dps=game.api.applyInkContact(e,dt,hit.wall);
+      e.hp-=dps*dt;
+      if(game.state.stats.wallStun>0&&Math.random()<game.state.stats.wallStun*dt*.9)e.stun=.45;
+      if(e.attackCd<=0){
+        game.api.damageWall(hit.wall,e.dmg,e.x,e.y);
+        e.attackCd=e.type==='gnawer'?.24:.42
+      }
+      continue;
+    }
+
+    let speed=e.speed*(1-game.api.clamp(e.gravitySlow,0,.7));
+    if(e.type==='sniper'&&playerDist<190){
+      e.shootCd-=dt;
+      if(e.shootCd<=0){
+        const dmg=7*(1-game.state.stats.playerArmor);game.state.player.hp-=dmg;
+        game.api.floatText(game.state.player.x,game.state.player.y-28,'-'+Math.round(dmg),'#b44141');e.shootCd=1.7
+      }
+    }else{
+      e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt
+    }
+    if(playerDist<game.state.player.r+e.r+2){
+      game.state.player.hp-=e.dmg*dt*.9*(1-game.state.stats.playerArmor);
+      if(game.state.synergies.has('Human Pinball')){
+        const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;
+        e.x+=dx/m*65*dt;e.y+=dy/m*65*dt;
+      }
+    }
+  }
+
+  for(const p of game.state.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.96;p.vy*=.96}
+  game.state.particles=game.state.particles.filter(p=>p.life>0);
+  for(const f of game.state.floaters){f.y-=22*dt;f.t-=dt}
+  game.state.floaters=game.state.floaters.filter(f=>f.t>0);
+
+  if(game.state.player.hp<=0)game.api.gameOver();
+  game.api.updateUI();
+}
+
+function loop(t){
+  const dt=Math.min(.033,(t-game.state.last)/1000||0);game.state.last=t;game.api.update(dt);game.api.draw();requestAnimationFrame(game.api.loop)
+}
+const api = { update, loop };
+Object.assign(game.api, api);
+return api;
+};
