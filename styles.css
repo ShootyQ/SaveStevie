@@ -3,7 +3,7 @@
   --blue:#4b79d8; --gold:#d8a72e; --purple:#8456c9; --orange:#d67a35;
 }
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;overflow:hidden;font-family:"Trebuchet MS",system-ui,sans-serif;background:#d8d0bc;color:#25313a}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;font-family:"Trebuchet MS",system-ui,sans-serif;background:#d8d0bc;color:#25313a}
 body{
   display:grid;place-items:center;padding:10px;
   background:radial-gradient(circle at 20% 10%,rgba(255,255,255,.92),transparent 30%),linear-gradient(#d9d2bf,#c9c0ab)
@@ -115,6 +115,11 @@ button.red{background:#9c4545}
 .synergy{
   margin:10px auto 0;padding:9px 12px;background:#efe5ff;border:2px solid #8b60c9;
   border-radius:12px;font-size:13px;font-weight:900;max-width:520px
+}
+/* Keep touch drawing away from Android's system back-gesture edges. */
+@media(pointer:coarse){
+  body{padding-left:max(28px,env(safe-area-inset-left));padding-right:max(28px,env(safe-area-inset-right))}
+  #app{width:100%;max-width:930px;min-width:0}
 }
 @media(max-width:760px){
   .hud{grid-template-columns:1fr 1fr;grid-template-areas:"ink hp" "time time"}
