@@ -139,3 +139,81 @@ button.red{background:#9c4545}
 .build-upgrades{display:grid;gap:8px}
 .build-entry h4{margin:0 0 5px}.build-entry p{text-align:left;margin:4px 0;font-size:13px}
 .build-entry .build-effect{color:#315d43;font-weight:bold}
+
+/* The notebook fills the available viewport. Detailed stats live between waves. */
+#app{height:min(calc(100dvh - 20px),950px)}
+.wave-stats{justify-content:center;margin:14px 0}
+.overlay:not(.build-overlay){overflow:auto;overscroll-behavior:contain}
+.cardbox{max-height:calc(100% - 8px);overflow:auto;flex-shrink:0}
+.splash-box{width:min(100%,620px);text-align:center;padding:24px 30px;background:#fbf7e9;
+  border:3px solid #26333c;box-shadow:8px 8px 0 #d8a72e,0 18px 60px #0005;transform:rotate(-.5deg)}
+.splash-eyebrow{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:10px;font-weight:900;letter-spacing:1.3px;color:#63717b}
+.splash-eyebrow span{color:#a06e13}
+.splash-art{max-width:400px;margin:8px auto -4px}
+.splash-art svg{display:block;width:100%;height:auto}
+.splash-title{font-size:clamp(44px,7vw,66px);letter-spacing:-3px;line-height:1;margin:0;color:#26333c}
+.splash-title span{color:#3562be;display:inline-block;transform:rotate(-3deg);text-decoration:underline;text-decoration-color:#d8a72e;text-decoration-thickness:5px;text-underline-offset:7px}
+.cardbox .splash-tagline{margin:17px 0;color:#4d5a62;font-size:14px}
+.splash-howto{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 0;border-top:1px dashed #c9c0ab;border-bottom:1px dashed #c9c0ab;margin-bottom:18px}
+.splash-howto b{display:block;font-size:10px;letter-spacing:1px;color:#3562be;margin-bottom:4px}
+.splash-howto span{font-size:12px;color:#526069}
+#startBtn{width:100%;min-height:52px;font-size:17px;background:#3562be;box-shadow:0 4px 0 #20447f;display:flex;align-items:center;justify-content:space-between;padding-inline:22px}
+.splash-footer{font-size:11px;color:#65717a;margin-top:13px}
+button{min-height:44px;touch-action:manipulation}
+button:disabled{opacity:.5;cursor:default}
+@media(max-width:760px),(pointer:coarse){
+  body{padding:0 max(20px,env(safe-area-inset-right)) 0 max(20px,env(safe-area-inset-left));background:#26333c}
+  #app{width:100%;max-width:none;height:100dvh;gap:0;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}
+  .panel{border-width:0;border-radius:0;box-shadow:none}
+  .bottom{flex-wrap:nowrap;gap:4px;padding:7px 0 8px;background:#26333c}
+  .bottom button{flex:1;min-width:0;padding:6px 3px;font-size:11px;border-radius:8px;box-shadow:none;white-space:nowrap}
+  #message{display:none}
+  .hud{left:7px;right:7px;top:8px;grid-template-columns:1fr 1fr 62px;grid-template-areas:"ink hp time";gap:5px}
+  .box{padding:5px;border-radius:9px;border-width:1px}
+  .barlabel{font-size:10px;white-space:nowrap}
+  .barlabel span{float:right}
+  .timer .barlabel span{float:none}
+  .bar{height:8px}
+  #upgradeList,#inkTags{display:none}
+  #freehandMeter{top:58px!important;width:150px!important;padding:4px 6px!important}
+  .overlay{padding:12px}
+  .cardbox{width:100%;padding:16px;max-height:calc(100% - 8px)}
+  .splash-box{padding:18px;transform:none;box-shadow:5px 5px 0 #d8a72e}
+  .splash-eyebrow{justify-content:center;font-size:9px;letter-spacing:.8px}
+  .splash-art{max-width:330px;margin:12px auto 6px}
+  .splash-title{font-size:48px}
+  .splash-howto{gap:5px;margin-bottom:16px}
+  .splash-howto span{font-size:11px}
+  .splash-tagline{font-size:12px!important}
+  .startbox h2{font-size:28px}
+  .wave-stats{gap:5px}
+  .pill{font-size:12px;padding:6px 8px}
+  .build-overlay{padding:10px}
+}
+@media(max-height:520px){
+  .splash-art{max-width:200px;margin:2px auto}
+  .splash-title{font-size:38px}
+  .splash-howto{padding:8px 0;margin-bottom:12px}
+  .splash-footer{margin-top:8px}
+}
+@media(max-width:380px){
+  .splash-box{padding:14px}
+  .splash-title{font-size:38px;letter-spacing:-2px}
+  .splash-art{max-width:200px;margin:6px auto}
+  .splash-eyebrow{font-size:8px;gap:4px}
+  .cardbox .splash-tagline{margin:12px 0}
+  .splash-howto{padding:10px 0;margin-bottom:12px}
+  .splash-howto b{font-size:9px;letter-spacing:.4px}
+  #startBtn{min-height:48px;font-size:15px;padding-inline:14px}
+  .splash-footer{font-size:10px;margin-top:10px}
+}
+@media(max-height:520px) and (min-width:600px){
+  .splash-box{display:grid;grid-template-columns:180px 1fr;gap:7px 18px;padding:14px 20px}
+  .splash-eyebrow{grid-column:1 / -1}
+  .splash-art{grid-column:1;grid-row:2 / span 5;align-self:center;margin:0}
+  .splash-title,.splash-tagline,.splash-howto,#startBtn,.splash-footer{grid-column:2;margin:0!important}
+  .splash-title{font-size:38px}
+  .splash-howto{padding:8px 0}
+  #startBtn{min-height:44px;font-size:15px}
+}
+#startOverlay{background:radial-gradient(circle at 50% 10%,#fffdf4,#e5ddc6)}

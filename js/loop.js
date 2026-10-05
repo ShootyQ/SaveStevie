@@ -27,7 +27,8 @@ function update(dt){
     if(w.life<=0)game.state.walls=game.state.walls.filter(x=>x!==w);
   }
 
-  game.api.updateStevie(dt);game.api.updateProjectiles(dt);
+  game.api.updateStevie(dt);game.api.updateProjectiles(dt);game.api.updateEnemyShots(dt);
+  if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
 
   game.api.spawnWaveEnemies(dt);
 
@@ -170,8 +171,8 @@ function update(dt){
     if(e.type==='sniper'&&playerDist<190){
       e.shootCd-=dt;
       if(e.shootCd<=0){
-        const dmg=7*(1-game.state.stats.playerArmor);game.state.player.hp-=dmg;
-        game.api.floatText(game.state.player.x,game.state.player.y-28,'-'+Math.round(dmg),'#b44141');e.shootCd=1.7
+        if(!game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y))game.api.fireSniper(e);
+        e.shootCd=1.7
       }
     }else{
       e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt

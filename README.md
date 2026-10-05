@@ -17,7 +17,7 @@ Refactored from doodle_defender_v8.html. Open index.html directly in a modern br
 - js/input.js owns pointer drawing and button/resize event wiring.
 - js/effects.js creates particles and floating text.
 - js/geometry.js contains math and intersection helpers.
-- styles.css preserves the original layout and appearance.
+- styles.css defines the responsive notebook layout, splash screen, and overlays.
 
 Each system is a factory receiving the same game context. Mutable values live in game.state; DOM references in game.dom; upgrade tables in game.catalog. game.api connects systems without implicit shared variables. System methods are also grouped on game.renderer, game.walls, etc. Install every system before starting the loop.
 
@@ -68,12 +68,14 @@ Touching Stevie deals one hit using the monster's contact damage and Stevie's
 armor reduction, then bursts and removes the monster. Contact removal grants
 no kill rewards and produces no split children. Bosses follow this rule too;
 Stevie must survive The Eraser's hit for its removal to clear the final fight.
-Snipers keep their ranged attacks. Human Pinball now makes contact explosions
+Snipers unlock at wave 9 and telegraph with a blue aim line before launching
+visible shots. Walls block their line of sight and intercept fired rounds.
+Shots deal 7 damage before armor, and the game-over screen names the last hit. Human Pinball now makes contact explosions
 push nearby monsters away. Existing saved best-wave records are preserved.
 
 ## Review your build
 
-Use **Your Build** to pause and inspect every owned upgrade, its stack count,
+Use **Build** to pause and inspect every owned upgrade, its stack count,
 cumulative contribution, current combined stats, and active synergies. Closing
 the screen restores the previous pause state. Reward cards show the next stack
 and its cumulative effect; picking one confirms the new count and effect.
@@ -105,7 +107,7 @@ pass; human playtests across strong and weak builds are still needed.
 
 ## In-game changelog
 
-Use **Changelog** to read recent updates without leaving the game. It pauses
+Use **Updates** to read recent updates without leaving the game. It pauses
 your run while open and restores your previous pause state when closed.
 The entries in `index.html` (`#changelogEntries`) are the single source for
 player-facing release notes; prepend an entry for every future feature, fix,
@@ -125,3 +127,17 @@ randomness checks. The optional Playwright benchmark
 `node tests/browser-performance.cjs` measures a seeded crowded, upgraded scene
 and reports a combat-state digest for before/after comparisons. See
 [performance notes](docs/performance.md) for prerequisites and measured results.
+
+## Phone layout and fullscreen
+
+The illustrated splash introduces drawing, defending, and upgrading. On phones
+and touch devices the game fills the available viewport height, with safe-area
+insets, 20px side rails for Android navigation gestures, and touch-sized controls.
+Ink, Stevie health, wave number, and time remain visible during play. Score,
+kills, luck, best wave, and pressure appear in the wave-clear summary; Build
+retains detailed upgrades and synergies.
+
+Starting a run on a touch device requests browser fullscreen when supported.
+**Screen** toggles it manually; **Exit** returns to the browser. Unsupported or
+denied fullscreen leaves the normal viewport-filling layout playable. Resizing
+translates the scene together so Stevie stays aligned with existing defenses.

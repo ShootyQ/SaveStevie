@@ -141,6 +141,55 @@ function updateProjectiles(dt){
   }
 }
 
+// Sniper rounds travel visibly and collide along their whole step, so a thin
+// wall cannot be skipped even when the browser drops frames.
+function shotBlocked(x,y,nx,ny,r=3){
+  const from={x,y},to={x:nx,y:ny};
+  for(const wall of game.state.walls){
+    const bounds=game.api.wallGeometry(wall.pts),pad=wall.thick/2+r;
+    const minX=Math.min(x,nx)-pad,maxX=Math.max(x,nx)+pad,minY=Math.min(y,ny)-pad,maxY=Math.max(y,ny)+pad;
+    if(bounds.maxX<minX||bounds.minX>maxX||bounds.maxY<minY||bounds.minY>maxY)continue;
+    for(const seg of bounds.segments){
+      if(seg.maxX<minX||seg.minX>maxX||seg.maxY<minY||seg.minY>maxY)continue;
+      const {a,b}=seg;
+      if(game.api.segmentIntersection(from,to,a,b)||
+        Math.min(game.api.pointSegDist(x,y,a.x,a.y,b.x,b.y),game.api.pointSegDist(nx,ny,a.x,a.y,b.x,b.y),
+          game.api.pointSegDist(a.x,a.y,x,y,nx,ny),game.api.pointSegDist(b.x,b.y,x,y,nx,ny))<=pad)return true;
+    }
+  }
+  return false;
+}
+function fireSniper(e){
+  const dx=game.state.player.x-e.x,dy=game.state.player.y-e.y,d=Math.hypot(dx,dy)||1;
+  game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:2,r:3,damage:7});
+  game.api.burst(e.x,e.y,'#4b79d8',3);
+}
+function updateEnemyShots(dt){
+  const remaining=[];
+  for(const shot of game.state.enemyShots){
+    const step=Math.min(dt,Math.max(0,shot.life)),dx=shot.vx*step,dy=shot.vy*step;
+    const nx=shot.x+dx,ny=shot.y+dy,player=game.state.player;
+    const px=shot.x-player.x,py=shot.y-player.y,a=dx*dx+dy*dy,b=2*(px*dx+py*dy),c=px*px+py*py-(player.r+shot.r)**2;
+    let hitTime=c<=0?0:null;
+    const discriminant=b*b-4*a*c;
+    if(hitTime===null&&a>0&&discriminant>=0){const t=(-b-Math.sqrt(discriminant))/(2*a);if(t>=0&&t<=1)hitTime=t}
+    // Test cover only up to the first player impact; walls behind Stevie cannot
+    // retroactively absorb a shot that already reached him.
+    const endX=shot.x+dx*(hitTime??1),endY=shot.y+dy*(hitTime??1);shot.life-=dt;
+    if(shotBlocked(shot.x,shot.y,endX,endY,shot.r)){
+      game.api.burst(endX,endY,'#4b79d8',5);continue;
+    }
+    if(hitTime!==null){
+      const damage=shot.damage*(1-game.state.stats.playerArmor);
+      damageStevie(damage,'Sniper shot');
+      game.api.floatText(player.x,player.y-28,'SHOT −'+Number(damage.toFixed(1)),'#3562be');
+      game.api.burst(player.x,player.y,'#4b79d8',6);continue;
+    }
+    shot.x=nx;shot.y=ny;if(shot.life>0)remaining.push(shot);
+  }
+  game.state.enemyShots=remaining;
+}
+
 function eraserAttack(e,dt){
   if(e.type!=='eraser')return;
   e.eraseCd-=dt;
@@ -236,12 +285,16 @@ function steerBounce(e,dt){
   return true;
 }
 
+function damageStevie(damage,source){
+  game.state.player.hp=Math.max(0,game.state.player.hp-damage);
+  game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
+}
 function contactStevie(e){
   if(e.hp<=0||!game.state.enemies.includes(e))return false;
   const player=game.state.player;
   if(game.api.dist(e.x,e.y,player.x,player.y)>=player.r+e.r+2)return false;
   const damage=e.dmg*(1-game.state.stats.playerArmor);
-  player.hp=Math.max(0,player.hp-damage);
+  damageStevie(damage,e.type==='eraser'?'The Eraser':e.type[0].toUpperCase()+e.type.slice(1)+' contact');
   game.api.floatText(player.x,player.y-28,'-'+Number(damage.toFixed(1)),'#b44141');
   game.api.burst(e.x,e.y,e.color,12);
   // Contact removal is not a player kill: no rewards, healing, or split children.
@@ -255,7 +308,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

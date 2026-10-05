@@ -7,8 +7,30 @@ function pointerPos(e){
 function endDraw(){
   if(!game.state.drawing)return;game.state.drawing=false;if(game.state.currentWall)game.api.createWall(game.state.currentWall);game.state.currentWall=null
 }
+function screenSupported(){return typeof document.documentElement?.requestFullscreen==='function'}
+function updateScreenButton(){
+  const button=game.dom.$('fullscreenBtn');
+  button.disabled=!screenSupported();button.textContent=document.fullscreenElement?'Exit':'Screen';
+  button.setAttribute?.('aria-pressed',document.fullscreenElement?'true':'false');
+  button.title=screenSupported()?'Toggle fullscreen':'Fullscreen is unavailable in this browser; the game still fits your screen';
+}
+function enterScreen(){
+  if(!screenSupported()||document.fullscreenElement)return;
+  // Must run directly from a user gesture; unavailable/denied fullscreen is harmless.
+  try{const request=document.documentElement.requestFullscreen();request?.catch(()=>{});}catch{}
+}
+function startRun(){
+  if(window.matchMedia?.('(pointer: coarse)').matches)enterScreen();
+  game.api.resetRun();
+}
+function toggleScreen(){
+  if(document.fullscreenElement){try{document.exitFullscreen()?.catch(()=>{});}catch{}}else enterScreen();
+}
 function bind() {
 window.addEventListener('resize',game.api.resize);
+window.visualViewport?.addEventListener('resize',game.api.resize);
+document.addEventListener?.('fullscreenchange',()=>{game.api.resize();updateScreenButton()});
+game.dom.$('fullscreenBtn').onclick=toggleScreen;updateScreenButton();
 game.dom.$('buildBtn').onclick=game.api.openBuild;
 game.dom.$('closeBuildBtn').onclick=game.api.closeBuild;
 game.dom.$('changelogBtn').onclick=game.api.openChangelog;
@@ -31,9 +53,9 @@ game.dom.canvas.addEventListener('pointermove',e=>{
 });
 game.dom.canvas.addEventListener('pointerup',game.api.endDraw);
 game.dom.canvas.addEventListener('pointercancel',game.api.endDraw);
-game.dom.$('startBtn').onclick=game.api.resetRun;
-game.dom.$('againBtn').onclick=game.api.resetRun;
-game.dom.$('newRunBtn').onclick=game.api.resetRun;
+game.dom.$('startBtn').onclick=startRun;
+game.dom.$('againBtn').onclick=startRun;
+game.dom.$('newRunBtn').onclick=startRun;
 game.dom.$('continueBtn').onclick=game.api.proceedAfterWave;
 game.dom.$('rerollBtn').onclick=game.api.reroll;
 game.dom.$('endlessBtn').onclick=()=>{

@@ -6,8 +6,9 @@ function waveDuration(){
 
 function resetRun(){
   game.api.closeBuild();game.api.closeChangelog();
+  game.dom.$('lastHitText').textContent='';
   game.state.wave=1;game.state.kills=0;game.state.score=0;game.state.waveKills=0;game.state.rerolls=1;game.state.endless=false;game.state.specialization='none';game.state.finalOvertime=false;game.state.finalBossDefeated=false;
-  game.state.walls=[];game.state.enemies=[];game.state.particles=[];game.state.floaters=[];game.state.projectiles=[];game.state.synergies.clear();
+  game.state.walls=[];game.state.enemies=[];game.state.particles=[];game.state.floaters=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.synergies.clear();
   Object.assign(game.state.stats,{
     maxInk:250,ink:250,inkRegen:8,wallHp:95,wallDamage:10,wallSlow:0,wallStun:0,
     refund:0,luck:0,playerRegen:0,doubleLine:false,tripleLine:false,explode:false,
@@ -27,7 +28,7 @@ function resetRun(){
 
 function startWave(){
   game.api.resetEnemyWave();
-  game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.particles=[];game.state.floaters=[];
+  game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.particles=[];game.state.floaters=[];
   game.state.finalOvertime=false; game.state.finalBossDefeated=false;
   game.state.stats.ink=game.state.stats.maxInk;
   game.state.stats.firstStrokeUsed=false;
@@ -41,7 +42,7 @@ function waveComplete(){
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running)return;
   game.state.betweenWaves=true;
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);
-  game.state.enemies=[];game.state.projectiles=[];
+  game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
 
   const survival=100,killBonus=game.state.waveKills*10;
   const inkBonus=Math.floor(75*(game.state.stats.ink/game.state.stats.maxInk));
@@ -54,6 +55,7 @@ function waveComplete(){
   game.dom.$('inkBonus').textContent='+'+inkBonus;
   game.dom.$('hpBonus').textContent='+'+hpBonus;
   game.dom.$('waveScore').textContent=total;
+  game.dom.$('waveClearTitle').textContent='Wave '+game.state.wave+' cleared!';
 
   if(game.state.wave===20&&!game.state.endless){
     game.state.running=false;game.dom.$('victoryScore').textContent=game.state.score;game.dom.victoryOverlay.style.display='grid';
