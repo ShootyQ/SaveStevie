@@ -29,6 +29,7 @@ jobs:
           mkdir -p _site
           cp index.html styles.css game.js _site/
           cp -R js _site/js
+          cp -R assets _site/assets
       - name: Configure Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5

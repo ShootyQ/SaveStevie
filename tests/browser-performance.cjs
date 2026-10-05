@@ -8,11 +8,11 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
  await page.addInitScript(()=>{window.requestAnimationFrame=()=>0;let seed=123456;Math.random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}});
  await page.route('http://127.0.0.1:8001/**',route=>{
   const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;
-  try{body=fs.readFileSync(path.join(root,name),'utf8')}catch{return route.fulfill({status:404,body:''})}
-  if(name==='game.js')body=body.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');
-  return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':'text/html'});
+  try{body=fs.readFileSync(path.join(root,name))}catch{return route.fulfill({status:404,body:''})}
+  if(name==='game.js')body=body.toString('utf8').replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');
+  return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':'text/html'});
  });
- await page.goto('http://127.0.0.1:8001/');await page.click('#startBtn');
+ await page.goto('http://127.0.0.1:8001/');await page.waitForFunction(()=>!window.testGame.api.artworkReady||window.testGame.api.artworkReady());await page.click('#startBtn');
  const session=await page.context().newCDPSession(page);await session.send('Profiler.enable');await session.send('Profiler.start');
  const result=await page.evaluate(()=>{
   const g=window.testGame,W=g.state.W,H=g.state.H;g.state.wave=15;g.api.startWave();g.state.spawnTimer=1000;g.state.timeLeft=1000;g.state.waveTime=1000;

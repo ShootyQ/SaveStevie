@@ -217,3 +217,17 @@ button:disabled{opacity:.5;cursor:default}
   #startBtn{min-height:44px;font-size:15px}
 }
 #startOverlay{background:radial-gradient(circle at 50% 10%,#fffdf4,#e5ddc6)}
+/* Real doodles share the splash notebook with a drawn ink barrier. */
+.splash-art{position:relative;aspect-ratio:440 / 250;width:100%;border-radius:16px;
+  background:linear-gradient(#bdd3e344 1px,transparent 1px),linear-gradient(90deg,#bdd3e344 1px,transparent 1px),#f7f1df;background-size:24px 24px}
+.splash-art img{position:absolute;object-fit:contain;pointer-events:none;height:auto}
+.splash-stevie{width:22%;left:39%;top:34%}
+.splash-grunt{width:22%;left:2%;top:16%;transform:rotate(-8deg)}
+.splash-sniper{width:28%;right:0;top:24%;transform:rotate(7deg)}
+.splash-splitter{width:22%;right:2%;bottom:0;transform:rotate(-5deg)}
+.splash-pencil{width:15%;left:11%;bottom:3%;transform:rotate(-10deg)}
+.splash-fire{width:12%;left:29%;top:7%;transform:rotate(-25deg)}
+.splash-scribble{position:absolute;left:54%;bottom:2%;color:#3562be;font-size:clamp(9px,2.3vw,15px);font-weight:bold;transform:rotate(-8deg)}
+.ucard{position:relative}
+.upgrade-art{position:absolute;top:8px;right:8px;width:38px;height:38px;object-fit:contain}
+.ucard:has(.upgrade-art) h3{padding-right:36px}

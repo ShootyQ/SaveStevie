@@ -193,7 +193,9 @@ function rollCards(forceRare=false){
       return false;
     });
     if(related.length)hint='<div style="margin-top:7px;font-size:10px;font-weight:900;color:#8456c9">Potential synergy nearby…</div>';
-    c.innerHTML=`<div class="rarity">${u.rarity}</div><h3>${u.name}</h3><p>${u.desc}</p>${hint}<div class="stack">${oneTimeUpgrades.has(u.name)?'One-time unlock':(stack?'Owned ×'+stack+' → ×'+(stack+1):'New upgrade → ×1')}<br>${game.api.upgradeEffect(u.name,stack+1)}</div>`;
+    const artwork={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Fine Tip':'pencil','Stevie Has Had Enough':'pencil'}[u.name];
+    const icon=artwork?`<img class="upgrade-art" src="assets/art/${artwork}.png" alt="" width="48" height="48">`:'';
+    c.innerHTML=`${icon}<div class="rarity">${u.rarity}</div><h3>${u.name}</h3><p>${u.desc}</p>${hint}<div class="stack">${oneTimeUpgrades.has(u.name)?'One-time unlock':(stack?'Owned ×'+stack+' → ×'+(stack+1):'New upgrade → ×1')}<br>${game.api.upgradeEffect(u.name,stack+1)}</div>`;
     c.onclick=()=>game.api.chooseUpgrade(u);game.dom.cardsEl.appendChild(c)
   });
 }

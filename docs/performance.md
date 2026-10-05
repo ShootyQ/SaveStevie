@@ -48,3 +48,13 @@ Combat-state and next-random-value hashes matched exactly. These are synchronous
 CPU/update/draw-submission measurements on this host, not end-to-end frame rate,
 GPU/compositor timing, or physical Pixel results. Use device playtests to assess
 battery, thermals, and real-world smoothness.
+
+## Custom-art check
+
+After integrating the notebook PNGs, the same seeded crowded-fight benchmark
+was compared against the preceding mobile/sniper branch. Images were fully
+loaded before timing. Median update + draw measured 8.1ms before and 7.4ms after
+on this host; the combat/next-random hash matched exactly. This single comparison
+establishes no observed regression in that scene, not a guaranteed speedup on
+phones. Status combinations are composed once into a bounded 32-entry cache;
+wall artwork retains its bounded phase cache. Missing asset loads use vectors.
