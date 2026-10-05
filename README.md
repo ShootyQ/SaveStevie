@@ -198,3 +198,28 @@ without flying fragments or expanding rings. No assets or dependencies added.
 Validation covers actual target selection, immune/solo electrical procs,
 explosion damage and synergies, random-state parity with visuals disabled,
 finite/pure rendering, resize, lifetime, reset, and worst-case effect budgets.
+
+## Monster compendium and introductions
+
+Open **Monsters** from the toolbar to browse all 19 illustrated monsters,
+including split children and bosses. Each entry includes a fun name, first
+available wave, base stats from the combat definitions, abilities, and counter
+advice. HP and movement speed scale with the wave; displayed contact damage is
+before Stevie's armor. King Doodle-Doom's base HP includes its first-wave bonus.
+Names also appear in contact-hit reports.
+
+Before combat begins on a monster's first available wave, a paused notebook
+page introduces every type newly unlocked in that wave together. Niblets are
+introduced alongside their splitting parent; bosses are introduced on wave 5,
+and the final Eraser on wave 20. Random selection can delay actual appearances.
+Each new run shows these pages again while enabled. **Bring it on!** (or Escape)
+continues; **Skip these introductions from now on** or the checkbox in the
+compendium disables them. This preference is stored separately under
+`saveStevieMonsterIntros`; best-wave records are preserved. If storage is
+unavailable, the preference still works for the current visit.
+
+The compendium restores any previous manual pause when closed. Introduction
+pages prevent the toolbar pause button or another information dialog from
+resuming combat underneath them. Both dialogs keep keyboard focus inside,
+scroll within the notebook, and use existing artwork with the deployment's
+resource version. No combat balance or spawn randomness changes.

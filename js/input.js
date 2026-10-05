@@ -35,13 +35,11 @@ game.dom.$('buildBtn').onclick=game.api.openBuild;
 game.dom.$('closeBuildBtn').onclick=game.api.closeBuild;
 game.dom.$('changelogBtn').onclick=game.api.openChangelog;
 game.dom.$('closeChangelogBtn').onclick=game.api.closeChangelog;
-window.addEventListener('keydown',e=>{
-  const build=game.dom.$('buildOverlay').style.display==='grid';
-  const changelog=game.dom.$('changelogOverlay').style.display==='grid';
-  if(!build&&!changelog)return;
-  if(e.key==='Escape'){if(build)game.api.closeBuild();else game.api.closeChangelog()}
-  if(e.key==='Tab'){e.preventDefault();game.dom.$(build?'closeBuildBtn':'closeChangelogBtn').focus?.()}
-});
+game.dom.$('compendiumBtn').onclick=game.api.openCompendium;
+game.dom.$('closeCompendiumBtn').onclick=game.api.closeCompendium;
+game.dom.$('monsterIntrosEnabled').onchange=e=>game.api.setMonsterIntrosEnabled(e.target.checked);
+game.dom.$('continueMonsterIntroBtn').onclick=game.api.continueMonsterIntro;
+window.addEventListener('keydown',game.api.handleInfoKey);
 game.dom.canvas.addEventListener('pointerdown',e=>{
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
   game.state.drawing=true;game.state.currentWall=[game.api.pointerPos(e)];game.dom.canvas.setPointerCapture(e.pointerId)
@@ -69,7 +67,7 @@ game.dom.$('clearBtn').onclick=()=>{
   game.api.setMsg('Walls erased. Reclaimed a little ink.')
 };
 game.dom.$('pauseBtn').onclick=()=>{
-  if(!game.state.running||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
+  if(game.api.infoOpen()||!game.state.running||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
   game.state.paused=!game.state.paused;game.dom.$('pauseBtn').textContent=game.state.paused?'Resume':'Pause'
 };
 }

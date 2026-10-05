@@ -108,10 +108,8 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
   };
   return effects[name]?effects[name]():game.catalog.upgrades.find(u=>u.name===name)?.desc||'Active';
 }
-let activeInfo=null,pausedBeforeInfo=false;
+let activeInfo=null,pausedBeforeInfo=false,focusBeforeInfo=null;
 function renderBuild(){
-  game.dom.$('buildEnemies').innerHTML='<article class="build-entry"><h4>Wave 9 · Sniper</h4><p>Blue aim line warns before a ranged shot. Draw a wall across the line to block it; frost or stun interrupts its wind-up. Fired shots remain dangerous until blocked or expired.</p></article>'+game.catalog.enemyGuide.map(e=>
-    `<article class="build-entry"><h4>${e.name} · Wave ${e.wave}+</h4><p>${e.desc}</p></article>`).join('');
   const s=game.state.stats,f=v=>Number(v.toFixed(2));
   const totals=[['Max ink',s.maxInk],['Ink regeneration',f(s.inkRegen)+' /s'],['Stroke cost',f(s.lineCost)+' ink/pixel'],
     ['Wall damage',f(s.wallDamage)+' /s'],['Base wall HP',s.wallHp],['Wall lifetime',s.wallLife+'s'],['Line width',s.lineWidth+'px'],
@@ -128,25 +126,49 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
+const infoButtons={build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn'};
+function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
-  if(activeInfo===kind)return;
+  if(activeInfo===kind||activeInfo==='monsterIntro')return;
   if(activeInfo)closeInfo();
-  game.api.endDraw();pausedBeforeInfo=game.state.paused;game.state.paused=true;activeInfo=kind;
+  game.api.endDraw();pausedBeforeInfo=game.state.paused;focusBeforeInfo=document.activeElement;
+  game.state.paused=true;activeInfo=kind;
   if(kind==='build')renderBuild();
+  if(kind==='compendium')game.api.renderCompendium();
   game.dom.$(kind+'Overlay').style.display='grid';
-  game.dom.$(kind==='build'?'closeBuildBtn':'closeChangelogBtn').focus?.();
+  game.dom.$(infoButtons[kind]).focus?.({preventScroll:true});
+  const cards=game.dom.$(kind+'Overlay').querySelector?.('.build-box');
+  if(cards)cards.scrollTop=0;
+  if(kind==='monsterIntro')game.dom.$('monsterIntroCards').scrollTop=0;
 }
 function closeInfo(){
   if(!activeInfo)return;
   const kind=activeInfo;activeInfo=null;game.state.paused=pausedBeforeInfo;
-  game.dom.$(kind+'Overlay').style.display='none';game.dom.$(kind+'Btn').focus?.();
+  game.dom.$(kind+'Overlay').style.display='none';
+  if(kind==='monsterIntro')game.dom.$('pauseBtn').focus?.();else focusBeforeInfo?.focus?.();
 }
+function handleInfoKey(e){
+  if(!activeInfo)return;
+  if(e.key==='Escape'){
+    e.preventDefault();
+    if(activeInfo==='monsterIntro')game.api.continueMonsterIntro();else closeInfo();
+  }
+  if(e.key==='Tab'){
+    const overlay=game.dom.$(activeInfo+'Overlay');
+    const controls=Array.from(overlay.querySelectorAll('button:not([disabled]),input:not([disabled])'));
+    const first=controls[0],last=controls.at(-1);
+    if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
+    else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+  }
+}
+function openCompendium(){openInfo('compendium')}
+function closeCompendium(){if(activeInfo==='compendium')closeInfo()}
 function openBuild(){openInfo('build')}
 function closeBuild(){if(activeInfo==='build')closeInfo()}
 function openChangelog(){openInfo('changelog')}
 function closeChangelog(){if(activeInfo==='changelog')closeInfo()}
 
-const api = { openChangelog, closeChangelog, upgradeEffect, renderBuild, openBuild, closeBuild, setMsg, updateUI, roman, showSynergySplash };
+const api = { openInfo, closeInfo, infoOpen, handleInfoKey, openCompendium, closeCompendium, openChangelog, closeChangelog, upgradeEffect, renderBuild, openBuild, closeBuild, setMsg, updateUI, roman, showSynergySplash };
 Object.assign(game.api, api);
 return api;
 };

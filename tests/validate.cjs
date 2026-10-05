@@ -1,7 +1,7 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
 const root=path.resolve(__dirname,'..');
 function environment(){const nodes=new Map(),calls=[];let seed=123456;const math=Object.create(Math);math.random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const ctx=new Proxy({measureText:t=>({width:String(t).length*6})},{get(o,k){if(k in o)return o[k];return (...a)=>{calls.push([k,...a]);if(k==='createLinearGradient'||k==='createRadialGradient')return {addColorStop(){}};};}});function node(id){if(!nodes.has(id))nodes.set(id,{style:{},dataset:{},textContent:'',innerHTML:'',children:[],listeners:{},appendChild(n){this.children.push(n);},addEventListener(k,f){this.listeners[k]=f;},getBoundingClientRect(){return {left:0,top:0,width:800,height:700};},getContext(){return ctx;},setPointerCapture(){}});return nodes.get(id);}const sandbox={console,performance:{now:()=>1234},Math:math,Set,document:{getElementById:node,createElement:()=>node('created'+nodes.size),querySelectorAll:()=>[]},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:f=>{sandbox.frame=f;},setTimeout:()=>1,clearTimeout(){}};sandbox.window=sandbox;sandbox.addEventListener=()=>{};vm.createContext(sandbox);return {sandbox,node,calls};}
-function load(refactored){const env=environment();if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
+function load(refactored,options={}){const env=environment();if(options.storage)env.sandbox.localStorage=options.storage;if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}if(!options.intros)env.sandbox.testGame.api.setMonsterIntrosEnabled(false);env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
 const a=load(false),b=load(true);let checks=0;
 // Compare unchanged combat against the original without the new presentation labels.
 b.sandbox.testGame.api.damageNumber=()=>{};
@@ -358,15 +358,15 @@ const e=g.api.spawnEnemy(false,x+28,y,'grunt');const hp=g.state.player.hp;
 assert.equal(g.api.moveEnemySafely(e,-.001,0),false,'tiny high-frame-rate pulls cannot creep through a barrier');
 assert.equal(g.api.contactStevie(e),false,'close barrier blocks premature contact');assert.equal(g.state.player.hp,hp);
 g.state.walls=[];assert.equal(g.api.contactStevie(e),true,'without cover, the same contact still hurts');
-const marker=g.state.floaters.find(f=>f.hitMarker);assert.ok(marker);assert.equal(marker.source,'Grunt contact');assert.equal(marker.x,x+28,'impact remains at the disappearing monster');
-g.api.updateUI();assert.match(env.node('hitNotice').textContent,/Grunt contact/);
+const marker=g.state.floaters.find(f=>f.hitMarker);assert.ok(marker);assert.equal(marker.source,'Scribble Gribble contact');assert.equal(marker.x,x+28,'impact remains at the disappearing monster');
+g.api.updateUI();assert.match(env.node('hitNotice').textContent,/Scribble Gribble contact/);
 const pure=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),pure,'hit evidence renders without mutation');
 g.state.spawnTimer=999;g.api.update(.3);assert.equal(marker.x,x+28);assert.equal(marker.y,y,'impact evidence stays at the hit location');
 g.state.paused=true;const life=marker.t;g.api.update(.3);assert.equal(marker.t,life,'impact evidence respects pause');
 g.state.paused=false;g.api.update(.7);assert.equal(env.node('hitNotice').style.display,'none','hit notice expires without affecting layout');
 g.api.resetRun();g.state.player.hp=1;g.state.stats.killHeal=100;g.state.spawnTimer=999;
 g.api.spawnEnemy(false,x,y,'grunt');const dead=g.api.spawnEnemy(false,x+100,y,'grunt');dead.hp=0;g.api.update(.016);
-assert.equal(g.state.player.hp,0,'later kill healing cannot undo lethal contact');assert.equal(g.state.running,false);assert.match(env.node('lastHitText').textContent,/Grunt contact/);
+assert.equal(g.state.player.hp,0,'later kill healing cannot undo lethal contact');assert.equal(g.state.running,false);assert.match(env.node('lastHitText').textContent,/Scribble Gribble contact/);
 assert.doesNotMatch(fs.readFileSync(path.join(root,'index.html'),'utf8').match(/<div class="bottom">([\s\S]*?)<\/div>/)[1],/id="message"/,'footer contains no growing message');
 console.log('PASS: gravity and black-hole cover at waves 8–10, wall-aware contact, persistent/paused hit evidence, lethal contact, and no footer message.');
 }
@@ -464,4 +464,44 @@ for(let i=0;i<50;i++){g.api.animateChainLightning(source,Array.from({length:100}
 const budget=g.api.abilityEffectsSnapshot();assert.equal(budget.lightning.length,8);assert(budget.lightning.every(e=>e.targets.length<=6&&e.pathPoints<=78));assert.equal(budget.explosions.length,4);assert(budget.explosions.every(e=>e.points.length<=48&&e.anchors.length<=4&&e.fragments<=16),'long walls and simultaneous blasts remain bounded');
 g.api.waveComplete();assert.equal(g.api.abilityEffectsSnapshot().explosions.length,0);assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0,'wave clear discards combat effects');g.api.animateChainLightning(source,[]);g.api.startWave();assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0,'new wave clears stale casts');
 console.log('PASS: real lightning targets, exact explosion damage/synergies, immune/solo procs, no plain-wall blast, RNG/combat parity, pure finite paths, pause/upgrades, resize, expiration, and effect budgets.');
+}
+
+
+// Introductions freeze all combat, persist only the setting, and never touch best-wave records.
+{
+const saved=new Map([['doodleDefenderBestV4','14']]),writes=[];
+const storage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>{saved.set(key,String(value));writes.push(key)}};
+const env=load(true,{intros:true,storage}),g=env.sandbox.testGame;
+assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
+assert.equal(g.state.best,14,'existing record survives');
+assert.equal(g.catalog.monsters.length,19);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,19);
+assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
+const expected={1:['grunt'],3:['fast'],5:['bouncer','tank','boss'],7:['flanker','splitter','mini'],8:['wardling'],9:['sniper','sprinter'],10:['brood'],11:['bulwark'],12:['gnawer'],13:['medic'],14:['brute'],15:['sapper'],16:['elite'],20:['eraser']};
+g.api.resetRun();
+for(let wave=1;wave<=21;wave++){
+  g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
+  const intro=expected[wave];assert.equal(g.api.infoOpen(),!!intro,'only introduction waves pause: '+wave);
+  if(intro){
+    assert.equal(env.node('monsterIntroOverlay').style.display,'grid');
+    for(const type of intro)assert.ok(env.node('monsterIntroCards').innerHTML.includes(g.api.monsterName(type)));
+    assert.equal((env.node('monsterIntroCards').innerHTML.match(/class="monster-card"/g)||[]).length,intro.length,'group all new types');
+    const before=JSON.stringify(g.state);g.api.update(.5);assert.equal(JSON.stringify(g.state),before,'intro freezes clock, spawning, health, effects, and physics');
+    env.node('pauseBtn').onclick();assert.equal(g.state.paused,true,'toolbar cannot bypass intro');
+    g.api.openBuild();assert.equal(env.node('monsterIntroOverlay').style.display,'grid','other dialogs cannot replace intro');
+    g.api.continueMonsterIntro();assert.equal(g.state.paused,false);assert.equal(g.api.infoOpen(),false);
+  }
+}
+g.state.wave=3;g.state.paused=true;g.api.startWave();g.api.continueMonsterIntro();assert.equal(g.state.paused,true,'introduction preserves an existing pause');
+g.api.resetRun();env.node('hideMonsterIntros').checked=true;g.api.continueMonsterIntro();
+assert.equal(saved.get('saveStevieMonsterIntros'),'off');assert.equal(g.api.monsterIntrosEnabled(),false);assert.equal(saved.get('doodleDefenderBestV4'),'14');
+g.api.resetRun();assert.equal(g.api.infoOpen(),false,'disabled setting survives new runs');g.state.wave=20;g.api.startWave();assert.equal(g.api.infoOpen(),false);
+const reloaded=load(true,{intros:true,storage});assert.equal(reloaded.sandbox.testGame.api.monsterIntrosEnabled(),false,'disabled setting survives page reload');
+g.state.paused=false;g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,19);
+const before=JSON.stringify(g.state);g.api.update(.2);assert.equal(JSON.stringify(g.state),before);
+g.api.closeCompendium();assert.equal(g.state.paused,false);g.state.paused=true;g.api.openCompendium();g.api.closeCompendium();assert.equal(g.state.paused,true);
+g.api.setMonsterIntrosEnabled(true);assert.equal(saved.get('saveStevieMonsterIntros'),'on');g.api.resetRun();assert.equal(g.api.infoOpen(),true,'setting can be re-enabled');
+g.api.resetRun();assert.equal(g.state.paused,true,'reset replaces an open introduction safely');g.api.handleInfoKey({key:'Escape',preventDefault(){}});assert.equal(g.state.paused,false,'Escape explicitly continues the introduction');
+const blocked={getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}};const fallback=load(true,{intros:true,storage:{getItem:key=>key==='doodleDefenderBestV4'?null:blocked.getItem(),setItem:blocked.setItem}}).sandbox.testGame;
+fallback.api.setMonsterIntrosEnabled(false);fallback.api.resetRun();assert.equal(fallback.state.paused,false,'blocked preference storage does not prevent gameplay');
+console.log('PASS: all 19 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
 }
