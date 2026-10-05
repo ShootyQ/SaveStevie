@@ -73,7 +73,7 @@ function update(dt){
     if(game.state.synergies.has('TESLA CAGE')&&w.intersections>0){
       for(const e of game.state.enemies){
         if(game.api.dist(e.x,e.y,cx,cy)<145){
-          e.hp-=Math.max(3,game.state.inks.electric*5)*dt;
+          game.api.dealDamage(e,Math.max(3,game.state.inks.electric*5)*dt,'electric');
           if(Math.random()<.8*dt)game.api.burst(e.x,e.y,'#90b3ff',2);
         }
       }
@@ -88,7 +88,7 @@ function update(dt){
           e.gravitySlow=Math.max(e.gravitySlow,.42);
           if(game.state.synergies.has('ABSOLUTE ZERO')&&Math.random()<.04*dt*60)e.freeze=Math.max(e.freeze,.4);
         }
-        if(game.state.synergies.has('Power Lines'))e.hp-=Math.max(4,game.state.inks.electric*4)*dt;
+        if(game.state.synergies.has('Power Lines'))game.api.dealDamage(e,Math.max(4,game.state.inks.electric*4)*dt,'electric');
       }
     }
   }
@@ -98,16 +98,16 @@ function update(dt){
     e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
 
-    if(e.burn>0){e.burn-=dt;e.hp-=e.burnDps*dt}
+    if(e.burn>0){e.burn-=dt;game.api.dealDamage(e,e.burnDps*dt,'fire')}
     if(e.poison>0){
       const decay=(game.state.synergies.has('Venom Ice')&&e.freeze>0)?.08:.28;
       e.poison=Math.max(0,e.poison-dt*decay);
-      e.hp-=e.poisonDps*e.poison*.24*dt
+      game.api.dealDamage(e,e.poisonDps*e.poison*.24*dt,'poison')
     }
     if(e.charged>0&&game.state.synergies.has('Rail Ink')){
       for(const n of game.state.enemies){
         if(n!==e&&game.api.dist(n.x,n.y,e.x,e.y)<38){
-          n.hp-=12*dt;e.hp-=6*dt;
+          game.api.dealDamage(n,12*dt,'electric');game.api.dealDamage(e,6*dt,'electric');
           if(Math.random()<1.5*dt)game.api.burst(n.x,n.y,'#91b6ff',2)
         }
       }
@@ -175,7 +175,7 @@ function update(dt){
 
       e.attackCd-=dt;
       const dps=game.api.applyInkContact(e,dt,hit.wall);
-      e.hp-=dps*dt;
+      game.api.dealDamage(e,dps*dt,'physical');
       if(game.state.stats.wallStun>0&&Math.random()<game.state.stats.wallStun*dt*.9)e.stun=.45;
       if(e.attackCd<=0){
         game.api.damageWall(hit.wall,e.dmg,e.x,e.y);

@@ -94,7 +94,7 @@ function updateProjectiles(dt){
     const dx=p.target.x-p.x,dy=p.target.y-p.y,d=Math.hypot(dx,dy)||1;
     p.x+=dx/d*p.speed*dt;p.y+=dy/d*p.speed*dt;
     if(d<10+p.target.r){
-      p.target.hp-=p.damage;
+      game.api.dealDamage(p.target,p.damage,'physical');
       if(game.state.synergies.has('Hot Rocks')){
         p.target.burn=Math.max(p.target.burn,2);
         p.target.burnDps=Math.max(p.target.burnDps,8+game.state.inks.fire*3);

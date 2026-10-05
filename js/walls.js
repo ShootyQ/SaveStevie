@@ -40,7 +40,7 @@ function damageWall(wall,amount,x,y){
             const dx=x-e.x,dy=y-e.y,m=Math.hypot(dx,dy)||1;
             e.x+=dx/m*24;e.y+=dy/m*24;
           }
-          e.hp-=dmg;
+          game.api.dealDamage(e,dmg,'blast');
 
           if(game.state.synergies.has('Cannon Ink')||game.state.synergies.has('INFERNO')){
             const dx=e.x-x,dy=e.y-y,m=Math.hypot(dx,dy)||1;
@@ -179,8 +179,8 @@ function applyInkContact(e,dt,wall=null){
   if(game.state.synergies.has('Event Horizon')&&e.gravitySlow>.12&&game.state.inks.void>0){
     const c=.006*game.state.inks.void*dt*60;
     if(Math.random()<c){
-      if(e.type==='boss'||e.type==='eraser')e.hp-=65+game.state.inks.void*30;
-      else e.hp=0;
+      if(e.type==='boss'||e.type==='eraser')game.api.dealDamage(e,65+game.state.inks.void*30,'void');
+      else game.api.dealDamage(e,e.hp,'void');
       game.api.burst(e.x,e.y,'#46345e',14);
     }
   }
@@ -221,8 +221,8 @@ function applyInkContact(e,dt,wall=null){
   if(game.state.inks.void>0){
     const chance=.0025*game.state.inks.void*dt*60;
     if(Math.random()<chance){
-      if(e.type==='boss'||e.type==='eraser')e.hp-=40+game.state.inks.void*25;
-      else e.hp=0;
+      if(e.type==='boss'||e.type==='eraser')game.api.dealDamage(e,40+game.state.inks.void*25,'void');
+      else game.api.dealDamage(e,e.hp,'void');
       game.api.burst(e.x,e.y,'#46345e',12);
     }
   }
@@ -237,7 +237,7 @@ function applyOneInk(kind,e,dt,chaos=false){
   if(kind==='repulsion'){
     const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;e.x+=dx/m*6;e.y+=dy/m*6
   }
-  if(kind==='void'&&!chaos)e.hp-=18;
+  if(kind==='void'&&!chaos)game.api.dealDamage(e,18,'void');
 }
 
 function chainLightning(source,level){
@@ -248,8 +248,8 @@ function chainLightning(source,level){
   if(game.state.synergies.has('Tesla Well')&&source.gravitySlow>.15){range+=45;count+=1;mult+=.35}
   if(game.state.synergies.has('THE STORM')){range+=65;count+=2;mult+=.45}
   const nearby=game.state.enemies.filter(e=>e!==source&&game.api.dist(e.x,e.y,source.x,source.y)<range).slice(0,count);
-  source.hp-=(3+level*2)*mult;
-  nearby.forEach(e=>{e.hp-=(4+level*3)*mult;game.api.burst(e.x,e.y,'#7ea7ff',4)});
+  game.api.dealDamage(source,(3+level*2)*mult,'electric');
+  nearby.forEach(e=>{game.api.dealDamage(e,(4+level*3)*mult,'electric');game.api.burst(e.x,e.y,'#7ea7ff',4)});
   game.api.burst(source.x,source.y,'#7ea7ff',5);
 }
 
@@ -260,13 +260,13 @@ function applySynergies(e,dt){
     }
   }
 
-  if(game.state.synergies.has('Cryoshock')&&e.freeze>0)e.hp-=Math.max(4,game.state.inks.electric*7)*dt;
+  if(game.state.synergies.has('Cryoshock')&&e.freeze>0)game.api.dealDamage(e,Math.max(4,game.state.inks.electric*7)*dt,'electric');
   if(game.state.synergies.has('Black Ice')&&e.freeze>0)e.gravitySlow=Math.max(e.gravitySlow,.62);
   if(game.state.synergies.has('Leech Ink')&&e.poison>0)game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+e.poisonDps*dt*.018);
 
   if(game.state.synergies.has('Thermal Shock')&&e.freeze>0&&e.burn>0){
     if(!e.thermalCd||e.thermalCd<=0){
-      e.hp-=18+4*(game.state.inks.fire+game.state.inks.frost);
+      game.api.dealDamage(e,18+4*(game.state.inks.fire+game.state.inks.frost),'frost');
       e.stun=Math.max(e.stun,.55);
       e.thermalCd=1.25;
       game.api.burst(e.x,e.y,'#ffcf7a',8);
@@ -275,7 +275,7 @@ function applySynergies(e,dt){
   }
 
   if(game.state.synergies.has('Tesla Well')&&e.gravitySlow>.15){
-    e.hp-=Math.max(2,game.state.inks.electric*4)*dt;
+    game.api.dealDamage(e,Math.max(2,game.state.inks.electric*4)*dt,'electric');
   }
 
   if(game.state.synergies.has('Venom Ice')&&e.freeze>0){
@@ -287,7 +287,7 @@ function applySynergies(e,dt){
   }
 
   if(game.state.synergies.has('THE STORM')&&e.freeze>0&&e.gravitySlow>.1){
-    e.hp-=Math.max(4,game.state.inks.electric*5)*dt;
+    game.api.dealDamage(e,Math.max(4,game.state.inks.electric*5)*dt,'electric');
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
