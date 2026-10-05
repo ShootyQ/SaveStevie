@@ -3,6 +3,8 @@ const root=path.resolve(__dirname,'..');
 function environment(){const nodes=new Map(),calls=[];let seed=123456;const math=Object.create(Math);math.random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const ctx=new Proxy({measureText:t=>({width:String(t).length*6})},{get(o,k){if(k in o)return o[k];return (...a)=>{calls.push([k,...a]);if(k==='createLinearGradient'||k==='createRadialGradient')return {addColorStop(){}};};}});function node(id){if(!nodes.has(id))nodes.set(id,{style:{},dataset:{},textContent:'',innerHTML:'',children:[],listeners:{},appendChild(n){this.children.push(n);},addEventListener(k,f){this.listeners[k]=f;},getBoundingClientRect(){return {left:0,top:0,width:800,height:700};},getContext(){return ctx;},setPointerCapture(){}});return nodes.get(id);}const sandbox={console,performance:{now:()=>1234},Math:math,Set,document:{getElementById:node,createElement:()=>node('created'+nodes.size),querySelectorAll:()=>[]},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:f=>{sandbox.frame=f;},setTimeout:()=>1,clearTimeout(){}};sandbox.window=sandbox;sandbox.addEventListener=()=>{};vm.createContext(sandbox);return {sandbox,node,calls};}
 function load(refactored){const env=environment();if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
 const a=load(false),b=load(true);let checks=0;
+// Compare unchanged combat against the original without the new presentation labels.
+b.sandbox.testGame.api.damageNumber=()=>{};
 function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot()),JSON.parse(a.snapshot()),label+' state');// Upgraded artwork intentionally differs; keep exact canvas parity for basic walls.
 if(!Object.values(b.sandbox.testGame.state.inks).some(Boolean))assert.deepStrictEqual(JSON.stringify(b.calls),JSON.stringify(a.calls),label+' canvas');for(const id of ['wave','score','kills','inkText','hpText','timeText','message'])assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
@@ -44,3 +46,27 @@ g.state.walls[0].pts=[{x:0,y:0},{x:0,y:0},{x:100000,y:0}];
 assert.ok(render()<20000,'long strokes have a bounded decoration budget');
 g.state.walls[0].pts=[{x:0,y:0},{x:0,y:0}];render();
 console.log('PASS: ten ink textures, combinations, live preview, finite geometry, bounded long strokes, and unchanged render state.');
+
+const damage=load(true).sandbox.testGame;
+const target={x:100,y:100,r:12,hp:100};
+damage.api.dealDamage(target,10,'physical');
+assert.equal(target.hp,90);
+assert.equal(damage.state.floaters[0].text,'10');
+assert.ok(damage.state.floaters[0].y<target.y-target.r);
+for(const type of ['fire','poison','electric','blast','void','frost'])damage.api.dealDamage(target,1,type);
+assert.equal(new Set(damage.state.floaters.map(f=>f.color)).size,7);
+const fire=damage.state.floaters.find(f=>f.color==='#c44c17');
+damage.api.dealDamage(target,.25,'fire');
+assert.equal(fire.text,'1.3');
+assert.equal(damage.state.floaters.length,7,'rapid ticks combine');
+fire.t=.4;damage.api.dealDamage(target,2,'fire');
+assert.equal(damage.state.floaters.length,8,'later ticks get a fresh label');
+target.hp=3;damage.api.dealDamage(target,50,'void');
+assert.equal(target.hp,-47,'combat keeps original overkill semantics');
+assert.equal(damage.state.floaters.find(f=>f.color==='#7740a0').text,'4','label only counts remaining health');
+const count=damage.state.floaters.length;damage.api.dealDamage(target,5,'physical');
+assert.equal(damage.state.floaters.length,count,'dead enemies do not add damage labels');
+damage.state.floaters=[];target.hp=10;damage.api.dealDamage(target,2,'fire');
+assert.equal(damage.state.floaters[0].text,'2','reset cannot reuse a removed label');
+damage.api.draw();
+console.log('PASS: colored damage amounts, tick aggregation, overkill, reset, and drawing.');

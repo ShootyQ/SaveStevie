@@ -51,3 +51,13 @@ custom server, or additional secrets are needed. Only `index.html`, `styles.css`
 
 Open the deployed URL on your phone. Best-wave records are saved in that
 browser's local storage and are not synced between devices.
+
+## Damage numbers
+
+Enemies show floating numbers for damage received: slate for physical hits,
+orange for fire, green for poison, blue for electricity, gold for explosions,
+purple for void, and cyan for thermal shock. Rapid ticks of the same type
+combine into short bursts; different types keep separate labels. Values use
+up to one decimal place and count remaining health rather than excess overkill.
+Frost, gravity, and repulsion effects that only slow or move enemies do not
+produce damage numbers.

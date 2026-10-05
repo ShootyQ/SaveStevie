@@ -194,8 +194,10 @@ function draw(){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1
   }
   for(const f of game.state.floaters){
-    game.dom.ctx.globalAlpha=game.api.clamp(f.t*2,0,1);game.dom.ctx.fillStyle=f.color;game.dom.ctx.font='bold 13px system-ui';
-    game.dom.ctx.textAlign='center';game.dom.ctx.fillText(f.text,f.x,f.y);game.dom.ctx.globalAlpha=1
+    game.dom.ctx.globalAlpha=game.api.clamp(f.t*2,0,1);game.dom.ctx.fillStyle=f.color;game.dom.ctx.font=f.damageNumber?'bold 16px system-ui':'bold 13px system-ui';
+    game.dom.ctx.textAlign='center';
+    if(f.damageNumber){game.dom.ctx.save();game.dom.ctx.strokeStyle='#fff8e9';game.dom.ctx.lineWidth=3;game.dom.ctx.strokeText(f.text,f.x,f.y);game.dom.ctx.restore()}
+    game.dom.ctx.fillText(f.text,f.x,f.y);game.dom.ctx.globalAlpha=1
   }
   if(game.state.paused){
     game.dom.ctx.fillStyle='rgba(20,25,28,.38)';game.dom.ctx.fillRect(0,0,game.state.W,game.state.H);
