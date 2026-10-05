@@ -409,3 +409,28 @@ for(let i=0;i<50;i++)g.api.animateEnemySplit(parent);assert.equal(g.api.enemyAni
 g.api.startWave();assert.equal(g.api.enemyAnimationCount(),0,'wave reset clears split echoes');
 console.log('PASS: travel-driven enemy motion, freeze/pause, damage and immune reactions, tick throttling, immediate two-generation splits, collider preservation, bounded echoes, and reset.');
 }
+
+{
+const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;const {x,y}=g.state.player;
+const sniper=g.api.spawnEnemy(false,x+120,y,'sniper');sniper.speed=0;sniper.shootCd=.4;
+g.api.updateEnemyAnimations(.016);assert.equal(g.api.enemyActionFrame(sniper),'sniper-ready','sniper visibly prepares a clear close shot');
+g.state.walls=[{pts:[{x:x+60,y:y-40},{x:x+60,y:y+40}],thick:8}];g.api.updateEnemyAnimations(.016);assert.equal(g.api.enemyActionFrame(sniper),null,'cover prevents misleading aiming pose');
+g.state.walls=[];g.api.fireSniper(sniper);g.api.updateEnemyAnimations(.016);assert.equal(g.state.enemyShots.length,1);assert.equal(g.api.enemyActionFrame(sniper),'sniper-fire','actual arrow launch triggers firing pose');
+sniper.freeze=1;g.api.updateEnemyAnimations(.016);assert.equal(g.api.enemyActionFrame(sniper),null,'freeze suppresses special actions');sniper.freeze=0;sniper.shootCd=1;g.api.updateEnemyAnimations(.3);assert.equal(g.api.enemyActionFrame(sniper),null,'firing pose recovers');
+g.state.enemies=[];g.state.enemyShots=[];const sapper=g.api.spawnEnemy(false,x+100,y,'sapper');sapper.speed=0;sapper.attackCd=.12;g.state.stats.wallDamage=0;
+const wall={pts:[{x:x+102,y:y-60},{x:x+102,y:y+60}],thick:8,hp:1e6,maxHp:1e6,life:100,maxLife:100,closed:false,intersections:0};g.state.walls=[wall];
+g.api.update(.01);assert.equal(g.api.enemyActionFrame(sapper),'sapper-ready','sapper winds up while actually touching a wall');const hp=wall.hp;
+g.api.update(.12);assert.equal(g.api.enemyActionFrame(sapper),'sapper-strike');assert.equal(wall.hp,hp-sapper.dmg*2,'swing preserves one doubled wall hit');
+g.state.walls=[];g.api.updateEnemyAnimations(.3);assert.equal(g.api.enemyActionFrame(sapper),null,'no phantom swings away from walls');
+g.state.enemies=[];const medic=g.api.spawnEnemy(false,x+180,y,'medic'),ally=g.api.spawnEnemy(false,x+150,y,'tank');ally.hp=10;const injured=ally.hp;
+g.api.updateEnemyBehavior(medic,.05);g.api.updateEnemyAnimations(.016);assert.ok(['medic-ready','medic-heal'].includes(g.api.enemyActionFrame(medic)));assert.equal(ally.hp,injured+.15,'animation preserves healing amount');
+medic.freeze=1;const stopped=ally.hp;g.api.updateEnemyBehavior(medic,.05);g.api.updateEnemyAnimations(.016);assert.equal(ally.hp,stopped);assert.equal(g.api.enemyActionFrame(medic),null,'frozen healer does not animate a heal');
+medic.freeze=0;ally.hp=ally.maxHp;g.api.updateEnemyBehavior(medic,.2);g.api.updateEnemyAnimations(.2);assert.equal(g.api.enemyActionFrame(medic),null,'full-health allies cause no healing animation');
+g.api.resetRun();g.state.spawnTimer=999;g.api.damageStevie(0,'zero');assert.equal(g.api.stevieReactionPose().sprite,null);g.api.damageStevie(5,'test contact');assert.equal(g.api.stevieReactionPose().sprite,'stevie-flinch');assert.equal(g.state.player.hp,95);
+g.api.updateStevieAnimation(.08);const reaction=JSON.stringify(g.api.stevieReactionPose()),pure=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),pure);assert.equal(JSON.stringify(g.api.stevieReactionPose()),reaction,'rendering is presentation-pure');
+g.state.paused=true;g.api.update(.4);assert.equal(JSON.stringify(g.api.stevieReactionPose()),reaction,'Stevie flinch respects pause');g.state.paused=false;g.api.updateStevieAnimation(.3);assert.equal(g.api.stevieReactionPose().sprite,null,'Stevie recovers');
+g.api.waveComplete();assert.equal(g.api.stevieReactionPose().sprite,'stevie-cheer-a');const clear=JSON.stringify(g.state);g.api.update(.3);assert.equal(JSON.stringify(g.state),clear,'celebration advances with combat stopped');assert.ok(g.api.stevieReactionPose().y<0);
+g.state.paused=true;const cheer=JSON.stringify(g.api.stevieReactionPose());g.api.update(.4);assert.equal(JSON.stringify(g.api.stevieReactionPose()),cheer);g.state.paused=false;g.state.inUpgrade=true;g.api.update(.4);assert.equal(JSON.stringify(g.api.stevieReactionPose()),cheer,'upgrade screen stops celebration');g.state.inUpgrade=false;
+g.api.update(1);assert.equal(g.api.stevieReactionPose().sprite,'stevie-cheer-b');assert.equal(g.api.stevieReactionPose().y,0,'cheer finishes in a calm pose');g.api.startWave();assert.equal(g.api.stevieReactionPose().sprite,null,'next wave clears Stevie reactions');
+console.log('PASS: covered/clear sniper actions, real sapper wind-up and doubled strikes, actual interrupted healing, Stevie hit/recovery, paused/finished celebrations, render purity, and reset.');
+}

@@ -166,6 +166,7 @@ function shotBlocked(x,y,nx,ny,r=3){
 function fireSniper(e){
   const dx=game.state.player.x-e.x,dy=game.state.player.y-e.y,d=Math.hypot(dx,dy)||1;
   game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:2,r:3,damage:7});
+  game.api.animateEnemyAction(e,'fire');
   game.api.burst(e.x,e.y,'#4b79d8',3);
 }
 function updateEnemyShots(dt){
@@ -233,13 +234,16 @@ function updateEnemyBehavior(e,dt){
   if(e.type==='sprinter'&&e.freeze<=0&&e.stun<=0)e.dashTime=(e.dashTime+dt)%3.2;
   if(e.type==='medic'){
     e.healPulse=(e.healPulse+dt)%1;
+    let healing=false;
     if(e.hp>0&&e.stun<=0&&e.freeze<=0){
       for(const ally of game.state.enemies){
         if(ally!==e&&ally.hp>0&&ally.hp<ally.maxHp&&game.api.withinRadius(e.x,e.y,ally.x,ally.y,95)){
           ally.hp=Math.min(ally.maxHp,ally.hp+3*dt);
+          healing=true;
         }
       }
     }
+    if(healing)game.api.animateEnemyAction(e,'heal');
   }
 }
 function enemyMoveScale(e){return game.api.enemySpeedScale()*(e.type==='sprinter'&&e.dashTime>=2.6?2.6:1)}
@@ -298,6 +302,7 @@ function moveEnemySafely(e,dx,dy){
 function damageStevie(damage,source,impact=game.state.player){
   if(game.state.player.hp<=0)return;
   game.state.player.hp=Math.max(0,game.state.player.hp-damage);
+  if(damage>0)game.api.reactStevieHit();
   game.state.floaters.push({hitMarker:true,x:impact.x,y:impact.y,r:impact.r||5,type:impact.type||'arrow',t:.9,source,amount:damage});
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }

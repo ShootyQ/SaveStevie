@@ -233,5 +233,8 @@ button:disabled{opacity:.5;cursor:default}
 .ucard:has(.upgrade-art) h3{padding-right:36px}
 
 .bottom{flex-shrink:0}
+.wave-heading{display:flex;align-items:center;justify-content:center;gap:10px}
+.wave-heading h2{margin:0}
+#waveStevie{width:56px;height:60px;flex-shrink:0;background:none}
 #hitNotice{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);padding:7px 11px;border:2px solid #8d3535;border-radius:10px;background:#fff5e8ee;color:#9d3030;font-size:12px;font-weight:900;text-align:center;pointer-events:none;z-index:6}
 @media(max-width:760px),(pointer:coarse){.bottom{height:59px;flex:0 0 59px}}

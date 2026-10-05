@@ -43,6 +43,7 @@ function startWave(){
 function waveComplete(){
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running)return;
   game.state.betweenWaves=true;
+  game.api.celebrateStevie();
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);
   game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
 

@@ -3,7 +3,7 @@ DoodleDefender.systems.renderer = function createRendererSystem(game) {
 // Load once. Missing/late assets retain the existing vector drawings.
 const doodles={},tintedDoodles=new Map();
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos'];
+const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{doodles[name]=image;inkSprites.clear()};
@@ -13,9 +13,26 @@ if(typeof Image!=='undefined')for(const name of doodleNames){
 const reducedMotion=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let motionReduced=!!reducedMotion?.matches;
 reducedMotion?.addEventListener?.('change',event=>{motionReduced=event.matches;resetEnemyAnimations()});
-let idleTime=0,throwTime=Infinity,throwDuration=.38,throwFacing=1;
-function resetStevieAnimation(){idleTime=0;throwTime=Infinity;throwFacing=1}
-function updateStevieAnimation(dt){idleTime=(idleTime+dt)%2.2;throwTime+=dt}
+let idleTime=0,throwTime=Infinity,throwDuration=.38,throwFacing=1,flinchAge=1,cheerAge=Infinity;
+const wavePortrait=document.getElementById('waveStevie'),waveCtx=wavePortrait?.getContext('2d');
+function resetStevieAnimation(){idleTime=0;throwTime=Infinity;throwFacing=1;flinchAge=1;cheerAge=Infinity}
+function updateStevieAnimation(dt){idleTime=(idleTime+dt)%2.2;throwTime+=dt;flinchAge+=dt}
+function reactStevieHit(){if(!motionReduced)flinchAge=0}
+function celebrateStevie(){cheerAge=0;throwTime=Infinity;flinchAge=1}
+function updateStevieCelebration(dt){cheerAge=Math.min(1.2,cheerAge+dt)}
+function stevieReactionPose(){
+  if(motionReduced)return {sprite:null,y:0,angle:0};
+  if(flinchAge<.22)return {sprite:'stevie-flinch',y:0,angle:-.08*Math.sin(flinchAge/.22*Math.PI)};
+  if(cheerAge!==Infinity){const bounce=cheerAge<1.2?Math.abs(Math.sin(cheerAge/1.2*Math.PI*2)):0;return {sprite:cheerAge<.6?'stevie-cheer-a':'stevie-cheer-b',y:-bounce*4,angle:0}}
+  return {sprite:null,y:0,angle:0};
+}
+function drawWaveStevie(){
+  if(!waveCtx||!game.state.betweenWaves)return;
+  const pose=stevieReactionPose(),image=doodles[pose.sprite]||doodles.stevie;if(!image)return;
+  waveCtx.clearRect(0,0,128,136);waveCtx.save();waveCtx.translate(64,132+pose.y);waveCtx.rotate(pose.angle);
+  const height=119,width=height*image.naturalWidth/image.naturalHeight;
+  waveCtx.drawImage(image,-width/2,-height,width,height);waveCtx.restore();
+}
 function startStevieThrow(target){
   throwFacing=target.x<game.state.player.x?-1:1;
   throwDuration=Math.max(.18,Math.min(.38,game.state.stats.rockRate*.7));throwTime=0;
@@ -36,7 +53,7 @@ function motionFor(e){
   let m=enemyMotion.get(e);
   if(!m){
     const heavy=['tank','brute','bulwark','boss','eraser'].includes(e.type);
-    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
+    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,action:null,readyUntil:-1,sprite:null,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
   }
   return m;
 }
@@ -55,12 +72,18 @@ function animateEnemySplit(e){
 }
 function enemyAnimationPose(e){return motionReduced?stillEnemyPose:(enemyMotion.get(e)?.pose||stillEnemyPose)}
 function enemyAnimationCount(){return splitEchoes.length}
+function animateEnemyAction(e,action){
+  if(motionReduced)return;
+  const m=motionFor(e);m.action=action;m.actionAge=0;
+}
+function prepareSapperStrike(e){if(!motionReduced)motionFor(e).readyUntil=motionTime+.05}
+function enemyActionFrame(e){return motionReduced?null:(enemyMotion.get(e)?.sprite||null)}
 function updateEnemyAnimations(dt){
   motionTime+=dt;
   if(motionReduced){splitEchoes=[];return}
   for(const e of game.state.enemies){
     const m=motionFor(e),distance=Math.hypot(e.x-m.x,e.y-m.y),heavy=m.heavy;
-    m.x=e.x;m.y=e.y;m.hitAge+=dt;m.birthAge+=dt;
+    m.x=e.x;m.y=e.y;m.hitAge+=dt;m.birthAge+=dt;m.actionAge+=dt;
     const moving=distance>.001&&e.freeze<=0&&e.stun<=0;
     if(moving)m.phase=(m.phase+Math.min(distance,e.r)* (heavy?.16:.27))%(Math.PI*2);
     const step=moving?Math.sin(m.phase):0,hop=moving?Math.abs(step)*m.hop:0;
@@ -68,6 +91,16 @@ function updateEnemyAnimations(dt){
     const birth=m.birthAge<.28?Math.sin(m.birthAge/.28*Math.PI):0;
     const p=m.pose;p.y=-hop-birth*5;p.angle=step*(heavy?.035:.055);
     p.sx=1+hit+birth*.14;p.sy=1-hit-birth*.1;
+    m.sprite=null;
+    if(e.freeze<=0&&e.stun<=0){
+      if(e.type==='sniper'){
+        if(m.action==='fire'&&m.actionAge<.2)m.sprite='sniper-fire';
+        else if(e.shootCd<=.6&&game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y)<190&&!game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y))m.sprite='sniper-ready';
+      }else if(e.type==='sapper'){
+        if(m.action==='strike'&&m.actionAge<.22)m.sprite='sapper-strike';
+        else if(m.readyUntil>motionTime)m.sprite='sapper-ready';
+      }else if(e.type==='medic'&&m.action==='heal'&&m.actionAge<.1)m.sprite=motionTime% .6<.3?'medic-ready':'medic-heal';
+    }
   }
   for(const echo of splitEchoes)echo.age+=dt;
   splitEchoes=splitEchoes.filter(e=>e.age<.28);
@@ -99,8 +132,9 @@ function tintedDoodle(name,colors){
   tintedDoodles.set(key,canvas);return canvas;
 }
 function drawDoodleEnemy(e,hpRatio){
-  const image=doodles[e.type];if(!image)return false;
-  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(e.type==='sniper'?3.4:2.7),height=width*image.naturalHeight/image.naturalWidth;
+  const action=enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
+  const base=doodles[e.type]||image;
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(e.type==='sniper'?3.4:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(0,pose.y);ctx.rotate(pose.angle);
@@ -109,7 +143,7 @@ function drawDoodleEnemy(e,hpRatio){
   if(e.type==='sniper'&&game.state.player.x<e.x)ctx.scale(-1,1);
   // A pale full silhouette remains; healthy colored artwork fills upward.
   // Round to display pixels so tiny fractional HP changes need no clipping.
-  const visibleHp=Math.round(hpRatio*height)/height,healthy=tintedDoodle(e.type,colors);
+  const visibleHp=Math.round(hpRatio*height)/height,healthy=tintedDoodle(name,colors);
   if(visibleHp<1){
     ctx.globalAlpha=.22;ctx.drawImage(image,left,top,width,height);ctx.globalAlpha=1;
     ctx.save();ctx.beginPath();ctx.rect(left,top+height*(1-visibleHp),width,height*visibleHp);ctx.clip();
@@ -286,6 +320,7 @@ function drawWallTextures(points,thick,opacity){
 }
 
 function draw(){
+  drawWaveStevie();
   game.dom.ctx.clearRect(0,0,game.state.W,game.state.H);game.dom.ctx.save();
   game.dom.ctx.strokeStyle='rgba(212,76,76,.35)';game.dom.ctx.lineWidth=2;
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
@@ -346,7 +381,11 @@ function draw(){
 
   // Stevie
   game.dom.ctx.translate(game.state.player.x,game.state.player.y);
-  if(doodles['stevie-animations']){
+  const reaction=stevieReactionPose();
+  if(doodles[reaction.sprite]){
+    game.dom.ctx.translate(0,reaction.y);game.dom.ctx.rotate(reaction.angle);
+    game.dom.ctx.drawImage(doodles[reaction.sprite],-34,-39.25,68,72.25);
+  }else if(doodles['stevie-animations']){
     const pose=stevieAnimationFrame();
     game.dom.ctx.scale(pose.facing,1);
     // Fixed cells and planted feet prevent trimmed-frame size/position jumps.
@@ -427,8 +466,9 @@ function draw(){
         game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r+5,0,Math.PI*2);game.dom.ctx.stroke();
       }
       if(e.type==='medic'){
+        const pulse=doodles.medic?(enemyActionFrame(e)?e.healPulse:0):e.healPulse;
         game.dom.ctx.strokeStyle='rgba(74,155,102,.25)';game.dom.ctx.lineWidth=1;
-        game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,25+e.healPulse*20,0,Math.PI*2);game.dom.ctx.stroke();
+        game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,25+pulse*20,0,Math.PI*2);game.dom.ctx.stroke();
       }
       if(e.type==='flanker'){
         game.dom.ctx.strokeStyle='#dbe5ff';game.dom.ctx.lineWidth=2;
@@ -462,7 +502,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { artworkReady:()=>doodleNames.every(name=>!!doodles[name]), resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 return api;
 };
