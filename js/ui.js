@@ -3,6 +3,7 @@ DoodleDefender.systems.ui = function createUiSystem(game) {
 function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
+  game.dom.$('pressure').textContent=Number(game.api.wavePressure().toFixed(1))+'×';
   game.dom.waveEl.textContent=game.state.wave;game.dom.scoreEl.textContent=game.state.score;game.dom.killsEl.textContent=game.state.kills;game.dom.luckEl.textContent=game.state.stats.luck;game.dom.bestEl.textContent=game.state.best;
   game.dom.inkBar.style.width=(100*game.state.stats.ink/game.state.stats.maxInk)+'%';
   game.dom.hpBar.style.width=(100*game.state.player.hp/game.state.player.maxHp)+'%';
@@ -95,6 +96,8 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
 }
 let buildOpen=false,pausedBeforeBuild=false;
 function renderBuild(){
+  game.dom.$('buildEnemies').innerHTML=game.catalog.enemyGuide.map(e=>
+    `<article class="build-entry"><h4>${e.name} · Wave ${e.wave}+</h4><p>${e.desc}</p></article>`).join('');
   const s=game.state.stats,f=v=>Number(v.toFixed(2));
   const totals=[['Max ink',s.maxInk],['Ink regeneration',f(s.inkRegen)+' /s'],['Stroke cost',f(s.lineCost)+' ink/pixel'],
     ['Wall damage',f(s.wallDamage)+' /s'],['Base wall HP',s.wallHp],['Wall lifetime',s.wallLife+'s'],['Line width',s.lineWidth+'px'],

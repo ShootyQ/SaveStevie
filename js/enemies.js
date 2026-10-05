@@ -1,5 +1,15 @@
 /* enemies: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.enemies = function createEnemiesSystem(game) {
+const pressure=game.catalog.pressureSettings={startWave:5,fullWave:20,maxMultiplier:3,speedBonus:.28,
+  surgeCycle:12,surgeSeconds:4,surgeMultiplier:1.35,quietMultiplier:.9,maxEnemies:180};
+game.catalog.enemyGuide=[
+  {wave:8,type:'wardling',name:'Wardling',desc:'Immune to one random marked damage type. Physical hits and other elements still work; slows and stuns still help.'},
+  {wave:9,type:'sprinter',name:'Sprinter',desc:'Warns with a gold ring, then dashes at 2.6× speed for 0.6s. Frost or stun interrupts the charge cycle.'},
+  {wave:10,type:'brood',name:'Brood',desc:'Splits into two Splitters, each splitting into two Minis: four final children. Keep splash damage ready.'},
+  {wave:11,type:'bulwark',name:'Bulwark',desc:'Takes only 35% of physical damage. Elemental damage bypasses its armor.'},
+  {wave:13,type:'medic',name:'Medic',desc:'Heals living allies within 95px for 3 HP/s. Cannot heal itself or revive enemies; freeze or stun stops healing.'},
+  {wave:15,type:'sapper',name:'Sapper',desc:'Seeks the nearest wall and deals double wall damage. Kill it quickly or redirect it with fresh walls.'}
+];
 function enemyType(){
   const pool=['grunt','grunt'];
   if(game.state.wave>=3)pool.push('fast');
@@ -11,10 +21,14 @@ function enemyType(){
   if(game.state.wave>=12)pool.push('gnawer');
   if(game.state.wave>=14)pool.push('brute');
   if(game.state.wave>=16)pool.push('elite');
+  for(const {wave,type} of game.catalog.enemyGuide){
+    if(game.state.wave>=wave)pool.push(type);
+  }
   return game.api.pick(pool);
 }
 
 function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
+  if(!forceBoss&&game.state.enemies.length>=pressure.maxEnemies)return null;
   let side=Math.floor(Math.random()*4),px,py;
   if(x!==null){px=x;py=y}else{
     if(side===0){px=game.api.rand(20,game.state.W-20);py=-26}
@@ -36,21 +50,34 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
     gnawer:{r:12,hp:42,speed:30,dmg:18,color:'#86563d'},
     brute:{r:19,hp:105,speed:20,dmg:22,color:'#51634a'},
     elite:{r:13,hp:68,speed:42,dmg:13,color:'#b34e82'},
+    wardling:{r:12,hp:38,speed:36,dmg:8,color:'#9e71b5'},
+    sprinter:{r:9,hp:24,speed:37,dmg:7,color:'#e39d2d'},
+    brood:{r:17,hp:62,speed:25,dmg:11,color:'#9053ac'},
+    bulwark:{r:18,hp:80,speed:22,dmg:13,color:'#6d7e91'},
+    medic:{r:12,hp:32,speed:28,dmg:5,color:'#4e9d75'},
+    sapper:{r:12,hp:44,speed:38,dmg:13,color:'#bd6b37'},
     mini:{r:7,hp:12,speed:49,dmg:5,color:'#a56cc1'},
     boss:{r:28,hp:270+game.state.wave*15,speed:18,dmg:27,color:'#962f3d'},
     eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'}
   };
   const d=defs[type];
-  game.state.enemies.push({
+  const enemy={
     x:px,y:py,type,r:d.r,hp:d.hp*scale,maxHp:d.hp*scale,speed:d.speed*(1+game.state.wave*.006),
     dmg:d.dmg,color:d.color,attackCd:0,shootCd:game.api.rand(1.3,2.1),stun:0,burn:0,burnDps:0,
     poison:0,poisonDps:0,freeze:0,chainCd:0,eraseCd:1.7,gravitySlow:0,thermalCd:0,charged:0,
     bounces:type==='bouncer'?3:0,bounceTime:0,bounceVX:0,bounceVY:0,
     flankAngle:Math.random()*Math.PI*2,flankCd:game.api.rand(1.0,2.0)
-  });
+  };
+  if(type==='wardling'){enemy.immunity=game.api.pick(['fire','poison','electric','blast','frost']);enemy.immuneCd=0}
+  if(type==='sprinter')enemy.dashTime=0;
+  if(type==='medic')enemy.healPulse=0;
+  game.state.enemies.push(enemy);
+  if(forceBoss)bossSpawned=true;
+  return enemy;
 }
 
 function killEnemy(e){
+  if(!game.state.enemies.includes(e))return;
   game.state.kills++;game.state.waveKills++;game.state.score+=10;
   game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.refund);
   game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+game.state.stats.killHeal);
@@ -58,6 +85,9 @@ function killEnemy(e){
   game.api.burst(e.x,e.y,e.color,12);
 
   if(e.type==='eraser') game.state.finalBossDefeated=true;
+  if(e.type==='brood'){
+    game.api.spawnEnemy(false,e.x+10,e.y,'splitter');game.api.spawnEnemy(false,e.x-10,e.y,'splitter');
+  }
   if(e.type==='splitter'){
     game.api.spawnEnemy(false,e.x+6,e.y+3,'mini');game.api.spawnEnemy(false,e.x-6,e.y-3,'mini');
   }
@@ -123,7 +153,83 @@ function eraserAttack(e,dt){
     e.eraseCd=Math.max(.55,1.7-game.state.wave*.015);
   }
 }
-const api = { enemyType, spawnEnemy, killEnemy, nearestEnemy, updateSteve, updateProjectiles, eraserAttack };
+
+let bossSpawned=false;
+function resetEnemyWave(){bossSpawned=false}
+function wavePressure(wave=game.state.wave){
+  const progress=game.api.clamp((wave-pressure.startWave)/(pressure.fullWave-pressure.startWave),0,1);
+  return 1+(pressure.maxMultiplier-1)*Math.pow(progress,1.15);
+}
+function enemySpeedScale(){return 1+pressure.speedBonus*game.api.clamp((game.state.wave-pressure.startWave)/(pressure.fullWave-pressure.startWave),0,1)}
+function spawnGap(){
+  const wave=game.state.wave,base=wave===1?2.35:wave===2?2.05:wave===3?1.78:wave===4?1.58:wave===5?1.42:Math.max(.34,1.48-wave*.034);
+  const elapsed=game.state.waveTime-game.state.timeLeft;
+  const surge=wave>pressure.startWave?(elapsed%pressure.surgeCycle>=pressure.surgeCycle-pressure.surgeSeconds?pressure.surgeMultiplier:pressure.quietMultiplier):1;
+  return Math.max(.12,base/(game.api.wavePressure()*surge));
+}
+function spawnWaveEnemies(dt){
+  game.state.spawnTimer-=dt;
+  if(game.state.spawnTimer<=0){
+    const bossDue=game.state.wave%5===0&&!bossSpawned&&game.state.timeLeft<game.state.waveTime-2;
+    game.api.spawnEnemy(bossDue);
+    game.state.spawnTimer=game.state.wave<=5?game.api.spawnGap():game.state.spawnTimer+game.api.spawnGap();
+  }
+}
+function updateEnemyBehavior(e,dt){
+  if(e.immunity)e.immuneCd=Math.max(0,e.immuneCd-dt);
+  if(e.type==='sprinter'&&e.freeze<=0&&e.stun<=0)e.dashTime=(e.dashTime+dt)%3.2;
+  if(e.type==='medic'){
+    e.healPulse=(e.healPulse+dt)%1;
+    if(e.hp>0&&e.stun<=0&&e.freeze<=0){
+      for(const ally of game.state.enemies){
+        if(ally!==e&&ally.hp>0&&ally.hp<ally.maxHp&&game.api.dist(e.x,e.y,ally.x,ally.y)<95){
+          ally.hp=Math.min(ally.maxHp,ally.hp+3*dt);
+        }
+      }
+    }
+  }
+}
+function enemyMoveScale(e){return game.api.enemySpeedScale()*(e.type==='sprinter'&&e.dashTime>=2.6?2.6:1)}
+function enemyTarget(e){
+  let target=game.state.player;
+  if(e.type==='sapper'){
+    let distance=Infinity;
+    for(const wall of game.state.walls)for(const point of wall.pts){
+      const d=game.api.dist(e.x,e.y,point.x,point.y);
+      if(d<distance){distance=d;target=point}
+    }
+  }
+  return target;
+}
+function bouncePathClear(e,x,y){
+  for(const w of game.state.walls)for(let i=1;i<w.pts.length;i++){
+    const a=w.pts[i-1],b=w.pts[i],radius=e.r+w.thick/2+1;
+    const start=game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y);
+    if(game.api.segmentIntersection(e,{x,y},a,b))return false;
+    for(const t of [.5,1]){
+      const d=game.api.pointSegDist(e.x+(x-e.x)*t,e.y+(y-e.y)*t,a.x,a.y,b.x,b.y);
+      if(d<radius&&d<start-.05)return false;
+    }
+  }
+  return true;
+}
+function steerBounce(e,dt){
+  const angle=Math.atan2(e.bounceVY,e.bounceVX),speed=e.speed*1.45*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7));
+  let best=null,bestScore=-Infinity;
+  for(const turn of [0,.45,-.45,.9,-.9,1.35,-1.35,1.9,-1.9,Math.PI]){
+    const a=angle+turn,vx=Math.cos(a)*speed,vy=Math.sin(a)*speed;
+    if(!game.api.bouncePathClear(e,e.x+vx*.3,e.y+vy*.3)||!game.api.bouncePathClear(e,e.x+vx*dt,e.y+vy*dt))continue;
+    const toward=Math.atan2(game.state.player.y-e.y,game.state.player.x-e.x);
+    const score=Math.cos(turn)+.35*Math.cos(a-toward);
+    if(score>bestScore){bestScore=score;best={vx,vy}}
+  }
+  if(!best){e.bounceTime=0;return false}
+  e.bounceVX=best.vx;e.bounceVY=best.vy;
+  e.x+=best.vx*dt;e.y+=best.vy*dt;e.bounceTime=Math.max(0,e.bounceTime-dt);
+  return true;
+}
+
+const api = { wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateSteve, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

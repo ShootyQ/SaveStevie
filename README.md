@@ -76,3 +76,24 @@ and its cumulative effect; picking one confirms the new count and effect.
 Repeatable upgrades stack additively or multiplicatively as described. One-time
 unlocks stop appearing once acquired, and Helmet/Shock Ink stop appearing at
 their caps. Repeated Pocket Rocks adds damage without slowing improved throws.
+
+## Late-wave pressure and new enemies
+
+Waves 1–5 keep their original spawn timing. Later waves ramp smoothly toward
+3× the old spawn rate at wave 20, with 4-second surges every 12 seconds and
+up to 28% faster movement. Seeded 60-second arrival checks measure wave 14
+at 131 spawns (previously 59), wave 15 at 145 (61), and wave 20 at 235 (75),
+before splits. These measure arrivals, not guaranteed concurrent enemies.
+Normal enemies are capped at 180 concurrent actors; required bosses can still
+spawn, once per wave. Upgrade economy and enemy HP scaling are unchanged.
+
+**Your Build → Enemy field guide** describes six new variants and counters:
+Wardling (wave 8), Sprinter (9), Brood (10), Bulwark (11), Medic (13), Sapper
+(15). Wardlings block one marked damage type; other damage and crowd control
+still work. Broods split into two Splitters and then four Minis. Bouncers now
+look ahead during ricochets, steer around nearby wall segments, and stop
+ricocheting when trapped. They cannot pathfind through a sealed enclosure.
+
+Tune `game.catalog.pressureSettings` in `js/enemies.js` for spawn multiplier,
+movement bonus, surge timing, and enemy budget. This is an initial balance
+pass; human playtests across strong and weak builds are still needed.
