@@ -151,8 +151,8 @@ splash, wall decorations, and matching upgrade cards. Other enemy types retain
 their existing artwork. Canvas collision radii and combat rules are unchanged.
 
 Images load once; status-tinted versions and wall glyphs are cached. Monsters
-retain a faded missing-health silhouette, colored status sections, and a small
-health/status bar when needed. Delayed or failed gameplay image loads use the
+remain fully visible at every health level, with colored status sections and a
+small health/status bar when needed. Delayed or failed gameplay image loads use the
 original vector drawings. No game dependencies are added. See
 `assets/art/README.md` for asset sources and export details.
 

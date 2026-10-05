@@ -141,22 +141,20 @@ function drawDoodleEnemy(e,hpRatio){
   // Squash around the feet so hit reactions remain small and planted.
   const foot=top+height;ctx.translate(0,foot);ctx.scale(pose.sx,pose.sy);ctx.translate(0,-foot);
   if(e.type==='sniper'&&game.state.player.x<e.x)ctx.scale(-1,1);
-  // A pale full silhouette remains; healthy colored artwork fills upward.
-  // Round to display pixels so tiny fractional HP changes need no clipping.
-  const visibleHp=Math.round(hpRatio*height)/height,healthy=tintedDoodle(name,colors);
-  if(visibleHp<1){
-    ctx.globalAlpha=.22;ctx.drawImage(image,left,top,width,height);ctx.globalAlpha=1;
-    ctx.save();ctx.beginPath();ctx.rect(left,top+height*(1-visibleHp),width,height*visibleHp);ctx.clip();
-    ctx.drawImage(healthy,left,top,width,height);ctx.restore();
-  }else ctx.drawImage(healthy,left,top,width,height);
+  // Damage never fades the body: health belongs in the separate bar.
+  ctx.drawImage(tintedDoodle(name,colors),left,top,width,height);
   ctx.restore();
+  drawEnemyHealthBar(e,hpRatio,colors);
+  return true;
+}
+function drawEnemyHealthBar(e,hpRatio,colors=enemyStatusColors(e)){
+  const ctx=game.dom.ctx;
   if(hpRatio<1||colors.length){
     const barWidth=e.r*2.3,barY=-e.r-10;
     ctx.fillStyle='#ddd5c1';ctx.fillRect(-barWidth/2,barY,barWidth,3);
     if(colors.length)colors.forEach((color,i)=>{ctx.fillStyle=color;ctx.fillRect(-barWidth/2+i*barWidth*hpRatio/colors.length,barY,barWidth*hpRatio/colors.length,3)});
     else{ctx.fillStyle=e.color;ctx.fillRect(-barWidth/2,barY,barWidth*hpRatio,3)}
   }
-  return true;
 }
 function enemyStatusColors(e){
   const colors=[];
@@ -415,28 +413,29 @@ function draw(){
       if(!drawDoodleEnemy(e,hpRatio)){
         game.dom.ctx.strokeStyle='#81344d';game.dom.ctx.lineWidth=3;
 
-        // Empty paper-colored body first, then fill upward according to remaining HP.
+        // Fallback bodies stay opaque too; only the health bar drains.
         game.dom.ctx.fillStyle='#f7e7e9';game.dom.ctx.fillRect(-32,-20,64,40);
         game.dom.ctx.save();
-        game.dom.ctx.beginPath();game.dom.ctx.rect(-32,20-40*hpRatio,64,40*hpRatio);game.dom.ctx.clip();
-        drawEnemyFill(e,-32,20-40*hpRatio,64,40*hpRatio);
+        game.dom.ctx.beginPath();game.dom.ctx.rect(-32,-20,64,40);game.dom.ctx.clip();
+        drawEnemyFill(e,-32,-20,64,40);
         game.dom.ctx.restore();
         game.dom.ctx.strokeRect(-32,-20,64,40);
 
         game.dom.ctx.fillStyle='#fff';game.dom.ctx.fillRect(-12,-5,7,7);game.dom.ctx.fillRect(5,-5,7,7);
         game.dom.ctx.fillStyle='#3b2630';game.dom.ctx.fillRect(-4,9,8,3);
+        drawEnemyHealthBar(e,hpRatio);
       }
     }else{
       if(!drawDoodleEnemy(e,hpRatio)){
         game.dom.ctx.strokeStyle='#2a3135';game.dom.ctx.lineWidth=2.5;
 
-        // Enemy body is now the health meter: its color drains from top to bottom.
+        // Preserve the full silhouette, including when PNG artwork is unavailable.
         game.dom.ctx.fillStyle='rgba(255,255,255,.42)';
         game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.fill();
 
         game.dom.ctx.save();
         game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.clip();
-        drawEnemyFill(e,-e.r,e.r-(2*e.r*hpRatio),e.r*2,2*e.r*hpRatio);
+        drawEnemyFill(e,-e.r,-e.r,e.r*2,e.r*2);
         game.dom.ctx.restore();
 
         game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.stroke();
@@ -444,6 +443,7 @@ function draw(){
         game.dom.ctx.fillStyle='#fff';
         game.dom.ctx.beginPath();game.dom.ctx.arc(-e.r*.25,-2,2,0,Math.PI*2);game.dom.ctx.arc(e.r*.25,-2,2,0,Math.PI*2);game.dom.ctx.fill();
         game.dom.ctx.strokeStyle='#222';game.dom.ctx.beginPath();game.dom.ctx.moveTo(-4,5);game.dom.ctx.lineTo(4,5);game.dom.ctx.stroke();
+        drawEnemyHealthBar(e,hpRatio);
       }
       if(e.type==='boss'&&!doodles.boss){game.dom.ctx.fillStyle='#d8a72e';game.dom.ctx.fillRect(-11,-e.r-8,22,5)}
       if(e.type==='bouncer'){
