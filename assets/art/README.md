@@ -41,7 +41,7 @@ boss.png, and eraser.png. These are isolated transparent cutouts from a custom
 scribbled sheet, exported at up to 192px (256px for bosses) with four-pixel
 borders. Bulwark has a dented shield, Medic a cap and bag, Sapper tools, Gnawer
 oversized teeth, Boss a wonky crown, and The Eraser a pink rubber body.
-All use the existing bounded status-tint cache and health-fading renderer.
+All use the existing bounded status-tint cache and opaque-body renderer and separate health bars.
 The Eraser keeps its wobble; the Medic keeps its healing pulse. Missing images
 retain the previous vector drawings. No combat rules or collision sizes change.
 
@@ -92,3 +92,8 @@ After 1.2 seconds Stevie settles into a happy pose until the next wave resets
 his presentation state. Reduced motion uses neutral art. Missing pose images
 fall back to the existing base drawings/idle atlas. No damage, healing,
 projectile timing, scoring, random draws, or collision coordinates change.
+
+Damaged monsters retain their full body artwork and opacity. Health now changes
+only the separate bar; status colors tint the entire body. This applies to all
+base sprites, action poses, bosses, and vector fallbacks. Transient split echoes
+still fade as they expire; living monsters do not fade with damage.
