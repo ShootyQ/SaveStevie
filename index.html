@@ -36,6 +36,7 @@
       </div>
     </div>
     <div id="upgradeList"></div>
+    <div id="hitNotice" role="status" style="display:none"></div>
     <div id="synergySplash" style="display:none;position:absolute;left:50%;top:24%;transform:translate(-50%,-50%);z-index:7;
       background:rgba(34,28,48,.94);color:white;border:3px solid #d8a72e;border-radius:16px;padding:14px 20px;
       text-align:center;box-shadow:0 12px 35px rgba(0,0,0,.28);pointer-events:none;min-width:260px">
@@ -149,13 +150,14 @@
 
   <div class="bottom">
     <button class="secondary" id="clearBtn" title="Erase all walls">Erase</button>
-    <div id="message">Fresh page every wave. Ink fully refills.</div>
+
     <button class="secondary" id="buildBtn">Build</button>
     <button class="secondary" id="changelogBtn">Updates</button>
     <button class="secondary" id="fullscreenBtn" title="Toggle fullscreen">Screen</button>
     <button id="pauseBtn">Pause</button>
   </div>
 </div>
+<div id="message" hidden></div>
 
 <div class="overlay build-overlay" id="buildOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="buildTitle">
   <div class="cardbox build-box">
@@ -173,6 +175,12 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry">
+        <h3>Clear arrows, protected Stevie &amp; six more doodles</h3>
+        <p>Gravity effects respect intact walls, and nearby monsters cannot deal contact damage through a barrier. Brief hit markers show which disappearing monster or sniper arrow hurt Stevie.</p>
+        <p>Sniper projectiles are larger, outlined custom arrows. Bouncers, Flankers, Wardlings, Sprinters, and Broods get matching notebook artwork.</p>
+        <p>The growing footer message is removed from the play layout. Mobile controls keep a fixed height so notices and upgrades cannot shrink the arena.</p>
+      </article>
       <article class="build-entry">
         <h3>Math-class doodles come to life</h3>
         <p>Stevie, Grunts, Snipers, Splitters, and Tanks now use custom scribbled artwork. Fire, frost, and poison decorate your walls with the new doodles, and elemental upgrade cards have matching icons.</p>

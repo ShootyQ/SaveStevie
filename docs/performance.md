@@ -58,3 +58,9 @@ on this host; the combat/next-random hash matched exactly. This single compariso
 establishes no observed regression in that scene, not a guaranteed speedup on
 phones. Status combinations are composed once into a bounded 32-entry cache;
 wall artwork retains its bounded phase cache. Missing asset loads use vectors.
+
+The subsequent barrier/arrow fix measured 7.9ms median update + draw and 10.1ms
+p95 in the same crowded scene on this host. Forced movement now checks wall
+paths; its combat hash intentionally differs because gravity no longer moves
+monsters through barriers. The six additional PNGs still load once and share
+the same bounded caches.

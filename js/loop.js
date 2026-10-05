@@ -42,7 +42,7 @@ function update(dt){
         if(game.api.withinRadius(e.x,e.y,cx,cy,135)){
           const dx=cx-e.x,dy=cy-e.y,m=Math.hypot(dx,dy)||1;
           const pull=(game.state.synergies.has('THE BLACK HOLE')?20:10)+(game.state.inks.gravity*4);
-          e.x+=dx/m*pull*dt;e.y+=dy/m*pull*dt;
+          game.api.moveEnemySafely(e,dx/m*pull*dt,dy/m*pull*dt);
           e.gravitySlow=Math.max(e.gravitySlow,.18);
         }
       }
@@ -81,6 +81,7 @@ function update(dt){
   }
 
   for(const e of [...game.state.enemies]){
+    if(game.state.player.hp<=0)break;
     if(e.hp<=0){game.api.killEnemy(e);continue}
     e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
@@ -112,7 +113,7 @@ function update(dt){
       const bp=game.api.nearestWallPoint(e.x,e.y,120+game.state.inks.gravity*20);
       if(bp){
         const gx=bp.x-e.x,gy=bp.y-e.y,m=Math.hypot(gx,gy)||1;
-        e.x+=gx/m*(8+game.state.inks.gravity*5)*dt;e.y+=gy/m*(8+game.state.inks.gravity*5)*dt
+        game.api.moveEnemySafely(e,gx/m*(8+game.state.inks.gravity*5)*dt,gy/m*(8+game.state.inks.gravity*5)*dt)
       }
     }
 
@@ -183,7 +184,7 @@ function update(dt){
   for(const p of game.state.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.96;p.vy*=.96}
   game.state.particles=game.state.particles.filter(p=>p.life>0);
   game.api.updateDamageNumbers(dt);
-  for(const f of game.state.floaters){if(!f.damageNumber){f.y-=22*dt;f.t-=dt}}
+  for(const f of game.state.floaters){if(!f.damageNumber){if(!f.hitMarker)f.y-=22*dt;f.t-=dt}}
   game.state.floaters=game.state.floaters.filter(f=>f.t>0);
 
   if(game.state.player.hp<=0)game.api.gameOver();

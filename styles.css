@@ -52,7 +52,7 @@ button:active{transform:translateY(2px);box-shadow:0 1px 0 #141b20}
 button.secondary{background:#68747b}
 button.gold{background:#b38720}
 button.red{background:#9c4545}
-#message{font-size:13px;font-weight:900;color:#4d565a;flex:1;text-align:center}
+#message{display:none!important}
 .overlay{
   position:absolute;inset:0;background:rgba(20,27,32,.66);display:grid;place-items:center;
   padding:18px;z-index:9
@@ -231,3 +231,7 @@ button:disabled{opacity:.5;cursor:default}
 .ucard{position:relative}
 .upgrade-art{position:absolute;top:8px;right:8px;width:38px;height:38px;object-fit:contain}
 .ucard:has(.upgrade-art) h3{padding-right:36px}
+
+.bottom{flex-shrink:0}
+#hitNotice{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);padding:7px 11px;border:2px solid #8d3535;border-radius:10px;background:#fff5e8ee;color:#9d3030;font-size:12px;font-weight:900;text-align:center;pointer-events:none;z-index:6}
+@media(max-width:760px),(pointer:coarse){.bottom{height:59px;flex:0 0 59px}}

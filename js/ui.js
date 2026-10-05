@@ -8,6 +8,9 @@ function text(node,value){
 function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
+  const hit=game.state.floaters.findLast(f=>f.hitMarker&&f.t>0),notice=game.dom.$('hitNotice');
+  notice.style.display=hit?'block':'none';
+  if(hit)text(notice,hit.source+' −'+Number(hit.amount.toFixed(1)));
   text(game.dom.$('liveWave'),game.state.wave);
   text(game.dom.$('pressure'),Number(game.api.wavePressure().toFixed(1))+'×');
   text(game.dom.waveEl,game.state.wave);text(game.dom.scoreEl,game.state.score);text(game.dom.killsEl,game.state.kills);text(game.dom.luckEl,game.state.stats.luck);text(game.dom.bestEl,game.state.best);

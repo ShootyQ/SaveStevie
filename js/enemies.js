@@ -181,7 +181,7 @@ function updateEnemyShots(dt){
     }
     if(hitTime!==null){
       const damage=shot.damage*(1-game.state.stats.playerArmor);
-      damageStevie(damage,'Sniper shot');
+      damageStevie(damage,'Sniper arrow',{x:endX,y:endY,r:shot.r,type:'arrow'});
       game.api.floatText(player.x,player.y-28,'SHOT −'+Number(damage.toFixed(1)),'#3562be');
       game.api.burst(player.x,player.y,'#4b79d8',6);continue;
     }
@@ -250,7 +250,7 @@ function enemyTarget(e){
   }
   return target;
 }
-function bouncePathClear(e,x,y){
+function bouncePathClear(e,x,y,tolerance=.05){
   const target={x,y};
   for(const w of game.state.walls){
     const bounds=game.api.wallGeometry(w.pts),radius=e.r+w.thick/2+1;
@@ -263,7 +263,7 @@ function bouncePathClear(e,x,y){
       if(game.api.segmentIntersection(e,target,a,b))return false;
       for(const t of [.5,1]){
         const d=game.api.pointSegDist(e.x+(x-e.x)*t,e.y+(y-e.y)*t,a.x,a.y,b.x,b.y);
-        if(d<radius&&d<start-.05)return false;
+        if(d<radius&&d<start-tolerance)return false;
       }
     }
   }
@@ -285,16 +285,25 @@ function steerBounce(e,dt){
   return true;
 }
 
-function damageStevie(damage,source){
+// Forced motion must respect live barriers just like bouncer path checks.
+function moveEnemySafely(e,dx,dy){
+  const x=e.x+dx,y=e.y+dy;
+  if(!game.api.bouncePathClear(e,x,y,0))return false;
+  e.x=x;e.y=y;return true;
+}
+function damageStevie(damage,source,impact=game.state.player){
+  if(game.state.player.hp<=0)return;
   game.state.player.hp=Math.max(0,game.state.player.hp-damage);
+  game.state.floaters.push({hitMarker:true,x:impact.x,y:impact.y,r:impact.r||5,type:impact.type||'arrow',t:.9,source,amount:damage});
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }
 function contactStevie(e){
   if(e.hp<=0||!game.state.enemies.includes(e))return false;
   const player=game.state.player;
   if(game.api.dist(e.x,e.y,player.x,player.y)>=player.r+e.r+2)return false;
+  if(game.api.shotBlocked(e.x,e.y,player.x,player.y,0))return false;
   const damage=e.dmg*(1-game.state.stats.playerArmor);
-  damageStevie(damage,e.type==='eraser'?'The Eraser':e.type[0].toUpperCase()+e.type.slice(1)+' contact');
+  damageStevie(damage,e.type==='eraser'?'The Eraser':e.type[0].toUpperCase()+e.type.slice(1)+' contact',e);
   game.api.floatText(player.x,player.y-28,'-'+Number(damage.toFixed(1)),'#b44141');
   game.api.burst(e.x,e.y,e.color,12);
   // Contact removal is not a player kill: no rewards, healing, or split children.
@@ -308,7 +317,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };
