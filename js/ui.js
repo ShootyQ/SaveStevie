@@ -94,7 +94,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
   };
   return effects[name]?effects[name]():game.catalog.upgrades.find(u=>u.name===name)?.desc||'Active';
 }
-let buildOpen=false,pausedBeforeBuild=false;
+let activeInfo=null,pausedBeforeInfo=false;
 function renderBuild(){
   game.dom.$('buildEnemies').innerHTML=game.catalog.enemyGuide.map(e=>
     `<article class="build-entry"><h4>${e.name} · Wave ${e.wave}+</h4><p>${e.desc}</p></article>`).join('');
@@ -114,17 +114,25 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
-function openBuild(){
-  if(buildOpen)return;
-  game.api.endDraw();pausedBeforeBuild=game.state.paused;game.state.paused=true;buildOpen=true;
-  renderBuild();game.dom.$('buildOverlay').style.display='grid';game.dom.$('closeBuildBtn').focus?.();
+function openInfo(kind){
+  if(activeInfo===kind)return;
+  if(activeInfo)closeInfo();
+  game.api.endDraw();pausedBeforeInfo=game.state.paused;game.state.paused=true;activeInfo=kind;
+  if(kind==='build')renderBuild();
+  game.dom.$(kind+'Overlay').style.display='grid';
+  game.dom.$(kind==='build'?'closeBuildBtn':'closeChangelogBtn').focus?.();
 }
-function closeBuild(){
-  if(!buildOpen)return;
-  buildOpen=false;game.state.paused=pausedBeforeBuild;game.dom.$('buildOverlay').style.display='none';game.dom.$('buildBtn').focus?.();
+function closeInfo(){
+  if(!activeInfo)return;
+  const kind=activeInfo;activeInfo=null;game.state.paused=pausedBeforeInfo;
+  game.dom.$(kind+'Overlay').style.display='none';game.dom.$(kind+'Btn').focus?.();
 }
+function openBuild(){openInfo('build')}
+function closeBuild(){if(activeInfo==='build')closeInfo()}
+function openChangelog(){openInfo('changelog')}
+function closeChangelog(){if(activeInfo==='changelog')closeInfo()}
 
-const api = { upgradeEffect, renderBuild, openBuild, closeBuild, setMsg, updateUI, roman, showSynergySplash };
+const api = { openChangelog, closeChangelog, upgradeEffect, renderBuild, openBuild, closeBuild, setMsg, updateUI, roman, showSynergySplash };
 Object.assign(game.api, api);
 return api;
 };

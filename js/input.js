@@ -11,10 +11,14 @@ function bind() {
 window.addEventListener('resize',game.api.resize);
 game.dom.$('buildBtn').onclick=game.api.openBuild;
 game.dom.$('closeBuildBtn').onclick=game.api.closeBuild;
+game.dom.$('changelogBtn').onclick=game.api.openChangelog;
+game.dom.$('closeChangelogBtn').onclick=game.api.closeChangelog;
 window.addEventListener('keydown',e=>{
-  if(game.dom.$('buildOverlay').style.display!=='grid')return;
-  if(e.key==='Escape')game.api.closeBuild();
-  if(e.key==='Tab'){e.preventDefault();game.dom.$('closeBuildBtn').focus?.()}
+  const build=game.dom.$('buildOverlay').style.display==='grid';
+  const changelog=game.dom.$('changelogOverlay').style.display==='grid';
+  if(!build&&!changelog)return;
+  if(e.key==='Escape'){if(build)game.api.closeBuild();else game.api.closeChangelog()}
+  if(e.key==='Tab'){e.preventDefault();game.dom.$(build?'closeBuildBtn':'closeChangelogBtn').focus?.()}
 });
 game.dom.canvas.addEventListener('pointerdown',e=>{
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
