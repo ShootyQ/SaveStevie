@@ -1,10 +1,10 @@
 /* Bounded, presentation-only ability animations. Geometry never uses combat RNG. */
 DoodleDefender.systems.abilityEffects = function createAbilityEffects(game) {
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
-let reduced=!!preference?.matches,lightning=[],explosions=[],serial=0;
-const limits={casts:8,targets:6,explosions:4,wallPoints:48,fragments:16};
+let reduced=!!preference?.matches,lightning=[],explosions=[],serial=0,statusClock=0,statuses=[],voids=[],leeches=[],lastLeech=-Infinity;
+const limits={casts:8,targets:6,explosions:4,wallPoints:48,fragments:16,statusMonsters:24,voids:8,leeches:6};
 preference?.addEventListener?.('change',event=>{reduced=event.matches;resetAbilityEffects()});
-function resetAbilityEffects(){lightning=[];explosions=[];serial=0}
+function resetAbilityEffects(){lightning=[];explosions=[];statuses=[];voids=[];leeches=[];serial=0;statusClock=0;lastLeech=-Infinity}
 function boundedPush(list,item,limit){if(list.length>=limit)list.shift();list.push(item)}
 function boltPath(dx,dy,seed,phase){
   const length=Math.hypot(dx,dy),steps=Math.max(4,Math.min(12,Math.ceil(length/16)));
@@ -46,14 +46,36 @@ function animateWallExplosion(wall,x,y,radius,inferno=false){
   }
   boundedPush(explosions,{x,y,radius,points,anchors,fragments,thick:wall.thick,inferno,age:0,life:reduced?.25:.62},limits.explosions);
 }
+function animateVoidHit(enemy){
+  boundedPush(voids,{x:enemy.x,y:enemy.y,r:Math.min(48,enemy.r+12),age:0,life:reduced?.25:.55},limits.voids);
+}
+function animateLeech(enemy,healed){
+  if(healed<=0||statusClock-lastLeech<.12)return;
+  lastLeech=statusClock;
+  const player=game.state.player;
+  boundedPush(leeches,{x:enemy.x,y:enemy.y,dx:player.x-enemy.x,dy:player.y-enemy.y,age:0,life:reduced?.25:.7},limits.leeches);
+}
 function updateAbilityEffects(dt){
+  statusClock+=dt;statuses=[];
+  for(const e of game.state.enemies){
+    if(e.hp<=0)continue;
+    const fire=e.burn>0&&e.immunity!=='fire',poison=e.poison>0&&e.immunity!=='poison',frost=e.freeze>0;
+    if(fire||poison||frost)statuses.push({enemy:e,fire,poison,frost});
+    if(statuses.length===limits.statusMonsters)break;
+  }
+  for(const effect of voids)effect.age+=dt;
+  for(const effect of leeches)effect.age+=dt;
+  voids=voids.filter(e=>e.age<e.life);leeches=leeches.filter(e=>e.age<e.life);
   for(const effect of lightning)effect.age+=dt;
   for(const effect of explosions)effect.age+=dt;
   lightning=lightning.filter(e=>e.age<e.life);explosions=explosions.filter(e=>e.age<e.life);
 }
-function moveAbilityEffects(dx,dy){for(const effect of [...lightning,...explosions]){effect.x+=dx;effect.y+=dy}}
+function moveAbilityEffects(dx,dy){for(const effect of [...lightning,...explosions,...voids,...leeches]){effect.x+=dx;effect.y+=dy}}
 function abilityEffectsSnapshot(){
   return {
+    statuses:statuses.map(s=>({x:s.enemy.x,y:s.enemy.y,fire:s.fire,poison:s.poison,frost:s.frost,clock:statusClock})),
+    voids:voids.map(e=>({x:e.x,y:e.y,age:e.age})),
+    leeches:leeches.map(e=>({x:e.x,y:e.y,targetX:e.x+e.dx,targetY:e.y+e.dy,age:e.age})),
     lightning:lightning.map(e=>({x:e.x,y:e.y,age:e.age,targets:e.arcs.map(a=>({x:e.x+a.dx,y:e.y+a.dy,immune:a.immune})),pathPoints:e.arcs.reduce((n,a)=>n+a.paths[0].length/2,0)})),
     explosions:explosions.map(e=>({x:e.x,y:e.y,age:e.age,radius:e.radius,points:e.points.map(p=>({x:e.x+p.x,y:e.y+p.y})),anchors:e.anchors.map(p=>({x:e.x+p.x,y:e.y+p.y})),fragments:e.fragments.length,inferno:e.inferno}))
   };
@@ -123,6 +145,74 @@ function drawWallExplosions(){
     ctx.restore();
   }
 }
-const api={animateChainLightning,animateWallExplosion,updateAbilityEffects,resetAbilityEffects,moveAbilityEffects,abilityEffectsSnapshot,drawChainLightning,drawWallExplosions};
+// Small pen-and-pencil ornaments leave the body and health bar readable.
+function drawInkStatusEffects(){
+  const ctx=game.dom.ctx;
+  for(const s of statuses){
+    const e=s.enemy;if(e.hp<=0)continue;
+    const r=Math.min(30,e.r*1.15),phase=statusClock*5+e.type.length;
+    ctx.save();ctx.translate(e.x,e.y);ctx.lineWidth=1.5;ctx.lineJoin='round';
+    if(s.fire){
+      for(const side of [-1,1]){
+        const height=reduced?9:10+Math.sin(phase+side)*4,x=side*(r+3),y=r*.4;
+        ctx.beginPath();ctx.moveTo(x-4,y);ctx.quadraticCurveTo(x-7,y-7,x+side*2,y-height);
+        ctx.quadraticCurveTo(x+1,y-7,x+5,y);ctx.closePath();
+        ctx.fillStyle='#f28a38';ctx.fill();ctx.strokeStyle='#8a422b';ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x-2,y-1);ctx.lineTo(x,y-height*.55);ctx.lineTo(x+2,y-1);ctx.fillStyle='#ffe293';ctx.fill();
+      }
+    }
+    if(s.poison){
+      for(let i=0;i<2;i++){
+        const t=reduced?.35:(statusClock*.7+i*.5)%1,x=(i?-1:1)*(r+5)+(!reduced?Math.sin(t*5+i)*3:0),y=r*.3-t*24;
+        ctx.globalAlpha=reduced?.7:Math.sin(t*Math.PI)*.8;ctx.fillStyle='#c5e882';ctx.strokeStyle='#528133';
+        ctx.beginPath();ctx.arc(x,y,2.5+t*1.5,0,Math.PI*2);ctx.fill();ctx.stroke();
+      }
+      ctx.globalAlpha=1;
+    }
+    if(s.frost){
+      for(let i=0;i<3;i++){
+        const angle=(i/3)*Math.PI*2+.3,x=Math.cos(angle)*(r+4),y=Math.sin(angle)*(r+4);
+        const size=reduced?5:5+Math.sin(phase*.6+i)*1.2;
+        ctx.beginPath();ctx.moveTo(x,y-size);ctx.lineTo(x+size*.55,y);ctx.lineTo(x,y+size);ctx.lineTo(x-size*.55,y);ctx.closePath();
+        ctx.fillStyle='#d6f6ff';ctx.fill();ctx.strokeStyle='#408ea8';ctx.stroke();
+        ctx.beginPath();ctx.moveTo(x,y-size+1);ctx.lineTo(x,y+size-1);ctx.strokeStyle='#8bd9eb';ctx.stroke();
+      }
+    }
+    ctx.restore();
+  }
+}
+function drawInkBursts(){
+  const ctx=game.dom.ctx;
+  for(const e of voids){
+    const t=e.age/e.life,r=e.r*(reduced?.65:1-t*.8);
+    ctx.save();ctx.translate(e.x,e.y);ctx.globalAlpha=(1-t)*.85;ctx.lineWidth=2;ctx.strokeStyle='#704b9b';
+    if(reduced){ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.stroke()}
+    else{
+      // Two curled pen strokes collapse into a tiny purple ink dot.
+      for(let arm=0;arm<2;arm++){
+        ctx.beginPath();for(let i=0;i<=20;i++){const a=i/20*Math.PI*2+t*5+arm*Math.PI,rr=r*(1-i/24),x=Math.cos(a)*rr,y=Math.sin(a)*rr;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)}ctx.stroke();
+      }
+      ctx.fillStyle='#a88acc';ctx.beginPath();ctx.arc(0,0,Math.max(1,r*.12),0,Math.PI*2);ctx.fill();
+    }
+    ctx.restore();
+  }
+  for(const e of leeches){
+    const t=e.age/e.life;
+    ctx.save();ctx.strokeStyle='#863650';ctx.fillStyle='#de7286';ctx.lineWidth=1.5;
+    if(reduced){
+      ctx.globalAlpha=(1-t)*.7;ctx.beginPath();ctx.arc(e.x+e.dx,e.y+e.dy,22,0,Math.PI*2);ctx.stroke();
+    }else{
+      for(let i=0;i<3;i++){
+        const p=Math.max(0,Math.min(1,t*1.5-i*.16)),arc=Math.sin(p*Math.PI)*16;
+        const x=e.x+e.dx*p,y=e.y+e.dy*p-arc;
+        ctx.globalAlpha=Math.min(1,(1-t)*3)*.8;
+        ctx.beginPath();ctx.arc(x,y,3-i*.4,0,Math.PI*2);ctx.fill();ctx.stroke();
+      }
+      if(t>.55){ctx.globalAlpha=(1-t)*1.4;const x=e.x+e.dx,y=e.y+e.dy-22;ctx.beginPath();ctx.moveTo(x,y+4);ctx.bezierCurveTo(x-10,y-2,x-3,y-9,x,y-4);ctx.bezierCurveTo(x+3,y-9,x+10,y-2,x,y+4);ctx.fill();ctx.stroke()}
+    }
+    ctx.restore();
+  }
+}
+const api={animateVoidHit,animateLeech,drawInkStatusEffects,drawInkBursts,animateChainLightning,animateWallExplosion,updateAbilityEffects,resetAbilityEffects,moveAbilityEffects,abilityEffectsSnapshot,drawChainLightning,drawWallExplosions};
 Object.assign(game.api,api);return api;
 };

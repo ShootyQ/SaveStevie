@@ -217,7 +217,9 @@ function applyInkContact(e,dt,wall=null){
     e.chainCd=Math.max(.22,.8-game.state.inks.electric*.12);
   }
   if(game.state.inks.vampire>0){
-    game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+dps*dt*(.015*game.state.inks.vampire));
+    const before=game.state.player.hp;
+    game.state.player.hp=Math.min(game.state.player.maxHp,before+dps*dt*(.015*game.state.inks.vampire));
+    game.api.animateLeech(e,game.state.player.hp-before);
   }
   if(game.state.inks.repulsion>0){
     const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;
@@ -271,7 +273,10 @@ function applySynergies(e,dt){
 
   if(game.state.synergies.has('Cryoshock')&&e.freeze>0)game.api.dealDamage(e,Math.max(4,game.state.inks.electric*7)*dt,'electric');
   if(game.state.synergies.has('Black Ice')&&e.freeze>0)e.gravitySlow=Math.max(e.gravitySlow,.62);
-  if(game.state.synergies.has('Leech Ink')&&e.poison>0)game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+e.poisonDps*dt*.018);
+  if(game.state.synergies.has('Leech Ink')&&e.poison>0){
+    const before=game.state.player.hp;game.state.player.hp=Math.min(game.state.player.maxHp,before+e.poisonDps*dt*.018);
+    game.api.animateLeech(e,game.state.player.hp-before);
+  }
 
   if(game.state.synergies.has('Thermal Shock')&&e.freeze>0&&e.burn>0){
     if(!e.thermalCd||e.thermalCd<=0){
@@ -292,7 +297,8 @@ function applySynergies(e,dt){
   }
 
   if(game.state.synergies.has('NECROTIC ENGINE')&&e.poison>0&&e.gravitySlow>.15){
-    game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+e.poisonDps*dt*.02);
+    const before=game.state.player.hp;game.state.player.hp=Math.min(game.state.player.maxHp,before+e.poisonDps*dt*.02);
+    game.api.animateLeech(e,game.state.player.hp-before);
   }
 
   if(game.state.synergies.has('THE STORM')&&e.freeze>0&&e.gravitySlow>.1){

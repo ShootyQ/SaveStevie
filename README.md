@@ -223,3 +223,23 @@ pages prevent the toolbar pause button or another information dialog from
 resuming combat underneath them. Both dialogs keep keyboard focus inside,
 scroll within the notebook, and use existing artwork with the deployment's
 resource version. No combat balance or spawn randomness changes.
+
+## More ink animations and music
+
+Fire, poison, and freeze now add small scribbled flames, rising bubbles, and
+icy crystals around affected monsters. Combined statuses display together;
+fire/poison immunity suppresses those damage ornaments. Only 24 affected
+monsters receive ornaments at once. Successful void damage creates collapsing
+purple spirals (at most 8), and actual vampire/Leech Ink/Necrotic Engine healing
+sends small red beads back to Stevie (at most 6 trails, throttled to one new
+trail per 0.12 seconds). Full health does not create a healing trail. These
+private visuals use no combat randomness, freeze while gameplay is paused,
+reset between waves, and move with the arena on resize. Reduced motion uses
+static crystals, bubbles, and short fading rings instead of moving effects.
+
+The supplied Save Stevie song plays on a loop after starting a run. The **♫**
+button mutes/resumes it and saves the choice on this device. Wave changes and
+menus keep the song playing; hiding the tab pauses it and returning resumes
+from the same position. Music loads on demand, starts from a player gesture,
+and cannot block gameplay if playback is unavailable. The MP3 is packaged and
+versioned with the static site. See `assets/audio/README.md` for track details.

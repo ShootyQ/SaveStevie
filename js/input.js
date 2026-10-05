@@ -20,6 +20,7 @@ function enterScreen(){
   try{const request=document.documentElement.requestFullscreen();request?.catch(()=>{});}catch{}
 }
 function startRun(){
+  game.api.startMusic();
   if(window.matchMedia?.('(pointer: coarse)').matches)enterScreen();
   game.api.resetRun();
 }

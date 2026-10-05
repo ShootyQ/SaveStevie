@@ -156,9 +156,11 @@
     <button class="secondary" id="changelogBtn">Updates</button>
     <button class="secondary" id="fullscreenBtn" title="Toggle fullscreen">Screen</button>
     <button id="pauseBtn">Pause</button>
+    <button class="secondary" id="musicBtn" aria-label="Mute music" title="Mute music">♫</button>
   </div>
 </div>
 <div id="message" hidden></div>
+<audio id="gameMusic" src="assets/audio/save-stevie.mp3" preload="none" loop></audio>
 
 <div class="overlay build-overlay" id="buildOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="buildTitle">
   <div class="cardbox build-box">
@@ -196,6 +198,10 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry">
+        <h3>Sizzling inks &amp; a Save Stevie soundtrack</h3>
+        <p>Burning monsters flicker with scribbled flames, poison bubbles rise, and frozen monsters sprout icy crystals. Void hits spiral into purple ink; vampire healing sends red ink beads back to Stevie. Your Save Stevie song now loops across waves and menus. Tap the music note to mute or resume; the setting is saved on this device.</p>
+      </article>
       <article class="build-entry">
         <h3>Meet the notebook nuisances</h3>
         <p>All 19 monsters now have fun names and illustrated compendium entries with first waves, stats, abilities, and counter tips. Waves pause before combat to introduce newly unlocked monsters together. Turn introductions off in the popup or Monsters screen; your choice is saved on this device.</p>
@@ -296,6 +302,7 @@
 <script src="js/dom.js"></script>
 <script src="js/state.js"></script>
 <script src="js/geometry.js"></script>
+<script src="js/music.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/monsters.js"></script>
 <script src="js/waves.js"></script>
