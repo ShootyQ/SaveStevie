@@ -257,3 +257,14 @@ and Lucky Scribble explain it too. Chaos specialization adds its separate +12
 bonus to normal rarity rolls; boss rolls use the Luck stat. Loaded Deck keeps
 normal rewards at Uncommon or better. Specialization and Collector weight the
 selection within a rolled rarity. No selection formulas or balance changed.
+
+
+## Late-wave rendering cache
+
+Mixed monster types and stacked statuses now reuse their full-resolution tinted
+art through a least-recently-used cache, capped at 192 entries and 16 MiB of
+RGBA pixels. This prevents the previous 32-entry cache from rebuilding most
+sprites every frame in a busy wave. The artwork, effects, and combat are
+unchanged. The optional `tests/browser-performance.cjs` benchmark has a
+`wave20` mode for this mixed-crowd rendering workload, with exact visual and
+combat hashes. See `docs/performance.md` for measured results and limits.
