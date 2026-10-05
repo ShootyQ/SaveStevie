@@ -3,7 +3,7 @@ DoodleDefender.systems.renderer = function createRendererSystem(game) {
 // Load once. Missing/late assets retain the existing vector drawings.
 const doodles={},tintedDoodles=new Map();
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','eraser','fast','brute','elite','mini'];
+const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{doodles[name]=image;inkSprites.clear()};
@@ -123,10 +123,13 @@ const inkSprites=new Map();
 let spriteDpr=0;
 function paintInk(ctx,kind,pulse,time,i){
       const image=doodles[kind];
-      if(image&&['fire','frost','poison'].includes(kind)){
-        const width=kind==='fire'?14+pulse:14,height=width*image.naturalHeight/image.naturalWidth;
+      if(image){
+        const width=['fire','electric','void'].includes(kind)?14+pulse:14,height=width*image.naturalHeight/image.naturalWidth;
         // Wall-local positive Y points outward, so flames rise away from the ink.
-        ctx.save();ctx.translate(0,7);ctx.rotate(Math.PI);ctx.drawImage(image,-width/2,-height/2,width,height);ctx.restore();return;
+        ctx.save();ctx.translate(0,7);ctx.rotate(Math.PI);
+        if(kind==='gravity')ctx.rotate(time*.3);
+        if(kind==='chaos')ctx.rotate((time*40+i*37)*Math.PI/180);
+        ctx.drawImage(image,-width/2,-height/2,width,height);ctx.restore();return;
       }
       if(kind==='poison'){
         ctx.strokeStyle='#39742e';ctx.fillStyle='#9bd34a';

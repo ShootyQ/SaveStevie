@@ -52,3 +52,13 @@ fragments of neighboring cells during export. Fast and Elite are exported at
 192px, Brute at 256px, and Mini at 128px, plus four-pixel borders. All 19 enemy
 types now have custom artwork. These four use the same health/status renderer,
 fixed collision sizes, and missing-image vector fallback as other enemies.
+
+The final elemental batch adds electric.png, blast.png, vampire.png, gravity.png,
+repulsion.png, void.png, and chaos.png: bolt, explosion, fanged droplet, inward
+spiral, outward arrows, dark portal, and multicolored die. Each is exported at
+up to 128px with four-pixel transparent borders; the seven total about 172 KiB
+on disk. All ten elemental inks now have matching card icons and wall glyphs.
+The existing bounded phase cache draws pulsing Electric/Void, spinning Gravity,
+and tumbling Chaos without per-glyph image allocations. Missing wall images
+retain procedural effects; failed card images remove themselves. Card URLs
+include the packaged build hash to refresh cached assets after deployment.
