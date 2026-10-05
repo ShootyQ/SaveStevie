@@ -105,7 +105,7 @@ function nearestEnemy(x,y,maxD){
   return bestE;
 }
 
-function updateSteve(dt){
+function updateStevie(dt){
   if(!game.state.stats.rockDamage||!game.state.stats.rockRate)return;
   game.state.player.rockCd-=dt;
   if(game.state.player.rockCd<=0){
@@ -134,7 +134,7 @@ function updateProjectiles(dt){
         if(Math.random()<.22)p.target.freeze=Math.max(p.target.freeze,.55);
       }
       if(game.state.synergies.has('Thunderstones'))game.api.chainLightning(p.target,Math.max(1,game.state.inks.electric));
-      if(game.state.synergies.has('Steve the Unreasonable'))game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+p.damage*.08);
+      if(game.state.synergies.has('Stevie the Unreasonable'))game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+p.damage*.08);
       game.api.burst(p.target.x,p.target.y,'#5f5a53',5);
       game.state.projectiles=game.state.projectiles.filter(q=>q!==p)
     }
@@ -229,7 +229,26 @@ function steerBounce(e,dt){
   return true;
 }
 
-const api = { wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateSteve, updateProjectiles, eraserAttack };
+function contactStevie(e){
+  if(e.hp<=0||!game.state.enemies.includes(e))return false;
+  const player=game.state.player;
+  if(game.api.dist(e.x,e.y,player.x,player.y)>=player.r+e.r+2)return false;
+  const damage=e.dmg*(1-game.state.stats.playerArmor);
+  player.hp=Math.max(0,player.hp-damage);
+  game.api.floatText(player.x,player.y-28,'-'+Number(damage.toFixed(1)),'#b44141');
+  game.api.burst(e.x,e.y,e.color,12);
+  // Contact removal is not a player kill: no rewards, healing, or split children.
+  game.state.enemies=game.state.enemies.filter(other=>other!==e);
+  if(e.type==='eraser')game.state.finalBossDefeated=true;
+  if(game.state.synergies.has('Human Pinball')){
+    for(const other of game.state.enemies){
+      const dx=other.x-player.x,dy=other.y-player.y,d=Math.hypot(dx,dy)||1;
+      if(d<85){other.x+=dx/d*32;other.y+=dy/d*32}
+    }
+  }
+  return true;
+}
+const api = { contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

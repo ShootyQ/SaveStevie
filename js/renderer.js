@@ -129,7 +129,7 @@ function draw(){
     drawWallTextures(game.state.currentWall,game.state.stats.lineWidth,.72)
   }
 
-  // Steve
+  // Stevie
   game.dom.ctx.translate(game.state.player.x,game.state.player.y);
   game.dom.ctx.fillStyle='#f3d7b5';game.dom.ctx.strokeStyle='#24323a';game.dom.ctx.lineWidth=3;
   game.dom.ctx.beginPath();game.dom.ctx.arc(0,-7,13,0,Math.PI*2);game.dom.ctx.fill();game.dom.ctx.stroke();
