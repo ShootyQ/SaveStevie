@@ -49,22 +49,16 @@
         <div class="splash-eyebrow">A NOTEBOOK SURVIVAL GAME <span>IN DEVELOPMENT</span></div>
         <div class="splash-art" aria-hidden="true">
           <svg viewBox="0 0 440 250" xmlns="http://www.w3.org/2000/svg">
-            <defs><pattern id="splashGrid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#bed4e3" stroke-width="1"/></pattern></defs>
-            <rect x="24" y="12" width="392" height="224" rx="22" fill="#f7f1df"/>
-            <rect x="24" y="12" width="392" height="224" rx="22" fill="url(#splashGrid)"/>
-            <path d="M61 12V236" stroke="#e4a5a0" stroke-width="2"/>
-            <path d="M136 164Q104 112 151 63Q207 35 291 71Q337 112 301 167" fill="none" stroke="#26333c" stroke-width="12" stroke-linecap="round"/>
-            <path d="M136 164Q104 112 151 63Q207 35 291 71Q337 112 301 167" fill="none" stroke="#68747b" stroke-width="3" stroke-linecap="round"/>
-            <g fill="#f28a38" stroke="#26333c" stroke-width="2"><path d="M149 66l-5-25 14 12 4-24 13 34Z"/><path d="M274 64l5-20 8 9 7-20 5 38Z"/></g>
-            <g stroke="#26333c" stroke-width="3" stroke-linecap="round"><path d="M199 216v-31m36 31v-31"/><path d="M193 157l-14 24m60-24 17 21"/><rect x="195" y="151" width="43" height="45" rx="7" fill="#4b79d8"/><circle cx="217" cy="134" r="26" fill="#f3d7b5"/><path d="M198 113q17-20 37 0" fill="#26333c"/><path d="M209 143q8 8 16 0" fill="none"/></g>
-            <g fill="#26333c"><circle cx="208" cy="132" r="2.8"/><circle cx="226" cy="132" r="2.8"/></g>
-            <g stroke="#26333c" stroke-width="3"><circle cx="75" cy="98" r="22" fill="#cf5b51"/><circle cx="359" cy="136" r="27" fill="#8456c9"/><circle cx="342" cy="48" r="15" fill="#73ba44"/></g>
-            <g fill="white"><circle cx="68" cy="94" r="4"/><circle cx="82" cy="94" r="4"/><circle cx="350" cy="131" r="5"/><circle cx="368" cy="131" r="5"/></g>
-            <g stroke="#26333c" stroke-width="3" fill="none"><path d="M68 109l14-4m-14 0 14 4M348 150h20M93 161l12-5m219 32 13 7"/></g>
-            <path d="M106 201l31-27 8 10-32 26-13 4Z" fill="#d8a72e" stroke="#26333c" stroke-width="2"/>
-            <path d="M100 214l13-4-8-9Z" fill="#26333c"/>
-            <text x="281" y="220" fill="#3562be" font-size="17" font-family="Trebuchet MS, sans-serif" font-weight="bold" transform="rotate(-8 281 220)">keep him safe!</text>
+            <path d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#26333c" stroke-width="10" stroke-linecap="round"/>
+            <path d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#68747b" stroke-width="2" stroke-linecap="round"/>
           </svg>
+          <img class="splash-stevie" src="assets/art/stevie.png" alt="" width="330" height="392">
+          <img class="splash-grunt" src="assets/art/grunt.png" alt="" width="200" height="182">
+          <img class="splash-sniper" src="assets/art/sniper.png" alt="" width="264" height="234">
+          <img class="splash-splitter" src="assets/art/splitter.png" alt="" width="200" height="153">
+          <img class="splash-pencil" src="assets/art/pencil.png" alt="" width="200" height="189">
+          <img class="splash-fire" src="assets/art/fire.png" alt="" width="136" height="119">
+          <span class="splash-scribble">keep him safe!</span>
         </div>
         <h1 class="splash-title">Save <span>Stevie.</span></h1>
         <p class="splash-tagline">Your ink. His life. One very chaotic notebook.</p>
@@ -179,6 +173,11 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry">
+        <h3>Math-class doodles come to life</h3>
+        <p>Stevie, Grunts, Snipers, Splitters, and Tanks now use custom scribbled artwork. Fire, frost, and poison decorate your walls with the new doodles, and elemental upgrade cards have matching icons.</p>
+        <p>The splash screen uses the same characters and pencil. Monster status colors and health remain visible; combat and hitboxes stay unchanged.</p>
+      </article>
       <article class="build-entry">
         <h3>Visible sniper shots &amp; more room to play</h3>
         <p>Snipers no longer deal invisible instant damage. A blue aim line warns before a visible shot, and walls intercept their projectiles. Ranged hits are labeled SHOT, and the game-over screen identifies your last hit.</p>

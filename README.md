@@ -21,7 +21,7 @@ Refactored from doodle_defender_v8.html. Open index.html directly in a modern br
 
 Each system is a factory receiving the same game context. Mutable values live in game.state; DOM references in game.dom; upgrade tables in game.catalog. game.api connects systems without implicit shared variables. System methods are also grouped on game.renderer, game.walls, etc. Install every system before starting the loop.
 
-This is a behavior-preserving first structural pass. The central simulation still coordinates interactions in loop.js; those can be extracted independently in future edits. Artwork remains procedural canvas drawing because v8 supplies no separate image assets. Best-wave storage retains the original doodleDefenderBestV4 key.
+This is a behavior-preserving first structural pass. The central simulation still coordinates interactions in loop.js; those can be extracted independently in future edits. Custom PNG doodles live in assets/art, with procedural canvas fallbacks while they load. Best-wave storage retains the original doodleDefenderBestV4 key.
 
 ## Validation
 
@@ -47,7 +47,7 @@ Every subsequent push to `main` updates the site automatically. You can also
 redeploy from the workflow's **Run workflow** button, selecting `main`.
 Pull requests run validation without publishing. No package installation,
 custom server, or additional secrets are needed. Only `index.html`, `styles.css`,
-`game.js`, and `js/` are published; test fixtures stay out of the site.
+`game.js`, `js/`, and `assets/` are published; test fixtures stay out of the site.
 
 Open the deployed URL on your phone. Best-wave records are saved in that
 browser's local storage and are not synced between devices.
@@ -141,3 +141,16 @@ Starting a run on a touch device requests browser fullscreen when supported.
 **Screen** toggles it manually; **Exit** returns to the browser. Unsupported or
 denied fullscreen leaves the normal viewport-filling layout playable. Resizing
 translates the scene together so Stevie stays aligned with existing defenses.
+
+## Custom notebook artwork
+
+Nine transparent, optimized PNGs in `assets/art/` supply Stevie, Grunt, Sniper,
+Splitter, Tank, a pencil, and fire/frost/poison doodles. They appear in the arena,
+splash, wall decorations, and matching upgrade cards. Other enemy types retain
+their existing artwork. Canvas collision radii and combat rules are unchanged.
+
+Images load once; status-tinted versions and wall glyphs are cached. Monsters
+retain a faded missing-health silhouette, colored status sections, and a small
+health/status bar when needed. Delayed or failed gameplay image loads use the
+original vector drawings. No game dependencies are added. See
+`assets/art/README.md` for asset sources and export details.

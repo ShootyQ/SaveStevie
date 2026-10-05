@@ -1,5 +1,48 @@
 /* renderer: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.renderer = function createRendererSystem(game) {
+// Load once. Missing/late assets retain the existing vector drawings.
+const doodles={},tintedDoodles=new Map();
+const doodleNames=['stevie','grunt','sniper','splitter','tank','pencil','fire','frost','poison'];
+if(typeof Image!=='undefined')for(const name of doodleNames){
+  const image=new Image();image.decoding='async';
+  image.onload=()=>{doodles[name]=image;inkSprites.clear()};
+  image.src='assets/art/'+name+'.png';
+}
+function tintedDoodle(name,colors){
+  const image=doodles[name];if(!colors.length)return image;
+  const key=name+':'+colors.join(',');
+  if(tintedDoodles.has(key))return tintedDoodles.get(key);
+  const canvas=typeof OffscreenCanvas==='undefined'?document.createElement('canvas'):new OffscreenCanvas(image.naturalWidth,image.naturalHeight);
+  canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;const ctx=canvas.getContext('2d');
+  ctx.drawImage(image,0,0);ctx.globalCompositeOperation='color';
+  colors.forEach((color,i)=>{ctx.fillStyle=color;ctx.fillRect(i*canvas.width/colors.length,0,canvas.width/colors.length,canvas.height)});
+  ctx.globalCompositeOperation='destination-in';ctx.drawImage(image,0,0);
+  // Only 32 combinations stay resident, regardless of changing monster statuses.
+  if(tintedDoodles.size>=32)tintedDoodles.delete(tintedDoodles.keys().next().value);
+  tintedDoodles.set(key,canvas);return canvas;
+}
+function drawDoodleEnemy(e,hpRatio){
+  const image=doodles[e.type];if(!image)return false;
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(e.type==='sniper'?3.4:2.7),height=width*image.naturalHeight/image.naturalWidth;
+  const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
+  ctx.save();if(e.type==='sniper'&&game.state.player.x<e.x)ctx.scale(-1,1);
+  // A pale full silhouette remains; healthy colored artwork fills upward.
+  // Round to display pixels so tiny fractional HP changes need no clipping.
+  const visibleHp=Math.round(hpRatio*height)/height,healthy=tintedDoodle(e.type,colors);
+  if(visibleHp<1){
+    ctx.globalAlpha=.22;ctx.drawImage(image,left,top,width,height);ctx.globalAlpha=1;
+    ctx.save();ctx.beginPath();ctx.rect(left,top+height*(1-visibleHp),width,height*visibleHp);ctx.clip();
+    ctx.drawImage(healthy,left,top,width,height);ctx.restore();
+  }else ctx.drawImage(healthy,left,top,width,height);
+  ctx.restore();
+  if(hpRatio<1||colors.length){
+    const barWidth=e.r*2.3,barY=-e.r-10;
+    ctx.fillStyle='#ddd5c1';ctx.fillRect(-barWidth/2,barY,barWidth,3);
+    if(colors.length)colors.forEach((color,i)=>{ctx.fillStyle=color;ctx.fillRect(-barWidth/2+i*barWidth*hpRatio/colors.length,barY,barWidth*hpRatio/colors.length,3)});
+    else{ctx.fillStyle=e.color;ctx.fillRect(-barWidth/2,barY,barWidth*hpRatio,3)}
+  }
+  return true;
+}
 function enemyStatusColors(e){
   const colors=[];
   if(e.poison>0)colors.push('#73ba44');
@@ -61,6 +104,12 @@ function textureSamples(points){
 const inkSprites=new Map();
 let spriteDpr=0;
 function paintInk(ctx,kind,pulse,time,i){
+      const image=doodles[kind];
+      if(image&&['fire','frost','poison'].includes(kind)){
+        const width=kind==='fire'?14+pulse:14,height=width*image.naturalHeight/image.naturalWidth;
+        // Wall-local positive Y points outward, so flames rise away from the ink.
+        ctx.save();ctx.translate(0,7);ctx.rotate(Math.PI);ctx.drawImage(image,-width/2,-height/2,width,height);ctx.restore();return;
+      }
       if(kind==='poison'){
         ctx.strokeStyle='#39742e';ctx.fillStyle='#9bd34a';
         ctx.beginPath();ctx.arc(0,4,3.2,0,Math.PI*2);ctx.fill();ctx.stroke();
@@ -202,11 +251,16 @@ function draw(){
 
   // Stevie
   game.dom.ctx.translate(game.state.player.x,game.state.player.y);
-  game.dom.ctx.fillStyle='#f3d7b5';game.dom.ctx.strokeStyle='#24323a';game.dom.ctx.lineWidth=3;
-  game.dom.ctx.beginPath();game.dom.ctx.arc(0,-7,13,0,Math.PI*2);game.dom.ctx.fill();game.dom.ctx.stroke();
-  game.dom.ctx.fillStyle='#3f75b7';game.dom.ctx.fillRect(-12,7,24,27);
-  game.dom.ctx.fillStyle='#25313a';game.dom.ctx.beginPath();game.dom.ctx.arc(-4,-9,1.8,0,Math.PI*2);game.dom.ctx.arc(4,-9,1.8,0,Math.PI*2);game.dom.ctx.fill();
-  game.dom.ctx.strokeStyle='#25313a';game.dom.ctx.lineWidth=2;game.dom.ctx.beginPath();game.dom.ctx.arc(0,-4,5,.25,Math.PI-.25);game.dom.ctx.stroke();
+  if(doodles.stevie){
+    const image=doodles.stevie,height=64,width=height*image.naturalWidth/image.naturalHeight;
+    game.dom.ctx.drawImage(image,-width/2,-31,width,height);
+  }else{
+    game.dom.ctx.fillStyle='#f3d7b5';game.dom.ctx.strokeStyle='#24323a';game.dom.ctx.lineWidth=3;
+    game.dom.ctx.beginPath();game.dom.ctx.arc(0,-7,13,0,Math.PI*2);game.dom.ctx.fill();game.dom.ctx.stroke();
+    game.dom.ctx.fillStyle='#3f75b7';game.dom.ctx.fillRect(-12,7,24,27);
+    game.dom.ctx.fillStyle='#25313a';game.dom.ctx.beginPath();game.dom.ctx.arc(-4,-9,1.8,0,Math.PI*2);game.dom.ctx.arc(4,-9,1.8,0,Math.PI*2);game.dom.ctx.fill();
+    game.dom.ctx.strokeStyle='#25313a';game.dom.ctx.lineWidth=2;game.dom.ctx.beginPath();game.dom.ctx.arc(0,-4,5,.25,Math.PI-.25);game.dom.ctx.stroke();
+  }
   game.dom.ctx.restore();
 
   for(const e of game.state.enemies){
@@ -228,22 +282,24 @@ function draw(){
       game.dom.ctx.fillStyle='#fff';game.dom.ctx.fillRect(-12,-5,7,7);game.dom.ctx.fillRect(5,-5,7,7);
       game.dom.ctx.fillStyle='#3b2630';game.dom.ctx.fillRect(-4,9,8,3);
     }else{
-      game.dom.ctx.strokeStyle='#2a3135';game.dom.ctx.lineWidth=2.5;
+      if(!drawDoodleEnemy(e,hpRatio)){
+        game.dom.ctx.strokeStyle='#2a3135';game.dom.ctx.lineWidth=2.5;
 
-      // Enemy body is now the health meter: its color drains from top to bottom.
-      game.dom.ctx.fillStyle='rgba(255,255,255,.42)';
-      game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.fill();
+        // Enemy body is now the health meter: its color drains from top to bottom.
+        game.dom.ctx.fillStyle='rgba(255,255,255,.42)';
+        game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.fill();
 
-      game.dom.ctx.save();
-      game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.clip();
-      drawEnemyFill(e,-e.r,e.r-(2*e.r*hpRatio),e.r*2,2*e.r*hpRatio);
-      game.dom.ctx.restore();
+        game.dom.ctx.save();
+        game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.clip();
+        drawEnemyFill(e,-e.r,e.r-(2*e.r*hpRatio),e.r*2,2*e.r*hpRatio);
+        game.dom.ctx.restore();
 
-      game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.stroke();
+        game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.stroke();
 
-      game.dom.ctx.fillStyle='#fff';
-      game.dom.ctx.beginPath();game.dom.ctx.arc(-e.r*.25,-2,2,0,Math.PI*2);game.dom.ctx.arc(e.r*.25,-2,2,0,Math.PI*2);game.dom.ctx.fill();
-      game.dom.ctx.strokeStyle='#222';game.dom.ctx.beginPath();game.dom.ctx.moveTo(-4,5);game.dom.ctx.lineTo(4,5);game.dom.ctx.stroke();
+        game.dom.ctx.fillStyle='#fff';
+        game.dom.ctx.beginPath();game.dom.ctx.arc(-e.r*.25,-2,2,0,Math.PI*2);game.dom.ctx.arc(e.r*.25,-2,2,0,Math.PI*2);game.dom.ctx.fill();
+        game.dom.ctx.strokeStyle='#222';game.dom.ctx.beginPath();game.dom.ctx.moveTo(-4,5);game.dom.ctx.lineTo(4,5);game.dom.ctx.stroke();
+      }
       if(e.type==='boss'){game.dom.ctx.fillStyle='#d8a72e';game.dom.ctx.fillRect(-11,-e.r-8,22,5)}
       if(e.type==='bouncer'){
         game.dom.ctx.strokeStyle='#e8fffb';game.dom.ctx.lineWidth=2;
@@ -295,7 +351,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { enemyStatusColors, resize, draw };
+const api = { artworkReady:()=>doodleNames.every(name=>!!doodles[name]), enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 return api;
 };
