@@ -8,7 +8,9 @@ outlines are intentional.
 
 Stevie is exported at up to 384px, the sniper at 256px, other characters/pencil
 at 192px, and wall elements/arrows at 128px (before borders). The initial nine PNGs together are
-roughly 620 KiB. Status-tinted sprite combinations use a bounded 32-entry cache. No source atlas is downloaded during play.
+roughly 620 KiB. Status-tinted sprite combinations use a bounded
+least-recently-used cache (192 entries, 16 MiB of RGBA pixels). No source atlas
+is downloaded during play.
 
 - stevie.png: player and splash
 - grunt.png, sniper.png, splitter.png, tank.png: corresponding enemies
@@ -82,7 +84,7 @@ Readiness requires a clear, close shot; firing follows actual projectile
 creation. Sappers prepare while touching walls, then strike on actual wall
 hits. Medics animate only after healing an injured nearby ally, and their
 custom range pulse stops when inactive, frozen, or stunned. Alternate poses
-share the existing 32-entry status-tint cache and fixed combat bounds.
+share the bounded status-tint cache and fixed combat bounds.
 
 Stevie's flinch follows actual damage and takes priority over rock throwing.
 A short cheer appears in the arena and a dedicated transparent wave-clear

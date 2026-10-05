@@ -56,11 +56,63 @@ was compared against the preceding mobile/sniper branch. Images were fully
 loaded before timing. Median update + draw measured 8.1ms before and 7.4ms after
 on this host; the combat/next-random hash matched exactly. This single comparison
 establishes no observed regression in that scene, not a guaranteed speedup on
-phones. Status combinations are composed once into a bounded 32-entry cache;
-wall artwork retains its bounded phase cache. Missing asset loads use vectors.
+phones. Status combinations are composed once into a bounded cache (initially 32
+entries; see the current limits below); wall artwork retains its bounded phase cache. Missing asset loads use vectors.
 
 The subsequent barrier/arrow fix measured 7.9ms median update + draw and 10.1ms
 p95 in the same crowded scene on this host. Forced movement now checks wall
 paths; its combat hash intentionally differs because gravity no longer moves
 monsters through barriers. The six additional PNGs still load once and share
 the same bounded caches.
+
+## Wave 20: mixed-monster status-cache churn
+
+A late-wave scene with many monster types and stacked statuses exceeded the
+old 32-entry tinted-sprite cache. Its first-in/first-out eviction also ignored
+recent hits. A steady mixed crowd rebuilt most of its colored images every
+frame, allocating thousands of offscreen canvases and repeatedly compositing
+PNG artwork. CPU sampling showed `drawImage`, tint creation, context creation,
+and garbage collection dominating this scene.
+
+Tinted sprites now use least-recently-used eviction, with both a 192-entry
+limit and a 16 MiB RGBA-pixel budget. Hits promote entries; genuinely unused
+combinations are discarded first. Oversized individual images are not cached
+and do not flush the working set. The original source dimensions, status colors,
+alpha, animations, draw order, and combat rules are preserved. These limits
+count cached pixel storage, not total browser/GPU process memory.
+
+The existing benchmark now disables introductions and music before starting,
+so its simulation actually runs. Add `wave20` to reproduce the rendering case:
+
+```sh
+node tests/browser-performance.cjs /path/to/source /tmp/wave20.json wave20
+```
+
+This phone-sized DPR-2 case draws 180 enemies across all 19 types and four
+stacked-status combinations, 12 closed walls with all ten inks, 1,800 particles,
+48 damage labels, eight lightning casts, and four explosions. It measures 150
+render submissions after 40 warm-up frames; simulation is held fixed to isolate
+rendering. A final capture freezes decorative wall hues and hashes canvas pixels
+alongside combat state and the next random draw.
+
+Observed on this host in headless Chromium, comparing main commit `5df2212`
+with this fix:
+
+| Mixed-crowd rendering | Before | After |
+| --- | ---: | ---: |
+| Median draw submission | 75.8 ms | 9.3 ms |
+| 95th percentile | 87.7 ms | 11.2 ms |
+| New canvases in timed loop and final capture | 22,975 | 23 |
+| New tinted images after warm-up | continually rebuilt | 0 |
+
+The remaining 23 canvases are bounded wall-glyph animation phases. The working
+set contains 76 tinted images using 11,172,992 RGBA bytes, with no evictions in
+this scene. Canvas-pixel and combat/randomness hashes matched exactly. The
+separate seeded simulation benchmark also retained its combat hash. Timings
+measure CPU/draw submission on this host; they do not establish physical Pixel
+frame rates or total GPU/compositor cost.
+
+Validation also exercises more than 32 mixed sprites, repeated cache hits,
+eviction over many status combinations, storage limits, run reuse, and render
+purity. `rendererCacheStats()` exposes cloned counts for profiling without
+exposing images or changing combat state.

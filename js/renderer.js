@@ -2,6 +2,10 @@
 DoodleDefender.systems.renderer = function createRendererSystem(game) {
 // Load once. Missing/late assets retain the existing vector drawings.
 const doodles={},tintedDoodles=new Map();
+// Fit a busy wave's working set without rebuilding every colored enemy each frame.
+const tintLimits={entries:192,bytes:16*1024*1024};
+let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
+function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
 const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
@@ -121,15 +125,25 @@ function drawSplitAnimations(){
 function tintedDoodle(name,colors){
   const image=doodles[name];if(!colors.length)return image;
   const key=name+':'+colors.join(',');
-  if(tintedDoodles.has(key))return tintedDoodles.get(key);
+  const cached=tintedDoodles.get(key);
+  if(cached){
+    // Move hits to the end, evicting genuinely unused combinations first.
+    tintedDoodles.delete(key);tintedDoodles.set(key,cached);tintHits++;return cached.canvas;
+  }
+  tintMisses++;
   const canvas=typeof OffscreenCanvas==='undefined'?document.createElement('canvas'):new OffscreenCanvas(image.naturalWidth,image.naturalHeight);
   canvas.width=image.naturalWidth;canvas.height=image.naturalHeight;const ctx=canvas.getContext('2d');
   ctx.drawImage(image,0,0);ctx.globalCompositeOperation='color';
   colors.forEach((color,i)=>{ctx.fillStyle=color;ctx.fillRect(i*canvas.width/colors.length,0,canvas.width/colors.length,canvas.height)});
   ctx.globalCompositeOperation='destination-in';ctx.drawImage(image,0,0);
-  // Only 32 combinations stay resident, regardless of changing monster statuses.
-  if(tintedDoodles.size>=32)tintedDoodles.delete(tintedDoodles.keys().next().value);
-  tintedDoodles.set(key,canvas);return canvas;
+  const bytes=canvas.width*canvas.height*4;
+  if(bytes>tintLimits.bytes)return canvas;
+  while(tintedDoodles.size&&(tintedDoodles.size>=tintLimits.entries||tintedBytes+bytes>tintLimits.bytes)){
+    const oldest=tintedDoodles.keys().next().value;
+    tintedBytes-=tintedDoodles.get(oldest).bytes;tintedDoodles.delete(oldest);tintEvictions++;
+  }
+  tintedDoodles.set(key,{canvas,bytes});tintedBytes+=bytes
+  return canvas;
 }
 function drawDoodleEnemy(e,hpRatio){
   const action=enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
@@ -507,7 +521,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 return api;
 };
