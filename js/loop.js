@@ -184,6 +184,7 @@ function update(dt){
   for(const p of game.state.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.96;p.vy*=.96}
   game.state.particles=game.state.particles.filter(p=>p.life>0);
   game.api.updateDamageNumbers(dt);
+  game.api.updateEnemyAnimations(dt);
   for(const f of game.state.floaters){if(!f.damageNumber){if(!f.hitMarker)f.y-=22*dt;f.t-=dt}}
   game.state.floaters=game.state.floaters.filter(f=>f.t>0);
 

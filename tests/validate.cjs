@@ -387,3 +387,25 @@ g.state.stats.rockRate=.28;target.x=g.state.player.x+120;g.state.player.rockCd=0
 g.api.startWave();assert.equal(pose(),neutral,'wave transition clears old throws');
 console.log('PASS: unarmed idle, real targeted throws, fast-upgrade recovery, paused frames, pure rendering, and wave reset.');
 }
+
+{
+const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;
+const {x,y}=g.state.player,e=g.api.spawnEnemy(false,x+110,y,'grunt');e.speed=0;
+const pose=monster=>JSON.stringify(g.api.enemyAnimationPose(monster));
+g.api.updateEnemyAnimations(.016);const idle=pose(e);e.x+=2;g.api.updateEnemyAnimations(.016);assert.notEqual(pose(e),idle,'actual travel animates monster');
+const before=JSON.stringify(g.state),animated=pose(e);g.api.draw();g.api.draw();assert.equal(JSON.stringify(g.state),before);assert.equal(pose(e),animated,'draw never advances monster motion');
+g.state.paused=true;g.api.update(.2);assert.equal(pose(e),animated,'pause freezes monster pose');g.state.paused=false;
+e.freeze=1;e.x+=2;g.api.updateEnemyAnimations(.016);assert.equal(g.api.enemyAnimationPose(e).y,0,'frozen monsters do not walk');e.freeze=0;
+g.api.dealDamage(e,1,'physical');g.api.updateEnemyAnimations(.05);assert.ok(g.api.enemyAnimationPose(e).sx>1,'actual damage squashes sprite');
+g.api.dealDamage(e,.1,'poison');g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyAnimationPose(e).sx,1,'frequent ticks cannot keep resetting squish');
+e.immunity='fire';e.immuneCd=1;g.api.dealDamage(e,20,'fire');g.api.updateEnemyAnimations(.016);assert.equal(g.api.enemyAnimationPose(e).sx,1,'immune hits do not react');
+g.state.enemies=[];const parent=g.api.spawnEnemy(false,x+100,y,'brood');g.api.killEnemy(parent);
+assert.equal(g.api.enemyAnimationCount(),1);assert.equal(g.state.enemies.length,2,'both children spawn immediately');assert(g.state.enemies.every(n=>n.type==='splitter'));
+const child=g.state.enemies[0],combatX=child.x,combatY=child.y;g.api.updateEnemyAnimations(.07);assert.ok(g.api.enemyAnimationPose(child).y<0,'split children spring up visually');assert.equal(child.x,combatX);assert.equal(child.y,combatY,'spring never moves a collider');
+g.api.killEnemy(child);assert.equal(g.state.enemies.filter(n=>n.type==='mini').length,2,'second generation still splits immediately');
+g.state.paused=true;const echoes=g.api.enemyAnimationCount();g.api.update(.4);assert.equal(g.api.enemyAnimationCount(),echoes,'pause freezes split echo lifetime');g.state.paused=false;
+g.api.updateEnemyAnimations(.3);assert.equal(g.api.enemyAnimationCount(),0,'echoes promptly expire');
+for(let i=0;i<50;i++)g.api.animateEnemySplit(parent);assert.equal(g.api.enemyAnimationCount(),20,'split visuals have a fixed budget');
+g.api.startWave();assert.equal(g.api.enemyAnimationCount(),0,'wave reset clears split echoes');
+console.log('PASS: travel-driven enemy motion, freeze/pause, damage and immune reactions, tick throttling, immediate two-generation splits, collider preservation, bounded echoes, and reset.');
+}

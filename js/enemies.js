@@ -86,10 +86,12 @@ function killEnemy(e){
 
   if(e.type==='eraser') game.state.finalBossDefeated=true;
   if(e.type==='brood'){
-    game.api.spawnEnemy(false,e.x+10,e.y,'splitter');game.api.spawnEnemy(false,e.x-10,e.y,'splitter');
+    game.api.animateEnemySplit(e);
+    game.api.animateSplitChild(game.api.spawnEnemy(false,e.x+10,e.y,'splitter'));game.api.animateSplitChild(game.api.spawnEnemy(false,e.x-10,e.y,'splitter'));
   }
   if(e.type==='splitter'){
-    game.api.spawnEnemy(false,e.x+6,e.y+3,'mini');game.api.spawnEnemy(false,e.x-6,e.y-3,'mini');
+    game.api.animateEnemySplit(e);
+    game.api.animateSplitChild(game.api.spawnEnemy(false,e.x+6,e.y+3,'mini'));game.api.animateSplitChild(game.api.spawnEnemy(false,e.x-6,e.y-3,'mini'));
   }
   if(game.state.synergies.has('Plaguefire')&&e.burn>0){
     for(const n of game.state.enemies)if(n!==e&&game.api.dist(n.x,n.y,e.x,e.y)<75)n.poison=Math.min(6,n.poison+2)

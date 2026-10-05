@@ -76,6 +76,7 @@ function dealDamage(enemy,amount,kind='physical'){
   if(enemy.type==='bulwark'&&kind==='physical'&&amount>0)amount*=.35;
   const before=enemy.hp,actual=Math.min(Math.max(0,before),amount);
   enemy.hp-=amount;
+  if(actual>0)game.api.reactEnemyHit(enemy);
   game.api.damageNumber(enemy,actual,kind,before>0&&enemy.hp<=0);
 }
 function updateDamageNumbers(dt){
