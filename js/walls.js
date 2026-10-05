@@ -2,8 +2,12 @@
 DoodleDefender.systems.walls = function createWallsSystem(game) {
 function nearestWallHit(e){
   for(const wall of game.state.walls){
+    const bounds=game.api.wallGeometry(wall.pts),radius=e.r+wall.thick/2;
+    if(e.x<bounds.minX-radius||e.x>bounds.maxX+radius||e.y<bounds.minY-radius||e.y>bounds.maxY+radius)continue;
     for(let i=1;i<wall.pts.length;i++){
-      const a=wall.pts[i-1],b=wall.pts[i];
+      const segment=bounds.segments[i-1];
+      if(e.x<segment.minX-radius||e.x>segment.maxX+radius||e.y<segment.minY-radius||e.y>segment.maxY+radius)continue;
+      const a=segment.a,b=segment.b;
       if(game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<e.r+wall.thick/2)return {wall,seg:i};
     }
   }
@@ -12,7 +16,9 @@ function nearestWallHit(e){
 
 function wallNear(x,y,r){
   for(const w of game.state.walls){
-    for(const p of w.pts)if(game.api.dist(x,y,p.x,p.y)<r)return true;
+    const b=game.api.wallGeometry(w.pts);
+    if(x<b.minX-r||x>b.maxX+r||y<b.minY-r||y>b.maxY+r)continue;
+    for(const p of w.pts)if(game.api.withinRadius(x,y,p.x,p.y,r))return true;
   }
   return false;
 }
@@ -34,8 +40,8 @@ function damageWall(wall,amount,x,y){
       }
 
       for(const e of game.state.enemies){
-        const md=Math.min(...wall.pts.map(p=>game.api.dist(p.x,p.y,e.x,e.y)));
-        if(md<radius){
+        const near=wall.pts.some(p=>game.api.withinRadius(p.x,p.y,e.x,e.y,radius));
+        if(near){
           if(game.state.synergies.has('Singularity Ink')){
             const dx=x-e.x,dy=y-e.y,m=Math.hypot(dx,dy)||1;
             e.x+=dx/m*24;e.y+=dy/m*24;
@@ -247,7 +253,8 @@ function chainLightning(source,level){
   if(game.state.synergies.has('Cryoshock')&&source.freeze>0){range+=70;count+=2;mult+=.55}
   if(game.state.synergies.has('Tesla Well')&&source.gravitySlow>.15){range+=45;count+=1;mult+=.35}
   if(game.state.synergies.has('THE STORM')){range+=65;count+=2;mult+=.45}
-  const nearby=game.state.enemies.filter(e=>e!==source&&game.api.dist(e.x,e.y,source.x,source.y)<range).slice(0,count);
+  const nearby=[];
+  for(const e of game.state.enemies){if(e!==source&&game.api.withinRadius(e.x,e.y,source.x,source.y,range)){nearby.push(e);if(nearby.length===count)break}}
   game.api.dealDamage(source,(3+level*2)*mult,'electric');
   nearby.forEach(e=>{game.api.dealDamage(e,(4+level*3)*mult,'electric');game.api.burst(e.x,e.y,'#7ea7ff',4)});
   game.api.burst(source.x,source.y,'#7ea7ff',5);
@@ -256,7 +263,7 @@ function chainLightning(source,level){
 function applySynergies(e,dt){
   if(game.state.synergies.has('Plaguefire')&&e.burn>0&&e.poison>1){
     for(const n of game.state.enemies){
-      if(n!==e&&game.api.dist(n.x,n.y,e.x,e.y)<72)n.poison=Math.min(6,n.poison+dt*.9)
+      if(n!==e&&game.api.withinRadius(n.x,n.y,e.x,e.y,72))n.poison=Math.min(6,n.poison+dt*.9)
     }
   }
 

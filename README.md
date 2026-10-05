@@ -54,7 +54,8 @@ browser's local storage and are not synced between devices.
 
 ## Damage feedback
 
-Small outlined damage numbers bounce in different directions by damage type:
+Small outlined damage numbers launch upward with a stable arc per monster.
+Damage type determines color:
 slate physical, orange fire, green poison, blue electric, gold blast, purple
 void, and cyan thermal shock. Each type collects rapid ticks over 0.55 seconds.
 Numbers last 2 seconds and fade over their final half-second, without cards or
@@ -109,3 +110,18 @@ your run while open and restores your previous pause state when closed.
 The entries in `index.html` (`#changelogEntries`) are the single source for
 player-facing release notes; prepend an entry for every future feature, fix,
 or balance change, as required by `AGENTS.md`.
+
+## Monster status colors
+
+Remaining-health fills show active effects: poison green, burn orange, freeze
+cyan, charged blue, slow purple, and stun gold. Multiple effects share the fill
+in colored sections. When effects expire, the original monster color returns.
+This applies to regular monsters and The Eraser without changing combat stats.
+
+## Performance checks
+
+`node tests/validate.cjs` includes wall-query equivalence and particle-budget
+randomness checks. The optional Playwright benchmark
+`node tests/browser-performance.cjs` measures a seeded crowded, upgraded scene
+and reports a combat-state digest for before/after comparisons. See
+[performance notes](docs/performance.md) for prerequisites and measured results.

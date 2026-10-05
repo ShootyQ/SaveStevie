@@ -1,5 +1,23 @@
 /* renderer: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.renderer = function createRendererSystem(game) {
+function enemyStatusColors(e){
+  const colors=[];
+  if(e.poison>0)colors.push('#73ba44');
+  if(e.burn>0)colors.push('#f28a38');
+  if(e.freeze>0)colors.push('#80dcf2');
+  if(e.charged>0)colors.push('#7199f5');
+  if(e.gravitySlow>0)colors.push('#b493db');
+  if(e.stun>0)colors.push('#f1cf64');
+  return colors;
+}
+function drawEnemyFill(e,x,y,width,height){
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e);
+  ctx.fillStyle=e.color;ctx.fillRect(x,y,width,height);
+  colors.forEach((color,i)=>{
+    ctx.fillStyle=color;ctx.fillRect(x+i*width/colors.length,y,width/colors.length,height);
+  });
+}
+
 function resize(){
   const r=game.dom.canvas.getBoundingClientRect();
   game.state.dpr=Math.min(2,window.devicePixelRatio||1);
@@ -30,23 +48,11 @@ function textureSamples(points){
   wallSamples.set(points,samples);
   return samples;
 }
-function drawWallTextures(points,thick,opacity){
-  const inks=game.state.inks,active=Object.keys(inks).filter(k=>inks[k]>0);
-  if(!active.length)return;
-  const ctx=game.dom.ctx,time=(game.state.waveTime-game.state.timeLeft)*3;
-  const samples=textureSamples(points);
-  ctx.save();ctx.globalAlpha=opacity;ctx.lineCap='round';ctx.lineJoin='round';
-  for(let i=0;i<samples.length;i++){
-    const p=samples[i];
-    for(let k=0;k<active.length;k++){
-      const kind=active[k],level=Math.min(3,inks[kind]);
-      // Stagger each element along the stroke, then alternate its side.
-      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);
-      ctx.translate((k-(active.length-1)/2)*Math.min(5,24/active.length),(k+i)%2?thick/2+3:-thick/2-3);
-      if((k+i)%2===0)ctx.rotate(Math.PI);
-      ctx.lineWidth=1.6;
-      const pulse=Math.sin(time+i*1.7+k),size=1+level*.1;
-      ctx.scale(size,size);
+// Glyphs are reused across walls; only animated phases need separate sprites.
+// Browsers without OffscreenCanvas retain the vector rendering path.
+const inkSprites=new Map();
+let spriteDpr=0;
+function paintInk(ctx,kind,pulse,time,i){
       if(kind==='poison'){
         ctx.strokeStyle='#39742e';ctx.fillStyle='#9bd34a';
         ctx.beginPath();ctx.arc(0,4,3.2,0,Math.PI*2);ctx.fill();ctx.stroke();
@@ -88,6 +94,48 @@ function drawWallTextures(points,thick,opacity){
         ctx.strokeStyle='hsl('+((time*40+i*37)%360)+',65%,45%)';
         ctx.beginPath();ctx.moveTo(-5,1);ctx.lineTo(3,5);ctx.lineTo(-2,10);ctx.lineTo(5,8);ctx.stroke();
       }
+}
+function inkSprite(kind,pulse,time,i){
+  if(typeof OffscreenCanvas==='undefined')return null;
+  const dpr=game.state.dpr;
+  if(spriteDpr!==dpr){inkSprites.clear();spriteDpr=dpr}
+  let phase=0;
+  if(kind==='fire'||kind==='electric'||kind==='void'){
+    phase=Math.round((pulse+1)*8);pulse=phase/8-1;
+  }else if(kind==='gravity'){
+    phase=Math.round(((time*.3)%(Math.PI*2))/(Math.PI*2)*64)%64;
+    time=phase/64*Math.PI*2/.3;
+  }else if(kind==='chaos'){
+    phase=Math.round(((time*40+i*37)%360)/7.5)%48;time=phase*7.5/40;i=0;
+  }
+  const key=kind+':'+phase;
+  if(inkSprites.has(key))return inkSprites.get(key);
+  const canvas=new OffscreenCanvas(40*dpr,40*dpr),ctx=canvas.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,20*dpr,10*dpr);
+  ctx.lineCap='round';ctx.lineJoin='round';ctx.lineWidth=1.6;
+  paintInk(ctx,kind,pulse,time,i);inkSprites.set(key,canvas);return canvas;
+}
+
+function drawWallTextures(points,thick,opacity){
+  const inks=game.state.inks,active=Object.keys(inks).filter(k=>inks[k]>0);
+  if(!active.length)return;
+  const ctx=game.dom.ctx,time=(game.state.waveTime-game.state.timeLeft)*3;
+  const samples=textureSamples(points);
+  ctx.save();ctx.globalAlpha=opacity;ctx.lineCap='round';ctx.lineJoin='round';
+  for(let i=0;i<samples.length;i++){
+    const p=samples[i];
+    for(let k=0;k<active.length;k++){
+      const kind=active[k],level=Math.min(3,inks[kind]);
+      // Stagger each element along the stroke, then alternate its side.
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);
+      ctx.translate((k-(active.length-1)/2)*Math.min(5,24/active.length),(k+i)%2?thick/2+3:-thick/2-3);
+      if((k+i)%2===0)ctx.rotate(Math.PI);
+      ctx.lineWidth=1.6;
+      const pulse=Math.sin(time+i*1.7+k),size=1+level*.1;
+      ctx.scale(size,size);
+      const sprite=inkSprite(kind,pulse,time,i);
+      if(sprite)ctx.drawImage(sprite,-20,-10,40,40);
+      else paintInk(ctx,kind,pulse,time,i);
       ctx.restore();
     }
   }
@@ -150,7 +198,7 @@ function draw(){
       game.dom.ctx.fillStyle='#f7e7e9';game.dom.ctx.fillRect(-32,-20,64,40);
       game.dom.ctx.save();
       game.dom.ctx.beginPath();game.dom.ctx.rect(-32,20-40*hpRatio,64,40*hpRatio);game.dom.ctx.clip();
-      game.dom.ctx.fillStyle='#ef8ba6';game.dom.ctx.fillRect(-32,-20,64,40);
+      drawEnemyFill(e,-32,20-40*hpRatio,64,40*hpRatio);
       game.dom.ctx.restore();
       game.dom.ctx.strokeRect(-32,-20,64,40);
 
@@ -165,8 +213,7 @@ function draw(){
 
       game.dom.ctx.save();
       game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.clip();
-      game.dom.ctx.fillStyle=e.color;
-      game.dom.ctx.fillRect(-e.r,e.r-(2*e.r*hpRatio),e.r*2,2*e.r*hpRatio);
+      drawEnemyFill(e,-e.r,e.r-(2*e.r*hpRatio),e.r*2,2*e.r*hpRatio);
       game.dom.ctx.restore();
 
       game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.stroke();
@@ -225,7 +272,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { resize, draw };
+const api = { enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 return api;
 };

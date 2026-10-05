@@ -6,6 +6,29 @@ function rand(a,b){return a+Math.random()*(b-a)}
 
 function dist(ax,ay,bx,by){return Math.hypot(ax-bx,ay-by)}
 
+function withinRadius(ax,ay,bx,by,r){const dx=ax-bx,dy=ay-by;return dx*dx+dy*dy<r*r}
+const wallGeometryCache=new WeakMap();
+function wallGeometry(points){
+  let geometry=wallGeometryCache.get(points);
+  if(geometry&&geometry.count===points.length)return geometry;
+  let minX=Infinity,minY=Infinity,maxX=-Infinity,maxY=-Infinity,cx=0,cy=0;
+  const segments=[];
+  for(let i=0;i<points.length;i++){
+    const p=points[i];minX=Math.min(minX,p.x);minY=Math.min(minY,p.y);maxX=Math.max(maxX,p.x);maxY=Math.max(maxY,p.y);cx+=p.x;cy+=p.y;
+    if(i){const a=points[i-1];segments.push({a,b:p,minX:Math.min(a.x,p.x),maxX:Math.max(a.x,p.x),minY:Math.min(a.y,p.y),maxY:Math.max(a.y,p.y)})}
+  }
+  geometry={count:points.length,minX,minY,maxX,maxY,cx:cx/points.length,cy:cy/points.length,segments};
+  wallGeometryCache.set(points,geometry);return geometry;
+}
+function nearestWallPoint(x,y,r){
+  let best=null,bestSquared=r*r;
+  for(const w of game.state.walls){
+    const b=game.api.wallGeometry(w.pts),dx=Math.max(b.minX-x,0,x-b.maxX),dy=Math.max(b.minY-y,0,y-b.maxY);
+    if(dx*dx+dy*dy>=bestSquared)continue;
+    for(const p of w.pts){const px=p.x-x,py=p.y-y,squared=px*px+py*py;if(squared<bestSquared){bestSquared=squared;best=p}}
+  }
+  return best;
+}
 function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
 
 function pointSegDist(px,py,x1,y1,x2,y2){
@@ -35,7 +58,7 @@ function countIntersections(points){
   }
   return n;
 }
-const api = { clamp, rand, dist, pick, pointSegDist, segmentIntersection, countIntersections };
+const api = { withinRadius, wallGeometry, nearestWallPoint, clamp, rand, dist, pick, pointSegDist, segmentIntersection, countIntersections };
 Object.assign(game.api, api);
 return api;
 };

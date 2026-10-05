@@ -57,7 +57,10 @@ assert.equal(target.hp,90);assert.equal(first.amount,10);assert.equal(first.t,2)
 for(const type of ['fire','poison','electric','blast','void','frost'])damage.api.dealDamage(target,1,type);
 assert.equal(damage.state.floaters.length,7,'damage types have separate small labels');
 assert.equal(new Set(damage.state.floaters.map(f=>f.color)).size,7);
-assert.equal(new Set(damage.state.floaters.map(f=>f.vx+','+f.vy)).size,7,'types bounce in different directions');
+assert.equal(new Set(damage.state.floaters.map(f=>f.vx+','+f.vy)).size,1,'all types share their monster trajectory');
+const other={x:200,y:240,r:12};damage.api.damageNumber(other,999,'physical');
+assert.notEqual(damage.state.floaters.at(-1).vx,first.vx,'different monsters receive different arcs');
+damage.state.floaters.pop();
 const fire=damage.state.floaters.find(f=>f.kind==='fire');damage.api.dealDamage(target,.25,'fire');assert.equal(fire.amount,1.25);
 const beforeRender=JSON.stringify(damage.state);damage.api.draw();assert.equal(JSON.stringify(damage.state),beforeRender,'render stays pure');
 assert.ok(!damageEnv.calls.some(c=>c[0]==='roundRect'),'no large damage cards');
@@ -81,7 +84,7 @@ readable.api.damageNumber({x:100,y:180,r:12},10,'fire');const label=readable.sta
 for(let i=0;i<40;i++)readable.api.update(.033);assert.ok(readable.state.floaters.includes(label)&&label.t>.5);
 const age=label.age;readable.state.paused=true;readable.api.update(.033);assert.equal(label.age,age);
 readable.state.paused=false;for(let i=0;i<22;i++)readable.api.update(.033);assert.ok(!readable.state.floaters.includes(label));
-console.log('PASS: compact typed numbers, separate arcs, tick collection, reset, budget, pure rendering, pause, and lifetime.');
+console.log('PASS: compact typed numbers, monster-based upward arcs, tick collection, reset, budget, pure rendering, pause, and lifetime.');
 
 const build=load(true),bg=build.sandbox.testGame;
 bg.api.resetRun();
@@ -227,3 +230,59 @@ const x=near.x;contact.api.contactStevie(colliding);assert.equal(near.x,x+32,'co
 assert.ok(contact.catalog.upgrades.some(u=>u.name==='Stevie Has Had Enough'));
 assert.ok(contact.catalog.synergyDefs.some(u=>u.name==='Stevie the Unreasonable'));
 console.log('PASS: one-shot armored contact, no rewards/splitting, repeat protection, movement contact, boss survival/loss, renamed upgrades, and Human Pinball.');
+
+const statuses=load(true),sg=statuses.sandbox.testGame;
+const creature=sg.api.spawnEnemy(false,300,300,'tank');
+assert.equal(sg.api.enemyStatusColors(creature).length,0);
+for(const [key,color] of [['poison','#73ba44'],['burn','#f28a38'],['freeze','#80dcf2'],['charged','#7199f5'],['gravitySlow','#b493db'],['stun','#f1cf64']]){
+  creature[key]=1;assert.ok(sg.api.enemyStatusColors(creature).includes(color));
+}
+assert.equal(sg.api.enemyStatusColors(creature).length,6,'combined statuses retain all colors');
+creature.hp=creature.maxHp/2;const before=JSON.stringify(sg.state);
+sg.api.draw();assert.equal(JSON.stringify(sg.state),before,'status tint rendering does not mutate combat');
+for(const key of ['poison','burn','freeze','charged','gravitySlow','stun'])creature[key]=0;
+assert.equal(sg.api.enemyStatusColors(creature).length,0,'base color returns when effects expire');
+for(const amount of [.01,1,999])for(const kind of ['physical','fire','poison','electric']){
+  const e={x:400,y:400,r:10};sg.api.damageNumber(e,amount,kind);
+  const f=sg.state.floaters.at(-1),origin=f.originY;
+  for(let i=0;i<60;i++){const y=f.y;sg.api.updateDamageNumbers(1/30);assert.ok(f.y<y,'every arc rises for its lifetime')}
+  assert.ok(f.y<origin-60,'substantial upward lift');
+  sg.state.floaters=[];
+}
+console.log('PASS: all status colors, combined/expired statuses, pure tinting, and upward arcs across damage sizes/types.');
+
+const optimized=load(true),og=optimized.sandbox.testGame;
+og.state.walls=[
+  {pts:[{x:40,y:60},{x:260,y:60},{x:260,y:300}],thick:8},
+  {pts:[{x:90,y:180},{x:90,y:180},{x:300,y:210},{x:90,y:180}],thick:24},
+  {pts:[{x:800,y:800},{x:900,y:900}],thick:8}
+];
+function referenceHit(e){for(const wall of og.state.walls)for(let i=1;i<wall.pts.length;i++){const a=wall.pts[i-1],b=wall.pts[i];if(og.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<e.r+wall.thick/2)return {wall,seg:i}}return null}
+function referencePoint(x,y,r){let best=null,d=r;for(const w of og.state.walls)for(const p of w.pts){const next=og.api.dist(x,y,p.x,p.y);if(next<d){d=next;best=p}}return best}
+function referenceBounce(e,x,y){for(const w of og.state.walls)for(let i=1;i<w.pts.length;i++){const a=w.pts[i-1],b=w.pts[i],radius=e.r+w.thick/2+1,start=og.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y);if(og.api.segmentIntersection(e,{x,y},a,b))return false;for(const t of [.5,1]){const d=og.api.pointSegDist(e.x+(x-e.x)*t,e.y+(y-e.y)*t,a.x,a.y,b.x,b.y);if(d<radius&&d<start-.05)return false}}return true}
+for(let i=0;i<250;i++){
+  const x=(i*37)%1000,y=(i*71)%1000,r=[0,1,8,20,50][i%5],e={x,y,r};
+  const actualHit=og.api.nearestWallHit(e),expectedHit=referenceHit(e);
+  assert.equal(actualHit===null,expectedHit===null,'broad phase preserves hit presence');
+  assert.equal(actualHit?.wall,expectedHit?.wall,'broad phase preserves first wall hit');
+  assert.equal(actualHit?.seg,expectedHit?.seg,'broad phase preserves first segment hit');
+  assert.equal(og.api.nearestWallPoint(x,y,160),referencePoint(x,y,160),'nearest point and ties preserved');
+  const near=og.state.walls.some(w=>w.pts.some(p=>og.api.dist(x,y,p.x,p.y)<42));
+  assert.equal(og.api.wallNear(x,y,42),near,'point-radius semantics preserved');
+  assert.equal(og.api.bouncePathClear(e,x+30,y-30),referenceBounce(e,x+30,y-30),'bounce pruning preserves collision decisions');
+}
+assert.equal(og.api.withinRadius(0,0,3,4,5),false,'strict radius boundary');
+assert.equal(og.api.withinRadius(0,0,3,4,5.01),true);
+const cachedPoints=og.state.walls[0].pts,geometry=og.api.wallGeometry(cachedPoints);
+assert.equal(og.api.wallGeometry(cachedPoints),geometry);cachedPoints.push({x:-100,y:-100});assert.equal(og.api.wallGeometry(cachedPoints).minX,-100,'changed point count refreshes bounds');
+og.state.stacks={'Bigger Ink Tank':1};og.api.updateUI();const badge=optimized.node('upgradeList').children.at(-1);
+og.api.updateUI();assert.equal(optimized.node('upgradeList').children.at(-1),badge,'unchanged HUD preserves nodes');
+og.state.stacks['Bigger Ink Tank']=2;og.api.updateUI();assert.equal(optimized.node('upgradeList').children.at(-1).textContent,'Bigger Ink Tank ×2');
+og.state.stats.ink=123;og.api.updateUI();assert.match(optimized.node('inkText').textContent,/123/,'live HUD still updates');
+const uncapped=load(true),capped=load(true);
+capped.sandbox.testGame.state.particles=Array.from({length:1800},()=>({x:0,y:0}));
+uncapped.sandbox.testGame.api.burst(1,2,'#abc',40);capped.sandbox.testGame.api.burst(1,2,'#abc',40);
+assert.equal(uncapped.sandbox.Math.random(),capped.sandbox.Math.random(),'particle budget preserves combat random sequence');
+assert.ok(capped.sandbox.testGame.state.particles.length<=1800);
+assert.ok(capped.sandbox.testGame.state.particles.some(p=>p.color==='#abc'),'contact/death bursts retain visible particles');
+console.log('PASS: cached wall-query equivalence, strict boundaries, geometry refresh, HUD identity/live values, and particle RNG preservation.');

@@ -34,14 +34,11 @@ function update(dt){
   // Geometry-based synergies pulse continuously.
   for(const w of game.state.walls){
     if(!w.closed)continue;
-    let cx=0,cy=0;
-    for(const p of w.pts){cx+=p.x;cy+=p.y}
-    cx/=w.pts.length;cy/=w.pts.length;
+    const {cx,cy}=game.api.wallGeometry(w.pts);
 
     if(game.state.synergies.has('Gravity Trap')||game.state.synergies.has('THE BLACK HOLE')){
       for(const e of game.state.enemies){
-        const d=game.api.dist(e.x,e.y,cx,cy);
-        if(d<135){
+        if(game.api.withinRadius(e.x,e.y,cx,cy,135)){
           const dx=cx-e.x,dy=cy-e.y,m=Math.hypot(dx,dy)||1;
           const pull=(game.state.synergies.has('THE BLACK HOLE')?20:10)+(game.state.inks.gravity*4);
           e.x+=dx/m*pull*dt;e.y+=dy/m*pull*dt;
@@ -52,7 +49,7 @@ function update(dt){
 
     if(game.state.synergies.has('Ring of Fire')){
       for(const e of game.state.enemies){
-        if(game.api.dist(e.x,e.y,cx,cy)<115){
+        if(game.api.withinRadius(e.x,e.y,cx,cy,115)){
           e.burn=Math.max(e.burn,1.4);
           e.burnDps=Math.max(e.burnDps,5+game.state.inks.fire*2.5);
         }
@@ -61,7 +58,7 @@ function update(dt){
 
     if(game.state.synergies.has('TESLA CAGE')&&w.intersections>0){
       for(const e of game.state.enemies){
-        if(game.api.dist(e.x,e.y,cx,cy)<145){
+        if(game.api.withinRadius(e.x,e.y,cx,cy,145)){
           game.api.dealDamage(e,Math.max(3,game.state.inks.electric*5)*dt,'electric');
           if(Math.random()<.8*dt)game.api.burst(e.x,e.y,'#90b3ff',2);
         }
@@ -95,7 +92,7 @@ function update(dt){
     }
     if(e.charged>0&&game.state.synergies.has('Rail Ink')){
       for(const n of game.state.enemies){
-        if(n!==e&&game.api.dist(n.x,n.y,e.x,e.y)<38){
+        if(n!==e&&game.api.withinRadius(n.x,n.y,e.x,e.y,38)){
           game.api.dealDamage(n,12*dt,'electric');game.api.dealDamage(e,6*dt,'electric');
           if(Math.random()<1.5*dt)game.api.burst(n.x,n.y,'#91b6ff',2)
         }
@@ -111,11 +108,7 @@ function update(dt){
 
     // Gravity ink pulls nearby enemies toward the closest nearby wall point
     if(game.state.inks.gravity>0&&game.state.walls.length){
-      let bp=null,bd=120+game.state.inks.gravity*20;
-      for(const w of game.state.walls)for(const p of w.pts){
-        const d=game.api.dist(e.x,e.y,p.x,p.y);
-        if(d<bd){bd=d;bp=p}
-      }
+      const bp=game.api.nearestWallPoint(e.x,e.y,120+game.state.inks.gravity*20);
       if(bp){
         const gx=bp.x-e.x,gy=bp.y-e.y,m=Math.hypot(gx,gy)||1;
         e.x+=gx/m*(8+game.state.inks.gravity*5)*dt;e.y+=gy/m*(8+game.state.inks.gravity*5)*dt

@@ -182,7 +182,7 @@ function updateEnemyBehavior(e,dt){
     e.healPulse=(e.healPulse+dt)%1;
     if(e.hp>0&&e.stun<=0&&e.freeze<=0){
       for(const ally of game.state.enemies){
-        if(ally!==e&&ally.hp>0&&ally.hp<ally.maxHp&&game.api.dist(e.x,e.y,ally.x,ally.y)<95){
+        if(ally!==e&&ally.hp>0&&ally.hp<ally.maxHp&&game.api.withinRadius(e.x,e.y,ally.x,ally.y,95)){
           ally.hp=Math.min(ally.maxHp,ally.hp+3*dt);
         }
       }
@@ -202,13 +202,20 @@ function enemyTarget(e){
   return target;
 }
 function bouncePathClear(e,x,y){
-  for(const w of game.state.walls)for(let i=1;i<w.pts.length;i++){
-    const a=w.pts[i-1],b=w.pts[i],radius=e.r+w.thick/2+1;
-    const start=game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y);
-    if(game.api.segmentIntersection(e,{x,y},a,b))return false;
-    for(const t of [.5,1]){
-      const d=game.api.pointSegDist(e.x+(x-e.x)*t,e.y+(y-e.y)*t,a.x,a.y,b.x,b.y);
-      if(d<radius&&d<start-.05)return false;
+  const target={x,y};
+  for(const w of game.state.walls){
+    const bounds=game.api.wallGeometry(w.pts),radius=e.r+w.thick/2+1;
+    const minX=Math.min(e.x,x)-radius,maxX=Math.max(e.x,x)+radius,minY=Math.min(e.y,y)-radius,maxY=Math.max(e.y,y)+radius;
+    if(bounds.maxX<minX||bounds.minX>maxX||bounds.maxY<minY||bounds.minY>maxY)continue;
+    for(const segment of bounds.segments){
+      if(segment.maxX<minX||segment.minX>maxX||segment.maxY<minY||segment.minY>maxY)continue;
+      const a=segment.a,b=segment.b;
+      const start=game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y);
+      if(game.api.segmentIntersection(e,target,a,b))return false;
+      for(const t of [.5,1]){
+        const d=game.api.pointSegDist(e.x+(x-e.x)*t,e.y+(y-e.y)*t,a.x,a.y,b.x,b.y);
+        if(d<radius&&d<start-.05)return false;
+      }
     }
   }
   return true;
