@@ -3,7 +3,7 @@ DoodleDefender.systems.renderer = function createRendererSystem(game) {
 // Load once. Missing/late assets retain the existing vector drawings.
 const doodles={},tintedDoodles=new Map();
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood'];
+const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','eraser'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{doodles[name]=image;inkSprites.clear()};
@@ -300,18 +300,20 @@ function draw(){
 
     if(e.type==='eraser'){
       game.dom.ctx.rotate(Math.sin(performance.now()/350)*.08);
-      game.dom.ctx.strokeStyle='#81344d';game.dom.ctx.lineWidth=3;
+      if(!drawDoodleEnemy(e,hpRatio)){
+        game.dom.ctx.strokeStyle='#81344d';game.dom.ctx.lineWidth=3;
 
-      // Empty paper-colored body first, then fill upward according to remaining HP.
-      game.dom.ctx.fillStyle='#f7e7e9';game.dom.ctx.fillRect(-32,-20,64,40);
-      game.dom.ctx.save();
-      game.dom.ctx.beginPath();game.dom.ctx.rect(-32,20-40*hpRatio,64,40*hpRatio);game.dom.ctx.clip();
-      drawEnemyFill(e,-32,20-40*hpRatio,64,40*hpRatio);
-      game.dom.ctx.restore();
-      game.dom.ctx.strokeRect(-32,-20,64,40);
+        // Empty paper-colored body first, then fill upward according to remaining HP.
+        game.dom.ctx.fillStyle='#f7e7e9';game.dom.ctx.fillRect(-32,-20,64,40);
+        game.dom.ctx.save();
+        game.dom.ctx.beginPath();game.dom.ctx.rect(-32,20-40*hpRatio,64,40*hpRatio);game.dom.ctx.clip();
+        drawEnemyFill(e,-32,20-40*hpRatio,64,40*hpRatio);
+        game.dom.ctx.restore();
+        game.dom.ctx.strokeRect(-32,-20,64,40);
 
-      game.dom.ctx.fillStyle='#fff';game.dom.ctx.fillRect(-12,-5,7,7);game.dom.ctx.fillRect(5,-5,7,7);
-      game.dom.ctx.fillStyle='#3b2630';game.dom.ctx.fillRect(-4,9,8,3);
+        game.dom.ctx.fillStyle='#fff';game.dom.ctx.fillRect(-12,-5,7,7);game.dom.ctx.fillRect(5,-5,7,7);
+        game.dom.ctx.fillStyle='#3b2630';game.dom.ctx.fillRect(-4,9,8,3);
+      }
     }else{
       if(!drawDoodleEnemy(e,hpRatio)){
         game.dom.ctx.strokeStyle='#2a3135';game.dom.ctx.lineWidth=2.5;
@@ -331,7 +333,7 @@ function draw(){
         game.dom.ctx.beginPath();game.dom.ctx.arc(-e.r*.25,-2,2,0,Math.PI*2);game.dom.ctx.arc(e.r*.25,-2,2,0,Math.PI*2);game.dom.ctx.fill();
         game.dom.ctx.strokeStyle='#222';game.dom.ctx.beginPath();game.dom.ctx.moveTo(-4,5);game.dom.ctx.lineTo(4,5);game.dom.ctx.stroke();
       }
-      if(e.type==='boss'){game.dom.ctx.fillStyle='#d8a72e';game.dom.ctx.fillRect(-11,-e.r-8,22,5)}
+      if(e.type==='boss'&&!doodles.boss){game.dom.ctx.fillStyle='#d8a72e';game.dom.ctx.fillRect(-11,-e.r-8,22,5)}
       if(e.type==='bouncer'){
         game.dom.ctx.strokeStyle='#e8fffb';game.dom.ctx.lineWidth=2;
         game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r+4,0,Math.PI*1.2);game.dom.ctx.stroke()

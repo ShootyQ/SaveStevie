@@ -35,3 +35,12 @@ rock upgrades. Pause freezes the frames, wave starts reset them, and reduced
 motion uses the neutral pose. Missing atlas loads fall back to stevie.png and
 then the original vector drawing. The atlas costs about 173 KiB, loads once,
 and requires just one sprite draw per frame.
+
+A third six-enemy batch adds bulwark.png, medic.png, sapper.png, gnawer.png,
+boss.png, and eraser.png. These are isolated transparent cutouts from a custom
+scribbled sheet, exported at up to 192px (256px for bosses) with four-pixel
+borders. Bulwark has a dented shield, Medic a cap and bag, Sapper tools, Gnawer
+oversized teeth, Boss a wonky crown, and The Eraser a pink rubber body.
+All use the existing bounded status-tint cache and health-fading renderer.
+The Eraser keeps its wobble; the Medic keeps its healing pulse. Missing images
+retain the previous vector drawings. No combat rules or collision sizes change.
