@@ -44,3 +44,11 @@ oversized teeth, Boss a wonky crown, and The Eraser a pink rubber body.
 All use the existing bounded status-tint cache and health-fading renderer.
 The Eraser keeps its wobble; the Medic keeps its healing pulse. Missing images
 retain the previous vector drawings. No combat rules or collision sizes change.
+
+The final enemy batch adds fast.png (orange runner with sneakers), brute.png
+(moss-green heavy arms), elite.png (magenta spikes), and mini.png (baby Splitter).
+The transparent 2×2 sheet was separated into isolated sprites, removing stray
+fragments of neighboring cells during export. Fast and Elite are exported at
+192px, Brute at 256px, and Mini at 128px, plus four-pixel borders. All 19 enemy
+types now have custom artwork. These four use the same health/status renderer,
+fixed collision sizes, and missing-image vector fallback as other enemies.
