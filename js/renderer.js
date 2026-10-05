@@ -11,6 +11,8 @@ if(typeof Image!=='undefined')for(const name of doodleNames){
 }
 // Presentation only: no combat RNG, attack delays, or collider changes.
 const reducedMotion=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
+let motionReduced=!!reducedMotion?.matches;
+reducedMotion?.addEventListener?.('change',event=>{motionReduced=event.matches;resetEnemyAnimations()});
 let idleTime=0,throwTime=Infinity,throwDuration=.38,throwFacing=1;
 function resetStevieAnimation(){idleTime=0;throwTime=Infinity;throwFacing=1}
 function updateStevieAnimation(dt){idleTime=(idleTime+dt)%2.2;throwTime+=dt}
@@ -19,12 +21,69 @@ function startStevieThrow(target){
   throwDuration=Math.max(.18,Math.min(.38,game.state.stats.rockRate*.7));throwTime=0;
 }
 function stevieAnimationFrame(){
-  if(reducedMotion?.matches)return {column:0,row:0,facing:1};
+  if(motionReduced)return {column:0,row:0,facing:1};
   if(throwTime<throwDuration){
     const progress=throwTime/throwDuration;
     return {column:progress<.14?0:progress<.42?1:progress<.75?2:3,row:1,facing:throwFacing};
   }
   return {column:idleTime<.85?0:idleTime<1.5?1:idleTime<1.6?2:3,row:0,facing:1};
+}
+// Weak records follow living monsters; only 20 short-lived split echoes survive
+// removal. Motion never moves a collider or consumes the combat random stream.
+const stillEnemyPose=Object.freeze({y:0,angle:0,sx:1,sy:1});
+let enemyMotion=new WeakMap(),splitEchoes=[],motionTime=0,motionSerial=0;
+function motionFor(e){
+  let m=enemyMotion.get(e);
+  if(!m){
+    const heavy=['tank','brute','bulwark','boss','eraser'].includes(e.type);
+    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
+  }
+  return m;
+}
+function resetEnemyAnimations(){enemyMotion=new WeakMap();splitEchoes=[];motionTime=0;motionSerial=0}
+function reactEnemyHit(e){
+  if(motionReduced)return;
+  const m=motionFor(e);
+  // Continuous poison/burn ticks produce an occasional nudge, not a permanent squash.
+  if(motionTime-m.lastHit>=.18){m.hitAge=0;m.lastHit=motionTime}
+}
+function animateSplitChild(e){if(e&&!motionReduced)motionFor(e).birthAge=0}
+function animateEnemySplit(e){
+  if(motionReduced)return;
+  if(splitEchoes.length>=20)splitEchoes.shift();
+  splitEchoes.push({x:e.x,y:e.y,r:e.r,type:e.type,color:e.color,hp:e.maxHp,maxHp:e.maxHp,age:0});
+}
+function enemyAnimationPose(e){return motionReduced?stillEnemyPose:(enemyMotion.get(e)?.pose||stillEnemyPose)}
+function enemyAnimationCount(){return splitEchoes.length}
+function updateEnemyAnimations(dt){
+  motionTime+=dt;
+  if(motionReduced){splitEchoes=[];return}
+  for(const e of game.state.enemies){
+    const m=motionFor(e),distance=Math.hypot(e.x-m.x,e.y-m.y),heavy=m.heavy;
+    m.x=e.x;m.y=e.y;m.hitAge+=dt;m.birthAge+=dt;
+    const moving=distance>.001&&e.freeze<=0&&e.stun<=0;
+    if(moving)m.phase=(m.phase+Math.min(distance,e.r)* (heavy?.16:.27))%(Math.PI*2);
+    const step=moving?Math.sin(m.phase):0,hop=moving?Math.abs(step)*m.hop:0;
+    const hit=m.hitAge<.14?Math.sin(m.hitAge/.14*Math.PI)*.12:0;
+    const birth=m.birthAge<.28?Math.sin(m.birthAge/.28*Math.PI):0;
+    const p=m.pose;p.y=-hop-birth*5;p.angle=step*(heavy?.035:.055);
+    p.sx=1+hit+birth*.14;p.sy=1-hit-birth*.1;
+  }
+  for(const echo of splitEchoes)echo.age+=dt;
+  splitEchoes=splitEchoes.filter(e=>e.age<.28);
+}
+function drawSplitAnimations(){
+  if(motionReduced)return;
+  const ctx=game.dom.ctx;
+  for(const echo of splitEchoes){
+    if(!doodles[echo.type])continue;
+    const progress=echo.age/.28;
+    for(const side of [-1,1]){
+      ctx.save();ctx.globalAlpha=(1-progress)*.65;ctx.translate(echo.x+side*progress*10,echo.y-progress*3);
+      ctx.scale(1+progress*.35,1-progress*.25);ctx.beginPath();ctx.rect(side<0?-echo.r*2:0,-echo.r*2,echo.r*2,echo.r*4);ctx.clip();
+      drawDoodleEnemy(echo,1);ctx.restore();
+    }
+  }
 }
 function tintedDoodle(name,colors){
   const image=doodles[name];if(!colors.length)return image;
@@ -43,7 +102,11 @@ function drawDoodleEnemy(e,hpRatio){
   const image=doodles[e.type];if(!image)return false;
   const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(e.type==='sniper'?3.4:2.7),height=width*image.naturalHeight/image.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
-  ctx.save();if(e.type==='sniper'&&game.state.player.x<e.x)ctx.scale(-1,1);
+  const pose=enemyAnimationPose(e);
+  ctx.save();ctx.translate(0,pose.y);ctx.rotate(pose.angle);
+  // Squash around the feet so hit reactions remain small and planted.
+  const foot=top+height;ctx.translate(0,foot);ctx.scale(pose.sx,pose.sy);ctx.translate(0,-foot);
+  if(e.type==='sniper'&&game.state.player.x<e.x)ctx.scale(-1,1);
   // A pale full silhouette remains; healthy colored artwork fills upward.
   // Round to display pixels so tiny fractional HP changes need no clipping.
   const visibleHp=Math.round(hpRatio*height)/height,healthy=tintedDoodle(e.type,colors);
@@ -90,6 +153,8 @@ function resize(){
     for(const wall of game.state.walls)wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
+    for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
+    for(const echo of splitEchoes)move(echo);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
   game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;
@@ -256,6 +321,7 @@ function draw(){
   }
 
   // Ranged threats are readable before and after firing.
+  drawSplitAnimations();
   for(const e of game.state.enemies){
     if(e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0||e.shootCd>.6||
       game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y)>=190||
@@ -302,7 +368,9 @@ function draw(){
     game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y);
 
     if(e.type==='eraser'){
-      game.dom.ctx.rotate(Math.sin(performance.now()/350)*.08);
+      if(doodles.eraser){
+        if(!motionReduced&&e.freeze<=0&&e.stun<=0)game.dom.ctx.rotate(Math.sin(motionTime/.35)*.08);
+      }else game.dom.ctx.rotate(Math.sin(performance.now()/350)*.08);
       if(!drawDoodleEnemy(e,hpRatio)){
         game.dom.ctx.strokeStyle='#81344d';game.dom.ctx.lineWidth=3;
 
@@ -394,7 +462,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { artworkReady:()=>doodleNames.every(name=>!!doodles[name]), resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { artworkReady:()=>doodleNames.every(name=>!!doodles[name]), resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 return api;
 };

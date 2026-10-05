@@ -62,3 +62,14 @@ The existing bounded phase cache draws pulsing Electric/Void, spinning Gravity,
 and tumbling Chaos without per-glyph image allocations. Missing wall images
 retain procedural effects; failed card images remove themselves. Card URLs
 include the packaged build hash to refresh cached assets after deployment.
+
+Enemy movement, hit reactions, and split animations reuse these PNGs; no extra
+images or animation sheets are downloaded. Weak per-enemy presentation records
+track travel-driven hops/lean and short hit squishes without modifying combat
+state or using random numbers. Heavy types lumber; Fast and Mini hop higher.
+Damage-over-time reactions are throttled to one every 180ms. Split parents
+leave at most 20 fading, clipped echoes for 280ms while children spring visually;
+children still spawn immediately at their original combat coordinates. Wave
+starts clear presentation records, pauses freeze them, and reduced motion
+removes them (including the custom Eraser wobble). Resize keeps echoes aligned
+with the arena. The system allocates no new sprites or tint combinations.
