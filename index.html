@@ -138,6 +138,7 @@
     <button class="secondary" id="clearBtn">Erase All Walls</button>
     <div id="message">Fresh page every wave. Ink fully refills.</div>
     <button class="secondary" id="buildBtn">Your Build</button>
+    <button class="secondary" id="changelogBtn">Changelog</button>
     <button id="pauseBtn">Pause</button>
   </div>
 </div>
@@ -150,6 +151,36 @@
     <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
     <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
     <h3>Enemy field guide</h3><div id="buildEnemies" class="build-upgrades"></div>
+  </div>
+</div>
+<div class="overlay build-overlay" id="changelogOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
+  <div class="cardbox build-box">
+    <div class="build-heading"><h2 id="changelogTitle">What's new</h2><button id="closeChangelogBtn">Close</button></div>
+    <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
+    <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
+    <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry">
+        <h3>Frantic waves &amp; six new enemies</h3>
+        <p>Waves 1–5 keep their spawn timing. Later waves ramp toward roughly 2× arrivals around wave 14 and 3× by wave 20, with short surges and faster movement.</p>
+        <p>Meet Wardlings, Sprinters, Broods, Bulwarks, Medics, and Sappers. Your Build includes their counters in the enemy field guide.</p>
+        <p>Bouncers steer around walls after ricocheting. Regular bosses now spawn once per wave.</p>
+      </article>
+      <article class="build-entry">
+        <h3>Damage feedback rework</h3>
+        <p>Damage now collects into punchy bursts with animated totals and colored damage-type breakdowns. Big hits get impact accents; lethal hits earn a FINISH stamp.</p>
+        <p>Popups avoid overlapping and stay on the playfield. Bursts last 2.2 seconds, and reduced-motion settings are respected.</p>
+      </article>
+      <article class="build-entry">
+        <h3>Your Build, visible stacks &amp; a new name</h3>
+        <p>Open Your Build to see every upgrade, stack count, cumulative effect, current totals, and active synergies. Reward cards preview the next stack.</p>
+        <p>One-time unlocks and capped upgrades stop appearing. Repeated Pocket Rocks no longer slows improved throws.</p>
+        <p>The game is now Save Stevie - In Development.</p>
+      </article>
+      <article class="build-entry">
+        <h3>Earlier damage-number readability pass</h3>
+        <p>Damage numbers were extended from 0.7 to 1.8 seconds, given slower drift, and grouped over longer tick windows. The newer burst rework above builds on this and uses 2.2-second popups.</p>
+      </article>
+    </div>
   </div>
 </div>
 <script src="js/config.js"></script>

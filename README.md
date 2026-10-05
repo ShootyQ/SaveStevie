@@ -97,3 +97,11 @@ ricocheting when trapped. They cannot pathfind through a sealed enclosure.
 Tune `game.catalog.pressureSettings` in `js/enemies.js` for spawn multiplier,
 movement bonus, surge timing, and enemy budget. This is an initial balance
 pass; human playtests across strong and weak builds are still needed.
+
+## In-game changelog
+
+Use **Changelog** to read recent updates without leaving the game. It pauses
+your run while open and restores your previous pause state when closed.
+The entries in `index.html` (`#changelogEntries`) are the single source for
+player-facing release notes; prepend an entry for every future feature, fix,
+or balance change, as required by `AGENTS.md`.
