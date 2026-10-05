@@ -57,7 +57,8 @@ browser's local storage and are not synced between devices.
 Enemies show floating numbers for damage received: slate for physical hits,
 orange for fire, green for poison, blue for electricity, gold for explosions,
 purple for void, and cyan for thermal shock. Rapid ticks of the same type
-combine into short bursts; different types keep separate labels. Values use
+combine over 0.6 seconds; different types keep separate labels. Numbers remain
+visible for 1.8 seconds, rise slowly, and fade during their final half-second. Values use
 up to one decimal place and count remaining health rather than excess overkill.
 Frost, gravity, and repulsion effects that only slow or move enemies do not
 produce damage numbers.

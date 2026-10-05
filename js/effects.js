@@ -20,9 +20,9 @@ function damageNumber(enemy,amount,kind='physical'){
   if(!labels){labels=new Map();damageLabels.set(enemy,labels)}
   let f=labels.get(kind);
   // Combine rapid damage ticks into short, readable bursts without extending life.
-  if(!f||f.t<=.45||!game.state.floaters.includes(f)){
+  if(!f||f.t<=1.2||!game.state.floaters.includes(f)){
     const [color,offset]=damageStyles[kind]||damageStyles.physical;
-    f={x:enemy.x+offset,y:enemy.y-(enemy.r||12)-10,t:.7,text:'',color,damageNumber:true,amount:0};
+    f={x:enemy.x+offset,y:enemy.y-(enemy.r||12)-10,t:1.8,text:'',color,damageNumber:true,amount:0};
     game.state.floaters.push(f);labels.set(kind,f);
   }
   f.amount+=amount;
