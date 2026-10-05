@@ -9,6 +9,13 @@ function endDraw(){
 }
 function bind() {
 window.addEventListener('resize',game.api.resize);
+game.dom.$('buildBtn').onclick=game.api.openBuild;
+game.dom.$('closeBuildBtn').onclick=game.api.closeBuild;
+window.addEventListener('keydown',e=>{
+  if(game.dom.$('buildOverlay').style.display!=='grid')return;
+  if(e.key==='Escape')game.api.closeBuild();
+  if(e.key==='Tab'){e.preventDefault();game.dom.$('closeBuildBtn').focus?.()}
+});
 game.dom.canvas.addEventListener('pointerdown',e=>{
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
   game.state.drawing=true;game.state.currentWall=[game.api.pointerPos(e)];game.dom.canvas.setPointerCapture(e.pointerId)

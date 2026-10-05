@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Doodle Defender v4</title>
+<title>Save Stevie - In Development</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div id="app">
   <div class="top">
     <div class="title">
-      <h1>Doodle Defender v4</h1>
+      <h1>Save Stevie - In Development</h1>
       <small>Fresh page. Bigger builds. Steve remains alarmingly dependent on you.</small>
     </div>
     <div class="stats">
@@ -136,10 +136,20 @@
   <div class="bottom">
     <button class="secondary" id="clearBtn">Erase All Walls</button>
     <div id="message">Fresh page every wave. Ink fully refills.</div>
+    <button class="secondary" id="buildBtn">Your Build</button>
     <button id="pauseBtn">Pause</button>
   </div>
 </div>
 
+<div class="overlay build-overlay" id="buildOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="buildTitle">
+  <div class="cardbox build-box">
+    <div class="build-heading"><h2 id="buildTitle">Your Build</h2><button id="closeBuildBtn">Close</button></div>
+    <p>The game pauses while you review. Totals include all upgrades and your specialization.</p>
+    <h3>Current totals</h3><div id="buildStats" class="build-stats"></div>
+    <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
+    <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
+  </div>
+</div>
 <script src="js/config.js"></script>
 <script src="js/dom.js"></script>
 <script src="js/state.js"></script>
