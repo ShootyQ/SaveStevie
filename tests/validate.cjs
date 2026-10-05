@@ -546,3 +546,19 @@ g.api.toggleMusic();const reloaded=load(true,{audio,storage}).sandbox.testGame;c
 assert.match(fs.readFileSync(path.join(root,'index.html'),'utf8'),/preload="none" loop/);assert.ok(fs.statSync(path.join(root,'assets/audio/save-stevie.mp3')).size>1000000);
 console.log('PASS: gesture-started looping music, uninterrupted wave transitions, saved mute/resume, background suspension, rejected playback retry, supplied song, and preserved records.');
 }
+
+{
+const env=load(true),g=env.sandbox.testGame;
+for(const u of g.catalog.upgrades){
+  const file=path.join(root,g.api.upgradeArtwork(u));assert.ok(fs.existsSync(file),'art exists for '+u.name);
+  if(file.endsWith('.svg')){const svg=fs.readFileSync(file,'utf8');assert.match(svg,/viewBox="0 0 64 64"/);assert.ok(!/<script|<foreignObject|href=/i.test(svg),'self-contained doodles');}
+}
+let cursor=0;g.api.getUpgrade=()=>g.catalog.upgrades[cursor++%g.catalog.upgrades.length];
+for(let i=0;i<g.catalog.upgrades.length;i+=3){g.api.rollCards();for(const card of env.node('cards').children.slice(-3))assert.match(card.innerHTML,/<img class="upgrade-art"/,'every rendered reward includes a picture');}
+g.state.stats.luck=8;g.api.rollCards();assert.match(env.node('rewardLuck').textContent,/Luck 8/);assert.match(env.node('rewardLuckDetails').textContent,/rerolls and boss rewards/);assert.match(env.node('rewardLuckDetails').textContent,/does not change damage/);
+g.api.renderBuild();assert.match(env.node('buildLuck').textContent,/Your Luck: 8/);assert.match(g.catalog.upgrades.find(u=>u.name==='Lucky Scribble').desc,/rarity odds/);
+const roll=(random,luck,boss=false)=>{env.sandbox.Math.random=()=>random;g.state.stats.luck=luck;return g.api.rarityRoll(boss)};
+assert.equal(roll(.009,0),'epic');assert.equal(roll(.009,8),'legendary');assert.equal(roll(.075,0),'rare');assert.equal(roll(.075,8),'epic');assert.equal(roll(.26,0),'uncommon');assert.equal(roll(.26,8),'rare');assert.equal(roll(.085,0,true),'epic');assert.equal(roll(.085,8,true),'legendary');assert.equal(roll(.385,0,true),'rare');assert.equal(roll(.385,8,true),'epic');
+g.state.specialization='chaos';assert.equal(roll(.014,0),'legendary');assert.equal(roll(.085,0,true),'epic','Chaos bonus affects normal rewards only');assert.match(g.api.luckExplanation(),/separate \+12/);g.state.stats.uncommonFloor=true;assert.match(g.api.luckExplanation(),/Loaded Deck/);
+console.log('PASS: artwork for every upgrade, rendered reward pictures, current Luck/help text, and accurate normal/boss/Chaos rarity explanations without balance changes.');
+}

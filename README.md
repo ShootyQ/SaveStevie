@@ -243,3 +243,17 @@ menus keep the song playing; hiding the tab pauses it and returning resumes
 from the same position. Music loads on demand, starts from a player gesture,
 and cannot block gameplay if playback is unavailable. The MP3 is packaged and
 versioned with the static site. See `assets/audio/README.md` for track details.
+
+## Upgrade pictures and Luck
+
+Every upgrade choice has a decorative picture. Existing ink and pencil artwork
+is reused; 32 small original SVG doodles cover the remaining upgrades. Images
+use the deployment resource version and a pen fallback if loading fails.
+
+Luck increases the rarity odds of future rewards, including rerolls and boss
+rewards. It does not increase damage or the probability of ink effects. The
+reward screen shows current Luck and a tap-to-expand explanation; Your Build
+and Lucky Scribble explain it too. Chaos specialization adds its separate +12
+bonus to normal rarity rolls; boss rolls use the Luck stat. Loaded Deck keeps
+normal rewards at Uncommon or better. Specialization and Collector weight the
+selection within a rolled rarity. No selection formulas or balance changed.

@@ -74,7 +74,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${3*n} ink/s`,
     'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 on each pick`,
     'Fine Tip':()=>`${f((1-Math.pow(.88,n))*100)}% cheaper strokes (multiplicative)`,
-    'Fat Marker':()=>`+${2*n}px width; +${15*n} base wall HP`, 'Lucky Scribble':()=>`+${8*n} Luck`,
+    'Fat Marker':()=>`+${2*n}px width; +${15*n} base wall HP`, 'Lucky Scribble':()=>`+${8*n} Luck — better rarity odds on rewards and rerolls`,
     'Recycling':()=>`+${5*n} ink per kill`, 'Closed Loop':()=>`+${40*n}% closed-wall durability`,
     'Permanent Marker':()=>`+${10*n}s wall lifetime`, 'Archival Ink':()=>`+${25*n}s wall lifetime`,
     'Architect':()=>`+${15*n}% durability per intersection`, 'Patchwork':()=>`+${18*n} HP per repaired wall`,
@@ -118,6 +118,7 @@ function renderBuild(){
     ['Rock damage',s.rockDamage],['Throw interval',s.rockRate?s.rockRate+'s':'Not unlocked'],
     ['Walls per stroke',s.tripleLine?3:s.doubleLine?2:1],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
     ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls]];
+  game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
   game.dom.$('buildStats').innerHTML=totals.map(([name,value])=>`<div class="build-stat">${name}<strong>${value}</strong></div>`).join('');
   game.dom.$('buildUpgrades').innerHTML=Object.entries(game.state.stacks).map(([name,n])=>{
     const u=game.catalog.upgrades.find(u=>u.name===name);

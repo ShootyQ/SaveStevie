@@ -88,7 +88,7 @@ game.catalog.upgrades = [
   {name:'First Aid',rarity:'common',cat:'stevie',desc:'+18 max HP and heal 18.',apply:()=>{game.state.player.maxHp+=18;game.state.player.hp+=18}},
   {name:'Fine Tip',rarity:'uncommon',cat:'draw',desc:'Lines cost 12% less ink.',apply:()=>game.state.stats.lineCost*=.88},
   {name:'Fat Marker',rarity:'uncommon',cat:'defense',desc:'+2 line width and +15 wall HP.',apply:()=>{game.state.stats.lineWidth+=2;game.state.stats.wallHp+=15}},
-  {name:'Lucky Scribble',rarity:'uncommon',cat:'economy',desc:'+8 Luck.',apply:()=>game.state.stats.luck+=8},
+  {name:'Lucky Scribble',rarity:'uncommon',cat:'economy',desc:'+8 Luck: improves rarity odds for future upgrades and rerolls.',apply:()=>game.state.stats.luck+=8},
   {name:'Recycling',rarity:'uncommon',cat:'economy',desc:'Kills refund 5 ink.',apply:()=>game.state.stats.refund+=5},
   {name:'Closed Loop',rarity:'uncommon',cat:'defense',desc:'Closed shapes gain +40% durability.',apply:()=>game.state.stats.closedBonus+=.4},
   {name:'Permanent Marker',rarity:'uncommon',cat:'defense',desc:'Walls fade 10 seconds more slowly.',apply:()=>game.state.stats.wallLife+=10},
@@ -169,7 +169,19 @@ function getUpgrade(forceRare=false){
   return game.catalog.upgrades[0];
 }
 
+function upgradeArtwork(u){
+  const existing={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos','Fine Tip':'pencil','Stevie Has Had Enough':'pencil'};
+  return existing[u.name]?'assets/art/'+existing[u.name]+'.png':'assets/art/upgrades/'+u.name.toLowerCase().replaceAll(' ','-')+'.svg';
+}
+function luckExplanation(){
+  let description='Luck improves the rarity of future upgrade rolls, including rerolls and boss rewards. It does not change damage, enemy stats, or how often ink effects trigger.';
+  if(game.state.specialization==='chaos')description+=' Chaos adds a separate +12 rarity bonus to normal rewards; boss rewards use your Luck stat.';
+  if(game.state.stats.uncommonFloor)description+=' Loaded Deck keeps normal rewards at Uncommon or better.';
+  return description;
+}
 function rollCards(forceRare=false){
+  game.dom.$('rewardLuck').textContent='Luck '+game.state.stats.luck+' · Higher Luck makes rarer upgrades more likely.';
+  game.dom.$('rewardLuckDetails').textContent=game.api.luckExplanation();
   game.dom.synergyNote.innerHTML='';
   game.dom.cardsEl.innerHTML='';
   const count=forceRare?4:(game.state.stats.extraChoice?4:3);
@@ -193,12 +205,14 @@ function rollCards(forceRare=false){
       return false;
     });
     if(related.length)hint='<div style="margin-top:7px;font-size:10px;font-weight:900;color:#8456c9">Potential synergy nearby…</div>';
-    const artwork={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos','Fine Tip':'pencil','Stevie Has Had Enough':'pencil'}[u.name];
     const build=document.documentElement?.dataset?.build;
-    const icon=artwork?`<img class="upgrade-art" src="assets/art/${artwork}.png${build?'?v='+build:''}" alt="" width="48" height="48">`:'';
+    const icon=`<img class="upgrade-art" src="${game.api.upgradeArtwork(u)}${build?'?v='+encodeURIComponent(build):''}" alt="" width="48" height="48">`;
     c.innerHTML=`${icon}<div class="rarity">${u.rarity}</div><h3>${u.name}</h3><p>${u.desc}</p>${hint}<div class="stack">${oneTimeUpgrades.has(u.name)?'One-time unlock':(stack?'Owned ×'+stack+' → ×'+(stack+1):'New upgrade → ×1')}<br>${game.api.upgradeEffect(u.name,stack+1)}</div>`;
     const art=c.querySelector?.('.upgrade-art');
-    art?.addEventListener('error',()=>art.remove(),{once:true});
+    art?.addEventListener('error',()=>{
+      // A tiny pen stays visible even if a deployment asset cannot be loaded.
+      art.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M12 50l7-17L45 7l12 12-27 27Z" fill="#f3d273" stroke="#29343b" stroke-width="3"/><path d="M12 50l10-4-6-6Z" fill="#29343b"/></svg>');
+    },{once:true});
     c.onclick=()=>game.api.chooseUpgrade(u);game.dom.cardsEl.appendChild(c)
   });
 }
@@ -221,7 +235,7 @@ function chooseSpecialization(spec){
   game.api.openUpgrade();
   game.api.setMsg('Specialization: '+({defense:'Fortress',ink:'Ink Alchemist',chaos:'Chaos'}[spec]))
 }
-const api = { upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
+const api = { upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
 Object.assign(game.api, api);
 return api;
 };
