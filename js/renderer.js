@@ -3,7 +3,7 @@ DoodleDefender.systems.renderer = function createRendererSystem(game) {
 // Load once. Missing/late assets retain the existing vector drawings.
 const doodles={},tintedDoodles=new Map();
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','eraser'];
+const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','eraser','fast','brute','elite','mini'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{doodles[name]=image;inkSprites.clear()};
