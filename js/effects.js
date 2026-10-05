@@ -9,12 +9,21 @@ function floatText(x,y,text,color='#444'){
 }
 // Ownership stays outside combat state; arcs use time and never combat randomness.
 const damageLabels=new WeakMap();
+const monsterMotion=new WeakMap();
+let motionIndex=0;
 const damageStyles={
-  physical:{color:'#354354',vx:-24,vy:-36},fire:{color:'#c44c17',vx:-13,vy:-52},
-  poison:{color:'#427b24',vx:23,vy:-43},electric:{color:'#315fd2',vx:36,vy:-61},
-  blast:{color:'#a46a12',vx:-36,vy:-59},void:{color:'#7740a0',vx:12,vy:-73},
-  frost:{color:'#167f99',vx:-3,vy:-80}
+  physical:{color:'#354354'},fire:{color:'#c44c17'},poison:{color:'#427b24'},
+  electric:{color:'#315fd2'},blast:{color:'#a46a12'},void:{color:'#7740a0'},frost:{color:'#167f99'}
 };
+function damageMotion(enemy){
+  let motion=monsterMotion.get(enemy);
+  if(!motion){
+    const index=motionIndex++;
+    motion={vx:[-16,-10,-4,4,10,16,0][index%7],vy:-64-4*(index%3)};
+    monsterMotion.set(enemy,motion);
+  }
+  return motion;
+}
 const lifetime=2,collectionWindow=.55,maxLabels=48;
 const reducedMotion=!!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
 function damageNumber(enemy,amount,kind='physical',finishing=false){
@@ -26,10 +35,12 @@ function damageNumber(enemy,amount,kind='physical',finishing=false){
   if(!f||f.age>=collectionWindow||!game.state.floaters.includes(f)){
     const existing=game.state.floaters.filter(item=>item.damageNumber);
     if(existing.length>=maxLabels)game.state.floaters=game.state.floaters.filter(item=>item!==existing[0]);
-    const style=damageStyles[kind];
-    f={x:enemy.x+style.vx*.3,y:enemy.y-(enemy.r||12)-8+style.vy*.16,
-      originX:enemy.x+style.vx*.3,originY:enemy.y-(enemy.r||12)-8+style.vy*.16,
-      vx:style.vx,vy:style.vy,age:0,t:lifetime,amount:0,kind,color:style.color,
+    const style=damageStyles[kind],motion=damageMotion(enemy),lane=f?.lane??labels.size;
+    // Fixed small lanes keep simultaneous types apart; trajectory belongs to the monster.
+    const offsetX=[0,-32,32][lane%3],offsetY=-Math.floor(lane/3)*30;
+    f={x:enemy.x+offsetX,y:enemy.y-(enemy.r||12)-8+offsetY,
+      originX:enemy.x+offsetX,originY:enemy.y-(enemy.r||12)-8+offsetY,
+      vx:motion.vx,vy:motion.vy,lane,age:0,t:lifetime,amount:0,kind,color:style.color,
       pulseAge:0,lastPulseAt:0,damageNumber:true,finishing:false};
     game.state.floaters.push(f);labels.set(kind,f);
   }
@@ -66,9 +77,12 @@ function drawDamageNumbers(){
     ctx.font='900 '+size+'px system-ui';
     const text=damageText(f.amount),width=ctx.measureText(text).width*1.16+6,height=size*1.16+6;
     const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+    // Fade before the HUD boundary instead of clamping Y and sliding horizontally.
+    if(f.y<=top+height/2){ctx.restore();continue}
     let box=null;
-    for(const [dx,dy] of [[0,0],[0,-height-3],[width+3,0],[-width-3,0],[0,height+3],[width+3,-height-3],[-width-3,-height-3],[0,-2*(height+3)],[2*(width+3),0],[-2*(width+3),0],[0,2*(height+3)]]){
-      const x=clamp(f.x+dx,width/2+3,W-width/2-3),y=clamp(f.y+dy,top+height/2,bottom-height/2);
+    for(const [dx,dy] of [[0,0],[0,-height-3],[0,-2*(height+3)],[0,-3*(height+3)]]){
+      const x=clamp(f.x+dx,width/2+3,W-width/2-3),y=Math.min(f.y+dy,bottom-height/2);
+      if(y<top+height/2)continue;
       const candidate={x,y,left:x-width/2,top:y-height/2,width,height};
       if(!placed.some(p=>candidate.left<p.left+p.width+2&&candidate.left+width+2>p.left&&candidate.top<p.top+p.height+2&&candidate.top+height+2>p.top)){
         box=candidate;break;
@@ -77,7 +91,7 @@ function drawDamageNumbers(){
     if(!box){ctx.restore();continue}
     placed.push(box);
     const pop=reducedMotion?1:1+.14*Math.sin(Math.min(1,f.pulseAge/.25)*Math.PI)*Math.exp(-5*f.pulseAge);
-    ctx.globalAlpha=Math.min(1,f.t/.5);ctx.translate(box.x,box.y);ctx.scale(pop,pop);
+    ctx.globalAlpha=Math.min(1,f.t/.5,Math.max(0,(box.y-top-height/2)/18));ctx.translate(box.x,box.y);ctx.scale(pop,pop);
     ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
     ctx.strokeStyle='#fff8e9';ctx.lineWidth=3;ctx.strokeText(text,0,0);
     ctx.fillStyle=f.color;ctx.fillText(text,0,0);ctx.restore();

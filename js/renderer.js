@@ -1,5 +1,23 @@
 /* renderer: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.renderer = function createRendererSystem(game) {
+function enemyStatusColors(e){
+  const colors=[];
+  if(e.poison>0)colors.push('#73ba44');
+  if(e.burn>0)colors.push('#f28a38');
+  if(e.freeze>0)colors.push('#80dcf2');
+  if(e.charged>0)colors.push('#7199f5');
+  if(e.gravitySlow>0)colors.push('#b493db');
+  if(e.stun>0)colors.push('#f1cf64');
+  return colors;
+}
+function drawEnemyFill(e,x,y,width,height){
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e);
+  ctx.fillStyle=e.color;ctx.fillRect(x,y,width,height);
+  colors.forEach((color,i)=>{
+    ctx.fillStyle=color;ctx.fillRect(x+i*width/colors.length,y,width/colors.length,height);
+  });
+}
+
 function resize(){
   const r=game.dom.canvas.getBoundingClientRect();
   game.state.dpr=Math.min(2,window.devicePixelRatio||1);
@@ -150,7 +168,7 @@ function draw(){
       game.dom.ctx.fillStyle='#f7e7e9';game.dom.ctx.fillRect(-32,-20,64,40);
       game.dom.ctx.save();
       game.dom.ctx.beginPath();game.dom.ctx.rect(-32,20-40*hpRatio,64,40*hpRatio);game.dom.ctx.clip();
-      game.dom.ctx.fillStyle='#ef8ba6';game.dom.ctx.fillRect(-32,-20,64,40);
+      drawEnemyFill(e,-32,20-40*hpRatio,64,40*hpRatio);
       game.dom.ctx.restore();
       game.dom.ctx.strokeRect(-32,-20,64,40);
 
@@ -165,8 +183,7 @@ function draw(){
 
       game.dom.ctx.save();
       game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.clip();
-      game.dom.ctx.fillStyle=e.color;
-      game.dom.ctx.fillRect(-e.r,e.r-(2*e.r*hpRatio),e.r*2,2*e.r*hpRatio);
+      drawEnemyFill(e,-e.r,e.r-(2*e.r*hpRatio),e.r*2,2*e.r*hpRatio);
       game.dom.ctx.restore();
 
       game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r,0,Math.PI*2);game.dom.ctx.stroke();
@@ -225,7 +242,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { resize, draw };
+const api = { enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 return api;
 };

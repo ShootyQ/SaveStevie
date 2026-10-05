@@ -57,7 +57,10 @@ assert.equal(target.hp,90);assert.equal(first.amount,10);assert.equal(first.t,2)
 for(const type of ['fire','poison','electric','blast','void','frost'])damage.api.dealDamage(target,1,type);
 assert.equal(damage.state.floaters.length,7,'damage types have separate small labels');
 assert.equal(new Set(damage.state.floaters.map(f=>f.color)).size,7);
-assert.equal(new Set(damage.state.floaters.map(f=>f.vx+','+f.vy)).size,7,'types bounce in different directions');
+assert.equal(new Set(damage.state.floaters.map(f=>f.vx+','+f.vy)).size,1,'all types share their monster trajectory');
+const other={x:200,y:240,r:12};damage.api.damageNumber(other,999,'physical');
+assert.notEqual(damage.state.floaters.at(-1).vx,first.vx,'different monsters receive different arcs');
+damage.state.floaters.pop();
 const fire=damage.state.floaters.find(f=>f.kind==='fire');damage.api.dealDamage(target,.25,'fire');assert.equal(fire.amount,1.25);
 const beforeRender=JSON.stringify(damage.state);damage.api.draw();assert.equal(JSON.stringify(damage.state),beforeRender,'render stays pure');
 assert.ok(!damageEnv.calls.some(c=>c[0]==='roundRect'),'no large damage cards');
@@ -81,7 +84,7 @@ readable.api.damageNumber({x:100,y:180,r:12},10,'fire');const label=readable.sta
 for(let i=0;i<40;i++)readable.api.update(.033);assert.ok(readable.state.floaters.includes(label)&&label.t>.5);
 const age=label.age;readable.state.paused=true;readable.api.update(.033);assert.equal(label.age,age);
 readable.state.paused=false;for(let i=0;i<22;i++)readable.api.update(.033);assert.ok(!readable.state.floaters.includes(label));
-console.log('PASS: compact typed numbers, separate arcs, tick collection, reset, budget, pure rendering, pause, and lifetime.');
+console.log('PASS: compact typed numbers, monster-based upward arcs, tick collection, reset, budget, pure rendering, pause, and lifetime.');
 
 const build=load(true),bg=build.sandbox.testGame;
 bg.api.resetRun();
@@ -227,3 +230,23 @@ const x=near.x;contact.api.contactStevie(colliding);assert.equal(near.x,x+32,'co
 assert.ok(contact.catalog.upgrades.some(u=>u.name==='Stevie Has Had Enough'));
 assert.ok(contact.catalog.synergyDefs.some(u=>u.name==='Stevie the Unreasonable'));
 console.log('PASS: one-shot armored contact, no rewards/splitting, repeat protection, movement contact, boss survival/loss, renamed upgrades, and Human Pinball.');
+
+const statuses=load(true),sg=statuses.sandbox.testGame;
+const creature=sg.api.spawnEnemy(false,300,300,'tank');
+assert.equal(sg.api.enemyStatusColors(creature).length,0);
+for(const [key,color] of [['poison','#73ba44'],['burn','#f28a38'],['freeze','#80dcf2'],['charged','#7199f5'],['gravitySlow','#b493db'],['stun','#f1cf64']]){
+  creature[key]=1;assert.ok(sg.api.enemyStatusColors(creature).includes(color));
+}
+assert.equal(sg.api.enemyStatusColors(creature).length,6,'combined statuses retain all colors');
+creature.hp=creature.maxHp/2;const before=JSON.stringify(sg.state);
+sg.api.draw();assert.equal(JSON.stringify(sg.state),before,'status tint rendering does not mutate combat');
+for(const key of ['poison','burn','freeze','charged','gravitySlow','stun'])creature[key]=0;
+assert.equal(sg.api.enemyStatusColors(creature).length,0,'base color returns when effects expire');
+for(const amount of [.01,1,999])for(const kind of ['physical','fire','poison','electric']){
+  const e={x:400,y:400,r:10};sg.api.damageNumber(e,amount,kind);
+  const f=sg.state.floaters.at(-1),origin=f.originY;
+  for(let i=0;i<60;i++){const y=f.y;sg.api.updateDamageNumbers(1/30);assert.ok(f.y<y,'every arc rises for its lifetime')}
+  assert.ok(f.y<origin-60,'substantial upward lift');
+  sg.state.floaters=[];
+}
+console.log('PASS: all status colors, combined/expired statuses, pure tinting, and upward arcs across damage sizes/types.');
