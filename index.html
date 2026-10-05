@@ -152,6 +152,7 @@
     <button class="secondary" id="clearBtn" title="Erase all walls">Erase</button>
 
     <button class="secondary" id="buildBtn">Build</button>
+    <button class="secondary" id="compendiumBtn">Monsters</button>
     <button class="secondary" id="changelogBtn">Updates</button>
     <button class="secondary" id="fullscreenBtn" title="Toggle fullscreen">Screen</button>
     <button id="pauseBtn">Pause</button>
@@ -166,7 +167,27 @@
     <h3>Current totals</h3><div id="buildStats" class="build-stats"></div>
     <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
     <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
-    <h3>Enemy field guide</h3><div id="buildEnemies" class="build-upgrades"></div>
+    <h3>Monster notes</h3><p>Open Monsters in the toolbar for the full illustrated compendium.</p>
+  </div>
+</div>
+<div class="overlay build-overlay" id="compendiumOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="compendiumTitle">
+  <div class="cardbox build-box monster-book">
+    <div class="build-heading"><h2 id="compendiumTitle">Monster Compendium</h2><button id="closeCompendiumBtn">Close</button></div>
+    <p class="monster-subtitle">Know your notebook nuisances. All 19 monsters, from first scribble to final boss. Your run pauses while you browse.</p>
+    <label class="monster-setting"><input id="monsterIntrosEnabled" type="checkbox" checked> Show new-monster introductions before each wave</label>
+    <p class="monster-setting-note">Saved on this device. Switch off for uninterrupted runs. Stats show base values before wave scaling, upgrades, or armor.</p>
+    <div id="monsterCards" class="monster-grid"></div>
+  </div>
+</div>
+<div class="overlay build-overlay" id="monsterIntroOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="monsterIntroTitle">
+  <div class="cardbox build-box monster-book">
+    <div class="build-heading"><h2 id="monsterIntroTitle">New monsters!</h2><span class="monster-paused">GAME PAUSED</span></div>
+    <p id="monsterIntroNote" class="monster-subtitle"></p>
+    <div id="monsterIntroCards" class="monster-grid"></div>
+    <div class="monster-intro-footer">
+      <label class="monster-setting"><input id="hideMonsterIntros" type="checkbox"> Skip these introductions from now on</label>
+      <button id="continueMonsterIntroBtn">Bring it on!</button>
+    </div>
   </div>
 </div>
 <div class="overlay build-overlay" id="changelogOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="changelogTitle">
@@ -175,6 +196,10 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry">
+        <h3>Meet the notebook nuisances</h3>
+        <p>All 19 monsters now have fun names and illustrated compendium entries with first waves, stats, abilities, and counter tips. Waves pause before combat to introduce newly unlocked monsters together. Turn introductions off in the popup or Monsters screen; your choice is saved on this device.</p>
+      </article>
       <article class="build-entry">
         <h3>Damaged monsters stay easy to spot</h3>
         <p>Monsters keep their full color and visibility at low health, including bosses, special-action poses, and fallback drawings. Separate health bars show damage; poison, fire, frost, and other status colors still cover the full body.</p>
@@ -272,6 +297,7 @@
 <script src="js/state.js"></script>
 <script src="js/geometry.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/monsters.js"></script>
 <script src="js/waves.js"></script>
 <script src="js/enemies.js"></script>
 <script src="js/walls.js"></script>

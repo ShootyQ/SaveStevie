@@ -1,15 +1,31 @@
 /* enemies: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.enemies = function createEnemiesSystem(game) {
+const defs=game.catalog.enemyDefs={
+    grunt:{r:11,hp:20,speed:30,dmg:6,color:'#cf5b51'},
+    fast:{r:8,hp:18,speed:60,dmg:7,color:'#d8893c'},
+    bouncer:{r:10,hp:28,speed:44,dmg:8,color:'#2e9f92'},
+    flanker:{r:10,hp:30,speed:39,dmg:9,color:'#6b8bd8'},
+    tank:{r:16,hp:70,speed:23,dmg:15,color:'#6d6b73'},
+    splitter:{r:13,hp:40,speed:31,dmg:10,color:'#8456c9'},
+    sniper:{r:12,hp:36,speed:27,dmg:7,color:'#4b79d8'},
+    gnawer:{r:12,hp:42,speed:30,dmg:18,color:'#86563d'},
+    brute:{r:19,hp:105,speed:20,dmg:22,color:'#51634a'},
+    elite:{r:13,hp:68,speed:42,dmg:13,color:'#b34e82'},
+    wardling:{r:12,hp:38,speed:36,dmg:8,color:'#9e71b5'},
+    sprinter:{r:9,hp:24,speed:37,dmg:7,color:'#e39d2d'},
+    brood:{r:17,hp:62,speed:25,dmg:11,color:'#9053ac'},
+    bulwark:{r:18,hp:80,speed:22,dmg:13,color:'#6d7e91'},
+    medic:{r:12,hp:32,speed:28,dmg:5,color:'#4e9d75'},
+    sapper:{r:12,hp:44,speed:38,dmg:13,color:'#bd6b37'},
+    mini:{r:7,hp:12,speed:49,dmg:5,color:'#a56cc1'},
+    boss:{r:28,hp:270,speed:18,dmg:27,color:'#962f3d'},
+    eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'}
+  };
+
 const pressure=game.catalog.pressureSettings={startWave:5,fullWave:20,maxMultiplier:3,speedBonus:.28,
   surgeCycle:12,surgeSeconds:4,surgeMultiplier:1.35,quietMultiplier:.9,maxEnemies:180};
-game.catalog.enemyGuide=[
-  {wave:8,type:'wardling',name:'Wardling',desc:'Immune to one random marked damage type. Physical hits and other elements still work; slows and stuns still help.'},
-  {wave:9,type:'sprinter',name:'Sprinter',desc:'Warns with a gold ring, then dashes at 2.6× speed for 0.6s. Frost or stun interrupts the charge cycle.'},
-  {wave:10,type:'brood',name:'Brood',desc:'Splits into two Splitters, each splitting into two Minis: four final children. Keep splash damage ready.'},
-  {wave:11,type:'bulwark',name:'Bulwark',desc:'Takes only 35% of physical damage. Elemental damage bypasses its armor.'},
-  {wave:13,type:'medic',name:'Medic',desc:'Heals living allies within 95px for 3 HP/s. Cannot heal itself or revive enemies; freeze or stun stops healing.'},
-  {wave:15,type:'sapper',name:'Sapper',desc:'Seeks the nearest wall and deals double wall damage. Kill it quickly or redirect it with fresh walls.'}
-];
+game.catalog.enemyGuide=game.catalog.monsters.filter(m=>['wardling','sprinter','brood','bulwark','medic','sapper'].includes(m.type)).map(m=>({wave:m.wave,type:m.type,name:m.name,desc:m.ability+' '+m.tip}));
+
 function enemyType(){
   const pool=['grunt','grunt'];
   if(game.state.wave>=3)pool.push('fast');
@@ -39,30 +55,9 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   let type=typeOverride||game.api.enemyType();
   if(forceBoss)type=(game.state.wave===20&&!game.state.endless)?'eraser':'boss';
   const scale=(1+(game.state.wave-1)*.024)*game.state.stats.enemyScale;
-  const defs={
-    grunt:{r:11,hp:20,speed:30,dmg:6,color:'#cf5b51'},
-    fast:{r:8,hp:18,speed:60,dmg:7,color:'#d8893c'},
-    bouncer:{r:10,hp:28,speed:44,dmg:8,color:'#2e9f92'},
-    flanker:{r:10,hp:30,speed:39,dmg:9,color:'#6b8bd8'},
-    tank:{r:16,hp:70,speed:23,dmg:15,color:'#6d6b73'},
-    splitter:{r:13,hp:40,speed:31,dmg:10,color:'#8456c9'},
-    sniper:{r:12,hp:36,speed:27,dmg:7,color:'#4b79d8'},
-    gnawer:{r:12,hp:42,speed:30,dmg:18,color:'#86563d'},
-    brute:{r:19,hp:105,speed:20,dmg:22,color:'#51634a'},
-    elite:{r:13,hp:68,speed:42,dmg:13,color:'#b34e82'},
-    wardling:{r:12,hp:38,speed:36,dmg:8,color:'#9e71b5'},
-    sprinter:{r:9,hp:24,speed:37,dmg:7,color:'#e39d2d'},
-    brood:{r:17,hp:62,speed:25,dmg:11,color:'#9053ac'},
-    bulwark:{r:18,hp:80,speed:22,dmg:13,color:'#6d7e91'},
-    medic:{r:12,hp:32,speed:28,dmg:5,color:'#4e9d75'},
-    sapper:{r:12,hp:44,speed:38,dmg:13,color:'#bd6b37'},
-    mini:{r:7,hp:12,speed:49,dmg:5,color:'#a56cc1'},
-    boss:{r:28,hp:270+game.state.wave*15,speed:18,dmg:27,color:'#962f3d'},
-    eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'}
-  };
-  const d=defs[type];
+  const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
   const enemy={
-    x:px,y:py,type,r:d.r,hp:d.hp*scale,maxHp:d.hp*scale,speed:d.speed*(1+game.state.wave*.006),
+    x:px,y:py,type,r:d.r,hp:baseHp*scale,maxHp:baseHp*scale,speed:d.speed*(1+game.state.wave*.006),
     dmg:d.dmg,color:d.color,attackCd:0,shootCd:game.api.rand(1.3,2.1),stun:0,burn:0,burnDps:0,
     poison:0,poisonDps:0,freeze:0,chainCd:0,eraseCd:1.7,gravitySlow:0,thermalCd:0,charged:0,
     bounces:type==='bouncer'?3:0,bounceTime:0,bounceVX:0,bounceVY:0,
@@ -186,7 +181,7 @@ function updateEnemyShots(dt){
     }
     if(hitTime!==null){
       const damage=shot.damage*(1-game.state.stats.playerArmor);
-      damageStevie(damage,'Sniper arrow',{x:endX,y:endY,r:shot.r,type:'arrow'});
+      damageStevie(damage,'Sniper arrow ('+game.api.monsterName('sniper')+')',{x:endX,y:endY,r:shot.r,type:'arrow'});
       game.api.floatText(player.x,player.y-28,'SHOT −'+Number(damage.toFixed(1)),'#3562be');
       game.api.burst(player.x,player.y,'#4b79d8',6);continue;
     }
@@ -312,7 +307,7 @@ function contactStevie(e){
   if(game.api.dist(e.x,e.y,player.x,player.y)>=player.r+e.r+2)return false;
   if(game.api.shotBlocked(e.x,e.y,player.x,player.y,0))return false;
   const damage=e.dmg*(1-game.state.stats.playerArmor);
-  damageStevie(damage,e.type==='eraser'?'The Eraser':e.type[0].toUpperCase()+e.type.slice(1)+' contact',e);
+  damageStevie(damage,game.api.monsterName(e.type)+' contact',e);
   game.api.floatText(player.x,player.y-28,'-'+Number(damage.toFixed(1)),'#b44141');
   game.api.burst(e.x,e.y,e.color,12);
   // Contact removal is not a player kill: no rewards, healing, or split children.

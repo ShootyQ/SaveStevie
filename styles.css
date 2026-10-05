@@ -238,3 +238,48 @@ button:disabled{opacity:.5;cursor:default}
 #waveStevie{width:56px;height:60px;flex-shrink:0;background:none}
 #hitNotice{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);padding:7px 11px;border:2px solid #8d3535;border-radius:10px;background:#fff5e8ee;color:#9d3030;font-size:12px;font-weight:900;text-align:center;pointer-events:none;z-index:6}
 @media(max-width:760px),(pointer:coarse){.bottom{height:59px;flex:0 0 59px}}
+
+/* Illustrated notebook field guide. Scroll inside the page, never the playfield. */
+.monster-book{background:linear-gradient(#bdd3e322 1px,transparent 1px),#fbf7e9;background-size:100% 28px}
+.monster-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.monster-card{min-width:0;border:2px solid #a8a08b;border-radius:6px 15px 9px 12px;background:#fffdf5;padding:14px;box-shadow:3px 3px 0 #d8d0bc}
+.monster-card-heading{display:flex;align-items:center;gap:10px}
+.monster-card-heading img{width:84px;height:84px;object-fit:contain;flex-shrink:0}
+.monster-card h3{font-size:20px;margin:4px 0;line-height:1.1;color:#26333c}
+.monster-wave{font-size:11px;font-weight:bold;letter-spacing:.5px;color:#3562be;text-transform:uppercase}
+.monster-role{font-size:12px;color:#65717a}
+.monster-card p{text-align:left;font-size:13px;line-height:1.5;margin:10px 0 0;color:#46535b}
+.monster-card .monster-flavor{color:#786438;font-style:italic;min-height:38px}
+.monster-stats{display:flex;gap:6px;margin:12px 0;border-block:1px dashed #c9c0ab;padding:8px 0}
+.monster-stats div{flex:1}
+.monster-stats dt{font-size:10px;color:#65717a}
+.monster-stats dd{margin:3px 0 0;font-size:13px;font-weight:900}
+.monster-card .monster-tip{color:#315d43}
+.monster-setting{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:bold;line-height:1.4;padding:10px 0;cursor:pointer}
+.monster-setting input{width:22px;height:22px;flex-shrink:0;accent-color:#3562be}
+.monster-book .monster-setting-note{font-size:12px;text-align:left}
+.monster-paused{font-size:11px;font-weight:bold;color:#315d43;white-space:nowrap}
+.monster-intro-footer{margin-top:18px;padding-top:10px;border-top:2px dashed #c9c0ab}
+#continueMonsterIntroBtn{display:block;width:100%;background:#3562be}
+@media(max-width:600px){
+  .monster-grid{grid-template-columns:1fr}
+  .monster-card-heading img{width:72px;height:72px}
+  .monster-card h3{font-size:19px}
+  .monster-book .build-heading{gap:8px}
+  .monster-book .build-heading h2{font-size:21px}
+  .monster-setting{font-size:13px}
+  .monster-book .monster-subtitle{font-size:13px}
+}
+#monsterIntroOverlay .monster-book{display:flex;flex-direction:column;overflow:hidden}
+#monsterIntroOverlay .build-heading,#monsterIntroNote,.monster-intro-footer{flex:0 0 auto}
+#monsterIntroCards{overflow:auto;overscroll-behavior:contain;min-height:0;padding:0 5px 5px 0}
+#monsterIntroOverlay .build-heading{position:static}
+#monsterIntroOverlay .monster-intro-footer{margin-top:10px;padding-top:4px}
+#monsterIntroOverlay .monster-setting{font-size:12px}
+#monsterIntroOverlay .monster-book{max-height:90dvh}
+.monster-book .build-heading h2{min-width:0}
+@media(max-width:600px){
+  #monsterIntroOverlay .build-heading{display:block}
+  #monsterIntroOverlay .build-heading h2{text-align:center}
+  #monsterIntroOverlay .monster-paused{display:block;text-align:center;padding:4px 0}
+}

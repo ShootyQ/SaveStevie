@@ -5,7 +5,7 @@ function waveDuration(){
 }
 
 function resetRun(){
-  game.api.closeBuild();game.api.closeChangelog();
+  game.api.closeInfo();
   game.dom.$('lastHitText').textContent='';
   game.state.wave=1;game.state.kills=0;game.state.score=0;game.state.waveKills=0;game.state.rerolls=1;game.state.endless=false;game.state.specialization='none';game.state.finalOvertime=false;game.state.finalBossDefeated=false;
   game.state.walls=[];game.state.enemies=[];game.state.particles=[];game.state.floaters=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.synergies.clear();
@@ -37,8 +37,9 @@ function startWave(){
   game.state.stats.firstStrokeUsed=false;
   game.state.waveKills=0;game.state.waveTime=game.api.waveDuration();game.state.timeLeft=game.state.waveTime;game.state.spawnTimer=.5;
   game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+game.state.stats.playerRegen+5);
-  game.api.setMsg(game.state.wave===20&&!game.state.endless?'THE ERASER approaches. This seems personal.':game.state.wave%5===0?'Boss wave. Fresh page, full ink.':'Wave '+game.state.wave+'. Fresh page, full ink.');
+  game.api.setMsg(game.state.wave===20&&!game.state.endless?game.api.monsterName('eraser')+' approaches. This seems personal.':game.state.wave%5===0?'Boss wave. Fresh page, full ink.':'Wave '+game.state.wave+'. Fresh page, full ink.');
   game.api.updateUI();
+  game.api.introduceWave();
 }
 
 function waveComplete(){

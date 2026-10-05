@@ -11,7 +11,7 @@ function update(dt){
     game.state.timeLeft=0;
     if(game.state.wave===20&&!game.state.endless&&!game.state.finalBossDefeated){
       game.state.finalOvertime=true;
-      game.api.setMsg('TIME SURVIVED. NOW DEFEAT THE ERASER!');
+      game.api.setMsg('TIME SURVIVED. NOW DEFEAT '+game.api.monsterName('eraser').toUpperCase()+'!');
     }else{
       game.api.waveComplete();return;
     }
