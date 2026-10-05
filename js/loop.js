@@ -1,6 +1,9 @@
 /* loop: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.loop = function createLoopSystem(game) {
 function update(dt){
+  // The wave-clear portrait celebrates while combat is stopped, but respects
+  // manual pause and the build/upgrade/specialization screens.
+  if(game.state.betweenWaves&&!game.state.paused&&!game.state.inUpgrade&&!game.state.awaitingSpec)game.api.updateStevieCelebration(dt);
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
 
   if(!game.state.finalOvertime) game.state.timeLeft-=dt;
@@ -158,11 +161,13 @@ function update(dt){
       }
 
       e.attackCd-=dt;
+      if(e.type==='sapper'&&e.attackCd>0&&e.attackCd<=.16)game.api.prepareSapperStrike(e);
       const dps=game.api.applyInkContact(e,dt,hit.wall);
       game.api.dealDamage(e,dps*dt,'physical');
       if(game.state.stats.wallStun>0&&Math.random()<game.state.stats.wallStun*dt*.9)e.stun=.45;
       if(e.attackCd<=0){
         game.api.damageWall(hit.wall,e.dmg*(e.type==='sapper'?2:1),e.x,e.y);
+        if(e.type==='sapper')game.api.animateEnemyAction(e,'strike');
         e.attackCd=e.type==='gnawer'?.24:.42
       }
       continue;

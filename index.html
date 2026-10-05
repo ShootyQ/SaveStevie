@@ -105,7 +105,7 @@
 
     <div class="overlay" id="waveOverlay" style="display:none">
       <div class="cardbox startbox">
-        <h2 id="waveClearTitle">Wave Cleared!</h2>
+        <div class="wave-heading"><canvas id="waveStevie" width="128" height="136" role="img" aria-label="Stevie celebrating the cleared wave"></canvas><h2 id="waveClearTitle">Wave Cleared!</h2></div>
         <div class="stats wave-stats">
           <div class="pill">Wave <span id="wave">1</span></div>
           <div class="pill">Score <span id="score">0</span></div>
@@ -175,6 +175,11 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry">
+        <h3>Special moves &amp; Stevie reactions</h3>
+        <p>Snipers cock and fire their pencil launchers, Sappers raise and swing their tools on wall strikes, and Medics animate their bags while healing injured allies. Stevie flinches when hit and cheers on the wave-clear screen.</p>
+        <p>New custom poses keep health and status colors visible. Animations respect pause and reduced motion, while shots, healing, damage, and upgrades keep their timing.</p>
+      </article>
       <article class="build-entry">
         <h3>The monsters are moving</h3>
         <p>Small monsters hop and shuffle while heavy monsters lumber. Damage gives them a quick squish; repeated poison and fire ticks keep reactions subtle. Broods and Splitters stretch and pop apart as their children spring out.</p>

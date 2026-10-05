@@ -73,3 +73,22 @@ children still spawn immediately at their original combat coordinates. Wave
 starts clear presentation records, pauses freeze them, and reduced motion
 removes them (including the custom Eraser wobble). Resize keeps echoes aligned
 with the arena. The system allocates no new sprites or tint combinations.
+
+Special-action frames add sniper-ready/fire, sapper-ready/strike, medic-ready/heal,
+and Stevie flinch/cheer-a/cheer-b PNGs (about 328 KiB total on disk). Each pair
+uses a common scale and fixed transparent canvas with aligned feet, exported
+from a custom nine-pose sheet. The Sniper retains its pencil launcher.
+Readiness requires a clear, close shot; firing follows actual projectile
+creation. Sappers prepare while touching walls, then strike on actual wall
+hits. Medics animate only after healing an injured nearby ally, and their
+custom range pulse stops when inactive, frozen, or stunned. Alternate poses
+share the existing 32-entry status-tint cache and fixed combat bounds.
+
+Stevie's flinch follows actual damage and takes priority over rock throwing.
+A short cheer appears in the arena and a dedicated transparent wave-clear
+portrait; the presentation clock advances during the wave break while combat
+stays stopped. Manual pause and upgrade/specialization screens freeze it.
+After 1.2 seconds Stevie settles into a happy pose until the next wave resets
+his presentation state. Reduced motion uses neutral art. Missing pose images
+fall back to the existing base drawings/idle atlas. No damage, healing,
+projectile timing, scoring, random draws, or collision coordinates change.
