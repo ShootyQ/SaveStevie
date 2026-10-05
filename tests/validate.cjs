@@ -134,3 +134,76 @@ const title=fs.readFileSync(path.join(root,'index.html'),'utf8');
 assert.match(title,/<title>Save Stevie - In Development<\/title>/);
 assert.match(title,/<h1>Save Stevie - In Development<\/h1>/);
 console.log('PASS: additive/multiplicative stacks, ink levels, one-time unlocks, caps, rock speed, build review, pause restoration, synergies, and branding.');
+
+const pressureEnv=load(true),pg=pressureEnv.sandbox.testGame;
+pg.api.resetRun();
+const originalGap=w=>w===1?2.35:w===2?2.05:w===3?1.78:w===4?1.58:w===5?1.42:Math.max(.34,1.48-w*.034);
+function arrivals(wave,useOriginal=false){
+  pg.state.wave=wave;pg.api.startWave();let count=0,bosses=0;
+  const realSpawn=pg.api.spawnEnemy;
+  pg.api.spawnEnemy=(boss)=>{count++;if(boss)bosses++;return realSpawn(boss)};
+  for(let i=0;i<3600;i++){
+    pg.state.timeLeft=60-i/60;
+    if(useOriginal){pg.state.spawnTimer-=1/60;if(pg.state.spawnTimer<=0){count++;pg.state.spawnTimer=originalGap(wave)}}
+    else pg.api.spawnWaveEnemies(1/60);
+    pg.state.enemies=[];
+  }
+  pg.api.spawnEnemy=realSpawn;return {count,bosses};
+}
+for(const wave of [1,2,3,4,5])assert.equal(arrivals(wave).count,arrivals(wave,true).count,'early-wave spawn timing preserved');
+const pressureCounts=[];
+for(const wave of [8,10,14,15,20]){
+  const old=arrivals(wave,true),now=arrivals(wave);
+  pressureCounts.push({wave,old:old.count,new:now.count,ratio:Number((now.count/old.count).toFixed(2))});
+  if(wave===14)assert.ok(now.count/old.count>=2&&now.count/old.count<2.5,'wave 14 roughly doubles arrivals');
+  if(wave===20)assert.ok(now.count/old.count>=3&&now.count/old.count<3.4,'wave 20 roughly triples arrivals');
+  if(wave%5===0)assert.equal(now.bosses,1,'boss is spawned once, even if killed early');
+}
+console.log('PASS: 60-second arrival counts '+JSON.stringify(pressureCounts));
+pg.state.wave=20;pg.api.startWave();pg.state.timeLeft=51;const surgeGap=pg.api.spawnGap();pg.state.timeLeft=57;
+assert.ok(surgeGap<pg.api.spawnGap(),'short surge increases frequency');
+assert.equal(pg.api.enemySpeedScale(),1.28);
+for(const [wave,type] of [[8,'wardling'],[9,'sprinter'],[10,'brood'],[11,'bulwark'],[13,'medic'],[15,'sapper']]){
+  const pick=pg.api.pick;let pool;
+  pg.api.pick=list=>{pool=list;return list[0]};pg.state.wave=wave-1;pg.api.enemyType();assert.ok(!pool.includes(type));
+  pg.state.wave=wave;pg.api.enemyType();assert.ok(pool.includes(type));pg.api.pick=pick;
+}
+pg.state.wave=10;pg.api.startWave();
+const ward=pg.api.spawnEnemy(false,100,200,'wardling');
+const wardHp=ward.hp;pg.api.dealDamage(ward,10,ward.immunity);assert.equal(ward.hp,wardHp);
+pg.api.dealDamage(ward,10,'physical');assert.equal(ward.hp,wardHp-10,'immunity has a physical counter');
+const immuneMessages=pg.state.floaters.filter(f=>f.text?.startsWith('IMMUNE')).length;
+pg.api.dealDamage(ward,10,ward.immunity);assert.equal(pg.state.floaters.filter(f=>f.text?.startsWith('IMMUNE')).length,immuneMessages,'immunity feedback is throttled');
+const armor=pg.api.spawnEnemy(false,120,200,'bulwark'),armorHp=armor.hp;
+pg.api.dealDamage(armor,10,'physical');assert.equal(armor.hp,armorHp-3.5);
+pg.api.dealDamage(armor,10,'fire');assert.equal(armor.hp,armorHp-13.5,'elemental damage bypasses physical armor');
+pg.state.enemies=[];const brood=pg.api.spawnEnemy(false,100,200,'brood');pg.api.killEnemy(brood);
+assert.equal(pg.state.enemies.length,2);assert.ok(pg.state.enemies.every(e=>e.type==='splitter'));
+for(const e of [...pg.state.enemies])pg.api.killEnemy(e);
+assert.equal(pg.state.enemies.length,4);assert.ok(pg.state.enemies.every(e=>e.type==='mini'));
+for(const e of [...pg.state.enemies])pg.api.killEnemy(e);assert.equal(pg.state.enemies.length,0,'split chain is finite');
+const runner=pg.api.spawnEnemy(false,100,200,'sprinter');runner.dashTime=2.2;
+assert.equal(pg.api.enemyMoveScale(runner),pg.api.enemySpeedScale(),'telegraph comes before dash');
+pg.api.updateEnemyBehavior(runner,.5);assert.ok(pg.api.enemyMoveScale(runner)>2*pg.api.enemySpeedScale());
+const medic=pg.api.spawnEnemy(false,100,200,'medic'),ally=pg.api.spawnEnemy(false,130,200,'grunt');ally.hp=5;
+pg.api.updateEnemyBehavior(medic,1);assert.equal(ally.hp,8);
+medic.freeze=1;pg.api.updateEnemyBehavior(medic,1);assert.equal(ally.hp,8,'freeze stops healing');
+medic.freeze=0;ally.hp=0;pg.api.updateEnemyBehavior(medic,1);assert.equal(ally.hp,0,'healer does not revive dead enemies');
+pg.state.walls=[{pts:[{x:90,y:200},{x:90,y:400}],thick:8,hp:100,maxHp:100,life:72,maxLife:72}];
+const sapper=pg.api.spawnEnemy(false,80,200,'sapper');assert.equal(pg.api.enemyTarget(sapper),pg.state.walls[0].pts[0]);
+pg.state.enemies=[sapper];pg.state.spawnTimer=100;pg.state.timeLeft=60;
+pg.api.update(.016);assert.equal(pg.state.walls[0].hp,100-2*sapper.dmg,'sapper attacks walls twice as hard');
+pg.state.enemies=[];pg.state.walls=[{pts:[{x:200,y:100},{x:200,y:400}],thick:8,hp:100,maxHp:100,life:72,maxLife:72}];
+const bounce=pg.api.spawnEnemy(false,182,250,'bouncer');bounce.bounceVX=70;bounce.bounceVY=0;bounce.bounceTime=.72;
+assert.equal(pg.api.bouncePathClear(bounce,220,250),false,'look-ahead detects crossing a line');
+for(let i=0;i<20;i++){pg.api.steerBounce(bounce,.016);assert.ok(pg.api.pointSegDist(bounce.x,bounce.y,200,100,200,400)>=bounce.r+4,'bouncer stays out of walls')}
+pg.state.walls=[{pts:[{x:80,y:190},{x:120,y:190},{x:120,y:210},{x:80,y:210},{x:80,y:190}],thick:8}];
+bounce.x=100;bounce.y=200;bounce.bounceTime=.7;
+assert.equal(pg.api.steerBounce(bounce,.016),false,'trapped bouncer falls back to attacking');
+assert.equal(bounce.bounceTime,0);
+pg.state.enemies=[];for(let i=0;i<200;i++)pg.api.spawnEnemy(false,100,200,'grunt');assert.equal(pg.state.enemies.length,180);
+pg.api.spawnEnemy(true);assert.ok(pg.state.enemies.some(e=>e.type==='boss'),'budget never prevents a required boss');
+pg.state.enemies=[];pg.state.walls=[];
+for(const type of ['wardling','sprinter','brood','bulwark','medic','sapper'])pg.api.spawnEnemy(false,100,200,type);
+pg.api.draw();for(const call of pressureEnv.calls)for(const v of call.slice(1))if(typeof v==='number')assert.ok(Number.isFinite(v),'new enemies render finite geometry');
+console.log('PASS: six unlocks, immunity, armor, two-generation splitting, telegraphed dash, interruptible healing, sapper targeting, bounce avoidance, and enemy budget.');

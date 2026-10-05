@@ -29,18 +29,7 @@ function update(dt){
 
   game.api.updateSteve(dt);game.api.updateProjectiles(dt);
 
-  game.state.spawnTimer-=dt;
-  const spawnGap =
-    game.state.wave===1 ? 2.35 :
-    game.state.wave===2 ? 2.05 :
-    game.state.wave===3 ? 1.78 :
-    game.state.wave===4 ? 1.58 :
-    game.state.wave===5 ? 1.42 :
-    Math.max(.34,1.48-game.state.wave*.034);
-  if(game.state.spawnTimer<=0){
-    const bossDue=game.state.wave%5===0&&!game.state.enemies.some(e=>e.type==='boss'||e.type==='eraser')&&game.state.timeLeft<game.state.waveTime-2;
-    game.api.spawnEnemy(bossDue);game.state.spawnTimer=spawnGap;
-  }
+  game.api.spawnWaveEnemies(dt);
 
   // Geometry-based synergies pulse continuously.
   for(const w of game.state.walls){
@@ -112,6 +101,7 @@ function update(dt){
         }
       }
     }
+    game.api.updateEnemyBehavior(e,dt);
     game.api.applySynergies(e,dt);
     game.api.eraserAttack(e,dt);
 
@@ -134,13 +124,11 @@ function update(dt){
     // Bouncers ricochet off a wall a few times and try another angle before
     // eventually giving up and attacking the barrier normally.
     if(e.type==='bouncer'&&e.bounceTime>0){
-      e.x+=e.bounceVX*dt;
-      e.y+=e.bounceVY*dt;
-      e.bounceTime-=dt;
-      continue;
+      if(game.api.steerBounce(e,dt))continue;
     }
 
-    let targetX=game.state.player.x,targetY=game.state.player.y;
+    const target=game.api.enemyTarget(e);
+    let targetX=target.x,targetY=target.y;
     if(e.type==='flanker'){
       e.flankCd-=dt;
       if(e.flankCd<=0){
@@ -178,13 +166,13 @@ function update(dt){
       game.api.dealDamage(e,dps*dt,'physical');
       if(game.state.stats.wallStun>0&&Math.random()<game.state.stats.wallStun*dt*.9)e.stun=.45;
       if(e.attackCd<=0){
-        game.api.damageWall(hit.wall,e.dmg,e.x,e.y);
+        game.api.damageWall(hit.wall,e.dmg*(e.type==='sapper'?2:1),e.x,e.y);
         e.attackCd=e.type==='gnawer'?.24:.42
       }
       continue;
     }
 
-    let speed=e.speed*(1-game.api.clamp(e.gravitySlow,0,.7));
+    let speed=e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7));
     if(e.type==='sniper'&&playerDist<190){
       e.shootCd-=dt;
       if(e.shootCd<=0){

@@ -179,6 +179,27 @@ function draw(){
         game.dom.ctx.strokeStyle='#e8fffb';game.dom.ctx.lineWidth=2;
         game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r+4,0,Math.PI*1.2);game.dom.ctx.stroke()
       }
+      const symbols={wardling:'◇',sprinter:'»',brood:'✣',bulwark:'▣',medic:'+',sapper:'×'};
+      if(symbols[e.type]){
+        game.dom.ctx.fillStyle='#fffdf2';game.dom.ctx.font='bold 15px system-ui';game.dom.ctx.textAlign='center';
+        game.dom.ctx.fillText(symbols[e.type],0,4);
+      }
+      if(e.immunity){
+        const labels={fire:'FIRE',poison:'VENOM',electric:'ZAP',blast:'BLAST',frost:'FROST'};
+        const colors={fire:'#c44c17',poison:'#427b24',electric:'#315fd2',blast:'#a46a12',frost:'#167f99'};
+        game.dom.ctx.strokeStyle=colors[e.immunity];game.dom.ctx.lineWidth=3;
+        game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r+4,0,Math.PI*2);game.dom.ctx.stroke();
+        game.dom.ctx.font='bold 9px system-ui';game.dom.ctx.fillStyle=colors[e.immunity];
+        game.dom.ctx.strokeStyle='#fff8e9';game.dom.ctx.lineWidth=3;game.dom.ctx.strokeText(labels[e.immunity],0,-e.r-8);game.dom.ctx.fillText(labels[e.immunity],0,-e.r-8);
+      }
+      if(e.type==='sprinter'&&e.dashTime>2.1){
+        game.dom.ctx.strokeStyle=e.dashTime>=2.6?'#d95050':'#e39d2d';game.dom.ctx.lineWidth=2;
+        game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r+5,0,Math.PI*2);game.dom.ctx.stroke();
+      }
+      if(e.type==='medic'){
+        game.dom.ctx.strokeStyle='rgba(74,155,102,.25)';game.dom.ctx.lineWidth=1;
+        game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,25+e.healPulse*20,0,Math.PI*2);game.dom.ctx.stroke();
+      }
       if(e.type==='flanker'){
         game.dom.ctx.strokeStyle='#dbe5ff';game.dom.ctx.lineWidth=2;
         game.dom.ctx.beginPath();game.dom.ctx.moveTo(-e.r-4,0);game.dom.ctx.lineTo(-e.r-9,-5);game.dom.ctx.moveTo(-e.r-4,0);game.dom.ctx.lineTo(-e.r-9,5);game.dom.ctx.stroke()

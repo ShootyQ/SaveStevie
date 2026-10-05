@@ -42,6 +42,11 @@ function damageNumber(enemy,amount,kind='physical',finishing=false){
   }
 }
 function dealDamage(enemy,amount,kind='physical'){
+  if(enemy.immunity===kind&&amount>0){
+    if(enemy.immuneCd<=0){game.api.floatText(enemy.x,enemy.y-enemy.r-8,'IMMUNE '+kind.toUpperCase(),damageStyles[kind]?.color||'#7740a0');enemy.immuneCd=1.1}
+    return;
+  }
+  if(enemy.type==='bulwark'&&kind==='physical'&&amount>0)amount*=.35;
   const before=enemy.hp,actual=Math.min(Math.max(0,before),amount);
   enemy.hp-=amount;
   game.api.damageNumber(enemy,actual,kind,before>0&&enemy.hp<=0);

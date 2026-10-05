@@ -26,6 +26,7 @@ function resetRun(){
 }
 
 function startWave(){
+  game.api.resetEnemyWave();
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.particles=[];game.state.floaters=[];
   game.state.finalOvertime=false; game.state.finalBossDefeated=false;
   game.state.stats.ink=game.state.stats.maxInk;
