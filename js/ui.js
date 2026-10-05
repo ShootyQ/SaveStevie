@@ -8,6 +8,7 @@ function text(node,value){
 function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
+  text(game.dom.$('liveWave'),game.state.wave);
   text(game.dom.$('pressure'),Number(game.api.wavePressure().toFixed(1))+'×');
   text(game.dom.waveEl,game.state.wave);text(game.dom.scoreEl,game.state.score);text(game.dom.killsEl,game.state.kills);text(game.dom.luckEl,game.state.stats.luck);text(game.dom.bestEl,game.state.best);
   game.dom.inkBar.style.width=(100*game.state.stats.ink/game.state.stats.maxInk)+'%';
@@ -106,7 +107,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
 }
 let activeInfo=null,pausedBeforeInfo=false;
 function renderBuild(){
-  game.dom.$('buildEnemies').innerHTML=game.catalog.enemyGuide.map(e=>
+  game.dom.$('buildEnemies').innerHTML='<article class="build-entry"><h4>Wave 9 · Sniper</h4><p>Blue aim line warns before a ranged shot. Draw a wall across the line to block it; frost or stun interrupts its wind-up. Fired shots remain dangerous until blocked or expired.</p></article>'+game.catalog.enemyGuide.map(e=>
     `<article class="build-entry"><h4>${e.name} · Wave ${e.wave}+</h4><p>${e.desc}</p></article>`).join('');
   const s=game.state.stats,f=v=>Number(v.toFixed(2));
   const totals=[['Max ink',s.maxInk],['Ink regeneration',f(s.inkRegen)+' /s'],['Stroke cost',f(s.lineCost)+' ink/pixel'],

@@ -22,6 +22,7 @@ game.state.enemies = [];
 game.state.particles = [];
 game.state.floaters = [];
 game.state.projectiles = [];
+game.state.enemyShots = [];
 game.state.drawing = false;
 game.state.currentWall = null;
 game.state.rerolls = 1;

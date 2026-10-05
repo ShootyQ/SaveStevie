@@ -22,6 +22,14 @@ function resize(){
   const r=game.dom.canvas.getBoundingClientRect();
   game.state.dpr=Math.min(2,window.devicePixelRatio||1);
   game.dom.canvas.width=Math.floor(r.width*game.state.dpr);game.dom.canvas.height=Math.floor(r.height*game.state.dpr);
+  const dx=(r.width-game.state.W)/2,dy=(r.height-game.state.H)/2;
+  if(dx||dy){
+    // Keep combat distances unchanged through browser chrome/fullscreen changes.
+    const move=p=>{p.x+=dx;p.y+=dy;if(Number.isFinite(p.originX))p.originX+=dx;if(Number.isFinite(p.originY))p.originY+=dy};
+    for(const wall of game.state.walls)wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));
+    if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
+    for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
+  }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
   game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;
 }
@@ -175,6 +183,21 @@ function draw(){
     // The preview array grows in place, so refresh its cached geometry.
     wallSamples.delete(game.state.currentWall);
     drawWallTextures(game.state.currentWall,game.state.stats.lineWidth,.72)
+  }
+
+  // Ranged threats are readable before and after firing.
+  for(const e of game.state.enemies){
+    if(e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0||e.shootCd>.6||
+      game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y)>=190||
+      game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y))continue;
+    const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#3562be';ctx.lineWidth=2;ctx.globalAlpha=.65;
+    ctx.setLineDash([5,7]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();
+    ctx.setLineDash([]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();
+  }
+  for(const shot of game.state.enemyShots){
+    const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#24323a';ctx.fillStyle='#74a2ff';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(shot.x-shot.vx*.05,shot.y-shot.vy*.05);ctx.lineTo(shot.x,shot.y);ctx.stroke();
+    ctx.beginPath();ctx.arc(shot.x,shot.y,shot.r+1,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
   }
 
   // Stevie

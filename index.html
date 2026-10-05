@@ -2,27 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Save Stevie - In Development</title>
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <div id="app">
-  <div class="top">
-    <div class="title">
-      <h1>Save Stevie - In Development</h1>
-      <small>Fresh page. Bigger builds. Stevie remains alarmingly dependent on you.</small>
-    </div>
-    <div class="stats">
-      <div class="pill">Wave <span id="wave">1</span></div>
-      <div class="pill">Score <span id="score">0</span></div>
-      <div class="pill">Kills <span id="kills">0</span></div>
-      <div class="pill">Luck <span id="luck">0</span></div>
-      <div class="pill">Best <span id="best">1</span></div>
-      <div class="pill">Pressure <span id="pressure">1×</span></div>
-    </div>
-  </div>
-
   <div class="panel">
     <canvas id="game"></canvas>
 
@@ -36,7 +21,7 @@
         <div id="hpBar" class="bar"></div>
       </div>
       <div class="box timer">
-        <div class="barlabel">SURVIVE <span id="timeText">25</span>s</div>
+        <div class="barlabel">W<span id="liveWave">1</span> · <span id="timeText">60</span>s</div>
         <div id="timeBar" class="bar"></div>
       </div>
     </div>
@@ -60,11 +45,36 @@
     </div>
 
     <div class="overlay" id="startOverlay">
-      <div class="cardbox startbox">
-        <h2>Protect Stevie.</h2>
-        <p>Every wave starts on a fresh page with a full ink tank. Survive 60 seconds. Wave 1 starts gently, then pressure ramps up. Longer doodles are tougher, old walls slowly fade, and certain upgrade combinations unlock entirely new synergy effects. Freehand now charges from real ink spent, not stroke-count cheese.</p>
-        <button id="startBtn">Start Run</button>
-        <div class="mini">Boss every 5 waves. Beat Wave 20 and defeat The Eraser to win.</div>
+      <div class="cardbox splash-box">
+        <div class="splash-eyebrow">A NOTEBOOK SURVIVAL GAME <span>IN DEVELOPMENT</span></div>
+        <div class="splash-art" aria-hidden="true">
+          <svg viewBox="0 0 440 250" xmlns="http://www.w3.org/2000/svg">
+            <defs><pattern id="splashGrid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#bed4e3" stroke-width="1"/></pattern></defs>
+            <rect x="24" y="12" width="392" height="224" rx="22" fill="#f7f1df"/>
+            <rect x="24" y="12" width="392" height="224" rx="22" fill="url(#splashGrid)"/>
+            <path d="M61 12V236" stroke="#e4a5a0" stroke-width="2"/>
+            <path d="M136 164Q104 112 151 63Q207 35 291 71Q337 112 301 167" fill="none" stroke="#26333c" stroke-width="12" stroke-linecap="round"/>
+            <path d="M136 164Q104 112 151 63Q207 35 291 71Q337 112 301 167" fill="none" stroke="#68747b" stroke-width="3" stroke-linecap="round"/>
+            <g fill="#f28a38" stroke="#26333c" stroke-width="2"><path d="M149 66l-5-25 14 12 4-24 13 34Z"/><path d="M274 64l5-20 8 9 7-20 5 38Z"/></g>
+            <g stroke="#26333c" stroke-width="3" stroke-linecap="round"><path d="M199 216v-31m36 31v-31"/><path d="M193 157l-14 24m60-24 17 21"/><rect x="195" y="151" width="43" height="45" rx="7" fill="#4b79d8"/><circle cx="217" cy="134" r="26" fill="#f3d7b5"/><path d="M198 113q17-20 37 0" fill="#26333c"/><path d="M209 143q8 8 16 0" fill="none"/></g>
+            <g fill="#26333c"><circle cx="208" cy="132" r="2.8"/><circle cx="226" cy="132" r="2.8"/></g>
+            <g stroke="#26333c" stroke-width="3"><circle cx="75" cy="98" r="22" fill="#cf5b51"/><circle cx="359" cy="136" r="27" fill="#8456c9"/><circle cx="342" cy="48" r="15" fill="#73ba44"/></g>
+            <g fill="white"><circle cx="68" cy="94" r="4"/><circle cx="82" cy="94" r="4"/><circle cx="350" cy="131" r="5"/><circle cx="368" cy="131" r="5"/></g>
+            <g stroke="#26333c" stroke-width="3" fill="none"><path d="M68 109l14-4m-14 0 14 4M348 150h20M93 161l12-5m219 32 13 7"/></g>
+            <path d="M106 201l31-27 8 10-32 26-13 4Z" fill="#d8a72e" stroke="#26333c" stroke-width="2"/>
+            <path d="M100 214l13-4-8-9Z" fill="#26333c"/>
+            <text x="281" y="220" fill="#3562be" font-size="17" font-family="Trebuchet MS, sans-serif" font-weight="bold" transform="rotate(-8 281 220)">keep him safe!</text>
+          </svg>
+        </div>
+        <h1 class="splash-title">Save <span>Stevie.</span></h1>
+        <p class="splash-tagline">Your ink. His life. One very chaotic notebook.</p>
+        <div class="splash-howto">
+          <div><b>01 / DRAW</b><span>Drag to build walls.</span></div>
+          <div><b>02 / DEFEND</b><span>Keep Stevie safe for 60s.</span></div>
+          <div><b>03 / UPGRADE</b><span>Stack inks. Build weird.</span></div>
+        </div>
+        <button id="startBtn">Let's save Stevie <span aria-hidden="true">→</span></button>
+        <div class="splash-footer">Bosses every 5 waves · A fresh page every wave</div>
       </div>
     </div>
 
@@ -100,7 +110,15 @@
 
     <div class="overlay" id="waveOverlay" style="display:none">
       <div class="cardbox startbox">
-        <h2>Wave Cleared!</h2>
+        <h2 id="waveClearTitle">Wave Cleared!</h2>
+        <div class="stats wave-stats">
+          <div class="pill">Wave <span id="wave">1</span></div>
+          <div class="pill">Score <span id="score">0</span></div>
+          <div class="pill">Kills <span id="kills">0</span></div>
+          <div class="pill">Luck <span id="luck">0</span></div>
+          <div class="pill">Best <span id="best">1</span></div>
+          <div class="pill">Pressure <span id="pressure">1×</span></div>
+        </div>
         <div class="bigscore">+<span id="waveScore">0</span></div>
         <div class="summary">
           <div>Survival <span id="survivalBonus">+100</span></div>
@@ -128,6 +146,7 @@
       <div class="cardbox startbox">
         <h2>They Got Stevie.</h2>
         <p>You reached wave <b id="finalWave">1</b> with <b id="finalKills">0</b> kills.</p>
+        <p id="lastHitText"></p>
         <div class="bigscore"><span id="finalScore">0</span></div>
         <button id="againBtn">New Run</button>
       </div>
@@ -135,10 +154,11 @@
   </div>
 
   <div class="bottom">
-    <button class="secondary" id="clearBtn">Erase All Walls</button>
+    <button class="secondary" id="clearBtn" title="Erase all walls">Erase</button>
     <div id="message">Fresh page every wave. Ink fully refills.</div>
-    <button class="secondary" id="buildBtn">Your Build</button>
-    <button class="secondary" id="changelogBtn">Changelog</button>
+    <button class="secondary" id="buildBtn">Build</button>
+    <button class="secondary" id="changelogBtn">Updates</button>
+    <button class="secondary" id="fullscreenBtn" title="Toggle fullscreen">Screen</button>
     <button id="pauseBtn">Pause</button>
   </div>
 </div>
@@ -159,6 +179,12 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry">
+        <h3>Visible sniper shots &amp; more room to play</h3>
+        <p>Snipers no longer deal invisible instant damage. A blue aim line warns before a visible shot, and walls intercept their projectiles. Ranged hits are labeled SHOT, and the game-over screen identifies your last hit.</p>
+        <p>A new illustrated splash screen welcomes you. The title and detailed stats leave the arena; your run stats appear after each wave. Phones use the available screen height with compact controls, safe drawing edges, and fullscreen where supported.</p>
+        <p>Screen resizing keeps walls, monsters, and shots positioned relative to Stevie instead of moving him away from your defenses.</p>
+      </article>
       <article class="build-entry">
         <h3>Smoother crowded fights</h3>
         <p>Wall and range checks skip unnecessary work, ink artwork is cached, and upgrade badges update only when they change.</p>
