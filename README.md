@@ -52,16 +52,19 @@ custom server, or additional secrets are needed. Only `index.html`, `styles.css`
 Open the deployed URL on your phone. Best-wave records are saved in that
 browser's local storage and are not synced between devices.
 
-## Damage numbers
+## Damage feedback
 
-Enemies show floating numbers for damage received: slate for physical hits,
-orange for fire, green for poison, blue for electricity, gold for explosions,
-purple for void, and cyan for thermal shock. Rapid ticks of the same type
-combine over 0.6 seconds; different types keep separate labels. Numbers remain
-visible for 1.8 seconds, rise slowly, and fade during their final half-second. Values use
-up to one decimal place and count remaining health rather than excess overkill.
-Frost, gravity, and repulsion effects that only slow or move enemies do not
-produce damage numbers.
+Enemy damage collects into 0.7-second bursts: a bold animated total with a
+colored breakdown for physical, fire, poison, lightning, blast, void, and
+thermal-shock damage. Bursts pop on impact, count up smoothly, rise, and fade
+over 2.2 seconds. Strong hits add impact rays; lethal hits show **FINISH**.
+
+Rapid ticks aggregate without restarting the animation every frame. Popup
+placement avoids the HUD and other popups; crowded fights retain at most 32
+bursts, with older bursts yielding when no readable position is available.
+The browser's reduced-motion preference removes the punch/rotation/rays and
+uses immediate totals with gentler drift. Damage counts remaining health,
+not excess overkill, and never changes combat mechanics or randomness.
 
 ## Review your build
 
