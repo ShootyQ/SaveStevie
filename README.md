@@ -117,3 +117,11 @@ Remaining-health fills show active effects: poison green, burn orange, freeze
 cyan, charged blue, slow purple, and stun gold. Multiple effects share the fill
 in colored sections. When effects expire, the original monster color returns.
 This applies to regular monsters and The Eraser without changing combat stats.
+
+## Performance checks
+
+`node tests/validate.cjs` includes wall-query equivalence and particle-budget
+randomness checks. The optional Playwright benchmark
+`node tests/browser-performance.cjs` measures a seeded crowded, upgraded scene
+and reports a combat-state digest for before/after comparisons. See
+[performance notes](docs/performance.md) for prerequisites and measured results.

@@ -1,14 +1,29 @@
 /* effects: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.effects = function createEffectsSystem(game) {
 function burst(x,y,color,n=10){
-  for(let i=0;i<n;i++)game.state.particles.push({x,y,vx:game.api.rand(-90,90),vy:game.api.rand(-90,90),life:game.api.rand(.3,.8),color});
+  const limit=1800;
+  // Reserve visible room for contact/death bursts while bounding cosmetic load.
+  if(n>=10&&game.state.particles.length+n>limit)game.state.particles.splice(0,Math.min(n,game.state.particles.length));
+  for(let i=0;i<n;i++){
+    // Consume the same random draws even when a cosmetic particle is omitted.
+    const vx=game.api.rand(-90,90),vy=game.api.rand(-90,90),life=game.api.rand(.3,.8);
+    if(game.state.particles.length<limit)game.state.particles.push({x,y,vx,vy,life,color});
+  }
 }
 
 function floatText(x,y,text,color='#444'){
-  game.state.floaters.push({x,y,t:.7,text,color});
+  syncDamageLabels();game.state.floaters.push({x,y,t:.7,text,color});knownFloatersLength=game.state.floaters.length;
 }
 // Ownership stays outside combat state; arcs use time and never combat randomness.
 const damageLabels=new WeakMap();
+const activeDamageLabels=new Set();
+let knownFloaters=null,knownFloatersLength=-1;
+function syncDamageLabels(){
+  const floaters=game.state.floaters;
+  if(floaters===knownFloaters&&floaters.length===knownFloatersLength)return;
+  activeDamageLabels.clear();for(const f of floaters)if(f.damageNumber&&f.t>0)activeDamageLabels.add(f);
+  knownFloaters=floaters;knownFloatersLength=floaters.length;
+}
 const monsterMotion=new WeakMap();
 let motionIndex=0;
 const damageStyles={
@@ -29,12 +44,16 @@ const reducedMotion=!!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.m
 function damageNumber(enemy,amount,kind='physical',finishing=false){
   if(!Number.isFinite(amount)||amount<=0)return;
   if(!damageStyles[kind])kind='physical';
+  syncDamageLabels();
   let labels=damageLabels.get(enemy);
   if(!labels){labels=new Map();damageLabels.set(enemy,labels)}
   let f=labels.get(kind);
-  if(!f||f.age>=collectionWindow||!game.state.floaters.includes(f)){
-    const existing=game.state.floaters.filter(item=>item.damageNumber);
-    if(existing.length>=maxLabels)game.state.floaters=game.state.floaters.filter(item=>item!==existing[0]);
+  if(!f||f.age>=collectionWindow||!activeDamageLabels.has(f)){
+    if(activeDamageLabels.size>=maxLabels){
+      const oldest=activeDamageLabels.values().next().value,index=game.state.floaters.indexOf(oldest);
+      if(index>=0)game.state.floaters.splice(index,1);
+      activeDamageLabels.delete(oldest);
+    }
     const style=damageStyles[kind],motion=damageMotion(enemy),lane=f?.lane??labels.size;
     // Fixed small lanes keep simultaneous types apart; trajectory belongs to the monster.
     const offsetX=[0,-32,32][lane%3],offsetY=-Math.floor(lane/3)*30;
@@ -42,7 +61,7 @@ function damageNumber(enemy,amount,kind='physical',finishing=false){
       originX:enemy.x+offsetX,originY:enemy.y-(enemy.r||12)-8+offsetY,
       vx:motion.vx,vy:motion.vy,lane,age:0,t:lifetime,amount:0,kind,color:style.color,
       pulseAge:0,lastPulseAt:0,damageNumber:true,finishing:false};
-    game.state.floaters.push(f);labels.set(kind,f);
+    game.state.floaters.push(f);activeDamageLabels.add(f);knownFloatersLength=game.state.floaters.length;labels.set(kind,f);
   }
   const previous=f.amount;f.amount+=amount;f.finishing=f.finishing||finishing;
   if(f.age-f.lastPulseAt>=.2&&Math.floor(f.amount)>Math.floor(previous)){
@@ -60,9 +79,11 @@ function dealDamage(enemy,amount,kind='physical'){
   game.api.damageNumber(enemy,actual,kind,before>0&&enemy.hp<=0);
 }
 function updateDamageNumbers(dt){
+  syncDamageLabels();
   for(const f of game.state.floaters){
     if(!f.damageNumber)continue;
     f.age+=dt;f.t-=dt;f.pulseAge+=dt;
+    if(f.t<=0)activeDamageLabels.delete(f);
     f.x=f.originX+(reducedMotion?0:f.vx*f.age*.65);
     f.y=f.originY+(reducedMotion?-4*f.age:f.vy*f.age+16*f.age*f.age);
   }

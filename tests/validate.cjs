@@ -250,3 +250,39 @@ for(const amount of [.01,1,999])for(const kind of ['physical','fire','poison','e
   sg.state.floaters=[];
 }
 console.log('PASS: all status colors, combined/expired statuses, pure tinting, and upward arcs across damage sizes/types.');
+
+const optimized=load(true),og=optimized.sandbox.testGame;
+og.state.walls=[
+  {pts:[{x:40,y:60},{x:260,y:60},{x:260,y:300}],thick:8},
+  {pts:[{x:90,y:180},{x:90,y:180},{x:300,y:210},{x:90,y:180}],thick:24},
+  {pts:[{x:800,y:800},{x:900,y:900}],thick:8}
+];
+function referenceHit(e){for(const wall of og.state.walls)for(let i=1;i<wall.pts.length;i++){const a=wall.pts[i-1],b=wall.pts[i];if(og.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<e.r+wall.thick/2)return {wall,seg:i}}return null}
+function referencePoint(x,y,r){let best=null,d=r;for(const w of og.state.walls)for(const p of w.pts){const next=og.api.dist(x,y,p.x,p.y);if(next<d){d=next;best=p}}return best}
+function referenceBounce(e,x,y){for(const w of og.state.walls)for(let i=1;i<w.pts.length;i++){const a=w.pts[i-1],b=w.pts[i],radius=e.r+w.thick/2+1,start=og.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y);if(og.api.segmentIntersection(e,{x,y},a,b))return false;for(const t of [.5,1]){const d=og.api.pointSegDist(e.x+(x-e.x)*t,e.y+(y-e.y)*t,a.x,a.y,b.x,b.y);if(d<radius&&d<start-.05)return false}}return true}
+for(let i=0;i<250;i++){
+  const x=(i*37)%1000,y=(i*71)%1000,r=[0,1,8,20,50][i%5],e={x,y,r};
+  const actualHit=og.api.nearestWallHit(e),expectedHit=referenceHit(e);
+  assert.equal(actualHit===null,expectedHit===null,'broad phase preserves hit presence');
+  assert.equal(actualHit?.wall,expectedHit?.wall,'broad phase preserves first wall hit');
+  assert.equal(actualHit?.seg,expectedHit?.seg,'broad phase preserves first segment hit');
+  assert.equal(og.api.nearestWallPoint(x,y,160),referencePoint(x,y,160),'nearest point and ties preserved');
+  const near=og.state.walls.some(w=>w.pts.some(p=>og.api.dist(x,y,p.x,p.y)<42));
+  assert.equal(og.api.wallNear(x,y,42),near,'point-radius semantics preserved');
+  assert.equal(og.api.bouncePathClear(e,x+30,y-30),referenceBounce(e,x+30,y-30),'bounce pruning preserves collision decisions');
+}
+assert.equal(og.api.withinRadius(0,0,3,4,5),false,'strict radius boundary');
+assert.equal(og.api.withinRadius(0,0,3,4,5.01),true);
+const cachedPoints=og.state.walls[0].pts,geometry=og.api.wallGeometry(cachedPoints);
+assert.equal(og.api.wallGeometry(cachedPoints),geometry);cachedPoints.push({x:-100,y:-100});assert.equal(og.api.wallGeometry(cachedPoints).minX,-100,'changed point count refreshes bounds');
+og.state.stacks={'Bigger Ink Tank':1};og.api.updateUI();const badge=optimized.node('upgradeList').children.at(-1);
+og.api.updateUI();assert.equal(optimized.node('upgradeList').children.at(-1),badge,'unchanged HUD preserves nodes');
+og.state.stacks['Bigger Ink Tank']=2;og.api.updateUI();assert.equal(optimized.node('upgradeList').children.at(-1).textContent,'Bigger Ink Tank ×2');
+og.state.stats.ink=123;og.api.updateUI();assert.match(optimized.node('inkText').textContent,/123/,'live HUD still updates');
+const uncapped=load(true),capped=load(true);
+capped.sandbox.testGame.state.particles=Array.from({length:1800},()=>({x:0,y:0}));
+uncapped.sandbox.testGame.api.burst(1,2,'#abc',40);capped.sandbox.testGame.api.burst(1,2,'#abc',40);
+assert.equal(uncapped.sandbox.Math.random(),capped.sandbox.Math.random(),'particle budget preserves combat random sequence');
+assert.ok(capped.sandbox.testGame.state.particles.length<=1800);
+assert.ok(capped.sandbox.testGame.state.particles.some(p=>p.color==='#abc'),'contact/death bursts retain visible particles');
+console.log('PASS: cached wall-query equivalence, strict boundaries, geometry refresh, HUD identity/live values, and particle RNG preservation.');
