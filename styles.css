@@ -283,3 +283,10 @@ button:disabled{opacity:.5;cursor:default}
   #monsterIntroOverlay .build-heading h2{text-align:center}
   #monsterIntroOverlay .monster-paused{display:block;text-align:center;padding:4px 0}
 }
+#musicBtn{min-width:40px;font-size:20px;line-height:1;flex:0 0 40px}
+#musicBtn.music-muted{opacity:.65}
+@media(max-width:760px),(pointer:coarse){
+  .bottom{gap:3px}
+  .bottom button{font-size:10px;padding-inline:1px}
+  .bottom #musicBtn{flex:0 0 28px;min-width:28px;font-size:19px}
+}
