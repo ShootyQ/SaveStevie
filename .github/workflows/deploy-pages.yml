@@ -25,11 +25,7 @@ jobs:
       - name: Validate game
         run: node tests/validate.cjs
       - name: Prepare static site
-        run: |
-          mkdir -p _site
-          cp index.html styles.css game.js _site/
-          cp -R js _site/js
-          cp -R assets _site/assets
+        run: node scripts/build-site.cjs
       - name: Configure Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5

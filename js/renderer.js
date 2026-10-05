@@ -2,11 +2,12 @@
 DoodleDefender.systems.renderer = function createRendererSystem(game) {
 // Load once. Missing/late assets retain the existing vector drawings.
 const doodles={},tintedDoodles=new Map();
-const doodleNames=['stevie','grunt','sniper','splitter','tank','pencil','fire','frost','poison'];
+const artworkVersion=document.documentElement?.dataset?.build;
+const doodleNames=['stevie','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{doodles[name]=image;inkSprites.clear()};
-  image.src='assets/art/'+name+'.png';
+  image.src='assets/art/'+name+'.png'+(artworkVersion?'?v='+artworkVersion:'');
 }
 function tintedDoodle(name,colors){
   const image=doodles[name];if(!colors.length)return image;
@@ -244,9 +245,17 @@ function draw(){
     ctx.setLineDash([]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();
   }
   for(const shot of game.state.enemyShots){
-    const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#24323a';ctx.fillStyle='#74a2ff';ctx.lineWidth=2;
-    ctx.beginPath();ctx.moveTo(shot.x-shot.vx*.05,shot.y-shot.vy*.05);ctx.lineTo(shot.x,shot.y);ctx.stroke();
-    ctx.beginPath();ctx.arc(shot.x,shot.y,shot.r+1,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore();
+    const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));
+    const image=doodles.arrow;
+    // The front tip stays on the projectile collision point; the visible shaft
+    // trails behind it, so the arrow cannot disappear before its tip arrives.
+    if(image){const width=30,height=width*image.naturalHeight/image.naturalWidth;ctx.drawImage(image,-width,-height/2,width,height)}
+    else{
+      ctx.strokeStyle='#fff8e9';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-27,0);ctx.lineTo(-5,0);ctx.stroke();
+      ctx.strokeStyle='#24323a';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#d95050';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-10,-5);ctx.lineTo(-10,5);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='#3562be';ctx.beginPath();ctx.moveTo(-25,-5);ctx.lineTo(-20,0);ctx.lineTo(-25,5);ctx.stroke();
+    }
+    ctx.restore();
   }
 
   // Stevie
@@ -306,7 +315,7 @@ function draw(){
         game.dom.ctx.beginPath();game.dom.ctx.arc(0,0,e.r+4,0,Math.PI*1.2);game.dom.ctx.stroke()
       }
       const symbols={wardling:'◇',sprinter:'»',brood:'✣',bulwark:'▣',medic:'+',sapper:'×'};
-      if(symbols[e.type]){
+      if(symbols[e.type]&&!doodles[e.type]){
         game.dom.ctx.fillStyle='#fffdf2';game.dom.ctx.font='bold 15px system-ui';game.dom.ctx.textAlign='center';
         game.dom.ctx.fillText(symbols[e.type],0,4);
       }
@@ -341,6 +350,13 @@ function draw(){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1
   }
   for(const f of game.state.floaters){
+    if(f.hitMarker){
+      const ctx=game.dom.ctx;ctx.save();ctx.globalAlpha=Math.min(1,f.t*2);ctx.strokeStyle='#d95050';ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(f.x,f.y,f.r+7,0,Math.PI*2);ctx.stroke();
+      const image=doodles[f.type];
+      if(image&&f.type!=='arrow'){const width=f.r*2.7,height=width*image.naturalHeight/image.naturalWidth;ctx.globalAlpha*=.4;ctx.drawImage(image,f.x-width/2,f.y-height/2,width,height)}
+      ctx.restore();continue;
+    }
     if(f.damageNumber)continue;
     game.dom.ctx.globalAlpha=game.api.clamp(f.t*2,0,1);game.dom.ctx.fillStyle=f.color;game.dom.ctx.font='bold 13px system-ui';
     game.dom.ctx.textAlign='center';game.dom.ctx.fillText(f.text,f.x,f.y);game.dom.ctx.globalAlpha=1

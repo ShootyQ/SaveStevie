@@ -5,6 +5,9 @@ function load(refactored){const env=environment();if(refactored){const html=fs.r
 const a=load(false),b=load(true);let checks=0;
 // Compare unchanged combat against the original without the new presentation labels.
 b.sandbox.testGame.api.damageNumber=()=>{};
+// Legacy parity deliberately retains the old force movement; wall-aware pulls
+// are a gameplay fix exercised independently below.
+b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
 function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>key==='enemyShots'?undefined:value),JSON.parse(a.snapshot()),label+' state');// Upgraded artwork intentionally differs; keep exact canvas parity for basic walls.
 if(!Object.values(b.sandbox.testGame.state.inks).some(Boolean))assert.deepStrictEqual(JSON.stringify(b.calls),JSON.stringify(a.calls),label+' canvas');for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
@@ -297,7 +300,7 @@ assert.equal(rg.state.enemyShots.length,1,'visible round is launched');
 rg.state.stats.playerArmor=.2;rg.api.updateEnemyShots(1);
 assert.equal(rg.state.player.hp,health-5.6,'only projectile contact damages Stevie, applying armor');
 assert.equal(rg.state.enemyShots.length,0,'one hit consumes the shot');
-assert.match(ranged.node('lastHitText').textContent,/Sniper shot/);
+assert.match(ranged.node('lastHitText').textContent,/Sniper arrow/);
 assert.ok(rg.state.floaters.some(f=>f.text?.startsWith('SHOT')),'ranged damage is labeled');
 rg.state.walls=[{pts:[{x:rg.state.player.x-70,y:rg.state.player.y-80},{x:rg.state.player.x-70,y:rg.state.player.y+80}],thick:8}];
 assert.equal(rg.api.shotBlocked(sniper.x,sniper.y,rg.state.player.x,rg.state.player.y),true,'walls interrupt line of sight');
@@ -334,4 +337,36 @@ const beforeResizeDraw=JSON.stringify(rr.state);rr.api.draw();assert.equal(JSON.
 assert.equal(resizable.node('liveWave').textContent,'1');
 console.log('PASS: visible ranged shots, armor, cover, swept collision, misses, freeze/pause, transitions, lethal hits, hit attribution, and resize-safe combat.');
 
+}
+
+{
+// Regression: the old centroid pull killed Stevie through an intact closed
+// loop after 605 frames in wave 8. Cover now stops forced motion and contact.
+for(const wave of [8,9,10])for(const synergy of ['Gravity Trap','THE BLACK HOLE']){
+  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=wave;g.state.spawnTimer=999;g.state.timeLeft=300;
+  g.state.player.hp=5;g.state.inks.gravity=1;g.state.stats.wallDamage=0;g.state.synergies.add(synergy);
+  const {x,y}=g.state.player,pts=Array.from({length:25},(_,i)=>({x:x+40*Math.cos(i*Math.PI/12),y:y+40*Math.sin(i*Math.PI/12)}));
+  const wall={pts,thick:8,hp:1e6,maxHp:1e6,life:100,maxLife:100,closed:true,intersections:0};g.state.walls=[wall];
+  const e=g.api.spawnEnemy(false,x+65,y,'wardling');e.speed=0;e.hp=e.maxHp=1e6;
+  for(let i=0;i<900;i++)g.api.update(.016);
+  assert.equal(g.state.player.hp,5,'intact loops prevent gravity contact in wave '+wave+' with '+synergy);
+  assert.equal(g.state.running,true);assert.ok(g.state.enemies.includes(e));assert.ok(e.x>x+40,'monster stays outside the wall');assert.ok(wall.hp>0);
+}
+const env=load(true),g=env.sandbox.testGame;g.api.resetRun();const {x,y}=g.state.player;
+g.state.walls=[{pts:[{x:x+15,y:y-60},{x:x+15,y:y+60}],thick:8}];
+const e=g.api.spawnEnemy(false,x+28,y,'grunt');const hp=g.state.player.hp;
+assert.equal(g.api.moveEnemySafely(e,-.001,0),false,'tiny high-frame-rate pulls cannot creep through a barrier');
+assert.equal(g.api.contactStevie(e),false,'close barrier blocks premature contact');assert.equal(g.state.player.hp,hp);
+g.state.walls=[];assert.equal(g.api.contactStevie(e),true,'without cover, the same contact still hurts');
+const marker=g.state.floaters.find(f=>f.hitMarker);assert.ok(marker);assert.equal(marker.source,'Grunt contact');assert.equal(marker.x,x+28,'impact remains at the disappearing monster');
+g.api.updateUI();assert.match(env.node('hitNotice').textContent,/Grunt contact/);
+const pure=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),pure,'hit evidence renders without mutation');
+g.state.spawnTimer=999;g.api.update(.3);assert.equal(marker.x,x+28);assert.equal(marker.y,y,'impact evidence stays at the hit location');
+g.state.paused=true;const life=marker.t;g.api.update(.3);assert.equal(marker.t,life,'impact evidence respects pause');
+g.state.paused=false;g.api.update(.7);assert.equal(env.node('hitNotice').style.display,'none','hit notice expires without affecting layout');
+g.api.resetRun();g.state.player.hp=1;g.state.stats.killHeal=100;g.state.spawnTimer=999;
+g.api.spawnEnemy(false,x,y,'grunt');const dead=g.api.spawnEnemy(false,x+100,y,'grunt');dead.hp=0;g.api.update(.016);
+assert.equal(g.state.player.hp,0,'later kill healing cannot undo lethal contact');assert.equal(g.state.running,false);assert.match(env.node('lastHitText').textContent,/Grunt contact/);
+assert.doesNotMatch(fs.readFileSync(path.join(root,'index.html'),'utf8').match(/<div class="bottom">([\s\S]*?)<\/div>/)[1],/id="message"/,'footer contains no growing message');
+console.log('PASS: gravity and black-hole cover at waves 8–10, wall-aware contact, persistent/paused hit evidence, lethal contact, and no footer message.');
 }

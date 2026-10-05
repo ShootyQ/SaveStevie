@@ -69,7 +69,7 @@ armor reduction, then bursts and removes the monster. Contact removal grants
 no kill rewards and produces no split children. Bosses follow this rule too;
 Stevie must survive The Eraser's hit for its removal to clear the final fight.
 Snipers unlock at wave 9 and telegraph with a blue aim line before launching
-visible shots. Walls block their line of sight and intercept fired rounds.
+visible 30px arrows. Walls block their line of sight and intercept fired rounds.
 Shots deal 7 damage before armor, and the game-over screen names the last hit. Human Pinball now makes contact explosions
 push nearby monsters away. Existing saved best-wave records are preserved.
 
@@ -154,3 +154,23 @@ retain a faded missing-health silhouette, colored status sections, and a small
 health/status bar when needed. Delayed or failed gameplay image loads use the
 original vector drawings. No game dependencies are added. See
 `assets/art/README.md` for asset sources and export details.
+
+## Barrier safety and readable hits
+
+Gravity Trap, Black Hole, and gravity-ink pulls respect intact wall collisions.
+Live barriers also block close-range monster contact with Stevie. This fixes
+monsters being pulled through closed defenses; spawn pressure, speeds, damage,
+armor, and upgrade stacking retain their current values.
+
+Snipers launch large custom arrows with a vector fallback. A hit leaves a brief
+red marker and ghost of the contact monster, plus a short source/damage notice
+inside the arena. It pauses with the run; the game-over screen retains the last
+hit. Lethal contact ends the run before later enemies can trigger kill healing.
+
+The footer message is removed from the play layout. Mobile controls use a fixed
+59px row, with all build details available through Build and wave summaries.
+
+`node scripts/build-site.cjs` packages the Pages site into `_site/`; an optional
+output-directory argument is supported. The package includes a content-derived
+version on CSS, scripts, and image URLs so new deployments do not reuse an
+older resource under the same filename. No package installation is required.
