@@ -3,11 +3,28 @@ DoodleDefender.systems.renderer = function createRendererSystem(game) {
 // Load once. Missing/late assets retain the existing vector drawings.
 const doodles={},tintedDoodles=new Map();
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['stevie','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood'];
+const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{doodles[name]=image;inkSprites.clear()};
   image.src='assets/art/'+name+'.png'+(artworkVersion?'?v='+artworkVersion:'');
+}
+// Presentation only: no combat RNG, attack delays, or collider changes.
+const reducedMotion=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
+let idleTime=0,throwTime=Infinity,throwDuration=.38,throwFacing=1;
+function resetStevieAnimation(){idleTime=0;throwTime=Infinity;throwFacing=1}
+function updateStevieAnimation(dt){idleTime=(idleTime+dt)%2.2;throwTime+=dt}
+function startStevieThrow(target){
+  throwFacing=target.x<game.state.player.x?-1:1;
+  throwDuration=Math.max(.18,Math.min(.38,game.state.stats.rockRate*.7));throwTime=0;
+}
+function stevieAnimationFrame(){
+  if(reducedMotion?.matches)return {column:0,row:0,facing:1};
+  if(throwTime<throwDuration){
+    const progress=throwTime/throwDuration;
+    return {column:progress<.14?0:progress<.42?1:progress<.75?2:3,row:1,facing:throwFacing};
+  }
+  return {column:idleTime<.85?0:idleTime<1.5?1:idleTime<1.6?2:3,row:0,facing:1};
 }
 function tintedDoodle(name,colors){
   const image=doodles[name];if(!colors.length)return image;
@@ -260,7 +277,12 @@ function draw(){
 
   // Stevie
   game.dom.ctx.translate(game.state.player.x,game.state.player.y);
-  if(doodles.stevie){
+  if(doodles['stevie-animations']){
+    const pose=stevieAnimationFrame();
+    game.dom.ctx.scale(pose.facing,1);
+    // Fixed cells and planted feet prevent trimmed-frame size/position jumps.
+    game.dom.ctx.drawImage(doodles['stevie-animations'],pose.column*128,pose.row*136,128,136,-34,-39.25,68,72.25);
+  }else if(doodles.stevie){
     const image=doodles.stevie,height=64,width=height*image.naturalWidth/image.naturalHeight;
     game.dom.ctx.drawImage(image,-width/2,-31,width,height);
   }else{
@@ -367,7 +389,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { artworkReady:()=>doodleNames.every(name=>!!doodles[name]), enemyStatusColors, resize, draw };
+const api = { artworkReady:()=>doodleNames.every(name=>!!doodles[name]), resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 return api;
 };

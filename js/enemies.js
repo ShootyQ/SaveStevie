@@ -106,12 +106,14 @@ function nearestEnemy(x,y,maxD){
 }
 
 function updateStevie(dt){
+  game.api.updateStevieAnimation(dt);
   if(!game.state.stats.rockDamage||!game.state.stats.rockRate)return;
   game.state.player.rockCd-=dt;
   if(game.state.player.rockCd<=0){
     const e=game.api.nearestEnemy(game.state.player.x,game.state.player.y,210);
     if(e){
       game.state.projectiles.push({x:game.state.player.x,y:game.state.player.y-8,target:e,speed:290,damage:game.state.stats.rockDamage,life:1.2});
+      game.api.startStevieThrow(e);
       game.state.player.rockCd=game.state.stats.rockRate;
     }
   }

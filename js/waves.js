@@ -27,6 +27,7 @@ function resetRun(){
 }
 
 function startWave(){
+  game.api.resetStevieAnimation();
   game.api.resetEnemyWave();
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.particles=[];game.state.floaters=[];
   game.state.finalOvertime=false; game.state.finalBossDefeated=false;

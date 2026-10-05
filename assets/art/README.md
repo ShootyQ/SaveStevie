@@ -26,3 +26,12 @@ and pen strokes. The five new monsters are exported at 192px and the arrow at
 128px, before borders. Arrow drawing is 30 CSS pixels wide, rotated to its
 velocity with its tip aligned to the collision point. Remaining enemy types
 continue to use their current art until another dedicated asset is added.
+
+Stevie animations use one 512×272 transparent atlas (stevie-animations.png),
+with four 128×136 idle cells on top and four throwing cells below. Fixed cell
+anchors keep his feet planted. The simulation advances a presentation-only
+clock; actual rock launches trigger a target-facing throw, shortened for faster
+rock upgrades. Pause freezes the frames, wave starts reset them, and reduced
+motion uses the neutral pose. Missing atlas loads fall back to stevie.png and
+then the original vector drawing. The atlas costs about 173 KiB, loads once,
+and requires just one sprite draw per frame.

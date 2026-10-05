@@ -370,3 +370,20 @@ assert.equal(g.state.player.hp,0,'later kill healing cannot undo lethal contact'
 assert.doesNotMatch(fs.readFileSync(path.join(root,'index.html'),'utf8').match(/<div class="bottom">([\s\S]*?)<\/div>/)[1],/id="message"/,'footer contains no growing message');
 console.log('PASS: gravity and black-hole cover at waves 8–10, wall-aware contact, persistent/paused hit evidence, lethal contact, and no footer message.');
 }
+
+{
+const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;
+const pose=()=>JSON.stringify(g.api.stevieAnimationFrame());const neutral=pose();
+g.api.update(.9);assert.notEqual(pose(),neutral,'Stevie idles without a rock upgrade');
+g.state.paused=true;const paused=pose();g.api.update(.4);assert.equal(pose(),paused,'idle freezes with pause');g.state.paused=false;
+g.state.stats.rockDamage=9;g.state.stats.rockRate=1.25;g.api.updateStevie(.01);assert.equal(g.api.stevieAnimationFrame().row,0,'no false throw without a target');
+const target=g.api.spawnEnemy(false,g.state.player.x-120,g.state.player.y,'tank');target.speed=0;
+g.api.updateStevie(.01);assert.equal(g.state.projectiles.length,1,'animation preserves one actual rock launch');assert.equal(g.api.stevieAnimationFrame().row,1);assert.equal(g.api.stevieAnimationFrame().facing,-1,'throw faces the actual target');
+const pure=JSON.stringify(g.state),frame=pose();g.api.draw();g.api.draw();assert.equal(JSON.stringify(g.state),pure);assert.equal(pose(),frame,'drawing never advances the animation');
+g.api.updateStevieAnimation(.1);assert.equal(g.api.stevieAnimationFrame().column,1,'release pose follows wind-up');
+g.state.paused=true;const throwing=pose();g.api.update(.3);assert.equal(pose(),throwing,'throw freezes with pause');g.state.paused=false;
+g.api.updateStevieAnimation(.4);assert.equal(g.api.stevieAnimationFrame().row,0,'throw returns to idle');
+g.state.stats.rockRate=.28;target.x=g.state.player.x+120;g.state.player.rockCd=0;g.api.updateStevie(.01);assert.equal(g.api.stevieAnimationFrame().facing,1);g.api.updateStevieAnimation(.2);assert.equal(g.api.stevieAnimationFrame().row,0,'rapid throw finishes before next shot');
+g.api.startWave();assert.equal(pose(),neutral,'wave transition clears old throws');
+console.log('PASS: unarmed idle, real targeted throws, fast-upgrade recovery, paused frames, pure rendering, and wave reset.');
+}
