@@ -16,6 +16,7 @@ Refactored from doodle_defender_v8.html. Open index.html directly in a modern br
 - js/ui.js updates the HUD and synergy splash.
 - js/input.js owns pointer drawing and button/resize event wiring.
 - js/effects.js creates particles and floating text.
+- js/ability-effects.js animates bounded lightning and explosive-wall feedback.
 - js/geometry.js contains math and intersection helpers.
 - styles.css defines the responsive notebook layout, splash screen, and overlays.
 
@@ -174,3 +175,26 @@ The footer message is removed from the play layout. Mobile controls use a fixed
 output-directory argument is supported. The package includes a content-derived
 version on CSS, scripts, and image URLs so new deployments do not reuse an
 older resource under the same filename. No package installation is required.
+
+## Ability animations
+
+Chain lightning branches from its source to selected nearby monsters with
+three cached jagged shapes, blue/gold pen strokes, and impact sparks. It lasts
+340ms. Explosive wall breaks leave a short stroke echo, comic burst, uneven
+expanding rings, and rotating ink fragments for 620ms; INFERNO uses orange.
+Plain wall breaks and fading walls do not invent explosions.
+
+Presentation records live outside combat state. Budgets are eight lightning
+casts, six shown targets per cast, four explosions, 48 captured wall vertices,
+four shockwave anchors, and 16 fragments per explosion. Secondary anchors use
+original wall vertices; fragments are distributed along the stroke even for
+two-point walls. Shockwave drawing caps its visual radius at 160px, while
+combat keeps the full upgrade-adjusted radius. Endpoints remain at the instant
+of impact and translate with the arena on resize. Drawing never advances
+life or uses combat randomness. Pause/upgrade screens freeze effects; wave
+transitions discard them. Reduced motion uses short, static, fading highlights
+without flying fragments or expanding rings. No assets or dependencies added.
+
+Validation covers actual target selection, immune/solo electrical procs,
+explosion damage and synergies, random-state parity with visuals disabled,
+finite/pure rendering, resize, lifetime, reset, and worst-case effect budgets.

@@ -29,6 +29,7 @@ function resetRun(){
 function startWave(){
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
+  game.api.resetAbilityEffects();
   game.api.resetEnemyWave();
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.particles=[];game.state.floaters=[];
   game.state.finalOvertime=false; game.state.finalBossDefeated=false;
@@ -44,6 +45,7 @@ function waveComplete(){
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running)return;
   game.state.betweenWaves=true;
   game.api.celebrateStevie();
+  game.api.resetAbilityEffects();
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);
   game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
 

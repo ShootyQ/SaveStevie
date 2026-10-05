@@ -434,3 +434,34 @@ g.state.paused=true;const cheer=JSON.stringify(g.api.stevieReactionPose());g.api
 g.api.update(1);assert.equal(g.api.stevieReactionPose().sprite,'stevie-cheer-b');assert.equal(g.api.stevieReactionPose().y,0,'cheer finishes in a calm pose');g.api.startWave();assert.equal(g.api.stevieReactionPose().sprite,null,'next wave clears Stevie reactions');
 console.log('PASS: covered/clear sniper actions, real sapper wind-up and doubled strikes, actual interrupted healing, Stevie hit/recovery, paused/finished celebrations, render purity, and reset.');
 }
+
+{
+const active=load(true),control=load(true),g=active.sandbox.testGame,c=control.sandbox.testGame;
+c.api.animateChainLightning=()=>{};c.api.animateWallExplosion=()=>{};
+for(const game of [g,c]){
+ game.api.resetRun();game.state.spawnTimer=999;const {x,y}=game.state.player;
+ for(const [dx,dy] of [[100,0],[140,0],[100,40],[500,0]]){const e=game.api.spawnEnemy(false,x+dx,y+dy,'tank');e.hp=e.maxHp=500;e.speed=0}
+ game.api.chainLightning(game.state.enemies[0],2);
+}
+assert.equal(JSON.stringify(g.state),JSON.stringify(c.state),'lightning cosmetics preserve all combat results and random particle draws');
+let fx=g.api.abilityEffectsSnapshot();assert.equal(fx.lightning.length,1);assert.equal(fx.lightning[0].targets.length,2,'arcs match selected targets');
+assert.deepEqual(JSON.parse(JSON.stringify(fx.lightning[0].targets)),g.state.enemies.slice(1,3).map(e=>({x:e.x,y:e.y,immune:false})));assert.equal(g.state.enemies[0].hp,493);assert.equal(g.state.enemies[1].hp,490);assert.equal(g.state.enemies[3].hp,500,'out-of-range enemy is untouched');
+for(const game of [g,c]){
+ game.state.inks.blast=2;game.state.synergies.add('Heavy Artillery');game.state.synergies.add('Demolition Grid');game.state.synergies.add('INFERNO');
+ const {x,y}=game.state.player,wall={pts:[{x:x+60,y},{x:x+180,y}],thick:8,hp:1,maxHp:1,life:50,maxLife:50,intersections:2};game.state.walls=[wall];game.api.damageWall(wall,2,x+120,y);
+}
+assert.equal(JSON.stringify(g.state),JSON.stringify(c.state),'explosion cosmetics preserve damage, knockback, statuses, healing, and random draws');
+fx=g.api.abilityEffectsSnapshot();assert.equal(fx.explosions.length,1);assert.equal(fx.explosions[0].radius,164,'visual records exact synergy-adjusted combat radius');assert.equal(fx.explosions[0].inferno,true);assert.ok(fx.explosions[0].fragments>=4,'two-point walls still throw distributed fragments');assert.equal(g.state.walls.length,0);
+const snapshot=JSON.stringify(fx),combat=JSON.stringify(g.state);g.api.draw();g.api.draw();assert.equal(JSON.stringify(g.api.abilityEffectsSnapshot()),snapshot,'draw does not advance effects');assert.equal(JSON.stringify(g.state),combat,'visuals never mutate combat');
+for(const call of active.calls)for(const value of call.slice(1))if(typeof value==='number')assert.ok(Number.isFinite(value),'effect paths stay finite');
+g.state.paused=true;g.api.update(.2);assert.equal(JSON.stringify(g.api.abilityEffectsSnapshot()),snapshot,'pause freezes lightning and blast');g.state.paused=false;g.state.inUpgrade=true;g.api.update(.2);assert.equal(JSON.stringify(g.api.abilityEffectsSnapshot()),snapshot,'upgrade screen freezes effects');g.state.inUpgrade=false;
+const before=g.api.abilityEffectsSnapshot();active.node('game').getBoundingClientRect=()=>({left:0,top:0,width:920,height:780});g.api.resize();const resized=g.api.abilityEffectsSnapshot();assert.equal(resized.lightning[0].x,before.lightning[0].x+60);assert.equal(resized.lightning[0].targets[0].y,before.lightning[0].targets[0].y+40);assert.equal(resized.explosions[0].points[0].x,before.explosions[0].points[0].x+60);assert.equal(resized.explosions[0].age,before.explosions[0].age);
+g.api.updateAbilityEffects(1);assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0);assert.equal(g.api.abilityEffectsSnapshot().explosions.length,0,'effects fully expire');
+g.api.resetRun();const {x,y}=g.state.player,plain={pts:[{x:x+60,y},{x:x+120,y}],hp:1,thick:8,intersections:0};g.state.walls=[plain];g.api.damageWall(plain,2,x+60,y);assert.equal(g.api.abilityEffectsSnapshot().explosions.length,0,'plain wall break does not invent blast damage');
+const source=g.api.spawnEnemy(false,x+120,y,'tank');source.immunity='electric';source.immuneCd=1;const hp=source.hp;g.api.chainLightning(source,1);assert.equal(source.hp,hp);assert.equal(g.api.abilityEffectsSnapshot().lightning[0].targets.length,0,'solo electric proc is only a source spark');
+const long={pts:Array.from({length:5000},(_,i)=>({x:i*.15,y:200+Math.sin(i*.05)*10})),thick:8};
+for(let i=0;i<50;i++){g.api.animateChainLightning(source,Array.from({length:100},(_,j)=>({x:x+j,y:y+j})));g.api.animateWallExplosion(long,x,y,100)}
+const budget=g.api.abilityEffectsSnapshot();assert.equal(budget.lightning.length,8);assert(budget.lightning.every(e=>e.targets.length<=6&&e.pathPoints<=78));assert.equal(budget.explosions.length,4);assert(budget.explosions.every(e=>e.points.length<=48&&e.anchors.length<=4&&e.fragments<=16),'long walls and simultaneous blasts remain bounded');
+g.api.waveComplete();assert.equal(g.api.abilityEffectsSnapshot().explosions.length,0);assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0,'wave clear discards combat effects');g.api.animateChainLightning(source,[]);g.api.startWave();assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0,'new wave clears stale casts');
+console.log('PASS: real lightning targets, exact explosion damage/synergies, immune/solo procs, no plain-wall blast, RNG/combat parity, pure finite paths, pause/upgrades, resize, expiration, and effect budgets.');
+}

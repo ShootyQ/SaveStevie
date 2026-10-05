@@ -38,6 +38,7 @@ function damageWall(wall,amount,x,y){
         radius+=30+wall.intersections*8;
         dmg+=25+wall.intersections*10;
       }
+      game.api.animateWallExplosion(wall,x,y,radius,game.state.synergies.has('INFERNO'));
 
       for(const e of game.state.enemies){
         const near=wall.pts.some(p=>game.api.withinRadius(p.x,p.y,e.x,e.y,radius));
@@ -255,6 +256,7 @@ function chainLightning(source,level){
   if(game.state.synergies.has('THE STORM')){range+=65;count+=2;mult+=.45}
   const nearby=[];
   for(const e of game.state.enemies){if(e!==source&&game.api.withinRadius(e.x,e.y,source.x,source.y,range)){nearby.push(e);if(nearby.length===count)break}}
+  game.api.animateChainLightning(source,nearby);
   game.api.dealDamage(source,(3+level*2)*mult,'electric');
   nearby.forEach(e=>{game.api.dealDamage(e,(4+level*3)*mult,'electric');game.api.burst(e.x,e.y,'#7ea7ff',4)});
   game.api.burst(source.x,source.y,'#7ea7ff',5);

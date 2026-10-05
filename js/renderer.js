@@ -189,6 +189,7 @@ function resize(){
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
+    game.api.moveAbilityEffects(dx,dy);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
   game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;
@@ -356,6 +357,7 @@ function draw(){
   }
 
   // Ranged threats are readable before and after firing.
+  game.api.drawWallExplosions();
   drawSplitAnimations();
   for(const e of game.state.enemies){
     if(e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0||e.shootCd>.6||
@@ -484,6 +486,7 @@ function draw(){
   for(const p of game.state.particles){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1
   }
+  game.api.drawChainLightning();
   for(const f of game.state.floaters){
     if(f.hitMarker){
       const ctx=game.dom.ctx;ctx.save();ctx.globalAlpha=Math.min(1,f.t*2);ctx.strokeStyle='#d95050';ctx.lineWidth=2;
