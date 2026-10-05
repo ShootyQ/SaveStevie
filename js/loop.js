@@ -27,7 +27,7 @@ function update(dt){
     if(w.life<=0)game.state.walls=game.state.walls.filter(x=>x!==w);
   }
 
-  game.api.updateSteve(dt);game.api.updateProjectiles(dt);
+  game.api.updateStevie(dt);game.api.updateProjectiles(dt);
 
   game.api.spawnWaveEnemies(dt);
 
@@ -106,6 +106,7 @@ function update(dt){
     game.api.eraserAttack(e,dt);
 
     if(e.hp<=0){game.api.killEnemy(e);continue}
+    if(game.api.contactStevie(e))continue;
     if(e.stun>0||e.freeze>0)continue;
 
     // Gravity ink pulls nearby enemies toward the closest nearby wall point
@@ -124,7 +125,7 @@ function update(dt){
     // Bouncers ricochet off a wall a few times and try another angle before
     // eventually giving up and attacking the barrier normally.
     if(e.type==='bouncer'&&e.bounceTime>0){
-      if(game.api.steerBounce(e,dt))continue;
+      if(game.api.steerBounce(e,dt)){game.api.contactStevie(e);continue}
     }
 
     const target=game.api.enemyTarget(e);
@@ -182,13 +183,7 @@ function update(dt){
     }else{
       e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt
     }
-    if(playerDist<game.state.player.r+e.r+2){
-      game.state.player.hp-=e.dmg*dt*.9*(1-game.state.stats.playerArmor);
-      if(game.state.synergies.has('Human Pinball')){
-        const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;
-        e.x+=dx/m*65*dt;e.y+=dy/m*65*dt;
-      }
-    }
+    game.api.contactStevie(e);
   }
 
   for(const p of game.state.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.96;p.vy*=.96}

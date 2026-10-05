@@ -9,7 +9,7 @@ Refactored from doodle_defender_v8.html. Open index.html directly in a modern br
 - js/dom.js binds canvas and HUD elements.
 - js/loop.js owns timing and simulation updates.
 - js/renderer.js draws the original canvas artwork and handles resizing.
-- js/enemies.js handles enemy creation, Steve, projectiles, and eraser attacks.
+- js/enemies.js handles enemy creation, Stevie, projectiles, and eraser attacks.
 - js/waves.js handles run reset, wave progression, victory, and game over.
 - js/walls.js handles drawing costs, wall durability, ink contact, and synergy combat effects.
 - js/upgrades.js owns upgrade and synergy definitions and selection.
@@ -54,17 +54,21 @@ browser's local storage and are not synced between devices.
 
 ## Damage feedback
 
-Enemy damage collects into 0.7-second bursts: a bold animated total with a
-colored breakdown for physical, fire, poison, lightning, blast, void, and
-thermal-shock damage. Bursts pop on impact, count up smoothly, rise, and fade
-over 2.2 seconds. Strong hits add impact rays; lethal hits show **FINISH**.
+Small outlined damage numbers bounce in different directions by damage type:
+slate physical, orange fire, green poison, blue electric, gold blast, purple
+void, and cyan thermal shock. Each type collects rapid ticks over 0.55 seconds.
+Numbers last 2 seconds and fade over their final half-second, without cards or
+large combined totals. Placement avoids overlap and stays inside the playfield,
+with a 48-label budget. Reduced-motion mode uses gentle drift without bouncing.
 
-Rapid ticks aggregate without restarting the animation every frame. Popup
-placement avoids the HUD and other popups; crowded fights retain at most 32
-bursts, with older bursts yielding when no readable position is available.
-The browser's reduced-motion preference removes the punch/rotation/rays and
-uses immediate totals with gentler drift. Damage counts remaining health,
-not excess overkill, and never changes combat mechanics or randomness.
+## Monster contact
+
+Touching Stevie deals one hit using the monster's contact damage and Stevie's
+armor reduction, then bursts and removes the monster. Contact removal grants
+no kill rewards and produces no split children. Bosses follow this rule too;
+Stevie must survive The Eraser's hit for its removal to clear the final fight.
+Snipers keep their ranged attacks. Human Pinball now makes contact explosions
+push nearby monsters away. Existing saved best-wave records are preserved.
 
 ## Review your build
 
