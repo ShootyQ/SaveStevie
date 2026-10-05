@@ -128,3 +128,14 @@ button.red{background:#9c4545}
   .ucard{min-height:108px}.ucard p{font-size:12px}
   .cardbox{max-height:89vh;overflow:auto}
 }
+
+.build-overlay{position:fixed;z-index:30;padding:12px;background:rgba(20,27,32,.82)}
+.build-box{width:min(100%,850px);max-height:90dvh;overflow:auto;overscroll-behavior:contain}
+.build-heading{position:sticky;top:0;z-index:1;background:#fbf7e9;display:flex;align-items:center;justify-content:space-between;gap:12px;padding-bottom:8px}
+.build-heading h2{text-align:left;font-size:25px}
+.build-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.build-stat,.build-entry{background:#fffdf5;border:2px solid #c9c0ab;border-radius:10px;padding:10px}
+.build-stat strong{display:block;margin-top:4px}
+.build-upgrades{display:grid;gap:8px}
+.build-entry h4{margin:0 0 5px}.build-entry p{text-align:left;margin:4px 0;font-size:13px}
+.build-entry .build-effect{color:#315d43;font-weight:bold}

@@ -6,14 +6,14 @@ const a=load(false),b=load(true);let checks=0;
 // Compare unchanged combat against the original without the new presentation labels.
 b.sandbox.testGame.api.damageNumber=()=>{};
 function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot()),JSON.parse(a.snapshot()),label+' state');// Upgraded artwork intentionally differs; keep exact canvas parity for basic walls.
-if(!Object.values(b.sandbox.testGame.state.inks).some(Boolean))assert.deepStrictEqual(JSON.stringify(b.calls),JSON.stringify(a.calls),label+' canvas');for(const id of ['wave','score','kills','inkText','hpText','timeText','message'])assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
+if(!Object.values(b.sandbox.testGame.state.inks).some(Boolean))assert.deepStrictEqual(JSON.stringify(b.calls),JSON.stringify(a.calls),label+' canvas');for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
 both(e=>{const c=e.node('game');c.listeners.pointerdown({clientX:180,clientY:180,pointerId:1});for(let i=1;i<16;i++)c.listeners.pointermove({clientX:180+i*9,clientY:180+i*3});c.listeners.pointerup();});compare('paid wall');
 both(e=>e.node('pauseBtn').onclick());compare('pause');both(e=>e.node('pauseBtn').onclick());compare('resume');
 for(let i=1;i<=2000;i++){both(e=>e.sandbox.frame(i*16));if(i%100===0)compare('frame '+i);}
 both(e=>e.node('continueBtn').onclick());compare('wave reward');
-both(e=>{const cards=e.node('cards').children;if(cards.length)cards.at(-1).onclick();});compare('upgrade');
+both(e=>{const cards=e.node('cards').children;if(cards.length)cards.at(-1).onclick();});compare('upgrade');assert.match(b.node('message').textContent,/×1 — /,'upgrade confirmation includes the new stack and effect');
 both(e=>e.node('clearBtn').onclick());compare('clear walls');
 both(e=>e.node('againBtn').onclick());compare('reset');
 
@@ -85,3 +85,42 @@ assert.ok(label.t>.5,'label remains fully visible for the first second');
 for(let i=0;i<25;i++)readable.api.update(.033);
 assert.ok(!readable.state.floaters.includes(label),'label expires after 1.8 seconds');
 console.log('PASS: longer damage label lifetime, slower drift, and eventual expiry.');
+
+const build=load(true),bg=build.sandbox.testGame;
+bg.api.resetRun();
+const choose=name=>bg.api.chooseUpgrade(bg.catalog.upgrades.find(u=>u.name===name));
+choose('Bigger Ink Tank');choose('Bigger Ink Tank');
+assert.equal(bg.state.stacks['Bigger Ink Tank'],2);
+assert.equal(bg.state.stats.maxInk,320,'repeated upgrades add their effects');
+assert.match(bg.api.upgradeEffect('Bigger Ink Tank'),/70/);
+choose('Fine Tip');choose('Fine Tip');
+assert.ok(Math.abs(bg.state.stats.lineCost-.31*.88*.88)<1e-10);
+assert.match(bg.api.upgradeEffect('Fine Tip'),/22.56%/);
+choose('Fire Ink');choose('Fire Ink');
+assert.equal(bg.state.inks.fire,2);assert.match(bg.api.upgradeEffect('Fire Ink'),/9 burn damage/);
+choose('Pocket Rocks');choose('Better Rocks');const rate=bg.state.stats.rockRate;
+choose('Pocket Rocks');assert.equal(bg.state.stats.rockRate,rate,'repeated Pocket Rocks preserves faster throws');
+assert.equal(bg.state.stats.rockDamage,30);
+choose('Double Stroke');choose('Double Stroke');
+assert.equal(bg.state.stacks['Double Stroke'],1,'one-time unlock cannot be wasted twice');
+choose('Triple Stroke');assert.equal(bg.api.upgradeAvailable(bg.catalog.upgrades.find(u=>u.name==='Double Stroke')),false);
+for(let i=0;i<6;i++)choose('Helmet');
+assert.equal(bg.state.stats.playerArmor,.55);
+assert.equal(bg.api.upgradeAvailable(bg.catalog.upgrades.find(u=>u.name==='Helmet')),false);
+assert.equal(bg.api.roman(6),6,'levels above five remain visible');
+const snapshot=bg.state.timeLeft;
+bg.api.openBuild();assert.equal(bg.state.paused,true);assert.equal(build.node('buildOverlay').style.display,'grid');
+bg.api.update(.033);assert.equal(bg.state.timeLeft,snapshot,'review pauses combat');
+assert.match(build.node('buildUpgrades').innerHTML,/Bigger Ink Tank ×2/);
+assert.match(build.node('buildUpgrades').innerHTML,/\+70 max ink/);
+assert.match(build.node('buildStats').innerHTML,/320/);
+assert.match(build.node('buildSynergies').innerHTML,/Hot Rocks/);
+bg.api.closeBuild();assert.equal(bg.state.paused,false);
+bg.state.paused=true;bg.api.openBuild();bg.api.closeBuild();assert.equal(bg.state.paused,true,'closing preserves an existing pause');
+bg.api.resetRun();bg.api.renderBuild();assert.match(build.node('buildUpgrades').innerHTML,/No upgrades yet/);assert.match(build.node('buildSynergies').innerHTML,/No active synergies/);
+choose('Fire Ink');choose('Poison Ink');bg.api.renderBuild();assert.match(build.node('buildSynergies').innerHTML,/Plaguefire/);
+for(const u of bg.catalog.upgrades)assert.ok(bg.api.upgradeEffect(u.name,2).length>0,u.name+' has an effect summary');
+const title=fs.readFileSync(path.join(root,'index.html'),'utf8');
+assert.match(title,/<title>Save Stevie - In Development<\/title>/);
+assert.match(title,/<h1>Save Stevie - In Development<\/h1>/);
+console.log('PASS: additive/multiplicative stacks, ink levels, one-time unlocks, caps, rock speed, build review, pause restoration, synergies, and branding.');

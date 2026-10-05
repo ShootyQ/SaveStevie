@@ -108,7 +108,7 @@ game.catalog.upgrades = [
   // Steve
   {name:'Bandages',rarity:'uncommon',cat:'steve',desc:'Heal 8 extra HP between waves.',apply:()=>game.state.stats.playerRegen+=8},
   {name:'Helmet',rarity:'uncommon',cat:'steve',desc:'Steve takes 10% less contact damage.',apply:()=>game.state.stats.playerArmor=Math.min(.55,game.state.stats.playerArmor+.1)},
-  {name:'Pocket Rocks',rarity:'rare',cat:'steve',desc:'Steve starts throwing rocks at nearby enemies.',apply:()=>{game.state.stats.rockDamage+=9;game.state.stats.rockRate=Math.max(game.state.stats.rockRate,1.25)}},
+  {name:'Pocket Rocks',rarity:'rare',cat:'steve',desc:'Steve starts throwing rocks at nearby enemies.',apply:()=>{game.state.stats.rockDamage+=9;game.state.stats.rockRate=game.state.stats.rockRate||1.25}},
   {name:'Better Rocks',rarity:'rare',cat:'steve',desc:'+12 rock damage and faster throws.',apply:()=>{game.state.stats.rockDamage+=12;game.state.stats.rockRate=Math.max(.45,(game.state.stats.rockRate||1.2)-.12)}},
   {name:'Emergency Medicine',rarity:'rare',cat:'steve',desc:'Heal 2 HP per kill.',apply:()=>game.state.stats.killHeal+=2},
   {name:'Really Good Rocks',rarity:'epic',cat:'steve',desc:'+24 rock damage.',apply:()=>{game.state.stats.rockDamage+=24;game.state.stats.rockRate=Math.max(.35,(game.state.stats.rockRate||1)-.1)}},
@@ -134,6 +134,14 @@ game.catalog.upgrades = [
   {name:'Death Ink',rarity:'legendary',cat:'ink',desc:'+20 base wall damage per second.',apply:()=>game.state.stats.wallDamage+=20},
 ];
 
+const oneTimeUpgrades = new Set(['Double Stroke','Triple Stroke','Quick Sketch','Loaded Deck','Collector','Greedy Goblin']);
+function upgradeAvailable(u){
+  if(oneTimeUpgrades.has(u.name)&&game.state.stacks[u.name])return false;
+  if(u.name==='Double Stroke'&&game.state.stats.doubleLine)return false;
+  if(u.name==='Helmet'&&game.state.stats.playerArmor>=.55)return false;
+  if(u.name==='Shock Ink'&&game.state.stats.wallStun>=.55)return false;
+  return true;
+}
 function upgradeWeight(u){
   let w=1;
   if(game.state.specialization==='defense'&&u.cat==='defense')w*=3;
@@ -155,7 +163,7 @@ function weightedPick(pool){
 function getUpgrade(forceRare=false){
   for(let tries=0;tries<40;tries++){
     const rar=game.api.rarityRoll(forceRare);
-    const pool=game.catalog.upgrades.filter(u=>u.rarity===rar);
+    const pool=game.catalog.upgrades.filter(u=>u.rarity===rar&&game.api.upgradeAvailable(u));
     if(pool.length)return game.api.weightedPick(pool);
   }
   return game.catalog.upgrades[0];
@@ -185,16 +193,18 @@ function rollCards(forceRare=false){
       return false;
     });
     if(related.length)hint='<div style="margin-top:7px;font-size:10px;font-weight:900;color:#8456c9">Potential synergy nearby…</div>';
-    c.innerHTML=`<div class="rarity">${u.rarity}</div><h3>${u.name}</h3><p>${u.desc}</p>${hint}<div class="stack">${stack?'Owned ×'+stack:'New upgrade'}</div>`;
+    c.innerHTML=`<div class="rarity">${u.rarity}</div><h3>${u.name}</h3><p>${u.desc}</p>${hint}<div class="stack">${oneTimeUpgrades.has(u.name)?'One-time unlock':(stack?'Owned ×'+stack+' → ×'+(stack+1):'New upgrade → ×1')}<br>${game.api.upgradeEffect(u.name,stack+1)}</div>`;
     c.onclick=()=>game.api.chooseUpgrade(u);game.dom.cardsEl.appendChild(c)
   });
 }
 
 function chooseUpgrade(u){
+  if(!game.api.upgradeAvailable(u))return;
   game.state.stacks[u.name]=(game.state.stacks[u.name]||0)+1;u.apply();game.api.checkSynergies();
   game.state.wave++;
   if(game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
-  game.state.inUpgrade=false;game.dom.upgradeOverlay.style.display='none';game.api.startWave();game.api.updateUI()
+  game.state.inUpgrade=false;game.dom.upgradeOverlay.style.display='none';game.api.startWave();game.api.updateUI();
+  game.api.setMsg(u.name+' ×'+game.state.stacks[u.name]+' — '+game.api.upgradeEffect(u.name,game.state.stacks[u.name]))
 }
 
 function reroll(){if(game.state.rerolls<=0)return;game.state.rerolls--;game.api.rollCards(game.state.wave%5===0);game.api.updateUI()}
@@ -206,7 +216,7 @@ function chooseSpecialization(spec){
   game.api.openUpgrade();
   game.api.setMsg('Specialization: '+({defense:'Fortress',ink:'Ink Alchemist',chaos:'Chaos'}[spec]))
 }
-const api = { checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
+const api = { upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
 Object.assign(game.api, api);
 return api;
 };

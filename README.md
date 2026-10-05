@@ -1,4 +1,4 @@
-# Doodle Defender
+# Save Stevie - In Development
 
 Refactored from doodle_defender_v8.html. Open index.html directly in a modern browser. No installation or build required. Keep the folder together.
 
@@ -62,3 +62,14 @@ visible for 1.8 seconds, rise slowly, and fade during their final half-second. V
 up to one decimal place and count remaining health rather than excess overkill.
 Frost, gravity, and repulsion effects that only slow or move enemies do not
 produce damage numbers.
+
+## Review your build
+
+Use **Your Build** to pause and inspect every owned upgrade, its stack count,
+cumulative contribution, current combined stats, and active synergies. Closing
+the screen restores the previous pause state. Reward cards show the next stack
+and its cumulative effect; picking one confirms the new count and effect.
+
+Repeatable upgrades stack additively or multiplicatively as described. One-time
+unlocks stop appearing once acquired, and Helmet/Shock Ink stop appearing at
+their caps. Repeated Pocket Rocks adds damage without slowing improved throws.
