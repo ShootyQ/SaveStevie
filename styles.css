@@ -290,3 +290,10 @@ button:disabled{opacity:.5;cursor:default}
   .bottom button{font-size:10px;padding-inline:1px}
   .bottom #musicBtn{flex:0 0 28px;min-width:28px;font-size:19px}
 }
+/* Every reward gets a small notebook doodle, without covering its text. */
+.ucard .rarity{padding-right:40px}
+.ucard h3{overflow-wrap:anywhere}
+.cardbox .reward-luck{font-size:12px;margin:0 0 8px;color:#315d43;font-weight:bold}
+.luck-guide{margin:0 0 14px;padding:8px 10px;border:1px dashed #b1a88e;border-radius:8px;background:#fffdf5}
+.luck-guide summary{font-size:13px;font-weight:bold;cursor:pointer;min-height:24px}
+.luck-guide p,.build-box .build-luck{text-align:left;font-size:13px;line-height:1.5;margin:8px 0;color:#46535b}

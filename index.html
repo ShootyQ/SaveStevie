@@ -77,6 +77,8 @@
       <div class="cardbox">
         <h2>Choose an Upgrade</h2>
         <p id="rewardText">Pick one. Build weird.</p>
+        <p id="rewardLuck" class="reward-luck"></p>
+        <details class="luck-guide"><summary>What does Luck do?</summary><p id="rewardLuckDetails"></p><p>Luck helps roll the rarity first. Your specialization and Collector affect which upgrade is picked within that rarity. Better odds still leave room for a bad roll!</p></details>
         <div class="cards" id="cards"></div>
         <div id="synergyNote"></div>
         <div class="cardactions">
@@ -167,6 +169,7 @@
     <div class="build-heading"><h2 id="buildTitle">Your Build</h2><button id="closeBuildBtn">Close</button></div>
     <p>The game pauses while you review. Totals include all upgrades and your specialization.</p>
     <h3>Current totals</h3><div id="buildStats" class="build-stats"></div>
+    <h3>Luck &amp; rewards</h3><p id="buildLuck" class="build-luck"></p>
     <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
     <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
     <h3>Monster notes</h3><p>Open Monsters in the toolbar for the full illustrated compendium.</p>
@@ -198,6 +201,10 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry">
+        <h3>A doodle for every upgrade &amp; Luck explained</h3>
+        <p>Every upgrade choice now has a little picture, with 32 new pen-and-colored-pencil icons alongside the existing ink artwork. Reward screens, Lucky Scribble, and Your Build explain Luck: it improves future reward rarity, including rerolls and boss rewards. It does not change damage or ink-effect chances.</p>
+      </article>
       <article class="build-entry">
         <h3>Sizzling inks &amp; a Save Stevie soundtrack</h3>
         <p>Burning monsters flicker with scribbled flames, poison bubbles rise, and frozen monsters sprout icy crystals. Void hits spiral into purple ink; vampire healing sends red ink beads back to Stevie. Your Save Stevie song now loops across waves and menus. Tap the music note to mute or resume; the setting is saved on this device.</p>
