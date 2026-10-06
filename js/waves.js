@@ -29,15 +29,16 @@ function resetRun(){
 }
 
 function startWave(){
+  game.api.selectMusicTrack(game.api.chapterForWave().id);
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
   game.api.resetAbilityEffects();
-  game.api.resetEnemyWave();
+  game.api.resetEnemyWave();game.api.resetSustain();
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.particles=[];game.state.floaters=[];
   game.state.finalOvertime=false; game.state.finalBossDefeated=false;
   game.state.stats.ink=game.state.stats.maxInk;
   game.state.stats.firstStrokeUsed=false;
-  game.state.waveKills=0;game.state.waveTime=game.api.waveDuration();game.state.timeLeft=game.state.waveTime;game.state.spawnTimer=.5;
+  game.state.waveKills=0;game.state.waveTime=game.api.waveDuration();game.state.timeLeft=game.state.waveTime;game.state.spawnTimer=game.state.wave===1?game.catalog.balance.openingDelay:.5;
   game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+game.state.stats.playerRegen+5);
   game.api.setMsg(game.state.wave===20&&!game.state.endless?game.api.monsterName('eraser')+' approaches. This seems personal.':game.state.wave%5===0?'Boss wave. Fresh page, full ink.':'Wave '+game.state.wave+'. Fresh page, full ink.');
   game.api.updateUI();
@@ -45,9 +46,10 @@ function startWave(){
 }
 
 function waveComplete(){
-  if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running)return;
+  if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending())return;
+  if(!game.state.endless&&game.state.wave<20&&game.state.wave%5===0&&game.state.timeLeft>0)return;
   game.state.betweenWaves=true;
-  game.api.awardScraps(3);
+  game.api.awardWaveScraps();
   game.api.celebrateStevie();
   game.api.resetAbilityEffects();
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);

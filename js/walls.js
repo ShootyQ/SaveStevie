@@ -80,7 +80,7 @@ function repairTouchedWalls(points){
       w.hp=Math.min(w.maxHp,w.hp+game.state.stats.repairDraw);
       if(game.state.synergies.has('Blood Patch')){
         const repaired=Math.max(0,w.hp-before);
-        game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+repaired*.08);
+        game.api.healStevie(repaired*.08);
       }
     }
   }
@@ -164,7 +164,7 @@ function createWall(points){
         const m=Math.hypot(n.x,n.y)||1;
         return{x:p.x+n.x/m*off,y:p.y+n.y/m*off};
       });
-      game.state.walls.push({pts:shifted,hp:hp*.82,maxHp:hp*.82,thick:base.thick,life,maxLife:life,closed:false,intersections:0});
+      game.state.walls.push({pts:shifted,hp:hp*game.catalog.balance.copyDurability,maxHp:hp*game.catalog.balance.copyDurability,thick:base.thick,life,maxLife:life,closed:false,intersections:0});
     }
   }
   game.api.updateUI();
@@ -218,7 +218,7 @@ function applyInkContact(e,dt,wall=null){
   }
   if(game.state.inks.vampire>0){
     const before=game.state.player.hp;
-    game.state.player.hp=Math.min(game.state.player.maxHp,before+dps*dt*(.015*game.state.inks.vampire));
+    game.api.healStevie(dps*dt*(.015*game.state.inks.vampire));
     game.api.animateLeech(e,game.state.player.hp-before);
   }
   if(game.state.inks.repulsion>0){
@@ -274,7 +274,7 @@ function applySynergies(e,dt){
   if(game.state.synergies.has('Cryoshock')&&e.freeze>0)game.api.dealDamage(e,Math.max(4,game.state.inks.electric*7)*dt,'electric');
   if(game.state.synergies.has('Black Ice')&&e.freeze>0)e.gravitySlow=Math.max(e.gravitySlow,.62);
   if(game.state.synergies.has('Leech Ink')&&e.poison>0){
-    const before=game.state.player.hp;game.state.player.hp=Math.min(game.state.player.maxHp,before+e.poisonDps*dt*.018);
+    const before=game.state.player.hp;game.api.healStevie(e.poisonDps*dt*.018);
     game.api.animateLeech(e,game.state.player.hp-before);
   }
 
@@ -297,7 +297,7 @@ function applySynergies(e,dt){
   }
 
   if(game.state.synergies.has('NECROTIC ENGINE')&&e.poison>0&&e.gravitySlow>.15){
-    const before=game.state.player.hp;game.state.player.hp=Math.min(game.state.player.maxHp,before+e.poisonDps*dt*.02);
+    const before=game.state.player.hp;game.api.healStevie(e.poisonDps*dt*.02);
     game.api.animateLeech(e,game.state.player.hp-before);
   }
 

@@ -9,7 +9,7 @@ const perks=game.catalog.notebookPerks=[
   {id:'rerolls',name:'Lunch Money',max:2,art:'reroll-coupon',desc:'+1 starting reroll per rank. Each cleared wave still supplies a free reroll.',effect:n=>'+'+n+' starting rerolls'},
   {id:'luck',name:'Lucky Eraser',max:4,art:'lucky-scribble',desc:'+2 starting Luck per rank, improving upgrade rarity odds.',effect:n=>'+'+2*n+' starting Luck'}
 ];
-let progress={version:1,scraps:0,lifetimeScraps:0,levels:{}},storageIssue=false,runScraps=0,runActive=false;
+let progress={version:1,scraps:0,lifetimeScraps:0,levels:{}},storageIssue=false,runScraps=0,runActive=false,killScraps=0;
 const cleanNumber=n=>Number.isSafeInteger(n)&&n>=0?Math.min(maxCurrency,n):0;
 try{
   const saved=JSON.parse(localStorage.getItem(key)||'null');
@@ -33,15 +33,20 @@ function awardScraps(amount){
   progress.scraps+=earned;progress.lifetimeScraps=Math.min(maxCurrency,progress.lifetimeScraps+earned);runScraps+=earned;
   saveNotebook();updateScrapCounters();
 }
-function beginScrapRun(){runScraps=0;runActive=true;updateScrapCounters()}
+function beginScrapRun(){runScraps=0;killScraps=0;runActive=true;updateScrapCounters()}
 function resumeScrapRun(){runActive=true}
-function awardKillScraps(enemy){
-  if(game.state.kills%10===0)awardScraps(1);
-  if(enemy.type==='boss'||enemy.type==='eraser'||game.catalog.enemyDefs[enemy.type]?.boss)awardScraps(5);
+function awardKillScraps(){
+  if(!runActive)return;
+  const b=game.catalog.balance;
+  if(game.state.kills%b.killsPerScrap===0&&killScraps<b.killScrapCap){awardScraps(1);killScraps++}
+}
+function awardWaveScraps(){
+  const wave=game.state.wave,chapter=!game.state.endless&&wave<=20&&wave%5===0;
+  game.api.awardScraps(1+(chapter?game.catalog.balance.chapterScraps[wave/5-1]:0));
 }
 function finishScrapRun(victory=false){
   if(!runActive)return;
-  if(victory)awardScraps(15);else if(runScraps===0)awardScraps(1);
+  if(victory)awardScraps(game.catalog.balance.victoryScraps);else if(runScraps===0)awardScraps(1);
   runActive=false;updateScrapCounters();
 }
 function applyNotebookLoadout(){
@@ -76,7 +81,8 @@ function resetNotebookProgress(){
   }
   progress=fresh;storageIssue=false;
   game.api.closeInfo();game.state.best=1;game.api.resetRun();game.api.closeInfo();
-  game.state.running=false;game.state.paused=false;runActive=false;runScraps=0;
+  game.state.running=false;game.state.paused=false;runActive=false;runScraps=0;killScraps=0;
+  game.api.selectMusicTrack('splash');
   game.dom.startOverlay.style.display='grid';updateScrapCounters();game.api.updateUI();
   game.dom.$('startBtn').focus?.();return true;
 }
@@ -97,6 +103,6 @@ function renderNotebook(){
 }
 function openNotebook(){game.api.openInfo('notebook')}
 function closeNotebook(){game.api.closeInfo()}
-const api={resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
+const api={awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;
 };
