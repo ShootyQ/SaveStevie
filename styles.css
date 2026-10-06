@@ -326,3 +326,6 @@ button:disabled{opacity:.5;cursor:default}
   .notebook-wallet{padding:12px 8px;gap:8px}
   .notebook-wallet strong{font-size:30px}
 }
+
+/* Browser-composited paper avoids redrawing a large texture in the game loop. */
+#game{background-size:cover,28px 28px,28px 28px;background-position:center,0 0,0 0;background-repeat:no-repeat,repeat,repeat}

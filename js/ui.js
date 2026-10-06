@@ -8,6 +8,7 @@ function text(node,value){
 function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
+  game.api.updateChapterBackground();
   const hit=game.state.floaters.findLast(f=>f.hitMarker&&f.t>0),notice=game.dom.$('hitNotice');
   notice.style.display=hit?'block':'none';
   if(hit)text(notice,hit.source+' −'+Number(hit.amount.toFixed(1)));

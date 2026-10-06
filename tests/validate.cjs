@@ -660,3 +660,18 @@ const reload=load(true,{storage}).sandbox.testGame;assert.equal(reload.state.bes
 const blocked=load(true,{storage:{getItem:()=>null,setItem(){throw Error('blocked')}}});blocked.sandbox.confirm=()=>true;blocked.sandbox.testGame.api.resetRun();blocked.sandbox.testGame.api.awardScraps(7);assert.equal(blocked.sandbox.testGame.api.resetNotebookProgress(),false);assert.equal(blocked.sandbox.testGame.api.notebookSnapshot().scraps,7);assert.match(blocked.node('notebookNotice').textContent,/Could not reset/);
 console.log('PASS: confirmed/cancelled full progress reset, fresh splash/loadout, save reload, preserved preferences, and blocked-storage failure.');
 }
+
+{
+const env=load(true),g=env.sandbox.testGame;
+for(const [wave,id] of [[1,'margin-mischief'],[5,'margin-mischief'],[6,'pop-quiz-panic'],[10,'pop-quiz-panic'],[11,'crayon-catastrophe'],[15,'crayon-catastrophe'],[16,'final-draft'],[20,'final-draft'],[25,'final-draft']]){
+  g.state.wave=wave;const before=JSON.stringify(g.state);
+  g.api.updateChapterBackground();assert.equal(JSON.stringify(g.state),before,'background cannot change combat');
+  assert.equal(g.api.chapterForWave().id,id);assert.equal(env.node('game').dataset.chapter,id);assert.match(env.node('game').style.backgroundImage,new RegExp(id+'\\.png'));assert.ok(fs.existsSync(path.join(root,'assets/art/backgrounds',id+'.png')));
+}
+g.api.resetRun();assert.equal(env.node('game').dataset.chapter,'margin-mischief');assert.match(env.node('waveChapter').textContent,/Waves 1–5/);
+const image=env.node('game').style.backgroundImage;g.api.updateUI();assert.equal(env.node('game').style.backgroundImage,image,'same chapter keeps the background stable');
+const control=load(true),active=load(true);control.sandbox.testGame.api.updateChapterBackground=()=>{};
+for(const e of [control,active]){e.sandbox.testGame.api.resetRun();for(let i=0;i<100;i++)e.sandbox.testGame.api.update(.016)}
+assert.equal(JSON.stringify(active.sandbox.testGame.state),JSON.stringify(control.sandbox.testGame.state));assert.equal(active.sandbox.Math.random(),control.sandbox.Math.random());
+console.log('PASS: chapter boundaries, asset coverage, new-run reset, stable backgrounds, and unchanged combat/RNG.');
+}

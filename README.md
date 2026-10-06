@@ -10,6 +10,7 @@ Refactored from doodle_defender_v8.html. Open index.html directly in a modern br
 - js/loop.js owns timing and simulation updates.
 - js/renderer.js draws the original canvas artwork and handles resizing.
 - js/enemies.js handles enemy creation, Stevie, projectiles, and eraser attacks.
+- js/chapters.js selects and versions four chapter background pages.
 - js/notebook.js banks persistent scraps and applies purchased next-run perks.
 - js/waves.js handles run reset, wave progression, victory, and game over.
 - js/walls.js handles drawing costs, wall durability, ink contact, and synergy combat effects.
@@ -348,3 +349,25 @@ current run. It returns to the splash screen with a fresh starting kit.
 Cancelling keeps everything. Music and monster-intro preferences are retained.
 A storage failure displays an error rather than resetting only the visible
 session. The confirmed reset is the explicit exception to preserving records.
+
+
+## Four illustrated paper chapters
+
+The arena uses original paper backgrounds from `assets/art/backgrounds`:
+Margin Mischief (waves 1–5), Pop Quiz Panic (6–10), Crayon Catastrophe (11–15),
+and Detention: The Final Draft (16–20). Chapter metadata is centralized in
+`js/chapters.js`; wave-clear screens show the current name/range. A new run
+returns to chapter 1; Endless retains chapter 4.
+
+Backgrounds use a cached CSS update when the chapter changes, outside canvas
+rendering and combat state. Images cover the arena with a centered crop for
+portrait/landscape devices, and keep a quiet pale center for readable enemies
+and ink effects. Paper/grid layers remain underneath if an image cannot load.
+Asset URLs use the deployment build version. There are no gameplay, reward,
+collision, difficulty, or music changes in this presentation layer; supplied
+chapter tracks can be integrated separately.
+
+Run `node tests/browser-chapters.cjs [packaged-site-directory]` with Playwright
+and Chromium for the optional desktop/phone asset, switching, reset, wave-clear
+label, and missing-art fallback checks. The normal validation also checks
+chapter boundaries and unchanged combat/randomness.

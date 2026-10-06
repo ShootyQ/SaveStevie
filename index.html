@@ -108,6 +108,7 @@
 
     <div class="overlay" id="waveOverlay" style="display:none">
       <div class="cardbox startbox">
+        <p id="waveChapter" class="scrap-summary"></p>
         <div class="wave-heading"><canvas id="waveStevie" width="128" height="136" role="img" aria-label="Stevie celebrating the cleared wave"></canvas><h2 id="waveClearTitle">Wave Cleared!</h2></div>
         <div class="stats wave-stats">
           <div class="pill">Wave <span id="wave">1</span></div>
@@ -219,6 +220,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Four pages, four paper worlds</h3><p>Custom backgrounds now mark each five-wave chapter: Margin Mischief (1–5), Pop Quiz Panic (6–10), Crayon Catastrophe (11–15), and Detention: The Final Draft (16–20). Faint paper texture and edge doodles keep the fighting space readable. Wave-clear screens name the current chapter; new runs return to the first page.</p></article>
       <article class="build-entry"><h3>A fresh notebook whenever you need it</h3><p>Back of the Notebook now includes Reset game progress. Confirming clears this browser’s scraps, permanent perks, best-wave record, and current run, then returns to the splash screen. Music and monster-intro settings stay as you chose them.</p></article>
       <article class="build-entry"><h3>New villains on pages 10 and 15</h3><p>Wave 10 introduces Staple Snack, a wall-crushing stapler with an orange warning line before its slam. Wave 15 introduces Count Crayon, a doodle wizard who summons three Niblets after a purple warning ring. Freeze or stun interrupts either attack. Both have custom scribbled artwork, compendium entries, introduction popups, and boss scrap rewards.</p></article>
       <article class="build-entry">
@@ -338,6 +340,7 @@
 <script src="js/state.js"></script>
 <script src="js/geometry.js"></script>
 <script src="js/music.js"></script>
+<script src="js/chapters.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/notebook.js"></script>
 <script src="js/monsters.js"></script>
