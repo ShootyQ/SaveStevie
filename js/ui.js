@@ -9,9 +9,13 @@ function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
   game.api.updateChapterBackground();
-  const overtime=game.dom.$('bossOvertime'),bossPending=game.state.running&&game.state.finalOvertime&&game.api.campaignBossPending();
-  overtime.style.display=bossPending?'block':'none';
-  if(bossPending)text(overtime,'Overtime · Defeat '+game.api.monsterName(game.api.bossTypeForWave()));
+  const overtime=game.dom.$('bossOvertime'),bossWave=game.state.wave%5===0;
+  const active=game.state.running&&!game.state.betweenWaves&&!game.state.inUpgrade;
+  overtime.style.display=active&&(bossWave||game.state.timeLeft===0)?'block':'none';
+  if(bossWave)text(overtime,'Defeat '+game.api.monsterName(game.api.bossTypeForWave()));
+  else if(game.state.timeLeft===0)text(overtime,'Clear the remaining monsters · '+game.state.enemies.filter(e=>e.hp>0).length+' left');
+  game.dom.$('waveCountdown').style.display=bossWave?'none':'';
+  game.dom.timeBar.style.display=bossWave?'none':'';
   const hit=game.state.floaters.findLast(f=>f.hitMarker&&f.t>0),notice=game.dom.$('hitNotice');
   notice.style.display=hit?'block':'none';
   if(hit)text(notice,hit.source+' −'+Number(hit.amount.toFixed(1)));

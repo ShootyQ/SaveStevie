@@ -69,7 +69,7 @@ function startWave(){
   game.state.finalOvertime=false; game.state.finalBossDefeated=false;
   game.state.stats.ink=game.state.stats.maxInk;
   game.state.stats.firstStrokeUsed=false;
-  game.state.waveKills=0;game.state.waveTime=game.api.waveDuration();game.state.timeLeft=game.state.waveTime;game.state.spawnTimer=game.state.wave===1?game.catalog.balance.openingDelay:.5;
+  game.state.waveElapsed=0;game.state.waveKills=0;game.state.waveTime=game.api.waveDuration();game.state.timeLeft=game.state.waveTime;game.state.spawnTimer=game.state.wave===1?game.catalog.balance.openingDelay:.5;
   game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+game.state.stats.playerRegen+5);
   game.api.setMsg(game.state.wave===20&&!game.state.endless?game.api.monsterName('eraser')+' approaches. This seems personal.':game.state.wave%5===0?'Boss wave. Fresh page, full ink.':'Wave '+game.state.wave+'. Fresh page, full ink.');
   game.api.updateUI();
@@ -77,7 +77,7 @@ function startWave(){
 }
 
 function waveComplete(){
-  if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending())return;
+  if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending()||(game.state.wave%5!==0&&game.state.enemies.some(e=>e.hp>0))||(game.state.wave%5===0&&!game.api.bossFightResolved()))return;
   game.api.stopSoundEffects();
   game.state.betweenWaves=true;
   game.api.awardWaveScraps();

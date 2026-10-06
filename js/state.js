@@ -16,6 +16,7 @@ game.state.score = 0;
 game.state.waveKills = 0;
 game.state.waveTime = 25;
 game.state.timeLeft = 25;
+game.state.waveElapsed = 0;
 game.state.best = +(localStorage.getItem('doodleDefenderBestV4')||1);
 game.state.walls = [];
 game.state.enemies = [];

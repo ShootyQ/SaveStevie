@@ -44,7 +44,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['enemyShots','tool','legendaryWave','legendaryOffered'].includes(key)?undefined:value),JSON.parse(a.snapshot()),label+' state');// Upgraded artwork intentionally differs; keep exact canvas parity for basic walls.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed'].includes(key)?undefined:value),JSON.parse(a.snapshot()),label+' state');// Upgraded artwork intentionally differs; keep exact canvas parity for basic walls.
 if(!Object.values(b.sandbox.testGame.state.inks).some(Boolean))assert.deepStrictEqual(JSON.stringify(b.calls),JSON.stringify(a.calls),label+' canvas');for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -349,7 +349,7 @@ rg.api.updateEnemyShots(1);assert.equal(rg.state.player.hp,protectedHp,'near mis
 rg.api.updateEnemyShots(2);assert.equal(rg.state.enemyShots.length,0,'missed shots expire');
 sniper.shootCd=.01;sniper.freeze=1;rg.api.update(.02);assert.equal(rg.state.enemyShots.length,0,'freeze interrupts firing');sniper.freeze=0;
 rg.api.fireSniper(sniper);rg.state.paused=true;const pausedShot=JSON.stringify(rg.state.enemyShots);rg.api.update(.03);assert.equal(JSON.stringify(rg.state.enemyShots),pausedShot,'shots pause with gameplay');rg.state.paused=false;
-rg.api.waveComplete();assert.equal(rg.state.enemyShots.length,0,'wave transition clears incoming shots');assert.equal(ranged.node('waveClearTitle').textContent,'Wave 12 cleared!');
+for(const enemy of [...rg.state.enemies])rg.api.killEnemy(enemy);rg.api.waveComplete();assert.equal(rg.state.enemyShots.length,0,'wave transition clears incoming shots');assert.equal(ranged.node('waveClearTitle').textContent,'Wave 12 cleared!');
 rg.api.resetRun();assert.equal(ranged.node('lastHitText').textContent,'');
 // Lethal projectile hits cannot be undone by later kill healing in the same tick.
 rg.state.player.hp=1;rg.state.enemyShots=[{x:rg.state.player.x-21,y:rg.state.player.y,vx:150,vy:0,r:3,damage:7,life:2}];rg.api.update(.02);
@@ -499,7 +499,7 @@ const source=g.api.spawnEnemy(false,x+120,y,'tank');source.immunity='electric';s
 const long={pts:Array.from({length:5000},(_,i)=>({x:i*.15,y:200+Math.sin(i*.05)*10})),thick:8};
 for(let i=0;i<50;i++){g.api.animateChainLightning(source,Array.from({length:100},(_,j)=>({x:x+j,y:y+j})));g.api.animateWallExplosion(long,x,y,100)}
 const budget=g.api.abilityEffectsSnapshot();assert.equal(budget.lightning.length,8);assert(budget.lightning.every(e=>e.targets.length<=12&&e.pathPoints<=156));assert.equal(budget.explosions.length,4);assert(budget.explosions.every(e=>e.points.length<=48&&e.anchors.length<=4&&e.fragments<=16),'long walls and simultaneous blasts remain bounded');
-g.api.waveComplete();assert.equal(g.api.abilityEffectsSnapshot().explosions.length,0);assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0,'wave clear discards combat effects');g.api.animateChainLightning(source,[]);g.api.startWave();assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0,'new wave clears stale casts');
+for(const enemy of [...g.state.enemies])g.api.killEnemy(enemy);g.api.waveComplete();assert.equal(g.api.abilityEffectsSnapshot().explosions.length,0);assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0,'wave clear discards combat effects');g.api.animateChainLightning(source,[]);g.api.startWave();assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0,'new wave clears stale casts');
 console.log('PASS: real lightning targets, exact explosion damage/synergies, immune/solo procs, no plain-wall blast, RNG/combat parity, pure finite paths, pause/upgrades, resize, expiration, and effect budgets.');
 }
 
@@ -722,13 +722,13 @@ for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['bul
 }
 for(const wave of [5,10,15]){
  const e=load(true),g=e.sandbox.testGame;g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,100,100);boss.freeze=999;
- g.state.timeLeft=.01;g.api.update(.02);assert.equal(g.state.finalOvertime,true);assert.equal(g.state.betweenWaves,false);assert.equal(e.node('bossOvertime').style.display,'block');assert.match(e.node('bossOvertime').textContent,new RegExp(g.api.monsterName(boss.type)));
- const count=g.state.enemies.length;g.api.update(.2);assert.equal(g.state.enemies.length,count,'overtime stops normal arrivals');g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,0,'cannot bypass living boss');
+ g.state.timeLeft=.01;g.api.update(.02);assert.equal(g.state.timeLeft,.01,'boss countdown never advances');assert.equal(e.node('waveCountdown').style.display,'none');assert.equal(g.state.finalOvertime,false);assert.equal(g.state.betweenWaves,false);assert.equal(e.node('bossOvertime').style.display,'block');assert.match(e.node('bossOvertime').textContent,new RegExp(g.api.monsterName(boss.type)));
+ const count=g.state.enemies.length;g.api.update(.2);assert.equal(g.state.enemies.length,count,'boss fight has no normal arrivals');g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,0,'cannot bypass living boss');
  g.api.killEnemy(boss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);assert.equal(e.node('bossOvertime').style.display,'none');assert.equal(g.api.notebookSnapshot().scraps,1+g.catalog.balance.chapterScraps[wave/5-1]);g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,1+g.catalog.balance.chapterScraps[wave/5-1],'milestone pays once');
 }
 g.api.resetRun();g.state.wave=5;g.api.startWave();const early=g.api.spawnEnemy(true,100,100);g.api.killEnemy(early);g.api.waveComplete();assert.equal(g.state.betweenWaves,true,'defeating the boss clears the encounter without waiting');
 g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.betweenWaves,true);
-g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'missing boss is ensured in overtime');g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'required boss never duplicates');
+g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'missing boss is ensured without a timer');g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'required boss never duplicates');
 const contactBoss=g.state.enemies.find(e=>e.waveBoss);contactBoss.x=g.state.player.x;contactBoss.y=g.state.player.y;g.api.contactStevie(contactBoss);assert.ok(g.state.enemies.includes(contactBoss),'boss contact cannot remove the encounter');g.api.killEnemy(contactBoss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);
 g.api.resetRun();g.state.stats.killHeal=g.state.stats.refund=g.state.stats.repairOnKill=100;g.state.player.hp=20;g.state.stats.ink=0;g.state.walls=[{hp:10,maxHp:100},{hp:10,maxHp:100}];
 for(let i=0;i<4;i++)g.api.killEnemy(g.api.spawnEnemy(false,0,0,'grunt'));
@@ -743,7 +743,7 @@ const preBottomless=g.state.stats.inkRegen;choose('Bottomless Pen');choose('Bott
 g.api.resetRun();g.state.stats.tripleLine=true;g.api.createWall([{x:100,y:100},{x:280,y:100}]);assert.equal(g.state.walls.length,3);assert.equal(g.state.walls[1].maxHp,g.state.walls[0].maxHp*.6);
 g.api.resetRun();for(let i=1;i<=12;i++){g.state.kills=i*25;g.api.awardKillScraps()}assert.equal(g.api.notebookSnapshot().runScraps,8,'kill scraps capped across a run');g.api.resumeScrapRun();g.state.kills=325;g.api.awardKillScraps();assert.equal(g.api.notebookSnapshot().runScraps,8,'endless cannot reset kill cap');
 g.api.resetRun();for(let wave=1;wave<=20;wave++){g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;if(wave%5===0)g.api.killEnemy(g.api.spawnEnemy(true,0,0));g.api.waveComplete();g.state.betweenWaves=false}assert.equal(g.api.notebookSnapshot().runScraps,61,'20 clears + chapter milestones + victory');
-console.log('PASS: HP curve, gentler opening, timed/capped groups, required boss overtime/contact/early kills, shared sustain budgets, pause/death protection, diminishing returns, thinner copies, and capped/milestone scraps.');
+console.log('PASS: HP curve, gentler opening, timed/capped groups, untimed required boss/contact/early kills, shared sustain budgets, pause/death protection, diminishing returns, thinner copies, and capped/milestone scraps.');
 }
 
 {
@@ -1231,4 +1231,27 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  g.api.weightedPick=pool=>pool.find(u=>u.name==='Triple Stroke')||pool[0];g.state.legendaryWave=g.state.wave;g.state.legendaryOffered=false;g.api.rollCards();assert.match(env.node('cards').children[0].innerHTML,/Triple Stroke/);assert.match(env.node('cards').children[0].className,/legendary/);
  g.api.chooseUpgrade({...triple,rarity:'legendary'});assert.equal(g.state.stats.tripleLine,true);assert.equal(g.state.stacks['Triple Stroke'],1);assert.equal(g.api.upgradeAvailable(triple),false);
  console.log('PASS: Triple Stroke excluded from all ordinary tiers, available in reserved Legendary pool, lower-tier application rejected and unlock remains one-time.');
+}
+
+{
+const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
+const enemy=g.api.spawnEnemy(false,100,100,'splitter');enemy.freeze=999;
+g.state.timeLeft=.01;g.state.spawnTimer=0;g.api.update(.02);
+assert.equal(g.state.timeLeft,0);assert.equal(g.state.enemies.length,1,'scheduled spawns stop at zero');assert.equal(g.state.betweenWaves,false,'living monsters prevent clear');
+g.api.waveComplete();assert.equal(g.state.betweenWaves,false,'cannot bypass cleanup');
+const elapsed=g.state.waveElapsed;g.state.paused=true;g.api.update(1);assert.equal(g.state.waveElapsed,elapsed);g.state.paused=false;
+g.api.killEnemy(enemy);assert.equal(g.state.enemies.length,2,'split children must also be cleared');
+for(const child of g.state.enemies)child.freeze=999;
+g.api.update(.02);assert.equal(g.state.betweenWaves,false);
+for(const child of [...g.state.enemies])g.api.killEnemy(child);
+g.api.update(.02);assert.equal(g.state.betweenWaves,true);const score=g.state.score;g.api.update(.02);assert.equal(g.state.score,score,'clear pays once');
+g.api.resetRun();g.state.timeLeft=0;g.state.player.hp=0;g.api.update(.02);assert.equal(g.state.betweenWaves,false,'death takes priority over cleanup clear');
+for(const wave of [5,10,15,20,25]){
+ g.api.resetRun();g.state.endless=wave>20;g.state.wave=wave;g.api.startWave();g.api.update(.01);
+ const boss=g.state.enemies.find(e=>e.waveBoss);assert.ok(boss);boss.freeze=999;boss.x=-100;boss.y=-100;
+ const time=g.state.timeLeft;for(let i=0;i<70;i++)g.api.update(1);
+ assert.equal(g.state.timeLeft,time);assert.equal(g.state.betweenWaves,false);assert.ok(g.state.waveElapsed>60);
+ g.api.killEnemy(boss);g.api.update(.01);assert.ok(g.state.betweenWaves,'boss death clears campaign and endless encounters');
+}
+console.log('PASS: zero-time cleanup, stopped arrivals, split children, pause, death priority, single rewards and untimed campaign/endless bosses.');
 }
