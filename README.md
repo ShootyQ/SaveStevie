@@ -749,3 +749,7 @@ The balls mark Stevie's existing health boundary; they do not add wall HP or
 replace the player's drawn defenses. Projectiles still use Stevie's body hitbox.
 Impact feedback pauses and translates on resize, and a vector fallback remains
 if artwork is unavailable. `tests/browser-refuge.cjs` checks desktop and phones.
+
+Intro music attempts autoplay on page initialization, respects saved mute and
+volume, and retries blocked playback on the next pointer/key gesture. Explicit
+music/start controls retain their own handlers to avoid duplicate toggles.
