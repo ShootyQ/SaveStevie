@@ -7,6 +7,15 @@ const a=load(false),b=load(true);let checks=0;
 // and permanent perks are checked separately below.
 function legacyStartingKit(){const g=b.sandbox.testGame;Object.assign(g.state.stats,{maxInk:250,ink:250,inkRegen:8,wallHp:95,wallDamage:10});Object.assign(g.state.player,{maxHp:100,hp:100});g.state.rerolls=1;}
 b.sandbox.testGame.api.applyNotebookLoadout=legacyStartingKit;
+// Keep legacy reward randomness only for the unchanged-system comparison.
+// The new reward plan, odds and slots have independent regression tests below.
+b.sandbox.testGame.api.resetRewardPlan=()=>{};
+b.sandbox.testGame.api.rarityRoll=force=>{
+ const g=b.sandbox.testGame,r=b.sandbox.Math.random()*100,luck=g.state.stats.luck;
+ if(force)return r<8+luck*.08?'legendary':r<38+luck*.12?'epic':'rare';
+ const bonus=luck+(g.state.specialization==='chaos'?12:0),leg=.8+bonus*.06,epic=6+bonus*.12,rare=18+bonus*.18,unc=33+bonus*.16;
+ return r<leg?'legendary':r<leg+epic?'epic':r<leg+epic+rare?'rare':g.state.stats.uncommonFloor||r<leg+epic+rare+unc?'uncommon':'common';
+};
 Object.assign(b.sandbox.testGame.catalog.balance,{openingDelay:.5,openingGap:2.35,copyDurability:.82,healRate:Infinity,refundRate:Infinity,repairRate:Infinity,quickRegen:3,fountainBonus:.5,bottomlessRegen:8});
 b.sandbox.testGame.api.enemyHpScale=(wave=b.sandbox.testGame.state.wave)=>1+(wave-1)*.024;
 legacyStartingKit();b.sandbox.testGame.api.updateUI();
@@ -15,7 +24,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>key==='enemyShots'?undefined:value),JSON.parse(a.snapshot()),label+' state');// Upgraded artwork intentionally differs; keep exact canvas parity for basic walls.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['enemyShots','tool','legendaryWave','legendaryOffered'].includes(key)?undefined:value),JSON.parse(a.snapshot()),label+' state');// Upgraded artwork intentionally differs; keep exact canvas parity for basic walls.
 if(!Object.values(b.sandbox.testGame.state.inks).some(Boolean))assert.deepStrictEqual(JSON.stringify(b.calls),JSON.stringify(a.calls),label+' canvas');for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -35,7 +44,7 @@ both(e=>{const s=state(e);Object.keys(s.inks).forEach(k=>s.inks[k]=1);s.stats.fr
 const points=[{x:250,y:300},{x:500,y:300},{x:500,y:500},{x:250,y:500},{x:250,y:300}];
 both(e=>api(e).createWall(points));compare('closed wall and Freehand charge');
 both(e=>api(e).createWall(points));compare('Freehand bank spending');
-both(e=>{const s=state(e);s.stats.ink=3;s.stats.freehandBank=0;api(e).createWall(points);});compare('insufficient ink truncation');
+// Insufficient ink now intentionally differs from v8; regression checked below.
 both(e=>api(e).spawnEnemy(false,260,310,'grunt'));compare('spawn contact enemy');
 both(e=>{const s=state(e);api(e).applyInkContact(s.enemies.at(-1),.016,s.walls[0]);});compare('stacked ink contact');
 for(let i=2001;i<=2100;i++)both(e=>e.sandbox.frame(i*16));compare('stacked ink rendering and simulation');
@@ -566,9 +575,9 @@ for(let i=0;i<g.catalog.upgrades.length;i+=3){g.api.rollCards();for(const card o
 g.state.stats.luck=8;g.api.rollCards();assert.match(env.node('rewardLuck').textContent,/Luck 8/);assert.match(env.node('rewardLuckDetails').textContent,/rerolls and boss rewards/);assert.match(env.node('rewardLuckDetails').textContent,/does not change damage/);
 g.api.renderBuild();assert.match(env.node('buildLuck').textContent,/Your Luck: 8/);assert.match(g.catalog.upgrades.find(u=>u.name==='Lucky Scribble').desc,/rarity odds/);
 const roll=(random,luck,boss=false)=>{env.sandbox.Math.random=()=>random;g.state.stats.luck=luck;return g.api.rarityRoll(boss)};
-assert.equal(roll(.009,0),'epic');assert.equal(roll(.009,8),'legendary');assert.equal(roll(.075,0),'rare');assert.equal(roll(.075,8),'epic');assert.equal(roll(.26,0),'uncommon');assert.equal(roll(.26,8),'rare');assert.equal(roll(.085,0,true),'epic');assert.equal(roll(.085,8,true),'legendary');assert.equal(roll(.385,0,true),'rare');assert.equal(roll(.385,8,true),'epic');
-g.state.specialization='chaos';assert.equal(roll(.014,0),'legendary');assert.equal(roll(.085,0,true),'epic','Chaos bonus affects normal rewards only');assert.match(g.api.luckExplanation(),/separate \+12/);g.state.stats.uncommonFloor=true;assert.match(g.api.luckExplanation(),/Loaded Deck/);
-console.log('PASS: artwork for every upgrade, rendered reward pictures, current Luck/help text, and accurate normal/boss/Chaos rarity explanations without balance changes.');
+assert.equal(roll(.009,0),'epic');assert.equal(roll(.009,8),'epic');assert.equal(roll(.075,0),'rare');assert.equal(roll(.065,8),'epic');assert.equal(roll(.26,0),'uncommon');assert.equal(roll(.25,8),'rare');assert.equal(roll(.085,0,true),'epic');assert.equal(roll(.085,8,true),'epic');assert.equal(roll(.385,0,true),'rare');assert.equal(roll(.385,8,true),'epic');
+g.state.specialization='chaos';assert.equal(roll(.014,0),'epic');assert.equal(roll(.085,0,true),'epic','Chaos bonus affects normal rewards only');assert.match(g.api.luckExplanation(),/separate \+12/);g.state.stats.uncommonFloor=true;assert.match(g.api.luckExplanation(),/Loaded Deck/);
+console.log('PASS: artwork for every upgrade, rendered reward pictures, current Luck/help text, and accurate normal/boss/Chaos rarity explanations.');
 }
 
 
@@ -618,10 +627,10 @@ reloaded.state.wave=20;reloaded.api.startWave();reloaded.api.killEnemy(reloaded.
 reloaded.api.resumeScrapRun();reloaded.api.awardScraps(3);assert.equal(reloaded.api.notebookSnapshot().scraps,21,'endless continues earning');
 reloaded.api.finishScrapRun();reloaded.api.awardScraps(20);assert.equal(reloaded.api.notebookSnapshot().scraps,21,'finished runs cannot earn');
 assert.ok(Number(stored.get('doodleDefenderBestV4'))>=15,'existing best never erased');
-const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:1000,lifetimeScraps:1000,levels:{}}):null,setItem(){}};
+const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:2000,lifetimeScraps:2000,levels:{}}):null,setItem(){}};
 const rich=load(true,{storage:richStore}).sandbox.testGame;
 for(const p of rich.catalog.notebookPerks){for(let rank=0;rank<p.max;rank++)assert.equal(rich.api.buyNotebookPerk(p.id),true);assert.equal(rich.api.buyNotebookPerk(p.id),false,'rank cap')}
-assert.equal(rich.api.notebookSnapshot().scraps,558,'all rank prices charged exactly');
+assert.equal(rich.api.notebookSnapshot().scraps,1308,'all rank prices charged exactly');
 rich.api.resetRun();assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,97,107,9,1.3,2,8]);
 rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.25,'run rock unlock speeds up starter rocks');assert.equal(rich.state.stats.rockDamage,18);
 const dirty=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:-5,lifetimeScraps:'oops',levels:{inkTank:999,health:-2,rocks:1.5,luck:'4'}}):null,setItem(){}}}).sandbox.testGame;
@@ -728,3 +737,71 @@ const pending=[];const race=load(true,{audio:{play(){const r={};pending.push(r);
 race.api.startSplashMusic();race.api.resetRun();pending[0].reject();assert.equal(race.api.musicStatus().blocked,false,'old rejected play cannot block the new chapter');pending[1].reject();assert.equal(race.api.musicStatus().blocked,true);race.api.toggleMusic();pending[2].resolve();assert.equal(race.api.musicStatus().blocked,false);race.api.toggleMusic();pending[2].reject();assert.equal(race.api.musicStatus().blocked,false,'stale rejection cannot undo mute');
 console.log('PASS: five soundtrack loops, explicit splash unlock, chapter transitions/no restarts, muted switching/endless/reset, supplied files, and stale playback-promise protection.');
 }
+
+// Actual resource accounting, slot replacement, run rarity, and campaign saves.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
+ const small=[{x:100,y:100},{x:110,y:100}],large=[{x:100,y:100},{x:1100,y:100}];
+ for(const ink of [0,1,3,5.99]){
+  g.state.stats.ink=ink;const count=g.state.stats.strokeCount;
+  for(let n=0;n<20;n++)g.api.createWall(small);
+  assert.equal(g.state.walls.length,0,'no wall spam at '+ink+' ink');
+  assert.equal(g.state.stats.strokeCount,count);assert.equal(g.state.stats.ink,ink);
+  env.node('game').listeners.pointerdown({clientX:100,clientY:100,pointerId:1});assert.equal(g.state.drawing,false);
+ }
+ g.state.stats.ink=6;g.api.createWall(small);assert.equal(g.state.walls.length,1);assert.equal(g.state.stats.ink,0,'tiny walls cost six');
+ g.state.walls=[];g.state.stats.ink=6;g.api.createWall(large);
+ assert.ok(Math.abs(g.state.walls[0].pts[1].x-100-6/.31)<1e-8,'long segment clips to affordable distance');
+ assert.equal(g.state.stats.ink,0);
+ g.state.walls=[];g.state.stats.firstFree=true;g.state.stats.firstStrokeUsed=false;g.api.createWall(large);
+ assert.equal(g.state.walls.length,1,'Quick Sketch still grants one free stroke');g.api.createWall(small);assert.equal(g.state.walls.length,1);
+ g.state.stats.firstFree=false;g.state.stats.freehandLevel=1;g.state.stats.freehandBank=6;g.api.createWall(small);
+ assert.equal(g.state.walls.length,2);assert.equal(g.state.stats.freehandBank,0);g.api.createWall(small);assert.equal(g.state.walls.length,2,'free bank cannot be reused');
+ g.api.resetRun();const upgrade=name=>g.catalog.upgrades.find(u=>u.name===name);
+ const take=(name,replace)=>g.api.chooseUpgrade(upgrade(name),replace);
+ for(let i=0;i<8;i++)take('Poison Ink');take('Fire Ink');
+ assert.equal(g.api.equippedEffects().length,2);assert.ok(g.state.synergies.has('Plaguefire'));
+ const wave=g.state.wave;take('Frost Ink');assert.equal(g.state.wave,wave,'full slots require explicit replacement');
+ g.api.selectReward(upgrade('Frost Ink'));assert.equal(env.node('effectReplacement').hidden,false);
+ env.node('effectReplacement').children.at(-1).onclick();assert.equal(g.state.inks.poison,8,'cancel preserves high-level ink');
+ take('Frost Ink','Fire Ink');assert.equal(g.state.inks.fire,0);assert.equal(g.state.inks.frost,1);assert.equal(g.state.inks.poison,8);
+ assert.equal(g.state.stacks['Fire Ink'],undefined);assert.equal(g.state.synergies.has('Plaguefire'),false);assert.ok(g.state.synergies.has('Venom Ice'));
+ take('Bigger Ink Tank');assert.equal(g.api.equippedEffects().length,2,'utility does not need a slot');
+ take('Shock Ink','Frost Ink');assert.equal(g.state.stats.wallStun,.16);take('Death Ink','Shock Ink');assert.equal(g.state.stats.wallStun,0);assert.equal(g.state.stats.wallDamage,28);
+ take('Blast Ink','Death Ink');assert.equal(g.state.stats.wallDamage,8,'replacing Death removes only its damage');
+ const counts={owned:0,new:0};for(let i=0;i<1000;i++){const u=g.api.getUpgrade();if(g.state.stacks[u.name])counts.owned++;else counts.new++;}
+ assert.ok(counts.owned>counts.new,'equipped effects are favored');
+ let tickets=0;for(let i=0;i<20000;i++){g.api.resetRewardPlan();if(g.state.legendaryWave){tickets++;assert.ok(g.state.legendaryWave>=1&&g.state.legendaryWave<=19);}}
+ assert.ok(tickets>1800&&tickets<2200,'seeded campaign chance is approximately 10%: '+tickets);
+ g.state.wave=7;g.state.legendaryWave=7;g.state.legendaryOffered=false;g.state.stats.luck=1000;g.state.specialization='chaos';
+ const cards=()=>{env.node('cards').children=[];g.api.rollCards();return env.node('cards').children;};
+ assert.equal(cards().filter(c=>c.className.includes('legendary')).length,1);
+ for(let i=0;i<50;i++)assert.equal(cards().filter(c=>c.className.includes('legendary')).length,0,'rerolls cannot add legendary offers');
+ for(let i=0;i<1000;i++)assert.notEqual(g.api.getUpgrade(true).rarity,'legendary','boss luck cannot bypass run plan');
+}
+{
+ const key='saveStevieNotebookV1',saved=new Map([['doodleDefenderBestV4','25']]);
+ const storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,String(v))};
+ const g=load(true,{storage}).sandbox.testGame;g.api.resetRun();
+ for(let wave=1;wave<=20;wave++){
+  g.state.wave=wave;g.state.betweenWaves=false;g.state.inUpgrade=false;g.api.startWave();g.state.timeLeft=0;
+  if(wave%5===0)g.api.killEnemy(g.api.spawnEnemy(true,100,100));
+  g.api.waveComplete();g.api.waveComplete();
+ }
+ assert.equal(g.api.notebookSnapshot().scraps,61,'full campaign pays all 61 clear/milestone/victory scraps once');
+ assert.equal(g.state.running,false);assert.equal(JSON.parse(saved.get(key)).scraps,61);
+ const reload=load(true,{storage}).sandbox.testGame;assert.equal(reload.api.notebookSnapshot().scraps,61,'campaign bank survives reload');
+ for(let n=0;n<3;n++)assert.equal(reload.api.buyNotebookPerk('tool'),true);
+ reload.api.resetRun();assert.equal(reload.state.tool.name,'Mechanical Pencil');assert.equal(reload.state.tool.slots,2);
+ assert.equal(reload.state.best,25,'prior best-wave save preserved');
+ for(const [rank,name,slots] of [[0,'Pencil',2],[3,'Mechanical Pencil',2],[6,'Simple Pen',3],[10,'Scented Sharpie',4]]){
+  const store={getItem:k=>k===key?JSON.stringify({version:1,scraps:10,levels:{tool:rank,inkTank:2,pencil:1}}):null,setItem(){}};
+  const tool=load(true,{storage:store}).sandbox.testGame;tool.api.resetRun();
+  assert.equal(tool.state.tool.name,name);assert.equal(tool.state.tool.slots,slots);assert.equal(tool.state.stats.maxInk,200);assert.equal(tool.state.stats.wallHp,73);
+  assert.equal(tool.api.buyNotebookPerk('tool'),false,'cannot buy while playing');
+  for(const effect of tool.catalog.upgrades.filter(u=>u.cat==='ink').slice(0,slots))tool.api.chooseUpgrade(effect);
+  assert.equal(tool.api.equippedEffects().length,slots,'all unlocked slots can be filled');
+  tool.api.resetRun();assert.equal(tool.api.equippedEffects().length,0,'new run resets effects but retains tool');assert.equal(tool.state.tool.slots,slots);
+ }
+}
+console.log('PASS: minimum ink and affordable clipping, free-stroke limits, 2–4 tool slots, replacement/cancellation and synergy cleanup, owned-effect weighting, 10% campaign legendary plans, and full-campaign scrap persistence.');

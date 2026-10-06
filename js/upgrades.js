@@ -37,8 +37,47 @@ game.catalog.synergyDefs = [
   {name:'TESLA CAGE', req:()=>game.state.inks.electric&&game.state.stacks['Architect']&&game.state.stacks['Closed Loop'], desc:'Closed intersecting geometry becomes a powered electric circuit.', major:true}
 ];
 
+// Effect slots belong to this run's permanent tool; utility upgrades stay free.
+const effectKeys={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Repulsion Ink':'repulsion','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Void Ink':'void','Chaos Ink':'chaos','Shock Ink':'shock','Death Ink':'death'};
+function equippedEffects(){return game.catalog.upgrades.filter(u=>effectKeys[u.name]&&game.state.stacks[u.name]>0);}
+function resetRewardPlan(){
+  // One reserved offer in 10% of campaigns. Rerolls, Luck and Endless cannot
+  // create extra legendary chances; short runs may end before the offer.
+  game.state.legendaryWave=Math.random()<.1?1+Math.floor(Math.random()*19):0;
+  game.state.legendaryOffered=false;
+}
+function removeEffect(u){
+  const key=effectKeys[u.name],n=game.state.stacks[u.name]||0;
+  if(key==='shock')game.state.stats.wallStun=0;
+  else if(key==='death')game.state.stats.wallDamage-=20*n;
+  else game.state.inks[key]=0;
+  delete game.state.stacks[u.name];
+}
+function renderTool(id){
+  const tool=game.state.tool,effects=equippedEffects(),version=document.documentElement?.dataset?.build;
+  const slots=Array.from({length:tool.slots},(_,i)=>{
+    const u=effects[i];return `<div class="tool-slot">${u?`<img src="${game.api.upgradeArtwork(u)}${version?'?v='+encodeURIComponent(version):''}" alt="" width="32" height="32"><strong>${u.name}</strong><span>Level ${game.state.stacks[u.name]}</span>`:'<strong>Empty slot</strong><span>Choose an effect</span>'}</div>`;
+  }).join('');
+  const synergies=game.catalog.synergyDefs.filter(d=>d.req()).map(d=>d.name).join(' · ');
+  game.dom.$(id).innerHTML=`<div class="tool-heading"><img src="assets/art/tools/${tool.rank>=10?'sharpie':tool.rank>=6?'pen':tool.rank>=3?'mechanical':'pencil'}.svg${version?'?v='+encodeURIComponent(version):''}" alt="" width="42" height="42"><div><strong>${tool.name}</strong><span>Tool rank ${tool.rank} · ${effects.length}/${tool.slots} effects</span></div></div><div class="tool-slots">${slots}</div><p class="tool-synergies">${synergies?'Active synergies: '+synergies:'Combine slotted effects to discover synergies.'}</p>`;
+}
+function selectReward(u){
+  if(effectKeys[u.name]&&!game.state.stacks[u.name]&&equippedEffects().length>=game.state.tool.slots){
+    const box=game.dom.$('effectReplacement');box.innerHTML='';box.hidden=false;
+    const title=document.createElement('p');title.textContent='Equip '+u.name+' at level 1. Which effect should it replace? Its levels will be lost.';box.appendChild(title);
+    for(const old of equippedEffects()){
+      const button=document.createElement('button');button.textContent='Replace '+old.name+' · level '+game.state.stacks[old.name];
+      button.onclick=()=>game.api.chooseUpgrade(u,old.name);box.appendChild(button);
+    }
+    const cancel=document.createElement('button');cancel.textContent='Keep my effects';cancel.className='secondary';cancel.onclick=()=>{box.hidden=true;};box.appendChild(cancel);
+    box.querySelector?.('button')?.focus();return;
+  }
+  game.api.chooseUpgrade(u);
+}
+
 function checkSynergies(){
   const newly=[];
+  for(const def of game.catalog.synergyDefs)if(!def.req())game.state.synergies.delete(def.name);
   for(const def of game.catalog.synergyDefs){
     if(def.req()&&!game.state.synergies.has(def.name)){
       game.state.synergies.add(def.name);
@@ -63,20 +102,13 @@ function openUpgrade(){
 }
 
 function rarityRoll(forceRare=false){
-  if(forceRare){
-    const r=Math.random()*100;
-    if(r<8+game.state.stats.luck*.08)return'legendary';
-    if(r<38+game.state.stats.luck*.12)return'epic';
-    return'rare';
-  }
-  const bonus=game.state.stats.luck+(game.state.specialization==='chaos'?12:0);
-  const r=Math.random()*100;
-  const leg=.8+bonus*.06,epic=6+bonus*.12,rare=18+bonus*.18,unc=33+bonus*.16;
-  if(r<leg)return'legendary';
-  if(r<leg+epic)return'epic';
-  if(r<leg+epic+rare)return'rare';
-  if(game.state.stats.uncommonFloor)return'uncommon';
-  if(r<leg+epic+rare+unc)return'uncommon';
+  const r=Math.random()*100,luck=Math.min(100,Math.max(0,game.state.stats.luck));
+  if(forceRare)return r<38+luck*.12?'epic':'rare';
+  const bonus=luck+(game.state.specialization==='chaos'?12:0);
+  const epic=6+bonus*.12,rare=18+bonus*.18,unc=33+bonus*.16;
+  if(r<epic)return'epic';
+  if(r<epic+rare)return'rare';
+  if(game.state.stats.uncommonFloor||r<epic+rare+unc)return'uncommon';
   return'common';
 }
 
@@ -144,6 +176,7 @@ function upgradeAvailable(u){
 }
 function upgradeWeight(u){
   let w=1;
+  if(effectKeys[u.name])w*=game.state.stacks[u.name]?6:(equippedEffects().length>=game.state.tool.slots?0.2:1);
   if(game.state.specialization==='defense'&&u.cat==='defense')w*=3;
   if(game.state.specialization==='ink'&&u.cat==='ink')w*=3;
   if(game.state.specialization==='chaos'&&(u.rarity==='epic'||u.rarity==='legendary'))w*=1.5;
@@ -161,6 +194,8 @@ function weightedPick(pool){
 }
 
 function getUpgrade(forceRare=false){
+  const owned=equippedEffects().filter(u=>game.api.upgradeAvailable(u)&&(!forceRare||['rare','epic'].includes(u.rarity))&&u.rarity!=='legendary');
+  if(owned.length&&Math.random()<.45)return game.api.weightedPick(owned);
   for(let tries=0;tries<40;tries++){
     const rar=game.api.rarityRoll(forceRare);
     const pool=game.catalog.upgrades.filter(u=>u.rarity===rar&&game.api.upgradeAvailable(u));
@@ -174,7 +209,7 @@ function upgradeArtwork(u){
   return existing[u.name]?'assets/art/'+existing[u.name]+'.png':'assets/art/upgrades/'+u.name.toLowerCase().replaceAll(' ','-')+'.svg';
 }
 function luckExplanation(){
-  let description='Luck improves the rarity of future upgrade rolls, including rerolls and boss rewards. It does not change damage, enemy stats, or how often ink effects trigger.';
+  let description='Luck improves the rarity of future upgrade rolls, including rerolls and boss rewards. It does not change damage, enemy stats, or how often ink effects trigger. Legendary offers are reserved for 10% of campaigns, independent of Luck; rerolls cannot add more.';
   if(game.state.specialization==='chaos')description+=' Chaos adds a separate +12 rarity bonus to normal rewards; boss rewards use your Luck stat.';
   if(game.state.stats.uncommonFloor)description+=' Loaded Deck keeps normal rewards at Uncommon or better.';
   return description;
@@ -182,14 +217,23 @@ function luckExplanation(){
 function rollCards(forceRare=false){
   game.dom.$('rewardLuck').textContent='Luck '+game.state.stats.luck+' · Higher Luck makes rarer upgrades more likely.';
   game.dom.$('rewardLuckDetails').textContent=game.api.luckExplanation();
+  game.api.renderTool('rewardTool');game.dom.$('effectReplacement').hidden=true;
   game.dom.synergyNote.innerHTML='';
   game.dom.cardsEl.innerHTML='';
   const count=forceRare?4:(game.state.stats.extraChoice?4:3);
   game.dom.cardsEl.className='cards '+(count===4?'four':'');
   const picks=[];
-  while(picks.length<count){
+  if(game.state.legendaryWave===game.state.wave&&!game.state.legendaryOffered){
+    const pool=game.catalog.upgrades.filter(u=>u.rarity==='legendary'&&game.api.upgradeAvailable(u));
+    if(pool.length){picks.push(game.api.weightedPick(pool));game.state.legendaryOffered=true;}
+  }
+  let attempts=0;
+  while(picks.length<count&&attempts++<200){
     const u=game.api.getUpgrade(forceRare);
     if(!picks.includes(u))picks.push(u);
+  }
+  if(picks.length<count){
+    for(const u of game.catalog.upgrades.filter(u=>u.rarity!=='legendary'&&(!forceRare||['rare','epic'].includes(u.rarity))&&game.api.upgradeAvailable(u)))if(!picks.includes(u)&&picks.length<count)picks.push(u);
   }
   picks.forEach(u=>{
     const c=document.createElement('div');c.className='ucard '+u.rarity;
@@ -204,7 +248,8 @@ function rollCards(forceRare=false){
       if(n.includes('Electric')&&def.name==='Cryoshock')return game.state.inks.frost>0;
       return false;
     });
-    if(related.length)hint='<div style="margin-top:7px;font-size:10px;font-weight:900;color:#8456c9">Potential synergy nearby…</div>';
+    if(effectKeys[u.name]&&!stack)hint='<div class="slot-hint">'+(equippedEffects().length>=game.state.tool.slots?'Replaces one effect of your choice':'Fills an empty effect slot')+'</div>';
+    if(related.length)hint+='<div style="margin-top:7px;font-size:10px;font-weight:900;color:#8456c9">Potential synergy nearby…</div>';
     const build=document.documentElement?.dataset?.build;
     const icon=`<img class="upgrade-art" src="${game.api.upgradeArtwork(u)}${build?'?v='+encodeURIComponent(build):''}" alt="" width="48" height="48">`;
     c.innerHTML=`${icon}<div class="rarity">${u.rarity}</div><h3>${u.name}</h3><p>${u.desc}</p>${hint}<div class="stack">${oneTimeUpgrades.has(u.name)?'One-time unlock':(stack?'Owned ×'+stack+' → ×'+(stack+1):'New upgrade → ×1')}<br>${game.api.upgradeEffect(u.name,stack+1)}</div>`;
@@ -213,12 +258,17 @@ function rollCards(forceRare=false){
       // A tiny pen stays visible even if a deployment asset cannot be loaded.
       art.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M12 50l7-17L45 7l12 12-27 27Z" fill="#f3d273" stroke="#29343b" stroke-width="3"/><path d="M12 50l10-4-6-6Z" fill="#29343b"/></svg>');
     },{once:true});
-    c.onclick=()=>game.api.chooseUpgrade(u);game.dom.cardsEl.appendChild(c)
+    c.setAttribute?.('role','button');c.setAttribute?.('tabindex','0');c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();game.api.selectReward(u);}};
+    c.onclick=()=>game.api.selectReward(u);game.dom.cardsEl.appendChild(c)
   });
 }
 
-function chooseUpgrade(u){
-  if(!game.api.upgradeAvailable(u))return;
+function chooseUpgrade(u,replaceName){
+  if(!game.catalog.upgrades.includes(u)||!game.api.upgradeAvailable(u))return;
+  if(effectKeys[u.name]&&!game.state.stacks[u.name]&&equippedEffects().length>=game.state.tool.slots){
+    const old=equippedEffects().find(e=>e.name===replaceName);if(!old)return;
+    removeEffect(old);
+  }
   game.state.stacks[u.name]=(game.state.stacks[u.name]||0)+1;u.apply();game.api.checkSynergies();
   game.state.wave++;
   if(game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
@@ -235,7 +285,7 @@ function chooseSpecialization(spec){
   game.api.openUpgrade();
   game.api.setMsg('Specialization: '+({defense:'Fortress',ink:'Ink Alchemist',chaos:'Chaos'}[spec]))
 }
-const api = { upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
+const api = { equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
 Object.assign(game.api, api);
 return api;
 };
