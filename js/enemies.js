@@ -365,14 +365,14 @@ function moveEnemySafely(e,dx,dy){
 function damageStevie(damage,source,impact=game.state.player){
   if(game.state.player.hp<=0)return;
   game.state.player.hp=Math.max(0,game.state.player.hp-damage);
-  if(damage>0)game.api.reactStevieHit();
+  if(damage>0){game.api.reactStevieHit();game.api.refugeImpact(impact)}
   game.state.floaters.push({hitMarker:true,x:impact.x,y:impact.y,r:impact.r||5,type:impact.type||'arrow',t:.9,source,amount:damage});
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }
 function contactStevie(e){
   if(e.hp<=0||!game.state.enemies.includes(e))return false;
   const player=game.state.player;
-  if(game.api.dist(e.x,e.y,player.x,player.y)>=player.r+e.r+2)return false;
+  if(!game.api.touchesRefuge(e))return false;
   if(game.api.shotBlocked(e.x,e.y,player.x,player.y,0))return false;
   if(e.waveBoss)return game.api.bossContact(e);
   const damage=e.dmg*(1-game.state.stats.playerArmor);

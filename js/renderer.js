@@ -7,7 +7,7 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
+const doodleNames=['paper-balls','stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{doodles[name]=image;inkSprites.clear()};
@@ -269,7 +269,7 @@ function resize(){
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
     game.api.movePlaguefire(dx,dy);
-    game.api.moveSupportInkVisuals(dx,dy);game.api.moveBossFields(dx,dy);
+    game.api.moveRefuge(dx,dy);game.api.moveSupportInkVisuals(dx,dy);game.api.moveBossFields(dx,dy);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
   game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;
@@ -475,6 +475,7 @@ function draw(){
     ctx.restore();
   }
 
+  game.api.drawRefuge(doodles['paper-balls'],motionReduced);
   // Stevie
   game.dom.ctx.translate(game.state.player.x,game.state.player.y);
   const reaction=stevieReactionPose();
