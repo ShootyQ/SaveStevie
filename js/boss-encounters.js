@@ -3,6 +3,7 @@ DoodleDefender.systems.bossEncounters=function(game){
 let brains=new WeakMap(),marks=[],clock=0;
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
+function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
 const colors={boss:'#9b3549',stapler:'#ad741f',crayon:'#8751ac',eraser:'#b95176'};
 function bossBrain(e){let b=brains.get(e);if(!b){b={cd:3,cast:null,turn:0,moveCd:0,target:null,enclosed:false,contactCd:0,recovery:0,charge:0,action:null,repeat:0};brains.set(e,b)}return b}
 function resetBossEncounters(){brains=new WeakMap();marks=[];clock=0}
@@ -22,9 +23,9 @@ function execute(e,b,c){
  const furious=e.hp<e.maxHp*.4;b.action={kind:c.kind,age:0};
  if(c.kind==='charge'){
   b.charge=.5;b.repeat=furious&&!c.repeat?1:0;b.chargeX=c.x;b.chargeY=c.y;game.api.animateEnemyAction(e,'slam');
-  if(c.wall&&game.state.walls.includes(c.wall)&&Math.hypot(c.x-e.x,c.y-e.y)<145)game.api.damageWall(c.wall,furious?80:60,c.x,c.y);
+  if(c.wall&&game.state.walls.includes(c.wall)&&Math.hypot(c.x-e.x,c.y-e.y)<145)game.api.damageWall(c.wall,earlyBoss(e)?(furious?150:110):(furious?80:60),c.x,c.y);
  }else if(c.kind==='swipe'){
-  for(const w of [...game.state.walls]){const p=game.api.nearestPointOnWall(e,w);if(p&&Math.hypot(p.x-e.x,p.y-e.y)<130)game.api.damageWall(w,furious?90:65,p.x,p.y)}
+  for(const w of [...game.state.walls]){const p=game.api.nearestPointOnWall(e,w);if(p&&Math.hypot(p.x-e.x,p.y-e.y)<130)game.api.damageWall(w,earlyBoss(e)?(furious?140:100):(furious?90:65),p.x,p.y)}
   game.api.animateEnemyAction(e,'erase',{x:c.x,y:c.y});b.recovery=1.5;
  }else if(c.kind==='clean'){
   e.burn=0;e.poison=0;b.recovery=2;game.api.animateVoidHit(e);volley(e,c,furious?5:3,'crumb');
@@ -32,7 +33,7 @@ function execute(e,b,c){
   const kinds=['red','blue','green'];for(let i=0;i<(furious?2:1)&&marks.length<8;i++)marks.push({x:c.x+(i?45:0),y:c.y,r:42,age:0,life:5,kind:kinds[(b.turn+i)%3],owner:e,hatched:false});game.api.animateEnemyAction(e,'summon');
  }else if(c.kind==='summon')summon(e,'mini',2);
  else volley(e,c,e.type==='stapler'?(furious?5:3):3,e.type==='stapler'?'staple':e.type==='crayon'?'crayon':'ink');
- b.cd=furious?3.2:4.5;b.turn++;b.cast=null;e.bossWindup=0;
+ b.cd=earlyBoss(e)?(furious?2.5:3.5):(furious?3.2:4.5);b.turn++;b.cast=null;e.bossWindup=0;
 }
 function updateBossEncounter(e,dt){
  const b=bossBrain(e);if(b.action){b.action.age+=dt;if(b.action.age>.65)b.action=null}b.contactCd=Math.max(0,b.contactCd-dt);b.recovery=Math.max(0,b.recovery-dt);
@@ -42,10 +43,11 @@ function updateBossEncounter(e,dt){
  if(b.charge>0){b.charge=Math.max(0,b.charge-dt);const dx=b.chargeX-e.x,dy=b.chargeY-e.y,m=Math.hypot(dx,dy)||1;if(!game.api.moveEnemySafely(e,dx/m*160*dt,dy/m*160*dt)){b.charge=0;b.recovery=1.2;b.repeat=0}
   if(b.charge<=0&&b.repeat){b.repeat=0;b.cast={kind:'charge',x:game.state.player.x,y:game.state.player.y,left:1.2,repeat:true};e.bossWindup=1.2}return}
  if(b.recovery>0)return;
+ if(earlyBoss(e)&&b.enclosed)b.cd=Math.min(b.cd,1.8);
  b.cd-=dt;if(b.cd>0)return;
  const wall=nearestBossWall(e),player=game.state.player;
  let kind=e.type==='stapler'?(b.turn%2===0?'charge':'volley'):e.type==='crayon'?(b.turn%4===3?'volley':'paint'):e.type==='eraser'?(wall?'swipe':'clean'):(b.turn%3===2?'summon':'volley');
- if(b.enclosed&&wall&&e.type!=='stapler'&&e.type!=='eraser'&&b.turn%2===1)kind='swipe';
+ if(b.enclosed&&wall&&e.type!=='stapler'&&e.type!=='eraser'&&(earlyBoss(e)||b.turn%2===1))kind='swipe';
  const target=(kind==='swipe'||kind==='charge')&&wall?wall:player;
  b.cast={kind,x:kind==='swipe'?e.x:target.x,y:kind==='swipe'?e.y:target.y,wall:target.wall,left:1.2};e.bossWindup=1.2;
 }

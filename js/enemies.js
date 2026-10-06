@@ -105,8 +105,9 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(forceBoss)type=game.api.bossTypeForWave();
   const scale=game.api.enemyHpScale()*game.state.stats.enemyScale;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
+  const earlyBoss=forceBoss&&(game.state.wave===5||game.state.wave===10),bossHp=earlyBoss?1.8:1,bossSpeed=earlyBoss?2:1;
   const enemy={
-    x:px,y:py,type,r:d.r,hp:baseHp*scale,maxHp:baseHp*scale,speed:d.speed*(1+game.state.wave*.006),
+    x:px,y:py,type,r:d.r,hp:baseHp*scale*bossHp,maxHp:baseHp*scale*bossHp,speed:d.speed*(1+game.state.wave*.006)*bossSpeed,
     dmg:d.dmg,color:d.color,attackCd:0,shootCd:game.api.rand(1.3,2.1),stun:0,burn:0,burnDps:0,
     poison:0,poisonDps:0,freeze:0,chainCd:0,eraseCd:1.7,gravitySlow:0,thermalCd:0,charged:0,
     bounces:type==='bouncer'?3:0,bounceTime:0,bounceVX:0,bounceVY:0,
