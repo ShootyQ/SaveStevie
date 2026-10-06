@@ -18,17 +18,19 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   for(const [wave,id] of [[1,'margin-mischief'],[6,'pop-quiz-panic'],[11,'crayon-catastrophe'],[16,'final-draft'],[21,'final-draft']]){
    await page.evaluate(wave=>{const g=testGame;g.api.resetRun();g.state.wave=wave;g.api.startWave();g.api.updateUI();const p=g.state.player;for(const [i,type]of ['grunt','tank','sniper','wardling'].entries()){const e=g.api.spawnEnemy(false,p.x-110+i*70,p.y-90,type);e.hp=e.maxHp*.6;e.burn=i%2?1:0;e.poison=i%2?0:1}g.api.draw()},wave);
    const background=await page.locator('#game').evaluate(c=>({image:getComputedStyle(c).backgroundImage,size:getComputedStyle(c).backgroundSize,chapter:c.dataset.chapter}));
-   assert.equal(background.chapter,id);assert.ok(background.image.includes(id+'.png?v='));assert.ok(background.size.startsWith('cover'));
+   assert.equal(background.chapter,id);assert.ok(background.image.includes(id+'.png?v='));assert.ok(background.size.startsWith('0px 0px'));
    await page.evaluate(()=>new Promise((resolve,reject)=>{const url=document.querySelector('#game').style.backgroundImage.match(/url\("?([^"\)]+)"?\)/)[1],i=new Image;i.onload=()=>resolve();i.onerror=()=>reject(Error('Background did not load: '+url));i.src=url}));
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'background does not expand phone layout');
+   const paper=await page.locator('#chapterPaper').evaluate(el=>{const c=getComputedStyle(el),r=el.getBoundingClientRect(),canvas=document.querySelector('#game').getBoundingClientRect();return {slice:c.borderImageSlice,width:c.borderImageWidth,source:c.borderImageSource,left:r.left,right:r.right,top:r.top,bottom:r.bottom,canvas:{left:canvas.left,right:canvas.right,top:canvas.top,bottom:canvas.bottom}}});
+   assert.equal(paper.slice,'18% fill');assert.match(paper.source,new RegExp(id+'\\.png'));assert.equal(paper.left,paper.canvas.left);assert.equal(paper.right,paper.canvas.right);assert.equal(paper.bottom,paper.canvas.bottom);assert.equal(paper.top-paper.canvas.top,58);
    if(wave<=20)await page.screenshot({path:'/tmp/chapter-'+id+'-'+viewport.width+'.png'});
    await page.evaluate(()=>testGame.api.waveComplete());assert.ok((await page.textContent('#waveChapter')).includes(await page.evaluate(()=>testGame.api.chapterForWave().name)));
   }
   await page.evaluate(()=>testGame.api.resetRun());assert.equal(await page.locator('#game').getAttribute('data-chapter'),'margin-mischief');
   // Failed image leaves the grid/paper fallback and playable canvas intact.
   await page.route('**/assets/art/backgrounds/pop-quiz-panic.png*',r=>r.fulfill({status:404,body:''}));
-  await page.evaluate(()=>{testGame.state.wave=6;testGame.api.updateUI();document.querySelector('#game').style.backgroundImage=document.querySelector('#game').style.backgroundImage.replace('.png?v=','.png?failed=1&v=');testGame.api.draw()});
-  assert.equal(await page.locator('#game').evaluate(c=>getComputedStyle(c).backgroundColor!=='rgba(0, 0, 0, 0)'),true);
+  await page.evaluate(()=>{testGame.state.wave=6;testGame.api.updateUI();document.querySelector('#game').style.backgroundImage=document.querySelector('#game').style.backgroundImage.replace('.png?v=','.png?failed=1&v=');const paper=document.querySelector('#chapterPaper');paper.style.borderImageSource=paper.style.borderImageSource.replace('.png?v=','.png?failed=1&v=');testGame.api.draw()});
+  assert.equal(await page.locator('#game').evaluate(c=>getComputedStyle(c.parentElement).backgroundColor!=='rgba(0, 0, 0, 0)'),true);
   assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' chapter backgrounds load/version, wave switching/endless/reset, readable live playfield, clear-screen labels, and missing-art fallback');await page.close();
  }
  await browser.close();

@@ -364,7 +364,7 @@ and Detention: The Final Draft (16–20). Chapter metadata is centralized in
 returns to chapter 1; Endless retains chapter 4.
 
 Backgrounds use a cached CSS update when the chapter changes, outside canvas
-rendering and combat state. Images cover the arena with a centered crop for
+rendering and combat state. Images use anchored nine-slice corners and a quiet stretched middle for
 portrait/landscape devices, and keep a quiet pale center for readable enemies
 and ink effects. Paper/grid layers remain underneath if an image cannot load.
 Asset URLs use the deployment build version. The background system itself has no gameplay, reward,
@@ -807,3 +807,8 @@ graphite stroke reveal offsets share a single progress value. Each 18-second
 cycle draws for 3.6s after a 1.2s lead-in. The existing scribble mixer plays quiet
 grains only during drawing, after audio gesture unlock, and respects effects
 volume, hidden tabs, open dialogs and reduced motion. Combat audio stays gated.
+
+Chapter backgrounds use a CSS nine-slice layer (`#chapterPaper`) behind the
+transparent combat canvas. The original 18% corner slices scale to 80–112px, with
+the edges and quiet middle filling the remaining space. The layer starts below
+the HUD; gameplay dimensions and input coordinates remain unchanged.
