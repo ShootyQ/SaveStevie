@@ -1,7 +1,7 @@
 /* upgrades: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.upgrades = function createUpgradesSystem(game) {
 game.catalog.synergyDefs = [
-  {name:'Plaguefire', req:()=>game.state.inks.fire&&game.state.inks.poison, desc:'Burning poisoned enemies spread infection and leave toxic fire bursts.'},
+  {name:'Plaguefire', req:()=>game.state.inks.fire&&game.state.inks.poison, desc:'Defeated burning, poisoned enemies leave growing ten-second Plaguefire pools that scorch holes in the paper.'},
   {name:'Cryoshock', req:()=>game.state.inks.frost&&game.state.inks.electric, desc:'Frozen enemies conduct boosted chain lightning.'},
   {name:'Singularity Ink', req:()=>game.state.inks.gravity&&game.state.inks.blast, desc:'Broken walls pull enemies inward before exploding.'},
   {name:'Black Ice', req:()=>game.state.inks.repulsion&&game.state.inks.frost, desc:'Frozen enemies are shoved harder and stay slowed.'},

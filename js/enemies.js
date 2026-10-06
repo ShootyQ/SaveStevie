@@ -137,9 +137,7 @@ function killEnemy(e){
     game.api.animateEnemySplit(e);
     game.api.animateSplitChild(game.api.spawnEnemy(false,e.x+6,e.y+3,'mini'));game.api.animateSplitChild(game.api.spawnEnemy(false,e.x-6,e.y-3,'mini'));
   }
-  if(game.state.synergies.has('Plaguefire')&&e.burn>0){
-    for(const n of game.state.enemies)if(n!==e&&game.api.dist(n.x,n.y,e.x,e.y)<75)n.poison=Math.min(6,n.poison+2)
-  }
+  game.api.dropPlaguefire(e);
   game.state.enemies=game.state.enemies.filter(x=>x!==e);
 }
 

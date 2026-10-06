@@ -947,3 +947,37 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  assert.ok(cards.every(c=>!c.className.includes('epic')));
  console.log('PASS: all four tiers for every upgrade, multi-level/common equivalence, read-only full previews, one-wave advancement, replacement/cancellation, capped gains and distinct offers.');
 }
+
+// Plaguefire replaces infection hopping with bounded ground hazards and scars.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=1000;
+ const equip=name=>g.api.chooseUpgrade(g.catalog.upgrades.find(u=>u.name===name));
+ equip('Fire Ink');equip('Poison Ink');
+ const source=g.api.spawnEnemy(false,150,150,'grunt');source.burn=2;source.poison=2;source.hp=0;g.api.killEnemy(source);
+ let snap=g.api.plaguefireSnapshot();assert.equal(snap.patches.length,1,'defeated burning poisoned enemy drops a patch');assert.equal(snap.patches[0].r,9);
+ const target=g.api.spawnEnemy(false,150,150,'tank'),outside=g.api.spawnEnemy(false,230,150,'tank');
+ const hp=target.hp,outsideHp=outside.hp,playerHp=g.state.player.hp,wall={pts:[{x:130,y:150},{x:170,y:150}],hp:100,maxHp:100};g.state.walls=[wall];
+ g.api.updatePlaguefire(1);assert.equal(target.hp,hp-10.5,'one-second Fire 6 + Poison 4.5 damage');assert.equal(outside.hp,outsideHp);assert.equal(g.state.player.hp,playerHp);assert.equal(wall.hp,100,'hazards never hurt Stevie or walls');
+ assert.equal(g.api.plaguefireSnapshot().patches[0].r,11.9);
+ const burning=g.api.spawnEnemy(false,180,150,'tank');burning.burn=2;burning.poison=2;g.api.applySynergies(burning,1);assert.equal(target.poison,0,'no old infection hopping');
+ g.api.dropPlaguefire(source);const before=target.hp;g.api.updatePlaguefire(1);assert.equal(target.hp,before-10.5,'overlapping patches do not stack');
+ target.immunity='fire';const immuneHp=target.hp;g.api.updatePlaguefire(.5);assert.equal(target.hp,immuneHp-2.25,'fire immunity still permits poison damage');
+ target.immunity='poison';const poisonImmuneHp=target.hp;g.api.updatePlaguefire(.5);assert.equal(target.hp,poisonImmuneHp-3);
+ for(const flag of ['paused','inUpgrade','betweenWaves','awaitingSpec']){g.state[flag]=true;const frozen=JSON.stringify(g.api.plaguefireSnapshot());g.api.updatePlaguefire(1);assert.equal(JSON.stringify(g.api.plaguefireSnapshot()),frozen,flag+' freezes lifetime');g.state[flag]=false;}
+ g.state.running=false;const stopped=JSON.stringify(g.api.plaguefireSnapshot());g.api.updatePlaguefire(1);assert.equal(JSON.stringify(g.api.plaguefireSnapshot()),stopped);g.state.running=true;
+ const unchanged=JSON.stringify(g.api.plaguefireSnapshot()),combat=JSON.stringify(g.state);env.calls.length=0;g.api.drawPlaguefire();g.api.drawPlaguefire();assert.equal(JSON.stringify(g.api.plaguefireSnapshot()),unchanged);assert.equal(JSON.stringify(g.state),combat,'drawing never changes combat');for(const call of env.calls)for(const n of call.slice(1))if(typeof n==='number')assert.ok(Number.isFinite(n));
+ g.api.movePlaguefire(20,-10);assert.equal(g.api.plaguefireSnapshot().patches[0].x,170);assert.equal(g.api.plaguefireSnapshot().patches[0].y,140);
+ // The first patch has three seconds elapsed; expire exactly at ten seconds.
+ g.state.enemies=[];g.api.updatePlaguefire(6.9);assert.equal(g.api.plaguefireSnapshot().scars.length,0);g.api.updatePlaguefire(.1);assert.equal(g.api.plaguefireSnapshot().scars.length,1);assert.equal(g.api.plaguefireSnapshot().scars[0].r,38);
+ g.api.updatePlaguefire(20);assert.equal(g.api.plaguefireSnapshot().patches.length,0);assert.equal(g.api.plaguefireSnapshot().scars.length,2,'burnout retains paper holes');
+ env.calls.length=0;g.api.drawPlaguefire();for(const call of env.calls)for(const n of call.slice(1))if(typeof n==='number')assert.ok(Number.isFinite(n));
+ for(let batch=0;batch<4;batch++){for(let i=0;i<30;i++)g.api.dropPlaguefire({...source,x:50+i,y:70});assert.equal(g.api.plaguefireSnapshot().patches.length,12);g.api.updatePlaguefire(10);}
+ assert.equal(g.api.plaguefireSnapshot().scars.length,24,'scar memory is bounded');
+ g.api.startWave();assert.equal(g.api.plaguefireSnapshot().scars.length,0,'next wave is fresh paper');assert.equal(g.api.plaguefireSnapshot().patches.length,0);
+ g.api.dropPlaguefire({...source,poison:0});g.api.dropPlaguefire({...source,burn:0});g.api.dropPlaguefire({...source,immunity:'fire'});assert.equal(g.api.plaguefireSnapshot().patches.length,0,'both actual statuses required');
+ g.state.synergies.delete('Plaguefire');g.api.dropPlaguefire(source);assert.equal(g.api.plaguefireSnapshot().patches.length,0,'synergy required');
+ // Real simulation handles patch kills/rewards once through the existing path.
+ g.state.synergies.add('Plaguefire');g.api.dropPlaguefire(source);const victim=g.api.spawnEnemy(false,150,150,'grunt');victim.hp=.1;victim.speed=0;const kills=g.state.kills;
+ g.api.update(.033);assert.equal(g.state.enemies.includes(victim),false);assert.equal(g.state.kills,kills+1);g.api.update(.033);assert.equal(g.state.kills,kills+1);
+ console.log('PASS: Plaguefire death drops, ten-second growth/burnout, damage/immunity/overlap, no infection hopping, pause/pure rendering, movement, bounded pools/scars, fresh waves and real kill rewards.');
+}

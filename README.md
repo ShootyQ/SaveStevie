@@ -577,3 +577,30 @@ are initial tuning values; campaign difficulty still needs human playtesting.
 
 Stevie’s notes use locally bundled Patrick Hand, licensed under the SIL Open
 Font License in `assets/fonts/OFL-PatrickHand.txt`; no remote font service is used.
+
+## Plaguefire pools and scorched paper
+
+Fire + Poison now creates Plaguefire ground pools when a defeated enemy is
+both burning and poisoned. This replaces the old nearby-enemy poison spread;
+ordinary Fire and Poison keep working. Fire- or Poison-immune enemies cannot
+seed pools. Contact removal still grants no kill effects.
+
+Each pool grows from a 9px to 38px radius over ten active-combat seconds. Its
+per-second damage is `4 + 2 × Fire level` fire plus `3 + 1.5 × Poison level`
+poison, captured when dropped; each type respects enemy immunity. Overlapping
+pools use the strongest damage per type rather than stacking. Pools hurt
+monsters, including bosses, but do not hurt Stevie or walls. Up to 12 live
+pools can exist; further drops are ignored until a pool burns out.
+
+Procedural pencil outlines, green bubbles and orange/green flames animate the
+pool. During its final 0.8 seconds it reveals a ragged, dark hole with charred
+paper rims and exposed fibers. Holes are decorative, remain on the current
+page (up to 24), and reset with the next wave or new run. Effects translate
+with the arena on resize. Pause and information/reward screens freeze combat
+and animation; reduced motion removes bubble/flame movement while retaining
+accurate growth and burnout. No new dependencies or external artwork are used.
+
+Run `node tests/validate.cjs` and, with Playwright/Chromium,
+`node tests/browser-plaguefire.cjs [packaged-site-directory]`. The browser suite
+checks real death triggers, changing canvas pixels, pause, live reduced-motion
+changes, burnout, resizing and fresh-wave reset at desktop and phone sizes.

@@ -84,6 +84,8 @@ function update(dt){
     }
   }
 
+  game.api.updatePlaguefire(dt);
+
   for(const e of [...game.state.enemies]){
     if(game.state.player.hp<=0)break;
     if(e.hp<=0){game.api.killEnemy(e);continue}

@@ -268,6 +268,7 @@ function resize(){
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
+    game.api.movePlaguefire(dx,dy);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
   game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;
@@ -403,6 +404,8 @@ function draw(){
   game.dom.ctx.clearRect(0,0,game.state.W,game.state.H);game.dom.ctx.save();
   game.dom.ctx.strokeStyle='rgba(212,76,76,.35)';game.dom.ctx.lineWidth=2;
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
+
+  game.api.drawPlaguefire();
 
   for(const w of game.state.walls){
     const hpRatio=game.api.clamp(w.hp/w.maxHp,0,1);
