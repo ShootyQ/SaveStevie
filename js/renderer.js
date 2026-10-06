@@ -13,10 +13,27 @@ if(typeof Image!=='undefined')for(const name of doodleNames){
   image.onload=()=>{doodles[name]=image;inkSprites.clear()};
   image.src='assets/art/'+name+'.png'+(artworkVersion?'?v='+artworkVersion:'');
 }
+// One SVG coordinate system drives both the visible stroke and its physical nib.
+const menuPath=game.dom.$('splashInkPath'),menuPencil=document.querySelector?.('.splash-pencil');
+const menuStrokes=document.querySelectorAll('.splash-ink-stroke');
+let menuAge=0,menuLength=0;
+function resetMenuPencil(){menuAge=0}
+function updateMenuPencil(dt){
+ if(!menuPath?.getTotalLength||!menuPencil)return;
+ const visible=!game.state.running&&!game.api.infoOpen()&&!document.hidden&&game.dom.startOverlay.style.display!=='none';
+ if(!visible){game.api.stopSoundEffects('scribble');return}
+ if(!menuLength)menuLength=menuPath.getTotalLength();
+ menuAge+=dt;
+ const phase=menuAge%18,progress=motionReduced?1:Math.max(0,Math.min(1,(phase-1.2)/3.6));
+ const p=menuPath.getPointAtLength(menuLength*progress);
+ menuPencil.setAttribute('transform','translate('+p.x+' '+p.y+')');
+ for(const stroke of menuStrokes){stroke.style.strokeDasharray=menuLength+' '+menuLength;stroke.style.strokeDashoffset=String(menuLength*(1-progress))}
+ if(!motionReduced&&phase>1.2&&phase<4.8)game.api.playMenuScribble();else game.api.stopSoundEffects('scribble');
+}
 // Presentation only: no combat RNG, attack delays, or collider changes.
 const reducedMotion=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let motionReduced=!!reducedMotion?.matches;
-reducedMotion?.addEventListener?.('change',event=>{motionReduced=event.matches;resetEnemyAnimations()});
+reducedMotion?.addEventListener?.('change',event=>{motionReduced=event.matches;resetEnemyAnimations();updateMenuPencil(0)});
 let idleTime=0,throwTime=Infinity,throwDuration=.38,throwFacing=1,flinchAge=1,cheerAge=Infinity;
 const wavePortrait=document.getElementById('waveStevie'),waveCtx=wavePortrait?.getContext('2d');
 function resetStevieAnimation(){idleTime=0;throwTime=Infinity;throwFacing=1;flinchAge=1;cheerAge=Infinity}
@@ -657,7 +674,8 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
+updateMenuPencil(0);
 return api;
 };

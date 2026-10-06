@@ -801,3 +801,9 @@ to main menu. Submenus opened from Pause return there on Close/Escape. Leaving
 requires confirmation, saves already-earned scraps without an extra quit reward,
 and preserves permanent ranks and best-wave records. The cover menu and bottom
 pencil tray share paper styling; phone controls retain at least 44px height.
+
+The main-menu pencil uses measured SVG path lengths: the nib transform and both
+graphite stroke reveal offsets share a single progress value. Each 18-second
+cycle draws for 3.6s after a 1.2s lead-in. The existing scribble mixer plays quiet
+grains only during drawing, after audio gesture unlock, and respects effects
+volume, hidden tabs, open dialogs and reduced motion. Combat audio stays gated.

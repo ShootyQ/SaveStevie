@@ -26,8 +26,10 @@ function unlockSoundEffects(){
   return Promise.resolve(resume).then(()=>loading).catch(()=>false);
  }catch{return Promise.resolve(false)}
 }
-function playSound(kind){
- const g=groups[kind];if(!g||!combatActive()||!context||context.state!=='running'||game.api.audioSettings().effectsVolume===0)return false;
+function menuActive(){return !game.state.running&&!game.api.infoOpen?.()&&!document.hidden&&game.dom.startOverlay.style.display!=='none'}
+function playMenuScribble(){return playSound('scribble',true)}
+function playSound(kind,menu=false){
+ const g=groups[kind];if(!g||!(menu&&kind==='scribble'?menuActive():combatActive())||!context||context.state!=='running'||game.api.audioSettings().effectsVolume===0)return false;
  const now=context.currentTime;
  if(now-(last[kind]??-Infinity)<g.gap){dropped++;return false}
  // Skip unloaded samples rather than queueing delayed combat noises.
@@ -36,14 +38,14 @@ function playSound(kind){
  if(voices.length>=maxVoices){const candidate=voices.find(v=>groups[v.kind].priority<g.priority);if(!candidate){dropped++;return false}stopVoice(candidate)}
  const name=available[(variants[kind]||0)%available.length];variants[kind]=(variants[kind]||0)+1;
  try{const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffers.get(name);if(kind==='rock'&&source.playbackRate)source.playbackRate.value=(variants[kind]%2)?.97:1.03;const duration=kind==='scribble'?Math.min(.28,source.buffer.duration):source.buffer.duration;
-  gain.gain.setValueAtTime(g.gain,now);gain.gain.setValueAtTime(g.gain,now+Math.max(0,duration-.025));gain.gain.linearRampToValueAtTime(0,now+duration);source.connect(gain);gain.connect(master);
+  const level=g.gain*(menu?.55:1);gain.gain.setValueAtTime(level,now);gain.gain.setValueAtTime(level,now+Math.max(0,duration-.025));gain.gain.linearRampToValueAtTime(0,now+duration);source.connect(gain);gain.connect(master);
   const voice={source,gain,kind,name,stopped:false};voices.push(voice);source.onended=()=>{voice.stopped=true;source.disconnect?.();gain.disconnect?.();voices=voices.filter(v=>v!==voice)};source.start(0,0,duration);last[kind]=now;played++;return true;
  }catch{stopSoundEffects(kind);return false}
 }
-function syncSoundEffects(){if(!combatActive())stopSoundEffects()}
+function syncSoundEffects(){if(!combatActive()){for(const v of [...voices])if(v.kind!=='scribble'||!menuActive())stopVoice(v)}}
 function resetSoundEffects(){stopSoundEffects();last={}}
 function soundEffectsSnapshot(){return {supported:!!(window.AudioContext||window.webkitAudioContext),unlocked:context?.state==='running',ready,failed,played,dropped,maxVoices,voices:voices.map(v=>({kind:v.kind,name:v.name})),volume:game.api.audioSettings().effectsVolume}}
 document.addEventListener?.('pointerdown',unlockSoundEffects,{capture:true});document.addEventListener?.('keydown',unlockSoundEffects,{capture:true});
 document.addEventListener?.('visibilitychange',()=>{if(document.hidden){stopSoundEffects();context?.suspend?.()?.catch?.(()=>{})}else if(context)unlockSoundEffects()});
-const api={unlockSoundEffects,playSound,stopSoundEffects,applyEffectsVolume,syncSoundEffects,resetSoundEffects,soundEffectsSnapshot};Object.assign(game.api,api);return api;
+const api={unlockSoundEffects,playMenuScribble,playSound,stopSoundEffects,applyEffectsVolume,syncSoundEffects,resetSoundEffects,soundEffectsSnapshot};Object.assign(game.api,api);return api;
 };
