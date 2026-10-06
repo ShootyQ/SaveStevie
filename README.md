@@ -530,3 +530,19 @@ local PNG/SVG references in CSS as well as HTML resources, so new interface art
 refreshes together with the deployment. The game still needs no dependencies.
 Run `node tests/validate.cjs`; the existing optional `browser-splash.cjs`,
 `browser-notebook.cjs`, and `browser-tools.cjs` suites check the affected screens.
+
+The Options page saves music and future sound-effects volumes independently of
+Notebook progress (`saveStevieAudioV1`). Music volume updates during playback;
+sound-effects volume is a saved preference until effects are added. Options also
+exposes monster introductions and the changelog. Stats shows saved best-wave and
+scrap records alongside the current run; it does not invent lifetime run history.
+Both screens pause gameplay and restore the previous pause state when closed.
+
+Rewards now show the drawing tool with equipped sockets and synergies. Each card
+compares the current value with its next-pick value, including diminishing ink
+regeneration bonuses. Inspect tool opens the full build without consuming a
+reward. The original two-socket pencil is in `assets/art/tools/slot-pencil.png`.
+The splash's SVG pencil anchors its actual graphite point to the ink path.
+`node tests/browser-options-workbench.cjs` checks the new screens and saved
+preferences at desktop and three phone viewports; pass a packaged site directory
+as the optional argument to check deployment output.

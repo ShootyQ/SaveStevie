@@ -15,12 +15,11 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   });
   await page.goto('http://127.0.0.1:8001/');
   await page.waitForFunction(()=>Array.from(document.querySelectorAll('.splash-art img')).every(i=>i.complete&&i.naturalWidth),null,{polling:50});
-  await page.waitForFunction(()=>Array.from(document.querySelectorAll('.splash-art svg image')).every(i=>performance.getEntriesByName(new URL(i.href.baseVal,document.baseURI).href).length>0),null,{polling:50});
   // The anchored pencil tip must meet the visible end of the ink on all screen sizes.
   for(const time of [0,480,900,1600,2500,3240,5700]){
    const error=await page.evaluate(time=>{
     document.querySelectorAll('.splash-art *').forEach(e=>e.getAnimations().forEach(a=>{a.pause();a.currentTime=time}));
-    const path=document.querySelector('#splashInkPath'),pencil=document.querySelector('.splash-pencil');
+    const path=document.querySelector('#splashInkPath'),pencil=document.querySelector('#splashPencilNib');
     const progress=1-parseFloat(getComputedStyle(path).strokeDashoffset);
     const end=path.getPointAtLength(path.getTotalLength()*progress).matrixTransform(path.getScreenCTM());
     const tip=new DOMPoint(0,0).matrixTransform(pencil.getScreenCTM());

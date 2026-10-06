@@ -11,7 +11,9 @@ const tracks=game.catalog.musicTracks={
 let muted=false,started=false,blocked=false,track='splash',playAttempt=0;
 try{muted=localStorage.getItem(key)==='yes'}catch{}
 const supported=typeof audio.play==='function';
-audio.loop=true;audio.volume=.35;
+audio.loop=true;
+function applyMusicVolume(){audio.volume=game.api.audioSettings().musicVolume;}
+applyMusicVolume();
 function updateMusicButton(){
   button.disabled=introButton.disabled=!supported;
   button.textContent=muted?'♫̸':'♫';
@@ -52,5 +54,5 @@ button.onclick=toggleMusic;introButton.onclick=startSplashMusic;
 document.addEventListener?.('visibilitychange',()=>{if(document.hidden){playAttempt++;audio.pause?.()}else playMusic()});
 audio.addEventListener?.('error',()=>{blocked=true;updateMusicButton()});
 updateMusicButton();
-const api={selectMusicTrack,startSplashMusic,startMusic,toggleMusic,musicStatus};Object.assign(game.api,api);return api;
+const api={applyMusicVolume,selectMusicTrack,startSplashMusic,startMusic,toggleMusic,musicStatus};Object.assign(game.api,api);return api;
 };

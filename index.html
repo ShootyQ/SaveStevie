@@ -53,7 +53,13 @@
           <svg viewBox="0 0 440 250" xmlns="http://www.w3.org/2000/svg">
             <path id="splashInkPath" class="splash-ink-stroke" pathLength="1" d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#26333c" stroke-width="10" stroke-linecap="round"/>
             <path class="splash-ink-stroke" pathLength="1" d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#68747b" stroke-width="2" stroke-linecap="round"/>
-          <g class="splash-pencil"><image href="assets/art/pencil.png" x="-6" y="-53" width="60" height="56.7"/></g>
+          <g class="splash-pencil" stroke="#26333c" stroke-width="1.8" stroke-linejoin="round">
+            <path d="M0 0 6-17 42-53 55-40 19-4Z" fill="#edc958"/>
+            <path d="m42-53 5-5 13 13-5 5Z" fill="#e69a93"/>
+            <path d="M0 0 6-17 19-4Z" fill="#e3c29a"/>
+            <path id="splashPencilNib" d="M0 0 2-6 6-2Z" fill="#26333c" stroke="none"/>
+            <path d="m10-15 35-35m-29 41 35-35" fill="none" stroke="#b88b27"/>
+          </g>
           </svg>
           <span class="splash-stevie"><img class="splash-stevie-frames" src="assets/art/stevie-animations.png" alt="" width="512" height="272"></span>
           <span class="splash-rock"></span>
@@ -72,18 +78,19 @@
         </div>
         <button id="startBtn">Let's save Stevie <span aria-hidden="true">→</span></button>
         <button class="secondary notebook-entry" id="splashNotebookBtn">Back of the Notebook · <span id="splashScraps">0</span> scraps</button>
-        <button class="secondary" id="splashMusicBtn">♫ Play intro music</button>
+        <div class="splash-links"><button class="secondary" id="splashMusicBtn">♫ Play intro music</button><button class="secondary" id="splashOptionsBtn">Options</button><button class="secondary" id="splashStatsBtn">Stats</button></div>
         <div class="splash-footer">Bosses every 5 waves · A fresh page every wave</div>
       </div>
     </div>
 
     <div class="overlay" id="upgradeOverlay" style="display:none">
-      <div class="cardbox">
-        <h2>Choose an Upgrade</h2>
+      <div class="cardbox reward-workbench">
+        <div class="reward-heading"><div><span class="section-kicker">BETWEEN THE PAGES</span><h2 id="rewardTitle">Upgrade your pencil</h2></div><button class="secondary" id="inspectToolBtn">Inspect tool</button></div>
         <p id="rewardText">Pick one. Build weird.</p>
+        <section id="rewardTool" class="tool-panel" aria-label="Your drawing tool"></section>
+        <p class="reward-help">Pick one card. Equipped effects gain a level; a new effect fills a slot or replaces one you choose. Tank, health, and other utility upgrades stay outside your slots.</p>
         <p id="rewardLuck" class="reward-luck"></p>
         <details class="luck-guide"><summary>What does Luck do?</summary><p id="rewardLuckDetails"></p><p>Equipped effects are favored so you can grow your build. Luck improves other rarity rolls; your specialization and Collector weight the choices. Legendary offers have a separate one-in-ten campaign chance.</p></details>
-        <section id="rewardTool" class="tool-panel" aria-label="Your drawing tool"></section>
         <div id="effectReplacement" class="effect-replacement" hidden aria-live="polite"></div>
         <div class="cards" id="cards"></div>
         <div id="synergyNote"></div>
@@ -164,9 +171,9 @@
   <div class="bottom">
     <button class="secondary" id="clearBtn" title="Erase all walls">Erase</button>
 
-    <button class="secondary" id="buildBtn">Build</button>
+    <button class="secondary" id="buildBtn">Tool</button>
     <button class="secondary" id="compendiumBtn">Monsters</button>
-    <button class="secondary" id="changelogBtn">Updates</button>
+    <button class="secondary" id="optionsBtn">Options</button>
     <button class="secondary" id="fullscreenBtn" title="Toggle fullscreen">Screen</button>
     <button id="pauseBtn">Pause</button>
     <button class="secondary" id="musicBtn" aria-label="Mute music" title="Mute music">♫</button>
@@ -177,7 +184,7 @@
 
 <div class="overlay build-overlay" id="buildOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="buildTitle">
   <div class="cardbox build-box">
-    <div class="build-heading"><h2 id="buildTitle">Your Build</h2><button id="closeBuildBtn">Close</button></div>
+    <div class="build-heading"><h2 id="buildTitle">Your Tool &amp; Build</h2><button id="closeBuildBtn">Close</button></div>
     <p>The game pauses while you review. Totals include Notebook perks, run upgrades, and your specialization.</p>
     <button class="secondary notebook-entry" id="buildNotebookBtn">Notebook · <span id="buildScraps">0</span> banked scraps</button>
     <h3>Current totals</h3><section id="buildTool" class="tool-panel" aria-label="Your drawing tool"></section>
@@ -186,6 +193,32 @@
     <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
     <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
     <h3>Monster notes</h3><p>Open Monsters in the toolbar for the full illustrated compendium.</p>
+  </div>
+</div>
+<div class="overlay build-overlay" id="optionsOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="optionsTitle">
+  <div class="cardbox build-box options-book">
+    <div class="build-heading"><div><span class="section-kicker">MAKE IT YOUR NOTEBOOK</span><h2 id="optionsTitle">Options</h2></div><button id="closeOptionsBtn">Close</button></div>
+    <p class="dialog-intro">Take a breather. Your run pauses while you’re here.</p>
+    <section class="option-section"><h3>Sound &amp; music</h3>
+      <label class="volume-label" for="musicVolume"><span>Music volume</span><output id="musicVolumeValue" for="musicVolume">35%</output></label>
+      <input id="musicVolume" type="range" min="0" max="100" step="1" value="35">
+      <p class="option-help">Adjust the chapter soundtrack while it plays. The music-note button still mutes it.</p>
+      <label class="volume-label" for="effectsVolume"><span>Sound effects volume</span><output id="effectsVolumeValue" for="effectsVolume">70%</output></label>
+      <input id="effectsVolume" type="range" min="0" max="100" step="1" value="70">
+      <p class="option-help">Sound effects are coming later. This saves your preferred volume for when they arrive.</p>
+    </section>
+    <section class="option-section"><h3>How you play</h3><label class="monster-setting"><input id="optionsIntros" type="checkbox" checked> Introduce new monsters before a wave</label><p class="option-help">Motion follows your device’s reduced-motion setting. Open Tool any time to pause and inspect your pencil, effects, and synergies.</p></section>
+    <div class="options-links"><button class="secondary" id="optionsStatsBtn">Notebook stats</button><button class="secondary" id="changelogBtn">What’s new</button></div>
+    <p id="optionsStorageNote" class="save-note" role="status"></p>
+  </div>
+</div>
+<div class="overlay build-overlay" id="statisticsOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="statisticsTitle">
+  <div class="cardbox build-box statistics-book">
+    <div class="build-heading"><div><span class="section-kicker">YOUR NOTEBOOK SO FAR</span><h2 id="statisticsTitle">Stats</h2></div><button id="closeStatisticsBtn">Close</button></div>
+    <h3>Saved progress</h3><div id="statisticsProgress" class="journal-grid"></div>
+    <div class="journal-progress" aria-hidden="true"><span id="statisticsProgressBar"></span></div><p class="option-help">Permanent Notebook ranks unlocked</p>
+    <h3 id="statisticsRunTitle">This run</h3><div id="statisticsRun" class="journal-grid"></div>
+    <p id="statisticsSaveNote" class="save-note"></p>
   </div>
 </div>
 <div class="overlay build-overlay" id="notebookOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="notebookTitle">
@@ -226,6 +259,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Your pencil, your notebook</h3><p>The splash pencil now draws from its actual graphite tip. Options adds separate saved music and future sound-effect volume controls; Stats shows your run and Notebook progress. Rewards show an illustrated pencil with effect sockets and clear Now → After comparisons. Open Tool or Inspect tool to pause and review your build.</p></article>
       <article class="build-entry"><h3>A little more notebook magic</h3><p>Scraps have their own collectible paper artwork. Illustrated buttons, taped-paper details, and new splash doodles give the notebook a warmer handmade feel, while keeping the controls readable on phones.</p></article>
       <article class="build-entry"><h3>The doodles have attitude</h3><p>Grunts and Gnawers chomp at walls, little runners skitter, Sprinters crouch and lunge, and Bouncers squash through ricochets. Staple Snack winds up and clacks, Count Crayon dances through its summon, and the Eraser swipes when it rubs out a wall. Motion pauses with the game and respects reduced-motion settings.</p></article>
       <article class="build-entry"><h3>A pencil with a plan</h3><p>Paid strokes need at least 6 ink, fixing empty-ink wall spam. Spend Notebook scraps to grow your pencil into a mechanical pencil, pen, and scented Sharpie with 2–4 effect slots. Rewards favor equipped effects; replace one deliberately to change your build. Legendary offers are reserved for roughly one in ten full campaigns.</p></article>
@@ -353,6 +387,7 @@
 <script src="js/state.js"></script>
 <script src="js/geometry.js"></script>
 <script src="js/balance.js"></script>
+<script src="js/settings.js"></script>
 <script src="js/music.js"></script>
 <script src="js/chapters.js"></script>
 <script src="js/ui.js"></script>

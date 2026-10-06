@@ -4,7 +4,7 @@
 const game = DoodleDefender.createGame();
 DoodleDefender.systems.dom(game);
 DoodleDefender.systems.state(game);
-for (const name of ["geometry","balance","music","chapters","ui","notebook","monsters","waves","enemies","walls","effects","abilityEffects","upgrades","renderer","loop","input"]) game[name] = DoodleDefender.systems[name](game);
+for (const name of ["geometry","balance","settings","music","chapters","ui","notebook","monsters","waves","enemies","walls","effects","abilityEffects","upgrades","renderer","loop","input"]) game[name] = DoodleDefender.systems[name](game);
 game.input.bind();
 game.dom.bestEl.textContent=game.state.best;
 game.api.resize();
