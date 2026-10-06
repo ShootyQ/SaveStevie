@@ -51,10 +51,11 @@
         <div class="splash-eyebrow">A NOTEBOOK SURVIVAL GAME <span>IN DEVELOPMENT</span></div>
         <div class="splash-art" aria-hidden="true">
           <svg viewBox="0 0 440 250" xmlns="http://www.w3.org/2000/svg">
-            <path d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#26333c" stroke-width="10" stroke-linecap="round"/>
-            <path d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#68747b" stroke-width="2" stroke-linecap="round"/>
+            <path class="splash-ink-stroke" pathLength="1" d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#26333c" stroke-width="10" stroke-linecap="round"/>
+            <path class="splash-ink-stroke" pathLength="1" d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#68747b" stroke-width="2" stroke-linecap="round"/>
           </svg>
-          <img class="splash-stevie" src="assets/art/stevie.png" alt="" width="330" height="392">
+          <span class="splash-stevie"><img class="splash-stevie-frames" src="assets/art/stevie-animations.png" alt="" width="512" height="272"></span>
+          <span class="splash-rock"></span>
           <img class="splash-grunt" src="assets/art/grunt.png" alt="" width="200" height="182">
           <img class="splash-sniper" src="assets/art/sniper.png" alt="" width="264" height="234">
           <img class="splash-splitter" src="assets/art/splitter.png" alt="" width="200" height="153">
@@ -222,6 +223,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>The splash doodles come alive</h3><p>Stevie idles, blinks, and tosses a little rock while the monsters fidget and bounce. A pencil traces the scribbled barrier and the flame flickers. These lightweight menu animations pause when the splash is hidden, and reduced-motion settings keep the scene still.</p></article>
       <article class="build-entry"><h3>A soundtrack for every chapter</h3><p>Play intro music on the splash screen for the calm new menu theme. Starting a run switches to Save Stevie, then Pop Quiz Panic, Crayon Catastrophe, and Detention: The Final Draft at waves 6, 11, and 16. Each song loops; waves and menus within a chapter keep its position. The music note still saves your mute choice. Resetting progress returns to the intro track.</p></article>
       <article class="build-entry"><h3>A smoother start and tougher chapter endings</h3><p>Wave 1 gives you more drawing time and fewer arrivals. Enemy HP climbs to 1.2× on wave 5, 1.9× on 10, 2.8× on 15, and 4× on 20. Later chapters add small coordinated groups. Chapter bosses must be removed before advancing; overtime stops new arrivals while you finish the fight. A surviving boss contact still resolves it, as before.</p><p>Repeated ink-regeneration picks give smaller bonuses. Extra parallel walls have 60% durability. Combat healing, kill ink refunds, and kill repairs share refillable budgets, preventing crowds from supplying unlimited sustain. Scraps now favor cleared chapters over kill farming; the Notebook explains the new payouts. Existing scraps and perks are kept.</p></article>
       <article class="build-entry"><h3>Four pages, four paper worlds</h3><p>Custom backgrounds now mark each five-wave chapter: Margin Mischief (1–5), Pop Quiz Panic (6–10), Crayon Catastrophe (11–15), and Detention: The Final Draft (16–20). Faint paper texture and edge doodles keep the fighting space readable. Wave-clear screens name the current chapter; new runs return to the first page.</p></article>
