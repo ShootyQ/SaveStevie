@@ -7,7 +7,7 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
+const doodleNames=['stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{doodles[name]=image;inkSprites.clear()};
@@ -56,7 +56,7 @@ let enemyMotion=new WeakMap(),splitEchoes=[],motionTime=0,motionSerial=0;
 function motionFor(e){
   let m=enemyMotion.get(e);
   if(!m){
-    const heavy=['tank','brute','bulwark','boss','eraser'].includes(e.type);
+    const heavy=['tank','brute','bulwark','boss','stapler','crayon','eraser'].includes(e.type);
     m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,action:null,readyUntil:-1,sprite:null,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
   }
   return m;
@@ -417,6 +417,15 @@ function draw(){
   game.dom.ctx.restore();
 
   for(const e of game.state.enemies){
+    if(e.bossWindup>0){
+      game.dom.ctx.save();game.dom.ctx.strokeStyle=e.type==='stapler'?'#a56a16':'#9354b9';game.dom.ctx.lineWidth=3;
+      game.dom.ctx.setLineDash([5,4]);game.dom.ctx.beginPath();
+      if(e.type==='stapler'&&game.state.walls.includes(e.bossTarget)){
+        const p=game.api.nearestPointOnWall(e,e.bossTarget);
+        if(p){game.dom.ctx.moveTo(e.x,e.y);game.dom.ctx.lineTo(p.x,p.y);game.dom.ctx.stroke();game.dom.ctx.beginPath();game.dom.ctx.arc(p.x,p.y,16,0,Math.PI*2)}
+      }else game.dom.ctx.arc(e.x,e.y,e.r+10+8*(1-e.bossWindup/1.2),0,Math.PI*2);
+      game.dom.ctx.stroke();game.dom.ctx.restore();
+    }
     const hpRatio=game.api.clamp(e.hp/e.maxHp,0,1);
     game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y);
 

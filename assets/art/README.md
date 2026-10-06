@@ -99,3 +99,11 @@ Damaged monsters retain their full body artwork and opacity. Health now changes
 only the separate bar; status colors tint the entire body. This applies to all
 base sprites, action poses, bosses, and vector fallbacks. Transient split echoes
 still fade as they expire; living monsters do not fade with damage.
+
+## Midgame boss sprites
+
+`stapler.png` (Staple Snack, wave 10) and `crayon.png` (Count Crayon, wave 15)
+are individually generated original transparent colored-pencil/pen doodles.
+The full sprites are preserved without an atlas dependency and are loaded with
+existing asset versioning, status tints, movement, and hit animation. Procedural
+body fallbacks keep gameplay functional while artwork loads.

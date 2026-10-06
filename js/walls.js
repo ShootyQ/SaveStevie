@@ -186,7 +186,7 @@ function applyInkContact(e,dt,wall=null){
   if(game.state.synergies.has('Event Horizon')&&e.gravitySlow>.12&&game.state.inks.void>0){
     const c=.006*game.state.inks.void*dt*60;
     if(Math.random()<c){
-      if(e.type==='boss'||e.type==='eraser')game.api.dealDamage(e,65+game.state.inks.void*30,'void');
+      if(e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss)game.api.dealDamage(e,65+game.state.inks.void*30,'void');
       else game.api.dealDamage(e,e.hp,'void');
       game.api.burst(e.x,e.y,'#46345e',14);
     }
@@ -230,7 +230,7 @@ function applyInkContact(e,dt,wall=null){
   if(game.state.inks.void>0){
     const chance=.0025*game.state.inks.void*dt*60;
     if(Math.random()<chance){
-      if(e.type==='boss'||e.type==='eraser')game.api.dealDamage(e,40+game.state.inks.void*25,'void');
+      if(e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss)game.api.dealDamage(e,40+game.state.inks.void*25,'void');
       else game.api.dealDamage(e,e.hp,'void');
       game.api.burst(e.x,e.y,'#46345e',12);
     }
