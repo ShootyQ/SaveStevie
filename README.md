@@ -2,6 +2,13 @@
 
 Refactored from doodle_defender_v8.html. Open index.html directly in a modern browser. No installation or build required. Keep the folder together.
 
+## Android internal testing
+
+The optional Capacitor wrapper bundles the game for offline Android play. Start
+with the [Android testing guide](docs/android-testing.md) for phone installation,
+signing, GitHub build artifacts and Google Play internal testing. Android tooling
+uses npm; the hosted web game still needs no dependencies or build.
+
 ## Copyright
 
 © 2026 ShootyQ. Save Stevie. All rights reserved.

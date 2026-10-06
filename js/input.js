@@ -49,6 +49,10 @@ for(const id of ['splashNotebookBtn','deathNotebookBtn','victoryNotebookBtn','bu
 game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
 game.dom.$('resetNotebookBtn').onclick=game.api.resetNotebookProgress;
 window.addEventListener('keydown',game.api.handleInfoKey);
+window.addEventListener('savestevie:background',()=>{
+  if(game.state.running&&!game.api.infoOpen()&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec)game.api.openInfo('pause');
+  game.api.stopSoundEffects();
+});
 game.dom.canvas.addEventListener('pointerdown',e=>{
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
   if(!game.api.canStartStroke()){game.api.setMsg('Let your ink refill to 6 before drawing.');return;}
