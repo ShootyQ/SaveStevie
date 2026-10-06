@@ -179,7 +179,7 @@ function rarityRoll(forceRare=false){
   if(forceRare)return 'rare';
   const r=Math.random()*100,luck=Math.min(100,Math.max(0,game.state.stats.luck));
   const bonus=luck+(game.state.specialization==='chaos'?12:0);
-  const rare=24+bonus*.3,uncommon=33+bonus*.16;
+  const rare=8+bonus*.3,uncommon=20+bonus*.16;
   if(r<rare)return 'rare';
   if(game.state.stats.uncommonFloor||r<rare+uncommon)return 'uncommon';
   return 'common';
