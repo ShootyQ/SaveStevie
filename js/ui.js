@@ -9,6 +9,9 @@ function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
   game.api.updateChapterBackground();
+  const overtime=game.dom.$('bossOvertime'),bossPending=game.state.running&&game.state.finalOvertime&&game.api.campaignBossPending();
+  overtime.style.display=bossPending?'block':'none';
+  if(bossPending)text(overtime,'Overtime · Defeat '+game.api.monsterName(game.api.bossTypeForWave()));
   const hit=game.state.floaters.findLast(f=>f.hitMarker&&f.t>0),notice=game.dom.$('hitNotice');
   notice.style.display=hit?'block':'none';
   if(hit)text(notice,hit.source+' −'+Number(hit.amount.toFixed(1)));
@@ -72,24 +75,24 @@ function showSynergySplash(name,desc,major=false){
 function upgradeEffect(name,n=game.state.stacks[name]||0){
   const f=v=>Number(v.toFixed(2)),s=game.state.stats;
   const effects={
-    'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${3*n} ink/s`,
+    'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${f(game.api.regenStackEffect('Quick Refill',n))} ink/s; diminishing returns`,
     'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 on each pick`,
     'Fine Tip':()=>`${f((1-Math.pow(.88,n))*100)}% cheaper strokes (multiplicative)`,
     'Fat Marker':()=>`+${2*n}px width; +${15*n} base wall HP`, 'Lucky Scribble':()=>`+${8*n} Luck — better rarity odds on rewards and rerolls`,
-    'Recycling':()=>`+${5*n} ink per kill`, 'Closed Loop':()=>`+${40*n}% closed-wall durability`,
+    'Recycling':()=>`+${5*n} ink per kill; shared 8 ink/s budget`, 'Closed Loop':()=>`+${40*n}% closed-wall durability`,
     'Permanent Marker':()=>`+${10*n}s wall lifetime`, 'Archival Ink':()=>`+${25*n}s wall lifetime`,
     'Architect':()=>`+${15*n}% durability per intersection`, 'Patchwork':()=>`+${18*n} HP per repaired wall`,
-    'Double Stroke':()=>`One-time unlock: 2 walls per stroke (3 with Triple Stroke)`,
+    'Double Stroke':()=>`One-time unlock: 2 walls per stroke (3 with Triple Stroke); extra walls have 60% HP`,
     'Quick Sketch':()=>`One-time unlock: first stroke each wave is free`,
     'Shock Ink':()=>`Stun factor ${f(Math.min(.55,.16*n))} (capped at 0.55); contact can stun for 0.45s`,
-    'Patch Job':()=>`+${3*n} HP to every wall per kill`, 'Freehand':()=>`${40+(n-1)*20} free-ink bank; charge with ${s.freehandThreshold} spent ink`,
-    'Living Fountain Pen':()=>`×${f(Math.pow(1.5,n))} ink regeneration (multiplicative)`,
-    'Triple Stroke':()=>`One-time unlock: 3 walls per stroke`,
-    'Bottomless Pen':()=>`+${120*n} max ink; +${8*n} ink/s`, 'Fortress Geometry':()=>`+${150*n}% closed-wall durability`,
+    'Patch Job':()=>`Up to ${3*n} HP per wall per kill; shared 12 HP/s budget`, 'Freehand':()=>`${40+(n-1)*20} free-ink bank; charge with ${s.freehandThreshold} spent ink`,
+    'Living Fountain Pen':()=>`×${f(game.api.regenStackEffect('Living Fountain Pen',n))} ink regeneration; diminishing returns`,
+    'Triple Stroke':()=>`One-time unlock: 3 walls per stroke; extra walls have 60% HP`,
+    'Bottomless Pen':()=>`+${120*n} max ink; +${f(game.api.regenStackEffect('Bottomless Pen',n))} ink/s; diminishing returns`, 'Fortress Geometry':()=>`+${150*n}% closed-wall durability`,
     'Bandages':()=>`+${8*n} HP healed between waves`, 'Helmet':()=>`${f(Math.min(.55,.1*n)*100)}% damage reduction (cap 55%)`,
     'Pocket Rocks':()=>`+${9*n} rock damage; unlocks throwing without slowing improved throws`,
     'Better Rocks':()=>`+${12*n} rock damage; each pick reduces throw interval by 0.12s, floor 0.45s`,
-    'Emergency Medicine':()=>`+${2*n} HP per kill`, 'Really Good Rocks':()=>`+${24*n} rock damage; each pick reduces throw interval by 0.1s, floor 0.35s`,
+    'Emergency Medicine':()=>`Up to ${2*n} HP per kill; shared 6 HP/s combat budget`, 'Really Good Rocks':()=>`+${24*n} rock damage; each pick reduces throw interval by 0.1s, floor 0.35s`,
     'Stevie Has Had Enough':()=>`+${45*n} rock damage; sets throw interval to 0.28s`,
     'Loaded Deck':()=>`One-time unlock: normal rewards are Uncommon or better`,
     'Reroll Coupon':()=>`+2 rerolls on each pick (inventory cap 5)`,
@@ -118,7 +121,7 @@ function renderBuild(){
     ['Stevie max HP',game.state.player.maxHp],['Damage reduction',f(s.playerArmor*100)+'%'],
     ['Rock damage',s.rockDamage],['Throw interval',s.rockRate?s.rockRate+'s':'Not unlocked'],
     ['Walls per stroke',s.tripleLine?3:s.doubleLine?2:1],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
-    ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls]];
+    ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','6 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','12 HP/s shared']];
   game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
   game.dom.$('buildStats').innerHTML=totals.map(([name,value])=>`<div class="build-stat">${name}<strong>${value}</strong></div>`).join('');
   game.dom.$('buildUpgrades').innerHTML=Object.entries(game.state.stacks).map(([name,n])=>{

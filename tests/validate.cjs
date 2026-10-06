@@ -7,6 +7,8 @@ const a=load(false),b=load(true);let checks=0;
 // and permanent perks are checked separately below.
 function legacyStartingKit(){const g=b.sandbox.testGame;Object.assign(g.state.stats,{maxInk:250,ink:250,inkRegen:8,wallHp:95,wallDamage:10});Object.assign(g.state.player,{maxHp:100,hp:100});g.state.rerolls=1;}
 b.sandbox.testGame.api.applyNotebookLoadout=legacyStartingKit;
+Object.assign(b.sandbox.testGame.catalog.balance,{openingDelay:.5,openingGap:2.35,copyDurability:.82,healRate:Infinity,refundRate:Infinity,repairRate:Infinity,quickRegen:3,fountainBonus:.5,bottomlessRegen:8});
+b.sandbox.testGame.api.enemyHpScale=(wave=b.sandbox.testGame.state.wave)=>1+(wave-1)*.024;
 legacyStartingKit();b.sandbox.testGame.api.updateUI();
 // Compare unchanged combat against the original without the new presentation labels.
 b.sandbox.testGame.api.damageNumber=()=>{};
@@ -148,7 +150,8 @@ function arrivals(wave,useOriginal=false){
   }
   pg.api.spawnEnemy=realSpawn;return {count,bosses};
 }
-for(const wave of [1,2,3,4,5])assert.equal(arrivals(wave).count,arrivals(wave,true).count,'early-wave spawn timing preserved');
+assert.ok(arrivals(1).count<arrivals(1,true).count,'wave 1 arrivals softened');
+for(const wave of [2,3,4,5])assert.equal(arrivals(wave).count,arrivals(wave,true).count,'early-wave spawn timing preserved');
 const pressureCounts=[];
 for(const wave of [8,10,14,15,20]){
   const old=arrivals(wave,true),now=arrivals(wave);
@@ -596,23 +599,24 @@ const env=load(true,{storage}),g=env.sandbox.testGame;
 assert.equal(g.api.buyNotebookPerk('inkTank'),false,'no free purchases');
 g.api.resetRun();
 assert.deepEqual([g.state.stats.maxInk,g.state.stats.inkRegen,g.state.stats.wallHp,g.state.stats.wallDamage,g.state.player.maxHp,g.state.rerolls],[160,5,65,8,75,0]);
-for(let i=0;i<10;i++){const e=g.api.spawnEnemy(false,100,100,'grunt');g.api.killEnemy(e);g.api.killEnemy(e)}
-assert.equal(g.api.notebookSnapshot().scraps,1,'ten actual kills, no double rewards');
+for(let i=0;i<25;i++){const e=g.api.spawnEnemy(false,100,100,'grunt');g.api.killEnemy(e);g.api.killEnemy(e)}
+assert.equal(g.api.notebookSnapshot().scraps,1,'25 actual kills, no double rewards');
 const contact=g.api.spawnEnemy(false,g.state.player.x,g.state.player.y,'grunt');g.api.contactStevie(contact);assert.equal(g.api.notebookSnapshot().scraps,1,'contact removals do not earn scraps');
-g.api.waveComplete();g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,4,'wave reward paid once');
-assert.equal(JSON.parse(stored.get(key)).scraps,4,'banked before run ends');
+g.api.waveComplete();g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,2,'wave reward paid once');
+assert.equal(JSON.parse(stored.get(key)).scraps,2,'banked before run ends');
 g.state.paused=true;assert.equal(g.api.buyNotebookPerk('inkTank'),false,'paused runs cannot buy');
-g.api.gameOver();g.api.gameOver();assert.equal(g.api.notebookSnapshot().scraps,4,'no duplicate/consolation on earned run');
-g.api.resetRun();g.api.gameOver();g.api.gameOver();assert.equal(g.api.notebookSnapshot().scraps,5,'zero-earnings defeat consolation once');
+g.api.gameOver();g.api.gameOver();assert.equal(g.api.notebookSnapshot().scraps,2,'no duplicate/consolation on earned run');
+g.api.resetRun();g.api.gameOver();g.api.gameOver();assert.equal(g.api.notebookSnapshot().scraps,3,'zero-earnings defeat consolation once');
+g.api.resetRun();g.api.awardScraps(2);g.api.gameOver();
 assert.equal(g.api.buyNotebookPerk('unknown'),false);assert.equal(g.api.buyNotebookPerk('inkTank'),true);assert.equal(g.api.buyNotebookPerk('inkTank'),false);
 assert.equal(g.state.stats.maxInk,160,'purchase applies next run');
 const reloaded=load(true,{storage}).sandbox.testGame;reloaded.api.resetRun();assert.equal(reloaded.state.stats.maxInk,180,'saved purchase applies');
 reloaded.api.chooseUpgrade(reloaded.catalog.upgrades.find(u=>u.name==='Bigger Ink Tank'));assert.equal(reloaded.state.stats.maxInk,215,'permanent perk stacks with run reward');
 reloaded.api.resetRun();assert.equal(reloaded.state.stats.maxInk,180,'new run clears temporary upgrades without duplicating perks');assert.equal(Object.keys(reloaded.state.stacks).length,0);
-const boss=reloaded.api.spawnEnemy(true,100,100,'boss');reloaded.api.killEnemy(boss);assert.equal(reloaded.api.notebookSnapshot().scraps,5,'boss kill bonus');
-reloaded.state.wave=20;reloaded.api.waveComplete();assert.equal(reloaded.api.notebookSnapshot().scraps,23,'final wave plus victory bonus');reloaded.api.finishScrapRun(true);assert.equal(reloaded.api.notebookSnapshot().scraps,23);
-reloaded.api.resumeScrapRun();reloaded.api.awardScraps(3);assert.equal(reloaded.api.notebookSnapshot().scraps,26,'endless continues earning');
-reloaded.api.finishScrapRun();reloaded.api.awardScraps(20);assert.equal(reloaded.api.notebookSnapshot().scraps,26,'finished runs cannot earn');
+const boss=reloaded.api.spawnEnemy(true,100,100,'boss');reloaded.api.killEnemy(boss);assert.equal(reloaded.api.notebookSnapshot().scraps,0,'boss kill does not pay a separate farming bonus');
+reloaded.state.wave=20;reloaded.api.startWave();reloaded.api.killEnemy(reloaded.api.spawnEnemy(true,100,100));reloaded.api.waveComplete();assert.equal(reloaded.api.notebookSnapshot().scraps,18,'final wave plus victory bonus');reloaded.api.finishScrapRun(true);assert.equal(reloaded.api.notebookSnapshot().scraps,18);
+reloaded.api.resumeScrapRun();reloaded.api.awardScraps(3);assert.equal(reloaded.api.notebookSnapshot().scraps,21,'endless continues earning');
+reloaded.api.finishScrapRun();reloaded.api.awardScraps(20);assert.equal(reloaded.api.notebookSnapshot().scraps,21,'finished runs cannot earn');
 assert.ok(Number(stored.get('doodleDefenderBestV4'))>=15,'existing best never erased');
 const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:1000,lifetimeScraps:1000,levels:{}}):null,setItem(){}};
 const rich=load(true,{storage:richStore}).sandbox.testGame;
@@ -639,13 +643,13 @@ g.api.updateBossAbility(s,1.2);assert.equal(wall.hp,35);assert.equal(g.state.pla
 s.bossCd=0;g.api.updateBossAbility(s,.1);s.freeze=1;g.api.updateBossAbility(s,.1);assert.equal(s.bossWindup,0);assert.equal(wall.hp,35,'freeze cancels a queued slam');
 s.freeze=0;s.bossCd=0;g.api.updateBossAbility(s,.1);g.state.walls=[];g.api.updateBossAbility(s,1.2);assert.equal(wall.hp,35,'removed target cancels hit');
 g.state.walls=[wall];s.bossCd=0;g.api.updateBossAbility(s,.1);s.x=500;g.api.updateBossAbility(s,1.2);assert.equal(wall.hp,35,'target must remain in reach');
-g.api.killEnemy(s);assert.equal(g.api.notebookSnapshot().scraps,5,'new boss gives boss scraps');
+g.api.killEnemy(s);assert.equal(g.api.notebookSnapshot().scraps,0,'boss scraps move to chapter completion');
 g.state.wave=15;g.api.startWave();const c=g.api.spawnEnemy(true,100,200);c.bossCd=0;g.api.updateBossAbility(c,.1);assert.equal(g.state.enemies.length,1);assert.equal(c.bossWindup,1.2);
 g.api.updateBossAbility(c,1.2);assert.equal(g.state.enemies.filter(e=>e.type==='mini').length,3);assert.equal(c.bossCd,8);
 c.bossCd=0;g.api.updateBossAbility(c,.1);c.stun=1;g.api.updateBossAbility(c,.1);assert.equal(c.bossWindup,0);assert.equal(g.state.enemies.length,4,'stun interrupts summons');
 c.stun=0;while(g.state.enemies.length<180)g.api.spawnEnemy(false,100,200,'grunt');c.bossCd=0;g.api.updateBossAbility(c,.1);g.api.updateBossAbility(c,1.2);assert.equal(g.state.enemies.length,180,'summons obey global cap');
 g.state.paused=true;c.bossCd=3;g.api.update(.3);assert.equal(c.bossCd,3,'pause stops boss timer');g.state.paused=false;
-g.api.killEnemy(c);assert.equal(g.api.notebookSnapshot().scraps,10);
+g.api.killEnemy(c);assert.equal(g.api.notebookSnapshot().scraps,0);
 for(const type of ['stapler','crayon']){g.state.enemies=[];const e=g.api.spawnEnemy(false,100,200,type);g.state.inks.void=1;env.sandbox.Math.random=()=>0;const before=e.hp;g.api.applyInkContact(e,.1);assert.ok(e.hp>0&&e.hp<before,'Void damages new bosses instead of instantly erasing them');}
 console.log('PASS: distinct campaign bosses, actual-segment telegraphs, slam safety/range/stale targets, freeze/stun cancellation, capped summons, pause, boss scraps, and Void boss protection.');
 }
@@ -674,4 +678,41 @@ const control=load(true),active=load(true);control.sandbox.testGame.api.updateCh
 for(const e of [control,active]){e.sandbox.testGame.api.resetRun();for(let i=0;i<100;i++)e.sandbox.testGame.api.update(.016)}
 assert.equal(JSON.stringify(active.sandbox.testGame.state),JSON.stringify(control.sandbox.testGame.state));assert.equal(active.sandbox.Math.random(),control.sandbox.Math.random());
 console.log('PASS: chapter boundaries, asset coverage, new-run reset, stable backgrounds, and unchanged combat/RNG.');
+}
+
+// Chapter difficulty, overtime, diminishing returns, and finite sustain/economy.
+{
+const env=load(true),g=env.sandbox.testGame;
+for(const [wave,scale] of [[1,1],[5,1.2],[10,1.9],[15,2.8],[20,4],[25,4.9]])assert.ok(Math.abs(g.api.enemyHpScale(wave)-scale)<1e-10);
+g.api.resetRun();assert.equal(g.state.spawnTimer,1.5);assert.equal(g.api.spawnGap(),2.7);
+for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['bulwark','brood']],[13,['medic','bulwark','brood']],[16,['sapper','elite','sprinter']]]){
+ g.state.wave=wave;g.api.startWave();g.state.spawnTimer=999;g.state.timeLeft=40;g.api.spawnWaveEnemies(.01);
+ assert.deepEqual(Array.from(g.state.enemies,e=>e.type),members);g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,members.length,'one group per threshold');
+ g.state.timeLeft=20;g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,members.length*2);assert.ok(g.state.enemies.at(-1).x>g.state.W,'second group approaches from opposite edge');
+ g.state.enemies=[];for(let i=0;i<180;i++)g.api.spawnEnemy(false,0,0,'grunt');g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,180,'groups obey enemy cap');
+}
+for(const wave of [5,10,15]){
+ const e=load(true),g=e.sandbox.testGame;g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,100,100);boss.freeze=999;
+ g.state.timeLeft=.01;g.api.update(.02);assert.equal(g.state.finalOvertime,true);assert.equal(g.state.betweenWaves,false);assert.equal(e.node('bossOvertime').style.display,'block');assert.match(e.node('bossOvertime').textContent,new RegExp(g.api.monsterName(boss.type)));
+ const count=g.state.enemies.length;g.api.update(.2);assert.equal(g.state.enemies.length,count,'overtime stops normal arrivals');g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,0,'cannot bypass living boss');
+ g.api.killEnemy(boss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);assert.equal(e.node('bossOvertime').style.display,'none');assert.equal(g.api.notebookSnapshot().scraps,1+g.catalog.balance.chapterScraps[wave/5-1]);g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,1+g.catalog.balance.chapterScraps[wave/5-1],'milestone pays once');
+}
+g.api.resetRun();g.state.wave=5;g.api.startWave();const early=g.api.spawnEnemy(true,100,100);g.api.killEnemy(early);g.api.waveComplete();assert.equal(g.state.betweenWaves,false,'early boss kill still requires surviving timer');
+g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.betweenWaves,true);
+g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'missing boss is ensured in overtime');g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'required boss never duplicates');
+const contactBoss=g.state.enemies.find(e=>e.waveBoss);contactBoss.x=g.state.player.x;contactBoss.y=g.state.player.y;g.api.contactStevie(contactBoss);g.api.update(.016);assert.equal(g.state.betweenWaves,true,'surviving the existing contact explosion resolves the boss');
+g.api.resetRun();g.state.stats.killHeal=g.state.stats.refund=g.state.stats.repairOnKill=100;g.state.player.hp=20;g.state.stats.ink=0;g.state.walls=[{hp:10,maxHp:100},{hp:10,maxHp:100}];
+for(let i=0;i<4;i++)g.api.killEnemy(g.api.spawnEnemy(false,0,0,'grunt'));
+assert.equal(g.state.player.hp,26);assert.equal(g.state.stats.ink,8);assert.equal(g.state.walls.reduce((sum,w)=>sum+w.hp,0),32,'repair shares a single budget across walls');
+g.state.paused=true;g.api.update(1);assert.equal(g.api.healStevie(100),0,'pause cannot recharge sustain');g.state.paused=false;g.api.updateSustain(1);g.api.killEnemy(g.api.spawnEnemy(false,0,0,'grunt'));assert.equal(g.state.player.hp,32);assert.equal(g.state.stats.ink,16);assert.equal(g.state.walls.reduce((sum,w)=>sum+w.hp,0),44);
+g.state.player.hp=0;assert.equal(g.api.healStevie(100),0,'combat healing never revives Stevie');
+g.api.resetRun();g.state.player.hp=20;g.state.synergies.add('Stevie the Unreasonable');const rockTarget=g.api.spawnEnemy(false,100,200,'tank');g.state.projectiles=Array.from({length:4},()=>({x:100,y:200,target:rockTarget,speed:0,damage:100,life:1}));g.api.updateProjectiles(.01);assert.equal(g.state.player.hp,26,'rock-healing synergy shares the same combat budget');
+g.api.resetRun();const choose=name=>g.api.chooseUpgrade(g.catalog.upgrades.find(u=>u.name===name));
+choose('Quick Refill');assert.equal(g.state.stats.inkRegen,7);choose('Quick Refill');assert.ok(Math.abs(g.state.stats.inkRegen-(7+2/1.4))<1e-10);assert.match(g.api.upgradeEffect('Quick Refill'),/3.43/);
+const before=g.state.stats.inkRegen;choose('Living Fountain Pen');choose('Living Fountain Pen');assert.ok(Math.abs(g.state.stats.inkRegen-before*1.35*(1+.35/1.5))<1e-10);
+const preBottomless=g.state.stats.inkRegen;choose('Bottomless Pen');choose('Bottomless Pen');assert.ok(Math.abs(g.state.stats.inkRegen-preBottomless-4-4/1.4)<1e-10);
+g.api.resetRun();g.state.stats.tripleLine=true;g.api.createWall([{x:100,y:100},{x:280,y:100}]);assert.equal(g.state.walls.length,3);assert.equal(g.state.walls[1].maxHp,g.state.walls[0].maxHp*.6);
+g.api.resetRun();for(let i=1;i<=12;i++){g.state.kills=i*25;g.api.awardKillScraps()}assert.equal(g.api.notebookSnapshot().runScraps,8,'kill scraps capped across a run');g.api.resumeScrapRun();g.state.kills=325;g.api.awardKillScraps();assert.equal(g.api.notebookSnapshot().runScraps,8,'endless cannot reset kill cap');
+g.api.resetRun();for(let wave=1;wave<=20;wave++){g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;if(wave%5===0)g.api.killEnemy(g.api.spawnEnemy(true,0,0));g.api.waveComplete();g.state.betweenWaves=false}assert.equal(g.api.notebookSnapshot().runScraps,61,'20 clears + chapter milestones + victory');
+console.log('PASS: HP curve, gentler opening, timed/capped groups, required boss overtime/contact/early kills, shared sustain budgets, pause/death protection, diminishing returns, thinner copies, and capped/milestone scraps.');
 }

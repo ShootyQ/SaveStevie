@@ -99,7 +99,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   }
   let type=typeOverride||game.api.enemyType();
   if(forceBoss)type=game.api.bossTypeForWave();
-  const scale=(1+(game.state.wave-1)*.024)*game.state.stats.enemyScale;
+  const scale=game.api.enemyHpScale()*game.state.stats.enemyScale;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
   const enemy={
     x:px,y:py,type,r:d.r,hp:baseHp*scale,maxHp:baseHp*scale,speed:d.speed*(1+game.state.wave*.006),
@@ -113,7 +113,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='sprinter')enemy.dashTime=0;
   if(type==='medic')enemy.healPulse=0;
   game.state.enemies.push(enemy);
-  if(forceBoss)bossSpawned=true;
+  if(forceBoss){bossSpawned=true;enemy.waveBoss=true}
   return enemy;
 }
 
@@ -121,9 +121,8 @@ function killEnemy(e){
   if(!game.state.enemies.includes(e))return;
   game.state.kills++;game.state.waveKills++;game.state.score+=10;
   game.api.awardKillScraps(e);
-  game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.refund);
-  game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+game.state.stats.killHeal);
-  if(game.state.stats.repairOnKill)game.state.walls.forEach(w=>w.hp=Math.min(w.maxHp,w.hp+game.state.stats.repairOnKill));
+  game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
+  if(e.waveBoss)bossResolved=true;
   game.api.burst(e.x,e.y,e.color,12);
 
   if(e.type==='eraser') game.state.finalBossDefeated=true;
@@ -180,7 +179,7 @@ function updateProjectiles(dt){
         if(Math.random()<.22)p.target.freeze=Math.max(p.target.freeze,.55);
       }
       if(game.state.synergies.has('Thunderstones'))game.api.chainLightning(p.target,Math.max(1,game.state.inks.electric));
-      if(game.state.synergies.has('Stevie the Unreasonable'))game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+p.damage*.08);
+      if(game.state.synergies.has('Stevie the Unreasonable'))game.api.healStevie(p.damage*.08);
       game.api.burst(p.target.x,p.target.y,'#5f5a53',5);
       game.state.projectiles=game.state.projectiles.filter(q=>q!==p)
     }
@@ -250,20 +249,32 @@ function eraserAttack(e,dt){
   }
 }
 
-let bossSpawned=false;
-function resetEnemyWave(){bossSpawned=false}
+let bossSpawned=false,bossResolved=false,groupsSpawned=0;
+function resetEnemyWave(){bossSpawned=false;bossResolved=false;groupsSpawned=0}
+function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
+function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
+function spawnChapterGroup(){
+  const wave=game.state.wave;if(wave<6)return;
+  const types=wave<=10?(wave>=9?['sniper','fast']:wave>=7?['flanker','fast']:['tank','fast']):wave<=15?(wave>=13?['medic','bulwark','brood']:['bulwark','brood']):['sapper','elite','sprinter'];
+  const fromLeft=groupsSpawned%2===0;
+  for(let i=0;i<types.length;i++)game.api.spawnEnemy(false,fromLeft?-26:game.state.W+26,game.state.H*(.35+.12*i),types[i]);
+}
+
 function wavePressure(wave=game.state.wave){
   const progress=game.api.clamp((wave-pressure.startWave)/(pressure.fullWave-pressure.startWave),0,1);
   return 1+(pressure.maxMultiplier-1)*Math.pow(progress,1.15);
 }
 function enemySpeedScale(){return 1+pressure.speedBonus*game.api.clamp((game.state.wave-pressure.startWave)/(pressure.fullWave-pressure.startWave),0,1)}
 function spawnGap(){
-  const wave=game.state.wave,base=wave===1?2.35:wave===2?2.05:wave===3?1.78:wave===4?1.58:wave===5?1.42:Math.max(.34,1.48-wave*.034);
+  const wave=game.state.wave,base=wave===1?game.catalog.balance.openingGap:wave===2?2.05:wave===3?1.78:wave===4?1.58:wave===5?1.42:Math.max(.34,1.48-wave*.034);
   const elapsed=game.state.waveTime-game.state.timeLeft;
   const surge=wave>pressure.startWave?(elapsed%pressure.surgeCycle>=pressure.surgeCycle-pressure.surgeSeconds?pressure.surgeMultiplier:pressure.quietMultiplier):1;
   return Math.max(.12,base/(game.api.wavePressure()*surge));
 }
 function spawnWaveEnemies(dt){
+  if(game.state.finalOvertime)return;
+  const elapsed=game.state.waveTime-game.state.timeLeft;
+  if(game.state.wave>=6&&groupsSpawned<2&&elapsed>=[20,40][groupsSpawned]){game.api.spawnChapterGroup();groupsSpawned++}
   game.state.spawnTimer-=dt;
   if(game.state.spawnTimer<=0){
     const bossDue=game.state.wave%5===0&&!bossSpawned&&game.state.timeLeft<game.state.waveTime-2;
@@ -361,6 +372,7 @@ function contactStevie(e){
   // Contact removal is not a player kill: no rewards, healing, or split children.
   game.state.enemies=game.state.enemies.filter(other=>other!==e);
   if(e.type==='eraser')game.state.finalBossDefeated=true;
+  if(e.waveBoss)bossResolved=true;
   if(game.state.synergies.has('Human Pinball')){
     for(const other of game.state.enemies){
       const dx=other.x-player.x,dy=other.y-player.y,d=Math.hypot(dx,dy)||1;
@@ -369,7 +381,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

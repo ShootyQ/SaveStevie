@@ -329,3 +329,5 @@ button:disabled{opacity:.5;cursor:default}
 
 /* Browser-composited paper avoids redrawing a large texture in the game loop. */
 #game{background-size:cover,28px 28px,28px 28px;background-position:center,0 0,0 0;background-repeat:no-repeat,repeat,repeat}
+
+#bossOvertime{position:absolute;top:58px;left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);padding:6px 10px;border:2px dashed #a56a16;border-radius:8px;background:#fff6ddf5;color:#815019;font-size:12px;font-weight:bold;text-align:center;pointer-events:none;z-index:6}

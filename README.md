@@ -10,6 +10,7 @@ Refactored from doodle_defender_v8.html. Open index.html directly in a modern br
 - js/loop.js owns timing and simulation updates.
 - js/renderer.js draws the original canvas artwork and handles resizing.
 - js/enemies.js handles enemy creation, Stevie, projectiles, and eraser attacks.
+- js/balance.js centralizes HP tuning, regeneration returns and combat sustain budgets.
 - js/chapters.js selects and versions four chapter background pages.
 - js/notebook.js banks persistent scraps and applies purchased next-run perks.
 - js/waves.js handles run reset, wave progression, victory, and game over.
@@ -89,13 +90,14 @@ their caps. Repeated Pocket Rocks adds damage without slowing improved throws.
 
 ## Late-wave pressure and new enemies
 
-Waves 1–5 keep their original spawn timing. Later waves ramp smoothly toward
+Waves 2–5 keep their original spawn timing; wave 1 is softened in the chapter tuning pass. Later waves ramp smoothly toward
 3× the old spawn rate at wave 20, with 4-second surges every 12 seconds and
 up to 28% faster movement. Seeded 60-second arrival checks measure wave 14
-at 131 spawns (previously 59), wave 15 at 145 (61), and wave 20 at 235 (75),
-before splits. These measure arrivals, not guaranteed concurrent enemies.
+at 131 spawns (previously 59), wave 15 at 145 (61), and wave 20 at 235 (75)
+before the later chapter-group additions and before splits. These measure arrivals, not guaranteed concurrent enemies.
 Normal enemies are capped at 180 concurrent actors; required bosses can still
-spawn, once per wave. Upgrade economy and enemy HP scaling are unchanged.
+spawn, once per wave. The chapter tuning section below describes the current
+upgrade economy and enemy HP scaling.
 
 **Your Build → Enemy field guide** describes six new variants and counters:
 Wardling (wave 8), Sprinter (9), Brood (10), Bulwark (11), Medic (13), Sapper
@@ -280,8 +282,9 @@ caps, prices, and a preview of your next starting kit. Purchases are available
 outside an active run and apply on the next new run; they stack with run
 upgrades. Continuing Endless uses the current run's kit.
 
-Scraps are banked immediately: 1 per 10 kills, 3 per cleared wave, 5 per
-actually killed boss/Eraser, and 15 for campaign victory. Contact removals earn
+Scraps are banked immediately: 1 per 25 kills (at most 8 per run), 1 per
+cleared wave, plus 6/8/10/12 for the four campaign chapter clears and 5 for
+campaign victory. Boss kills no longer pay a separate reward. Contact removals earn
 nothing. A defeat with zero earnings gives 1 consolation scrap. Quitting keeps
 already banked earnings. Each run's kill counter starts fresh.
 
@@ -297,9 +300,9 @@ already banked earnings. Each run's kill counter starts fresh.
 Ranks cost 5, 12, 24, 40, and 60 scraps where available. Fresh runs start with
 160 ink, 5 ink/s regeneration, 65 wall HP, 8 wall damage/s, 75 Stevie HP,
 and no starting rerolls or rocks. Each wave reward still grants a free reroll.
-Enemy schedules and scaling are unchanged: this pass reduces starting power
-rather than adding enemy pressure. This is an initial tuning pass, not a
-promise of a particular failure wave.
+The chapter difficulty pass described below adds enemy scaling and limits
+runaway sustain. These remain initial tuning values, not a promise of a
+particular failure wave.
 
 Progress uses `saveStevieNotebookV1` in localStorage on this browser/site origin;
 it does not sync across devices. Existing best-wave and preference keys are
@@ -330,13 +333,13 @@ Wave 15 spawns **Count Crayon** (crayon): after a 1.2-second purple-ring
 warning, it summons up to three Niblets and waits 8 seconds before its next
 wind-up. Summons obey the existing enemy cap. Freeze/stun cancels either
 boss's wind-up and delays its retry. Both retain ordinary movement, wall bites,
-contact damage, status tinting, and the normal 5-scrap boss kill bonus; Void
+contact damage, status tinting, and the chapter-clear scrap milestones; Void
 Ink and Event Horizon damage them rather than instantly erasing them.
 
 Both have original transparent doodle sprites, compendium entries, and grouped
 wave-start introductions. Wave 20 keeps The Big Rub-Out; other endless boss
-waves use King Doodle-Doom. Midgame waves keep the existing timer completion
-rule. Run `node tests/validate.cjs` for combat checks and the optional
+waves use King Doodle-Doom. Chapter-ending campaign waves require surviving
+the timer and removing the boss; the wave 20 finale still ends immediately when resolved. Run `node tests/validate.cjs` for combat checks and the optional
 `node tests/browser-bosses.cjs [packaged-site-directory]` for desktop/phone
 artwork, introductions, live warning rendering, and compendium checks.
 
@@ -363,11 +366,56 @@ Backgrounds use a cached CSS update when the chapter changes, outside canvas
 rendering and combat state. Images cover the arena with a centered crop for
 portrait/landscape devices, and keep a quiet pale center for readable enemies
 and ink effects. Paper/grid layers remain underneath if an image cannot load.
-Asset URLs use the deployment build version. There are no gameplay, reward,
-collision, difficulty, or music changes in this presentation layer; supplied
+Asset URLs use the deployment build version. The background system itself has no gameplay, reward,
+collision, difficulty, or music effects; supplied
 chapter tracks can be integrated separately.
 
 Run `node tests/browser-chapters.cjs [packaged-site-directory]` with Playwright
 and Chromium for the optional desktop/phone asset, switching, reset, wave-clear
 label, and missing-art fallback checks. The normal validation also checks
 chapter boundaries and unchanged combat/randomness.
+
+
+## Chapter difficulty tuning
+
+`js/balance.js` holds the tunable values. Enemy HP interpolates between
+1× / 1.2× / 1.9× / 2.8× / 4× at waves 1 / 5 / 10 / 15 / 20, then adds 0.18×
+per endless wave. Enemy contact damage and existing surge/speed formulas stay
+unchanged. Wave 1 delays its first arrival to 1.5s and uses a 2.7s spawn gap.
+At 20s and 40s elapsed, later chapters add small groups from alternating sides,
+using only already-introduced monster types and respecting the 180-enemy cap.
+
+Waves 5, 10, and 15 require both the timer and the boss to be resolved.
+Overtime pauses normal arrivals and shows the named boss objective; boss
+specials and existing enemies continue fighting. Early boss kills still require
+surviving the wave. Wave 20 retains its immediate-clear final-boss rule.
+Surviving a boss contact hit resolves it, preserving the contact explosion
+rule; lethal contact loses the run. A required boss is ensured if it was not
+spawned before time expired. Endless retains timed wave completion.
+
+Quick Refill adds `2 / (1 + 0.4 × prior picks)` ink/s. Bottomless Pen still adds
+120 max ink, with `4 / (1 + 0.4 × prior picks)` ink/s. Living Fountain Pen
+multiplies regeneration by `1 + 0.35 / (1 + 0.5 × prior picks)`. Extra parallel
+walls retain full damage but have 60% of the primary wall's durability.
+Current totals and upgrade-stack explanations reflect these formulas.
+
+Combat healing shares a 6 HP/s refill budget, kill refunds share 8 ink/s, and
+kill repairs share 12 wall HP/s across all walls. Each budget holds up to one
+second of reserve for immediate bursts, refills only during active combat,
+and resets on a new wave. Only actual healing/refunds/repairs consume reserve;
+full health/ink/walls waste none. Combat healing cannot revive Stevie.
+First Aid and between-wave recovery are outside the combat healing budget;
+active Patchwork drawing repairs remain separate. Existing ink damage,
+synergies, upgrade art, and purchased Notebook perks are retained.
+
+A full campaign pays 61 scraps for clears/milestones/victory, plus up to 8
+kill scraps (69 total). Defeat without earnings still gives 1 consolation scrap.
+Stored scraps, ranks, preferences, and records are unchanged.
+
+Validation covers HP anchors, spawn groups/caps, boss overtime and early
+kills/contact, shared budgets, paused refill/death protection, regeneration
+formulas, parallel durability, and scrap caps/milestones. The optional
+`node tests/browser-difficulty.cjs [packaged-site-directory]` checks overtime,
+Build/upgrade text and Notebook earnings on desktop and phone viewports.
+A seeded closed-barrier opening smoke test survived with 33 HP versus 15 HP
+under the previous spawn timing; later balance still needs human playtests.

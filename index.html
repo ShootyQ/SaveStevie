@@ -26,6 +26,7 @@
       </div>
     </div>
 
+    <div id="bossOvertime" role="status" style="display:none"></div>
     <div class="inktags" id="inkTags"></div>
     <div id="freehandMeter" style="display:none;position:absolute;left:10px;top:92px;width:190px;
       background:rgba(255,255,255,.9);border:2px solid rgba(31,42,51,.15);border-radius:12px;padding:6px 8px;
@@ -187,7 +188,7 @@
     <div class="build-heading"><h2 id="notebookTitle">Back of the Notebook</h2><button id="closeNotebookBtn">Close</button></div>
     <div class="notebook-wallet"><span class="notebook-scrap" aria-hidden="true">✂</span><div><strong id="notebookBank">0</strong> <b>Notebook Scraps</b><small>Saved on this browser · Kept after defeat</small></div></div>
     <p id="notebookNotice" role="status"></p>
-    <div class="notebook-earn"><b>How to collect scraps</b><span>1 per 10 kills · 3 per cleared wave · 5 per defeated boss · 15 for winning wave 20. A defeat with no earnings keeps 1 consolation scrap.</span></div>
+    <div class="notebook-earn"><b>How to collect scraps</b><span>1 per 25 kills (up to 8 per run) · 1 per cleared wave · Chapter-clear bonuses: 6 / 8 / 10 / 12 · 5 extra for winning wave 20. A defeat with no earnings keeps 1 consolation scrap.</span></div>
     <h3>Your next starting kit</h3><p id="notebookLoadout"></p>
     <div id="notebookPerks" class="notebook-grid"></div>
     <div class="notebook-earn"><b>Start a fresh notebook</b><p>Reset all scraps, permanent perks, your best-wave record, and the current run on this browser. You will be asked to confirm.</p><button class="secondary" id="resetNotebookBtn">Reset game progress</button></div>
@@ -220,6 +221,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>A smoother start and tougher chapter endings</h3><p>Wave 1 gives you more drawing time and fewer arrivals. Enemy HP climbs to 1.2× on wave 5, 1.9× on 10, 2.8× on 15, and 4× on 20. Later chapters add small coordinated groups. Chapter bosses must be removed before advancing; overtime stops new arrivals while you finish the fight. A surviving boss contact still resolves it, as before.</p><p>Repeated ink-regeneration picks give smaller bonuses. Extra parallel walls have 60% durability. Combat healing, kill ink refunds, and kill repairs share refillable budgets, preventing crowds from supplying unlimited sustain. Scraps now favor cleared chapters over kill farming; the Notebook explains the new payouts. Existing scraps and perks are kept.</p></article>
       <article class="build-entry"><h3>Four pages, four paper worlds</h3><p>Custom backgrounds now mark each five-wave chapter: Margin Mischief (1–5), Pop Quiz Panic (6–10), Crayon Catastrophe (11–15), and Detention: The Final Draft (16–20). Faint paper texture and edge doodles keep the fighting space readable. Wave-clear screens name the current chapter; new runs return to the first page.</p></article>
       <article class="build-entry"><h3>A fresh notebook whenever you need it</h3><p>Back of the Notebook now includes Reset game progress. Confirming clears this browser’s scraps, permanent perks, best-wave record, and current run, then returns to the splash screen. Music and monster-intro settings stay as you chose them.</p></article>
       <article class="build-entry"><h3>New villains on pages 10 and 15</h3><p>Wave 10 introduces Staple Snack, a wall-crushing stapler with an orange warning line before its slam. Wave 15 introduces Count Crayon, a doodle wizard who summons three Niblets after a purple warning ring. Freeze or stun interrupts either attack. Both have custom scribbled artwork, compendium entries, introduction popups, and boss scrap rewards.</p></article>
@@ -339,6 +341,7 @@
 <script src="js/dom.js"></script>
 <script src="js/state.js"></script>
 <script src="js/geometry.js"></script>
+<script src="js/balance.js"></script>
 <script src="js/music.js"></script>
 <script src="js/chapters.js"></script>
 <script src="js/ui.js"></script>

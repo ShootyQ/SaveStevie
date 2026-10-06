@@ -9,9 +9,9 @@ function update(dt){
   if(!game.state.finalOvertime) game.state.timeLeft-=dt;
   if(game.state.timeLeft<=0){
     game.state.timeLeft=0;
-    if(game.state.wave===20&&!game.state.endless&&!game.state.finalBossDefeated){
+    if(game.api.campaignBossPending()){
       game.state.finalOvertime=true;
-      game.api.setMsg('TIME SURVIVED. NOW DEFEAT '+game.api.monsterName('eraser').toUpperCase()+'!');
+      game.api.ensureWaveBoss();game.api.setMsg('TIME SURVIVED. NOW DEFEAT '+game.api.monsterName(game.api.bossTypeForWave()).toUpperCase()+'!');
     }else{
       game.api.waveComplete();return;
     }
@@ -21,6 +21,7 @@ function update(dt){
     game.api.waveComplete();return;
   }
 
+  game.api.updateSustain(dt);
   game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.inkRegen*dt);
 
   // Ink slowly fades even when nobody is touching it.
