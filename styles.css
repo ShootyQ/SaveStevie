@@ -632,3 +632,6 @@ button:disabled { transform:none; }
 /* Nine-slice paper preserves corner illustrations without cover cropping. */
 #chapterPaper{position:absolute;inset:58px 0 0;pointer-events:none;border:0 solid transparent;border-image-slice:18% fill;border-image-width:clamp(80px,11vw,112px);border-image-repeat:stretch;background:linear-gradient(rgba(76,132,183,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(76,132,183,.08) 1px,transparent 1px);background-size:28px 28px;}
 #game{position:relative;background-color:transparent;background-size:0 0;}
+
+.copyright-notice{display:block;margin-top:6px;font-family:"Trebuchet MS",system-ui,sans-serif;font-size:10px;line-height:1.4;color:#786b54}
+@media(max-height:520px) and (min-width:600px){.copyright-notice{margin-top:3px;font-size:9px}}

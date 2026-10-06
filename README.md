@@ -2,6 +2,15 @@
 
 Refactored from doodle_defender_v8.html. Open index.html directly in a modern browser. No installation or build required. Keep the folder together.
 
+## Copyright
+
+© 2026 ShootyQ. Save Stevie. All rights reserved.
+
+No license to copy, modify, redistribute or commercially use this project is
+granted by making this repository publicly accessible. Third-party components
+remain subject to their respective licenses; the bundled Patrick Hand font
+retains its [SIL Open Font License](assets/fonts/OFL-PatrickHand.txt).
+
 ## Editing guide
 
 - game.js composes systems and starts the game.
