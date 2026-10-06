@@ -747,8 +747,8 @@ The refuge now uses one complete transparent illustration,
 `assets/art/paper-fort.png`, instead of repeated ball sprites. Its outer footprint
 is 112×104px, with 18px rounded collision
 corners, centered 4px below Stevie so his full-size portrait stays visible.
-The thin folded-paper walls have corner towers and battlements, with lined/grid
-paper, colored scraps, grades and playful doodles. Contact uses nearest-point distance to the rounded rectangle; no
+The thin folded-paper walls have mismatched corner towers, bent battlements and
+tape patches, with lined/grid paper, colored scraps and scruffy pencil doodles. Contact uses nearest-point distance to the rounded rectangle; no
 extra health or changes to armor, cover, projectile hitboxes or rewards.
 
 Sound effects use the eleven user-supplied recordings converted to 32 kHz mono
