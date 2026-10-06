@@ -446,7 +446,9 @@ playback and chapter selection on desktop and phone-sized browsers.
 The splash reuses Stevie’s four-column/two-row sprite sheet for idle, blink and
 throw poses. A small CSS rock arc is synchronized with his throw and the
 sniper’s reaction. The grunt shifts, the splitter bounces, the fire wiggles,
-and the pencil retraces the ink barrier in a six-second loop. Buttons remain
+and the pencil retraces the ink barrier in a six-second loop. Its SVG motion
+path references the actual barrier, with the pencil tip anchored to the same
+progress as the ink reveal, so alignment scales with the scene. Buttons remain
 stationary. These decorative CSS animations never use combat state, random
 numbers, or another JavaScript frame loop. Animation playback pauses when
 startOverlay is hidden; prefers-reduced-motion disables movement, leaves the

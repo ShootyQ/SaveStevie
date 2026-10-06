@@ -225,7 +225,7 @@ button:disabled{opacity:.5;cursor:default}
 .splash-grunt{width:22%;left:2%;top:16%;transform:rotate(-8deg)}
 .splash-sniper{width:28%;right:0;top:24%;transform:rotate(7deg)}
 .splash-splitter{width:22%;right:2%;bottom:0;transform:rotate(-5deg)}
-.splash-pencil{width:15%;left:11%;bottom:3%;transform:rotate(-10deg)}
+
 .splash-fire{width:12%;left:29%;top:7%;transform:rotate(-25deg)}
 .splash-scribble{position:absolute;left:54%;bottom:2%;color:#3562be;font-size:clamp(9px,2.3vw,15px);font-weight:bold;transform:rotate(-8deg)}
 .ucard{position:relative}
@@ -340,9 +340,9 @@ button:disabled{opacity:.5;cursor:default}
 .splash-grunt{transform-origin:50% 85%;animation:splashGruntWiggle 2.6s ease-in-out infinite}
 .splash-sniper{transform-origin:50% 80%;animation:splashSniperReact 6s ease-in-out infinite}
 .splash-splitter{transform-origin:50% 90%;animation:splashSplitterBounce 1.8s ease-in-out infinite}
-.splash-pencil{animation:splashPencilTrace 6s ease-in-out infinite}
+.splash-pencil{offset-path:url(#splashInkPath);offset-position:0px 0px;offset-anchor:0px 0px;offset-rotate:0deg;animation:splashPencilTrace 6s linear infinite}
 .splash-fire{transform-origin:50% 100%;animation:splashFireFlicker .9s ease-in-out infinite}
-.splash-ink-stroke{stroke-dasharray:1;animation:splashInkTrace 6s ease-in-out infinite}
+.splash-ink-stroke{stroke-dasharray:1;animation:splashInkTrace 6s linear infinite}
 .splash-scribble{animation:splashNoteWiggle 3.8s ease-in-out infinite}
 .splash-rock{position:absolute;left:57%;top:55%;width:2%;aspect-ratio:5 / 4;border:1px solid #5f5a53;border-radius:45% 60% 40% 50%;background:#aea088;opacity:0;pointer-events:none;animation:splashRockToss 6s linear infinite}
 #startOverlay .splash-art *{animation-play-state:var(--splash-motion,running)}
@@ -356,7 +356,7 @@ button:disabled{opacity:.5;cursor:default}
 @keyframes splashSplitterBounce{0%,100%{transform:rotate(-5deg) scale(1.03,.97)}45%{transform:translateY(-6px) rotate(3deg) scale(.97,1.03)}}
 @keyframes splashSniperReact{0%,55%,80%,100%{transform:rotate(7deg)}65%{transform:rotate(3deg)}73%{transform:translateX(3px) rotate(12deg)}76%{transform:rotate(4deg)}}
 @keyframes splashFireFlicker{0%,100%{transform:rotate(-25deg) scale(.96,1)}50%{transform:rotate(-19deg) scale(1.05,1.08)}}
-@keyframes splashPencilTrace{0%,58%,100%{transform:rotate(-10deg)}8%{transform:translate(135%,-15%) rotate(10deg)}30%{transform:translate(145%,-195%) rotate(40deg)}44%{transform:translate(350%,-220%) rotate(80deg)}54%{transform:translate(420%,-20%) rotate(100deg)}}
+@keyframes splashPencilTrace{0%,8%,100%{offset-distance:0%}54%,94%{offset-distance:100%}}
 @keyframes splashInkTrace{0%,8%,100%{stroke-dashoffset:1}54%,94%{stroke-dashoffset:0}}
 @keyframes splashRockToss{0%,64%{opacity:0;transform:translate(0,0)}65%{opacity:1;transform:translate(0,0)}69%{opacity:1;transform:translate(700%,-1000%) rotate(160deg)}73%{opacity:1;transform:translate(1350%,-400%) rotate(300deg)}74%,100%{opacity:0;transform:translate(1350%,-400%) rotate(300deg)}}
 @keyframes splashNoteWiggle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(-5deg)}}
