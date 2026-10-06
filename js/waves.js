@@ -7,10 +7,10 @@ function waveDuration(){
 function resetRun(){
   game.api.closeInfo();
   game.dom.$('lastHitText').textContent='';
-  game.state.wave=1;game.state.kills=0;game.state.score=0;game.state.waveKills=0;game.state.rerolls=1;game.state.endless=false;game.state.specialization='none';game.state.finalOvertime=false;game.state.finalBossDefeated=false;
+  game.state.wave=1;game.state.kills=0;game.state.score=0;game.state.waveKills=0;game.state.rerolls=0;game.state.endless=false;game.state.specialization='none';game.state.finalOvertime=false;game.state.finalBossDefeated=false;
   game.state.walls=[];game.state.enemies=[];game.state.particles=[];game.state.floaters=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.synergies.clear();
   Object.assign(game.state.stats,{
-    maxInk:250,ink:250,inkRegen:8,wallHp:95,wallDamage:10,wallSlow:0,wallStun:0,
+    maxInk:160,ink:160,inkRegen:5,wallHp:65,wallDamage:8,wallSlow:0,wallStun:0,
     refund:0,luck:0,playerRegen:0,doubleLine:false,tripleLine:false,explode:false,
     repairOnKill:0,freehandLevel:0,freehandCharge:0,freehandThreshold:80,freehandBank:0,freehandBankSize:40,strokeCount:0,closedBonus:1,killHeal:0,
     lineCost:.31,lineWidth:8,wallLife:72,intersectBonus:0,repairDraw:0,firstFree:false,
@@ -19,7 +19,9 @@ function resetRun(){
   });
   Object.keys(game.state.inks).forEach(k=>game.state.inks[k]=0);
   for(const k in game.state.stacks)delete game.state.stacks[k];
-  game.state.player.maxHp=100;game.state.player.hp=100;game.state.player.rockCd=0;
+  game.state.player.maxHp=75;game.state.player.hp=75;game.state.player.rockCd=0;
+  game.state.drawing=false;game.state.currentWall=null;
+  game.api.applyNotebookLoadout();game.api.beginScrapRun();
   game.state.running=true;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
   game.dom.startOverlay.style.display='none';game.dom.gameOverOverlay.style.display='none';game.dom.upgradeOverlay.style.display='none';
   game.dom.waveOverlay.style.display='none';game.dom.victoryOverlay.style.display='none';game.dom.specializeOverlay.style.display='none';
@@ -45,6 +47,7 @@ function startWave(){
 function waveComplete(){
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running)return;
   game.state.betweenWaves=true;
+  game.api.awardScraps(3);
   game.api.celebrateStevie();
   game.api.resetAbilityEffects();
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);
@@ -64,6 +67,7 @@ function waveComplete(){
   game.dom.$('waveClearTitle').textContent='Wave '+game.state.wave+' cleared!';
 
   if(game.state.wave===20&&!game.state.endless){
+    game.api.finishScrapRun(true);
     game.state.running=false;game.dom.$('victoryScore').textContent=game.state.score;game.dom.victoryOverlay.style.display='grid';
     if(game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
     game.api.updateUI();return;
@@ -79,6 +83,7 @@ function proceedAfterWave(){
 }
 
 function gameOver(){
+  game.api.finishScrapRun();
   game.state.running=false;
   game.dom.$('finalWave').textContent=game.state.wave;game.dom.$('finalKills').textContent=game.state.kills;game.dom.$('finalScore').textContent=game.state.score;
   game.dom.gameOverOverlay.style.display='grid';

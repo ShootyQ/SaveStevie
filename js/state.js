@@ -25,14 +25,14 @@ game.state.projectiles = [];
 game.state.enemyShots = [];
 game.state.drawing = false;
 game.state.currentWall = null;
-game.state.rerolls = 1;
+game.state.rerolls = 0;
 game.state.specialization = 'none';
 game.state.pendingNextWave = false;
 game.state.finalOvertime = false;
 game.state.finalBossDefeated = false;
-game.state.player = {x:400,y:350,r:17,maxHp:100,hp:100,rockCd:0};
+game.state.player = {x:400,y:350,r:17,maxHp:75,hp:75,rockCd:0};
 game.state.stats = {
-  maxInk:250,ink:250,inkRegen:8,wallHp:95,wallDamage:10,wallSlow:0,wallStun:0,
+  maxInk:160,ink:160,inkRegen:5,wallHp:65,wallDamage:8,wallSlow:0,wallStun:0,
   refund:0,luck:0,playerRegen:0,doubleLine:false,tripleLine:false,explode:false,
   repairOnKill:0,freehandLevel:0,freehandCharge:0,freehandThreshold:80,freehandBank:0,freehandBankSize:40,strokeCount:0,closedBonus:1,killHeal:0,
   lineCost:.31,lineWidth:8,wallLife:72,intersectBonus:0,repairDraw:0,firstFree:false,

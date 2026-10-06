@@ -74,6 +74,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
 function killEnemy(e){
   if(!game.state.enemies.includes(e))return;
   game.state.kills++;game.state.waveKills++;game.state.score+=10;
+  game.api.awardKillScraps(e);
   game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.refund);
   game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+game.state.stats.killHeal);
   if(game.state.stats.repairOnKill)game.state.walls.forEach(w=>w.hp=Math.min(w.maxHp,w.hp+game.state.stats.repairOnKill));

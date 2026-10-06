@@ -127,7 +127,7 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
-const infoButtons={build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn'};
+const infoButtons={build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(activeInfo===kind||activeInfo==='monsterIntro')return;
@@ -136,6 +136,7 @@ function openInfo(kind){
   game.state.paused=true;activeInfo=kind;
   if(kind==='build')renderBuild();
   if(kind==='compendium')game.api.renderCompendium();
+  if(kind==='notebook')game.api.renderNotebook();
   game.dom.$(kind+'Overlay').style.display='grid';
   game.dom.$(infoButtons[kind]).focus?.({preventScroll:true});
   const cards=game.dom.$(kind+'Overlay').querySelector?.('.build-box');
@@ -146,7 +147,7 @@ function closeInfo(){
   if(!activeInfo)return;
   const kind=activeInfo;activeInfo=null;game.state.paused=pausedBeforeInfo;
   game.dom.$(kind+'Overlay').style.display='none';
-  if(kind==='monsterIntro')game.dom.$('pauseBtn').focus?.();else focusBeforeInfo?.focus?.();
+  if(kind==='monsterIntro'||(focusBeforeInfo?.getClientRects&&focusBeforeInfo.getClientRects().length===0))game.dom.$('pauseBtn').focus?.();else focusBeforeInfo?.focus?.();
 }
 function handleInfoKey(e){
   if(!activeInfo)return;

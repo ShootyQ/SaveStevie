@@ -108,7 +108,7 @@ game.catalog.upgrades = [
   // Stevie
   {name:'Bandages',rarity:'uncommon',cat:'stevie',desc:'Heal 8 extra HP between waves.',apply:()=>game.state.stats.playerRegen+=8},
   {name:'Helmet',rarity:'uncommon',cat:'stevie',desc:'Stevie takes 10% less contact damage.',apply:()=>game.state.stats.playerArmor=Math.min(.55,game.state.stats.playerArmor+.1)},
-  {name:'Pocket Rocks',rarity:'rare',cat:'stevie',desc:'Stevie starts throwing rocks at nearby enemies.',apply:()=>{game.state.stats.rockDamage+=9;game.state.stats.rockRate=game.state.stats.rockRate||1.25}},
+  {name:'Pocket Rocks',rarity:'rare',cat:'stevie',desc:'Stevie starts throwing rocks at nearby enemies.',apply:()=>{game.state.stats.rockDamage+=9;game.state.stats.rockRate=Math.min(game.state.stats.rockRate||1.25,1.25)}},
   {name:'Better Rocks',rarity:'rare',cat:'stevie',desc:'+12 rock damage and faster throws.',apply:()=>{game.state.stats.rockDamage+=12;game.state.stats.rockRate=Math.max(.45,(game.state.stats.rockRate||1.2)-.12)}},
   {name:'Emergency Medicine',rarity:'rare',cat:'stevie',desc:'Heal 2 HP per kill.',apply:()=>game.state.stats.killHeal+=2},
   {name:'Really Good Rocks',rarity:'epic',cat:'stevie',desc:'+24 rock damage.',apply:()=>{game.state.stats.rockDamage+=24;game.state.stats.rockRate=Math.max(.35,(game.state.stats.rockRate||1)-.1)}},

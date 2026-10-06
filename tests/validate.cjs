@@ -3,6 +3,11 @@ const root=path.resolve(__dirname,'..');
 function environment(){const nodes=new Map(),calls=[];let seed=123456;const math=Object.create(Math);math.random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const ctx=new Proxy({measureText:t=>({width:String(t).length*6})},{get(o,k){if(k in o)return o[k];return (...a)=>{calls.push([k,...a]);if(k==='createLinearGradient'||k==='createRadialGradient')return {addColorStop(){}};};}});function node(id){if(!nodes.has(id))nodes.set(id,{style:{},dataset:{},textContent:'',innerHTML:'',children:[],listeners:{},appendChild(n){this.children.push(n);},addEventListener(k,f){this.listeners[k]=f;},getBoundingClientRect(){return {left:0,top:0,width:800,height:700};},getContext(){return ctx;},setPointerCapture(){}});return nodes.get(id);}const sandbox={console,performance:{now:()=>1234},Math:math,Set,document:{getElementById:node,createElement:()=>node('created'+nodes.size),querySelectorAll:()=>[]},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:f=>{sandbox.frame=f;},setTimeout:()=>1,clearTimeout(){}};sandbox.window=sandbox;sandbox.addEventListener=()=>{};vm.createContext(sandbox);return {sandbox,node,calls};}
 function load(refactored,options={}){const env=environment();if(options.storage)env.sandbox.localStorage=options.storage;if(options.audio)Object.assign(env.node('gameMusic'),options.audio);if(options.documentEvents)env.sandbox.document.addEventListener=(key,fn)=>options.documentEvents[key]=fn;const pendingImages=[];if(options.images)env.sandbox.Image=class{constructor(){this.naturalWidth=200;this.naturalHeight=180}set src(value){this.url=value;pendingImages.push(()=>this.onload?.())}get src(){return this.url}};if(options.reduced)env.sandbox.matchMedia=()=>({matches:true,addEventListener(){}});if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}for(const ready of pendingImages)ready();if(!options.intros)env.sandbox.testGame.api.setMonsterIntrosEnabled(false);env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
 const a=load(false),b=load(true);let checks=0;
+// Keep the old starting kit only in the legacy parity fixture. New-run balance
+// and permanent perks are checked separately below.
+function legacyStartingKit(){const g=b.sandbox.testGame;Object.assign(g.state.stats,{maxInk:250,ink:250,inkRegen:8,wallHp:95,wallDamage:10});Object.assign(g.state.player,{maxHp:100,hp:100});g.state.rerolls=1;}
+b.sandbox.testGame.api.applyNotebookLoadout=legacyStartingKit;
+legacyStartingKit();b.sandbox.testGame.api.updateUI();
 // Compare unchanged combat against the original without the new presentation labels.
 b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
@@ -94,7 +99,7 @@ bg.api.resetRun();
 const choose=name=>bg.api.chooseUpgrade(bg.catalog.upgrades.find(u=>u.name===name));
 choose('Bigger Ink Tank');choose('Bigger Ink Tank');
 assert.equal(bg.state.stacks['Bigger Ink Tank'],2);
-assert.equal(bg.state.stats.maxInk,320,'repeated upgrades add their effects');
+assert.equal(bg.state.stats.maxInk,230,'repeated upgrades add their effects');
 assert.match(bg.api.upgradeEffect('Bigger Ink Tank'),/70/);
 choose('Fine Tip');choose('Fine Tip');
 assert.ok(Math.abs(bg.state.stats.lineCost-.31*.88*.88)<1e-10);
@@ -116,7 +121,7 @@ bg.api.openBuild();assert.equal(bg.state.paused,true);assert.equal(build.node('b
 bg.api.update(.033);assert.equal(bg.state.timeLeft,snapshot,'review pauses combat');
 assert.match(build.node('buildUpgrades').innerHTML,/Bigger Ink Tank ×2/);
 assert.match(build.node('buildUpgrades').innerHTML,/\+70 max ink/);
-assert.match(build.node('buildStats').innerHTML,/320/);
+assert.match(build.node('buildStats').innerHTML,/230/);
 assert.match(build.node('buildSynergies').innerHTML,/Hot Rocks/);
 bg.api.closeBuild();assert.equal(bg.state.paused,false);
 bg.state.paused=true;bg.api.openBuild();bg.api.closeBuild();assert.equal(bg.state.paused,true,'closing preserves an existing pause');
@@ -426,7 +431,7 @@ g.state.enemies=[];const medic=g.api.spawnEnemy(false,x+180,y,'medic'),ally=g.ap
 g.api.updateEnemyBehavior(medic,.05);g.api.updateEnemyAnimations(.016);assert.ok(['medic-ready','medic-heal'].includes(g.api.enemyActionFrame(medic)));assert.equal(ally.hp,injured+.15,'animation preserves healing amount');
 medic.freeze=1;const stopped=ally.hp;g.api.updateEnemyBehavior(medic,.05);g.api.updateEnemyAnimations(.016);assert.equal(ally.hp,stopped);assert.equal(g.api.enemyActionFrame(medic),null,'frozen healer does not animate a heal');
 medic.freeze=0;ally.hp=ally.maxHp;g.api.updateEnemyBehavior(medic,.2);g.api.updateEnemyAnimations(.2);assert.equal(g.api.enemyActionFrame(medic),null,'full-health allies cause no healing animation');
-g.api.resetRun();g.state.spawnTimer=999;g.api.damageStevie(0,'zero');assert.equal(g.api.stevieReactionPose().sprite,null);g.api.damageStevie(5,'test contact');assert.equal(g.api.stevieReactionPose().sprite,'stevie-flinch');assert.equal(g.state.player.hp,95);
+g.api.resetRun();g.state.spawnTimer=999;g.api.damageStevie(0,'zero');assert.equal(g.api.stevieReactionPose().sprite,null);g.api.damageStevie(5,'test contact');assert.equal(g.api.stevieReactionPose().sprite,'stevie-flinch');assert.equal(g.state.player.hp,70);
 g.api.updateStevieAnimation(.08);const reaction=JSON.stringify(g.api.stevieReactionPose()),pure=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),pure);assert.equal(JSON.stringify(g.api.stevieReactionPose()),reaction,'rendering is presentation-pure');
 g.state.paused=true;g.api.update(.4);assert.equal(JSON.stringify(g.api.stevieReactionPose()),reaction,'Stevie flinch respects pause');g.state.paused=false;g.api.updateStevieAnimation(.3);assert.equal(g.api.stevieReactionPose().sprite,null,'Stevie recovers');
 g.api.waveComplete();assert.equal(g.api.stevieReactionPose().sprite,'stevie-cheer-a');const clear=JSON.stringify(g.state);g.api.update(.3);assert.equal(JSON.stringify(g.state),clear,'celebration advances with combat stopped');assert.ok(g.api.stevieReactionPose().y<0);
@@ -519,7 +524,7 @@ e.burn=e.poison=e.freeze=0;g.api.updateAbilityEffects(.1);assert.equal(g.api.abi
 g.api.dealDamage(e,0,'void');assert.equal(g.api.abilityEffectsSnapshot().voids.length,0);e.immunity='void';g.api.dealDamage(e,4,'void');assert.equal(g.api.abilityEffectsSnapshot().voids.length,0,'immune hits do not generate successful void bursts');
 e.immunity=null;g.api.dealDamage(e,4,'void');assert.equal(g.api.abilityEffectsSnapshot().voids.length,1);assert.equal(e.hp,e.maxHp-4);
 g.state.inks.vampire=2;g.state.player.hp=g.state.player.maxHp;g.api.applyInkContact(e,.1);assert.equal(g.api.abilityEffectsSnapshot().leeches.length,0,'full health does not invent healing');
-g.state.player.hp=80;g.api.applyInkContact(e,.1);assert.ok(g.state.player.hp>80);assert.equal(g.api.abilityEffectsSnapshot().leeches.length,1);for(let i=0;i<100;i++)g.api.applyInkContact(e,.001);assert.equal(g.api.abilityEffectsSnapshot().leeches.length,1,'healing ticks are globally throttled');
+g.state.player.hp=50;g.api.applyInkContact(e,.1);assert.ok(g.state.player.hp>50);assert.equal(g.api.abilityEffectsSnapshot().leeches.length,1);for(let i=0;i<100;i++)g.api.applyInkContact(e,.001);assert.equal(g.api.abilityEffectsSnapshot().leeches.length,1,'healing ticks are globally throttled');
 for(let i=0;i<100;i++){const n=g.api.spawnEnemy(false,150+i,200,'grunt');n.burn=n.poison=n.freeze=2;g.api.animateVoidHit(n);g.api.updateAbilityEffects(.13);g.api.animateLeech(n,1)}
 fx=g.api.abilityEffectsSnapshot();assert.equal(fx.statuses.length,24);assert.ok(fx.voids.length<=8&&fx.leeches.length<=6);for(let i=0;i<100;i++)g.api.animateVoidHit(e);assert.equal(g.api.abilityEffectsSnapshot().voids.length,8,'void bursts cap concurrent events');
 const captured=g.api.abilityEffectsSnapshot();env.node('game').getBoundingClientRect=()=>({left:0,top:0,width:920,height:780});g.api.resize();fx=g.api.abilityEffectsSnapshot();assert.equal(fx.statuses[0].x,captured.statuses[0].x+60);assert.equal(fx.leeches[0].targetY,captured.leeches[0].targetY+40);assert.equal(fx.voids[0].x,captured.voids[0].x+60);
@@ -581,4 +586,43 @@ for(let mask=1;mask<64;mask++){
 const stats=g.api.rendererCacheStats();assert.ok(stats.tintEvictions>0,'unused combinations are evicted');
 const e=g.state.enemies[0];g.state.enemies=[e];g.api.draw();const before=g.api.rendererCacheStats();g.api.resetRun();const next=g.api.spawnEnemy(false,200,250,e.type);for(const key of ['burn','poison','freeze','charged','gravitySlow','stun'])next[key]=e[key];g.api.draw();assert.equal(g.api.rendererCacheStats().tintMisses,before.tintMisses,'run resets can reuse valid cached art');
 console.log('PASS: mixed-monster/status sprite reuse beyond 32 entries, exact hit/miss stability, bounded entry/byte storage, eviction, run reuse, and unchanged combat.');
+}
+
+// Notebook transactions and the actual lower-power starting kit.
+{
+const key='saveStevieNotebookV1',stored=new Map([['doodleDefenderBestV4','15']]);
+const storage={getItem:k=>stored.get(k)??null,setItem:(k,v)=>stored.set(k,String(v))};
+const env=load(true,{storage}),g=env.sandbox.testGame;
+assert.equal(g.api.buyNotebookPerk('inkTank'),false,'no free purchases');
+g.api.resetRun();
+assert.deepEqual([g.state.stats.maxInk,g.state.stats.inkRegen,g.state.stats.wallHp,g.state.stats.wallDamage,g.state.player.maxHp,g.state.rerolls],[160,5,65,8,75,0]);
+for(let i=0;i<10;i++){const e=g.api.spawnEnemy(false,100,100,'grunt');g.api.killEnemy(e);g.api.killEnemy(e)}
+assert.equal(g.api.notebookSnapshot().scraps,1,'ten actual kills, no double rewards');
+const contact=g.api.spawnEnemy(false,g.state.player.x,g.state.player.y,'grunt');g.api.contactStevie(contact);assert.equal(g.api.notebookSnapshot().scraps,1,'contact removals do not earn scraps');
+g.api.waveComplete();g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,4,'wave reward paid once');
+assert.equal(JSON.parse(stored.get(key)).scraps,4,'banked before run ends');
+g.state.paused=true;assert.equal(g.api.buyNotebookPerk('inkTank'),false,'paused runs cannot buy');
+g.api.gameOver();g.api.gameOver();assert.equal(g.api.notebookSnapshot().scraps,4,'no duplicate/consolation on earned run');
+g.api.resetRun();g.api.gameOver();g.api.gameOver();assert.equal(g.api.notebookSnapshot().scraps,5,'zero-earnings defeat consolation once');
+assert.equal(g.api.buyNotebookPerk('unknown'),false);assert.equal(g.api.buyNotebookPerk('inkTank'),true);assert.equal(g.api.buyNotebookPerk('inkTank'),false);
+assert.equal(g.state.stats.maxInk,160,'purchase applies next run');
+const reloaded=load(true,{storage}).sandbox.testGame;reloaded.api.resetRun();assert.equal(reloaded.state.stats.maxInk,180,'saved purchase applies');
+reloaded.api.chooseUpgrade(reloaded.catalog.upgrades.find(u=>u.name==='Bigger Ink Tank'));assert.equal(reloaded.state.stats.maxInk,215,'permanent perk stacks with run reward');
+reloaded.api.resetRun();assert.equal(reloaded.state.stats.maxInk,180,'new run clears temporary upgrades without duplicating perks');assert.equal(Object.keys(reloaded.state.stacks).length,0);
+const boss=reloaded.api.spawnEnemy(true,100,100,'boss');reloaded.api.killEnemy(boss);assert.equal(reloaded.api.notebookSnapshot().scraps,5,'boss kill bonus');
+reloaded.state.wave=20;reloaded.api.waveComplete();assert.equal(reloaded.api.notebookSnapshot().scraps,23,'final wave plus victory bonus');reloaded.api.finishScrapRun(true);assert.equal(reloaded.api.notebookSnapshot().scraps,23);
+reloaded.api.resumeScrapRun();reloaded.api.awardScraps(3);assert.equal(reloaded.api.notebookSnapshot().scraps,26,'endless continues earning');
+reloaded.api.finishScrapRun();reloaded.api.awardScraps(20);assert.equal(reloaded.api.notebookSnapshot().scraps,26,'finished runs cannot earn');
+assert.ok(Number(stored.get('doodleDefenderBestV4'))>=15,'existing best never erased');
+const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:1000,lifetimeScraps:1000,levels:{}}):null,setItem(){}};
+const rich=load(true,{storage:richStore}).sandbox.testGame;
+for(const p of rich.catalog.notebookPerks){for(let rank=0;rank<p.max;rank++)assert.equal(rich.api.buyNotebookPerk(p.id),true);assert.equal(rich.api.buyNotebookPerk(p.id),false,'rank cap')}
+assert.equal(rich.api.notebookSnapshot().scraps,558,'all rank prices charged exactly');
+rich.api.resetRun();assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,97,107,9,1.3,2,8]);
+rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.25,'run rock unlock speeds up starter rocks');assert.equal(rich.state.stats.rockDamage,18);
+const dirty=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:-5,lifetimeScraps:'oops',levels:{inkTank:999,health:-2,rocks:1.5,luck:'4'}}):null,setItem(){}}}).sandbox.testGame;
+assert.equal(dirty.api.notebookSnapshot().scraps,0);dirty.api.resetRun();assert.equal(dirty.state.stats.maxInk,260);assert.equal(dirty.state.player.maxHp,75);assert.equal(dirty.state.stats.rockDamage,0);assert.equal(dirty.state.stats.luck,0);
+const blocked=load(true,{storage:{getItem:()=>null,setItem(){throw Error('blocked')}}}),sg=blocked.sandbox.testGame;
+sg.api.resetRun();sg.api.awardScraps(5);sg.api.gameOver();assert.equal(sg.api.buyNotebookPerk('health'),true);assert.match(blocked.node('notebookNotice').textContent,/not saving/);assert.equal(sg.api.notebookSnapshot().storageIssue,true);sg.api.resetRun();assert.equal(sg.state.player.maxHp,83,'session-only save failure still playable');
+console.log('PASS: Notebook earnings, immediate banking, duplicate/contact protections, consolation, costs/caps, purchase locking, next-run stacking/reset, saved reload, victory/endless, malformed saves, blocked storage, and lower-power starting kit.');
 }
