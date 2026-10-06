@@ -1200,3 +1200,27 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  const p=g.api.refugePoint(b.right+50,b.bottom+2);const cx=b.right-10,cy=b.bottom-10;assert.ok(Math.abs(Math.hypot(p.x-cx,p.y-cy)-10)<1e-9,'far diagonal projects onto the curved corner');
  console.log('PASS: half-size refuge footprint and exact rounded-corner projection.');
 }
+
+(async()=>{
+ const env=load(true),g=env.sandbox.testGame,sources=[];let ctx;
+ const param=()=>({value:0,setTargetAtTime(v){this.value=v},setValueAtTime(v){this.value=v},linearRampToValueAtTime(){}});
+ const node=()=>({gain:param(),connect(){},disconnect(){}});
+ env.sandbox.window.AudioContext=class{
+  constructor(){ctx=this;this.state='running';this.currentTime=0;this.destination={}}
+  createGain(){return node()}
+  createDynamicsCompressor(){return {...node(),threshold:param(),knee:param(),ratio:param(),attack:param(),release:param()}}
+  decodeAudioData(){return Promise.resolve({duration:.5})}
+  createBufferSource(){const s={connect(){},disconnect(){},start(...args){this.args=args},stop(){this.onended?.()}};sources.push(s);return s}
+ };
+ env.sandbox.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(4)});
+ g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,11);
+ const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('sound must not use combat RNG')};
+ assert.equal(g.api.playSound('scribble'),true);assert.equal(sources[0].args[2],.28);assert.equal(g.api.playSound('scribble'),false);
+ sources[0].onended();ctx.currentTime=.3;assert.equal(g.api.playSound('scribble'),true);assert.equal(g.api.soundEffectsSnapshot().voices[0].name,'scribble-2');
+ g.api.playSound('rock');ctx.currentTime=.4;g.api.playSound('rock');assert.deepEqual(g.api.soundEffectsSnapshot().voices.filter(v=>v.kind==='rock').map(v=>v.name),['rock-hit-1','rock-hit-2']);
+ g.api.playSound('wall');g.api.playSound('electric');g.api.playSound('pencil');assert.equal(g.api.soundEffectsSnapshot().voices.length,6);g.api.playSound('defeated');assert.equal(g.api.soundEffectsSnapshot().voices.length,6);assert.equal(g.api.soundEffectsSnapshot().voices.some(v=>v.kind==='scribble'),false,'higher-priority defeat replaces a scribble');
+ for(let i=0;i<100;i++){ctx.currentTime+=.01;g.api.playSound('electric');g.api.playSound('wall')}assert.ok(g.api.soundEffectsSnapshot().voices.length<=6);assert.equal(g.api.soundEffectsSnapshot().voices.filter(v=>v.kind==='electric').length,1);
+ g.state.paused=true;g.api.syncSoundEffects();assert.equal(g.api.soundEffectsSnapshot().voices.length,0);assert.equal(g.api.playSound('rock'),false);g.state.paused=false;
+ g.api.setAudioVolume('effectsVolume',0);assert.equal(g.api.playSound('rock'),false);assert.equal(g.api.audioSettings().musicVolume,.35);g.api.setAudioVolume('effectsVolume',.4);ctx.currentTime=2;assert.equal(g.api.playSound('rock'),true);g.api.resetSoundEffects();assert.equal(g.api.soundEffectsSnapshot().voices.length,0);
+ env.sandbox.Math.random=random;console.log('PASS: eleven decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
+})().catch(error=>{console.error(error);process.exitCode=1});

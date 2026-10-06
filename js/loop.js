@@ -1,6 +1,7 @@
 /* loop: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.loop = function createLoopSystem(game) {
 function update(dt){
+  game.api.syncSoundEffects();
   // The wave-clear portrait celebrates while combat is stopped, but respects
   // manual pause and the build/upgrade/specialization screens.
   if(game.state.betweenWaves&&!game.state.paused&&!game.state.inUpgrade&&!game.state.awaitingSpec)game.api.updateStevieCelebration(dt);

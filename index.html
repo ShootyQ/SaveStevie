@@ -219,7 +219,7 @@
       <p class="option-help">Adjust the chapter soundtrack while it plays. The music-note button still mutes it.</p>
       <label class="volume-label" for="effectsVolume"><span>Sound effects volume</span><output id="effectsVolumeValue" for="effectsVolume">70%</output></label>
       <input id="effectsVolume" type="range" min="0" max="100" step="1" value="70">
-      <p class="option-help">Sound effects are coming later. This saves your preferred volume for when they arrive.</p>
+      <p class="option-help">Adjust pencil scribbles, impacts and electric zaps. Set this to zero to mute effects without muting music.</p>
     </section>
     <section class="option-section"><h3>How you play</h3><label class="monster-setting"><input id="optionsIntros" type="checkbox" checked> Introduce new monsters before a wave</label><p class="option-help">Motion follows your device’s reduced-motion setting. Open Tool any time to pause and inspect your pencil, effects, and synergies.</p></section>
     <div class="options-links"><button class="secondary" id="optionsStatsBtn">Notebook stats</button><button class="secondary" id="changelogBtn">What’s new</button></div>
@@ -274,6 +274,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>The notebook makes some noise</h3><p>Drawing uses five varied pencil scribbles, finished walls get a pencil tap, rocks alternate impact sounds, and wall hits, lightning and defeated monsters have their own effects. Sounds have short cooldowns, limited overlap and a shared mixer to keep busy waves clear. Effects stop during pauses and menus; Options now controls their live volume separately from music.</p></article>
       <article class="build-entry"><h3>A smaller, messier paper fort</h3><p>Stevie’s paper barricade is now half as wide and tall, with one complete illustration instead of repeated balls. The naturally rounded pile mixes lined, graph and colored scraps, bad grades, good scores, doodles and little jokes. It sits around his feet so he stays visible, and its contact boundary now follows rounded corners.</p></article>
       <article class="build-entry"><h3>Music greets you on the intro</h3><p>The intro now starts its music automatically when the browser allows it. If autoplay is blocked, your first tap or key press retries playback. Saved mute and volume preferences still apply.</p></article>
       <article class="build-entry"><h3>Stevie builds a paper-ball fort</h3><p>Five different crumpled notebook-paper balls now form a little rectangular refuge around Stevie. The visible outer line is the contact-damage boundary: monsters reaching it hurt Stevie, while drawn walls still stop them first. The paper flashes at impacts; bosses retreat outside the fort after bumping it. The fort marks Stevie’s health boundary rather than adding a second health bar.</p></article>
@@ -416,6 +417,7 @@
 <script src="js/refuge.js"></script>
 <script src="js/balance.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/sound-effects.js"></script>
 <script src="js/music.js"></script>
 <script src="js/chapters.js"></script>
 <script src="js/ui.js"></script>

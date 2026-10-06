@@ -9,7 +9,7 @@ function setAudioVolume(name,value){
   if(!Object.hasOwn(defaults,name)||typeof value!=='number'||!Number.isFinite(value))return false;
   preferences[name]=volume(value,defaults[name]);
   try{localStorage.setItem(key,JSON.stringify(preferences));storageIssue=false;}catch{storageIssue=true;}
-  game.api.applyMusicVolume?.();renderOptions();return true;
+  game.api.applyMusicVolume?.();game.api.applyEffectsVolume?.();renderOptions();return true;
 }
 // Session-only manual rewards. Once used, a run stays unranked until reset.
 let devEnabled=false,testRun=false;

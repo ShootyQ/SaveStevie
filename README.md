@@ -679,8 +679,8 @@ Lightning uses bounded staggered hand-drawn bolts and orbiting status sparks;
 Plaguefire scars expose honey-colored scratched school-desk grain beneath
 charred paper edges. These visuals do not consume combat RNG.
 
-Development work now uses the `dev` branch. Push updates there; publishing or
-merging to `main` remains a separate action. Remaining ink animations include
+Development now uses fresh feature branches from `main`, with pull requests
+for review and merge. Remaining ink animations include
 Repulsion shove trails, Chaos result bursts, Death Ink skull pulses, Fire embers,
 Poison drips, and Void fragments. Contact accents are presentation-only, capped
 at 16 active effects and throttled to one per monster/type every 0.35 seconds.
@@ -750,3 +750,25 @@ corners, centered 18px below Stevie so his full-size portrait stays visible.
 The irregular art mixes lined/grid paper, colored scraps, grades and playful
 doodles. Contact uses nearest-point distance to the rounded rectangle; no
 extra health or changes to armor, cover, projectile hitboxes or rewards.
+
+Sound effects use the eleven user-supplied recordings converted to 32 kHz mono
+PCM WAV in `assets/audio/effects/` (about 380 KiB together). Leading silence is
+trimmed, peaks are reduced toward -6 dBFS with boost capped at 12 dB, long
+scribbles are clipped to 0.8 seconds, and tails fade for 25 ms. The two supplied rock files contain identical audio, so impacts alternate
+with a subtle fixed 0.97/1.03 pitch variation; scribbles cycle five recordings without consuming combat RNG.
+
+`js/sound-effects.js` unlocks Web Audio on a gesture, loads/decodes samples once,
+and skips unavailable events rather than queueing late noises. Scribbles use
+quiet 0.28-second grains only on actual pencil travel and stop on release.
+Successful wall creation uses the pencil drop; real rock collisions, wall
+damage, lightning casts (once per cast, not per hop), and monster kills have
+their own cues. Six total voices, group caps and short cooldowns limit crowd
+noise; higher-priority cues can replace scribbles. Effects have a separate
+master volume and mild compressor. Pauses/menus, hidden tabs, defeat, wave
+clear and fresh waves stop active effects. Unsupported audio or missing files
+leave gameplay functional. The Options Effects slider applies live and persists.
+
+Use a fresh descriptive branch from current `main` for each new change, push
+it, then open a PR into `main` for review/merge. Continue on the same branch
+for revisions to an open PR. If PR API access is unavailable, provide a
+prefilled GitHub compare link for the user to create the PR.
