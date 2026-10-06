@@ -85,7 +85,7 @@ the screen restores the previous pause state. Reward cards show the next stack
 and its cumulative effect; picking one confirms the new count and effect.
 
 Repeatable upgrades stack additively or multiplicatively as described. One-time
-unlocks stop appearing once acquired, and Helmet/Shock Ink stop appearing at
+unlocks stop appearing once acquired, and Helmet stop appearing at
 their caps. Repeated Pocket Rocks adds damage without slowing improved throws.
 
 ## Late-wave pressure and new enemies
@@ -472,7 +472,7 @@ rank 6 a Simple Pen (three), and rank 10 a Scented Sharpie (four). Existing
 Notebook purchases and best-wave records keep their save keys. Tool purchases
 apply on the next run; effect levels reset each run.
 
-Ink families, Shock Ink, and Death Ink occupy effect slots. Picking an equipped
+Ink families and Death Ink occupy effect slots. Picking an equipped
 effect levels it up. When slots are full, picking a new effect asks which old
 effect to replace and allows cancellation. Replacement loses that effect's
 levels and removes its bonuses and inactive synergies. Health, capacity,
@@ -665,3 +665,16 @@ Frost retains 98.6 damage while taking 360 wall damage. These demonstrate the
 solo roles in that encounter, rather than proving full-campaign balance.
 Run `node tests/browser-support-inks.cjs [packaged-site-directory]` for real
 combat, animation, pause, reduced-motion, preview and resize checks.
+
+Electric now includes Shock instead of requiring a separate socket. A contact cast
+repeats every max(0.22, 0.8 − 0.12 × level) seconds, deals 3 + 2 × level
+source damage, and jumps to the nearest living unvisited enemy within
+110 + 18 × level pixels **of the previous enemy**. It hits up to
+1 + floor(level/2) additional enemies (maximum 12 including synergy bonuses),
+each for 4 + 3 × level damage. Each hit stuns for min(0.45, 0.12 +
+0.025 × level) seconds; bosses halve that duration and Electric immunity
+blocks damage and shock. Existing Cryoshock, Tesla Well, and THE STORM bonuses
+still add range, jumps, and damage. Shock never occupies its own reward slot.
+Lightning uses bounded staggered hand-drawn bolts and orbiting status sparks;
+Plaguefire scars expose honey-colored scratched school-desk grain beneath
+charred paper edges. These visuals do not consume combat RNG.

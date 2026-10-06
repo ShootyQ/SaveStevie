@@ -162,7 +162,6 @@ function update(dt){
       if(e.type==='sapper'&&e.attackCd>0&&e.attackCd<=.16)game.api.prepareSapperStrike(e);
       const dps=game.api.applyInkContact(e,dt,hit.wall);
       game.api.dealDamage(e,dps*dt,'physical');
-      if(game.state.stats.wallStun>0&&Math.random()<game.state.stats.wallStun*dt*.9)e.stun=.45;
       if(e.stun>0||e.freeze>0||e.hp<=0)continue;
       if(e.attackCd<=0){
         game.api.damageWall(hit.wall,e.dmg*(e.type==='sapper'?2:1),e.x,e.y);

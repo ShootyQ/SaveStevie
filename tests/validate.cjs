@@ -34,6 +34,7 @@ b.sandbox.testGame.api.applyFrostContact=(e,dt)=>{const g=b.sandbox.testGame,n=g
 b.sandbox.testGame.api.applyVampireContact=(e,dt)=>{const g=b.sandbox.testGame;if(g.state.inks.vampire)g.api.healStevie(g.state.stats.wallDamage*dt*.015*g.state.inks.vampire)};
 b.sandbox.testGame.api.gravityDamageMultiplier=()=>1;
 b.sandbox.testGame.api.pullGravity=(e,dt,immobilized)=>{const g=b.sandbox.testGame;if(immobilized||!g.state.inks.gravity)return;const p=g.api.nearestWallPoint(e.x,e.y,120+g.state.inks.gravity*20);if(p){const dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1;g.api.moveEnemySafely(e,dx/d*(8+g.state.inks.gravity*5)*dt,dy/d*(8+g.state.inks.gravity*5)*dt)}};
+vm.runInContext("{const game=testGame;game.api.chainLightning=function chainLightning(source,level){\n  let count=1+Math.floor(level/2);\n  let range=110+level*18;\n  let mult=1;\n  if(game.state.synergies.has('Cryoshock')&&source.freeze>0){range+=70;count+=2;mult+=.55}\n  if(game.state.synergies.has('Tesla Well')&&source.gravitySlow>.15){range+=45;count+=1;mult+=.35}\n  if(game.state.synergies.has('THE STORM')){range+=65;count+=2;mult+=.45}\n  const nearby=[];\n  for(const e of game.state.enemies){if(e!==source&&game.api.withinRadius(e.x,e.y,source.x,source.y,range)){nearby.push(e);if(nearby.length===count)break}}\n  game.api.animateChainLightning(source,nearby);\n  game.api.dealDamage(source,(3+level*2)*mult,'electric');\n  nearby.forEach(e=>{game.api.dealDamage(e,(4+level*3)*mult,'electric');game.api.burst(e.x,e.y,'#7ea7ff',4)});\n  game.api.burst(source.x,source.y,'#7ea7ff',5);\n}\n;}",b.sandbox);
 legacyStartingKit();b.sandbox.testGame.api.updateUI();
 // Compare unchanged combat against the original without the new presentation labels.
 b.sandbox.testGame.api.damageNumber=()=>{};
@@ -494,7 +495,7 @@ g.api.resetRun();const {x,y}=g.state.player,plain={pts:[{x:x+60,y},{x:x+120,y}],
 const source=g.api.spawnEnemy(false,x+120,y,'tank');source.immunity='electric';source.immuneCd=1;const hp=source.hp;g.api.chainLightning(source,1);assert.equal(source.hp,hp);assert.equal(g.api.abilityEffectsSnapshot().lightning[0].targets.length,0,'solo electric proc is only a source spark');
 const long={pts:Array.from({length:5000},(_,i)=>({x:i*.15,y:200+Math.sin(i*.05)*10})),thick:8};
 for(let i=0;i<50;i++){g.api.animateChainLightning(source,Array.from({length:100},(_,j)=>({x:x+j,y:y+j})));g.api.animateWallExplosion(long,x,y,100)}
-const budget=g.api.abilityEffectsSnapshot();assert.equal(budget.lightning.length,8);assert(budget.lightning.every(e=>e.targets.length<=6&&e.pathPoints<=78));assert.equal(budget.explosions.length,4);assert(budget.explosions.every(e=>e.points.length<=48&&e.anchors.length<=4&&e.fragments<=16),'long walls and simultaneous blasts remain bounded');
+const budget=g.api.abilityEffectsSnapshot();assert.equal(budget.lightning.length,8);assert(budget.lightning.every(e=>e.targets.length<=12&&e.pathPoints<=156));assert.equal(budget.explosions.length,4);assert(budget.explosions.every(e=>e.points.length<=48&&e.anchors.length<=4&&e.fragments<=16),'long walls and simultaneous blasts remain bounded');
 g.api.waveComplete();assert.equal(g.api.abilityEffectsSnapshot().explosions.length,0);assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0,'wave clear discards combat effects');g.api.animateChainLightning(source,[]);g.api.startWave();assert.equal(g.api.abilityEffectsSnapshot().lightning.length,0,'new wave clears stale casts');
 console.log('PASS: real lightning targets, exact explosion damage/synergies, immune/solo procs, no plain-wall blast, RNG/combat parity, pure finite paths, pause/upgrades, resize, expiration, and effect budgets.');
 }
@@ -783,7 +784,7 @@ console.log('PASS: five soundtrack loops, explicit splash unlock, chapter transi
  take('Frost Ink','Fire Ink');assert.equal(g.state.inks.fire,0);assert.equal(g.state.inks.frost,1);assert.equal(g.state.inks.poison,8);
  assert.equal(g.state.stacks['Fire Ink'],undefined);assert.equal(g.state.synergies.has('Plaguefire'),false);assert.ok(g.state.synergies.has('Venom Ice'));
  take('Bigger Ink Tank');assert.equal(g.api.equippedEffects().length,2,'utility does not need a slot');
- take('Shock Ink','Frost Ink');assert.equal(g.state.stats.wallStun,.16);take('Death Ink','Shock Ink');assert.equal(g.state.stats.wallStun,0);assert.equal(g.state.stats.wallDamage,13);
+ take('Electric Ink','Frost Ink');assert.equal(g.state.inks.electric,1);take('Death Ink','Electric Ink');assert.equal(g.state.inks.electric,0);assert.equal(g.state.stats.wallDamage,13);
  take('Blast Ink','Death Ink');assert.equal(g.state.stats.wallDamage,8,'replacing Death removes only its damage');
  const counts={owned:0,new:0};for(let i=0;i<1000;i++){const u=g.api.getUpgrade();if(g.state.stacks[u.name])counts.owned++;else counts.new++;}
  assert.ok(counts.owned>counts.new,'equipped effects are favored');
@@ -939,8 +940,8 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  env.node('effectReplacement').children.at(-1).onclick();assert.equal(g.state.inks.poison,7,'cancelling preserves levels');
  g.api.chooseUpgrade(offer('Blast Ink','rare'),'Fire Ink');assert.equal(g.state.inks.blast,3);assert.equal(g.state.inks.fire,0);assert.equal(g.state.synergies.has('Plaguefire'),false);
  g.api.chooseUpgrade(offer('Death Ink','legendary'),'Blast Ink');assert.equal(g.state.stats.wallDamage,28);
- g.api.chooseUpgrade(offer('Shock Ink','rare'),'Death Ink');assert.equal(g.state.stats.wallDamage,8);
- assert.equal(g.api.upgradeLevels(offer('Shock Ink','legendary')),1);g.api.chooseUpgrade(offer('Shock Ink','legendary'));assert.equal(g.state.stats.wallStun,.55);assert.equal(g.state.stacks['Shock Ink'],4);
+ g.api.chooseUpgrade(offer('Electric Ink','rare'),'Death Ink');assert.equal(g.state.stats.wallDamage,8);
+ assert.equal(g.api.upgradeLevels(offer('Electric Ink','legendary')),4);g.api.chooseUpgrade(offer('Electric Ink','legendary'));assert.equal(g.state.inks.electric,7);assert.equal(g.catalog.upgrades.some(u=>u.name==='Shock Ink'),false);
  g.api.chooseUpgrade(offer('Helmet','legendary'));assert.equal(g.api.upgradeLevels(offer('Helmet','legendary')),2);g.api.chooseUpgrade(offer('Helmet','legendary'));assert.equal(g.state.stats.playerArmor,.55);assert.equal(g.state.stacks.Helmet,6);
  g.state.stats.rockRate=.28;for(const name of ['Better Rocks','Really Good Rocks','Stevie Has Had Enough'])g.api.chooseUpgrade(offer(name,'legendary'));assert.equal(g.state.stats.rockRate,.28,'lower rock upgrades never slow faster throws');
  for(const rarity of ['common','uncommon','rare']){
@@ -1075,4 +1076,22 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  e.x=360;assert.equal(g.api.gravityDamageMultiplier(e),1,'moving clear of the wall releases exposure');
  wall.pts=wall.pts.map(p=>({x:p.x+60,y:p.y}));assert.equal(g.api.gravityDamageMultiplier(e),1.16,'changed wall geometry invalidates the cached miss');
  console.log('PASS: cached Gravity contacts preserve corner, knockback and changed-wall behavior.');
+}
+
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.enemies=[];
+ const spawn=(x,hp=500)=>{const e=g.api.spawnEnemy(false,x,200,'tank');e.hp=e.maxHp=hp;e.speed=0;return e};
+ const source=spawn(60),second=spawn(190),third=spawn(320),dead=spawn(200,0),far=spawn(700);
+ g.api.chainLightning(source,2);
+ assert.equal(second.hp,490);assert.equal(third.hp,490,'second hop reaches beyond source radius');assert.equal(far.hp,500);assert.equal(dead.hp,0);
+ assert.ok(Math.abs(source.stun-.17)<1e-9);assert.ok(Math.abs(third.stun-.17)<1e-9);
+ const fx=g.api.abilityEffectsSnapshot();assert.equal(fx.lightning[0].targets.length,2);
+ g.api.resetAbilityEffects();source.immunity='electric';second.immunity='electric';source.stun=second.stun=0;const hp=source.hp;
+ g.api.chainLightning(source,2);assert.equal(source.hp,hp);assert.equal(source.stun,0);assert.equal(second.stun,0,'immune target cannot be shocked');
+ const boss=g.api.spawnEnemy(false,450,200,'boss');boss.hp=10000;boss.stun=0;g.state.enemies=[boss];g.api.chainLightning(boss,2);assert.ok(Math.abs(boss.stun-.085)<1e-9);
+ g.state.enemies=[];for(let i=0;i<16;i++)spawn(40+i*25);g.api.resetAbilityEffects();g.api.chainLightning(g.state.enemies[0],50);
+ assert.equal(g.api.abilityEffectsSnapshot().lightning[0].targets.length,12,'high levels have twelve rendered and damaging hops');assert.equal(g.state.enemies[13].hp,500);
+ const snapshot=JSON.stringify(g.api.abilityEffectsSnapshot()),state=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),state);assert.equal(JSON.stringify(g.api.abilityEffectsSnapshot()),snapshot);
+ assert.match(g.api.upgradeEffect('Electric Ink',2),/146px reach per hop/);assert.match(g.api.upgradeEffect('Electric Ink',2),/2 additional enemies/);
+ console.log('PASS: sequential lightning reach, live distinct targets, shock immunity and boss duration, twelve-hop combat/visual cap, accurate previews and pure drawing.');
 }

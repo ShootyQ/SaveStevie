@@ -16,7 +16,6 @@ function stevieNote(victory=false){
     'Repulsion Ink':'Watching them bounce off your walls? Ten out of ten.',
     'Void Ink':'You drew a hole in reality. Please do not lose the pencil.',
     'Chaos Ink':'I do not know what that ink did. I think the ink agrees.',
-    'Shock Ink':'They stopped. I ran. Excellent teamwork.',
     'Death Ink':'That pencil has a very serious attitude.'
   };
   return {
