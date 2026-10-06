@@ -69,6 +69,7 @@
           <div><b>03 / UPGRADE</b><span>Stack inks. Build weird.</span></div>
         </div>
         <button id="startBtn">Let's save Stevie <span aria-hidden="true">→</span></button>
+        <button class="secondary notebook-entry" id="splashNotebookBtn">Back of the Notebook · <span id="splashScraps">0</span> scraps</button>
         <div class="splash-footer">Bosses every 5 waves · A fresh page every wave</div>
       </div>
     </div>
@@ -123,6 +124,7 @@
           <div>Ink Bonus <span id="inkBonus">+0</span></div>
           <div>HP Bonus <span id="hpBonus">+0</span></div>
         </div>
+        <p class="scrap-summary">Notebook scraps earned this run: <b id="waveRunScraps">0</b> · Saved, even if Stevie falls.</p>
         <button id="continueBtn">Continue</button>
       </div>
     </div>
@@ -132,6 +134,8 @@
         <h2>STEVIE SURVIVED THE NOTEBOOK</h2>
         <p>You defeated The Eraser. This is, somehow, Stevie's greatest accomplishment.</p>
         <div class="bigscore"><span id="victoryScore">0</span></div>
+        <p class="scrap-summary">Earned <b id="victoryRunScraps">0</b> scraps this run · Bank: <b id="victoryBankScraps">0</b></p>
+        <button class="gold notebook-entry" id="victoryNotebookBtn">Spend Notebook Scraps</button>
         <div class="cardactions">
           <button id="endlessBtn">Continue Endless Mode</button>
           <button class="secondary" id="newRunBtn">New Run</button>
@@ -145,7 +149,8 @@
         <p>You reached wave <b id="finalWave">1</b> with <b id="finalKills">0</b> kills.</p>
         <p id="lastHitText"></p>
         <div class="bigscore"><span id="finalScore">0</span></div>
-        <button id="againBtn">New Run</button>
+        <p class="scrap-summary">Kept <b id="deathRunScraps">0</b> scraps from this run · Bank: <b id="deathBankScraps">0</b></p>
+        <div class="cardactions"><button class="gold" id="deathNotebookBtn">Spend Scraps</button><button id="againBtn">Try Again</button></div>
       </div>
     </div>
   </div>
@@ -167,12 +172,24 @@
 <div class="overlay build-overlay" id="buildOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="buildTitle">
   <div class="cardbox build-box">
     <div class="build-heading"><h2 id="buildTitle">Your Build</h2><button id="closeBuildBtn">Close</button></div>
-    <p>The game pauses while you review. Totals include all upgrades and your specialization.</p>
+    <p>The game pauses while you review. Totals include Notebook perks, run upgrades, and your specialization.</p>
+    <button class="secondary notebook-entry" id="buildNotebookBtn">Notebook · <span id="buildScraps">0</span> banked scraps</button>
     <h3>Current totals</h3><div id="buildStats" class="build-stats"></div>
     <h3>Luck &amp; rewards</h3><p id="buildLuck" class="build-luck"></p>
     <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
     <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
     <h3>Monster notes</h3><p>Open Monsters in the toolbar for the full illustrated compendium.</p>
+  </div>
+</div>
+<div class="overlay build-overlay" id="notebookOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="notebookTitle">
+  <div class="cardbox build-box notebook-book">
+    <div class="build-heading"><h2 id="notebookTitle">Back of the Notebook</h2><button id="closeNotebookBtn">Close</button></div>
+    <div class="notebook-wallet"><span class="notebook-scrap" aria-hidden="true">✂</span><div><strong id="notebookBank">0</strong> <b>Notebook Scraps</b><small>Saved on this browser · Kept after defeat</small></div></div>
+    <p id="notebookNotice" role="status"></p>
+    <div class="notebook-earn"><b>How to collect scraps</b><span>1 per 10 kills · 3 per cleared wave · 5 per defeated boss · 15 for winning wave 20. A defeat with no earnings keeps 1 consolation scrap.</span></div>
+    <h3>Your next starting kit</h3><p id="notebookLoadout"></p>
+    <div id="notebookPerks" class="notebook-grid"></div>
+    <p class="notebook-footnote">Permanent perks apply when you start a new run. Your in-run upgrade stacks reset each attempt. Scrap earnings are saved as they happen, so quitting keeps what you already earned.</p>
   </div>
 </div>
 <div class="overlay build-overlay" id="compendiumOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="compendiumTitle">
@@ -201,6 +218,10 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry">
+        <h3>Notebook Scraps &amp; a tougher first page</h3>
+        <p>Earn and keep scraps from kills, cleared waves, bosses, and victory. Spend them in Back of the Notebook on six capped permanent perks for your next run. First ranks cost 5 scraps. Fresh runs begin with 160 ink, 5 ink/s, 65 wall HP, 8 wall damage/s, and 75 Stevie HP; permanent perks and run upgrades build you back up. Scrap totals appear between waves and after defeat or victory.</p>
+      </article>
       <article class="build-entry">
         <h3>Smoother stacked-ink crowds</h3>
         <p>Busy late waves reuse colored monster artwork instead of constantly rebuilding it as different enemies and status effects mix. The cache keeps recently used combinations and limits its pixel storage. Monster visibility, ink animations, and combat rules stay the same.</p>
@@ -315,6 +336,7 @@
 <script src="js/geometry.js"></script>
 <script src="js/music.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/notebook.js"></script>
 <script src="js/monsters.js"></script>
 <script src="js/waves.js"></script>
 <script src="js/enemies.js"></script>

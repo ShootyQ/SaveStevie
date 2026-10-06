@@ -10,6 +10,7 @@ Refactored from doodle_defender_v8.html. Open index.html directly in a modern br
 - js/loop.js owns timing and simulation updates.
 - js/renderer.js draws the original canvas artwork and handles resizing.
 - js/enemies.js handles enemy creation, Stevie, projectiles, and eraser attacks.
+- js/notebook.js banks persistent scraps and applies purchased next-run perks.
 - js/waves.js handles run reset, wave progression, victory, and game over.
 - js/walls.js handles drawing costs, wall durability, ink contact, and synergy combat effects.
 - js/upgrades.js owns upgrade and synergy definitions and selection.
@@ -268,3 +269,51 @@ sprites every frame in a busy wave. The artwork, effects, and combat are
 unchanged. The optional `tests/browser-performance.cjs` benchmark has a
 `wave20` mode for this mixed-crowd rendering workload, with exact visual and
 combat hashes. See `docs/performance.md` for measured results and limits.
+
+
+## Notebook Scraps (first progression layer)
+
+Open **Back of the Notebook** from the splash screen, defeat/victory screens,
+or Your Build. The six permanent perks show current and next effects, rank
+caps, prices, and a preview of your next starting kit. Purchases are available
+outside an active run and apply on the next new run; they stack with run
+upgrades. Continuing Endless uses the current run's kit.
+
+Scraps are banked immediately: 1 per 10 kills, 3 per cleared wave, 5 per
+actually killed boss/Eraser, and 15 for campaign victory. Contact removals earn
+nothing. A defeat with zero earnings gives 1 consolation scrap. Quitting keeps
+already banked earnings. Each run's kill counter starts fresh.
+
+| Permanent perk | Bonus per rank | Rank cap |
+| --- | --- | --- |
+| Bigger Starting Tank | +20 starting/max ink | 5 |
+| Fresh Pencil | +8 starting wall HP | 4 |
+| Lunchbox Band-Aids | +8 starting/max Stevie HP | 4 |
+| Pocket Pebbles | +3 starting rock damage; 1.5/1.4/1.3s throw interval | 3 |
+| Lunch Money | +1 starting reroll | 2 |
+| Lucky Eraser | +2 starting Luck | 4 |
+
+Ranks cost 5, 12, 24, 40, and 60 scraps where available. Fresh runs start with
+160 ink, 5 ink/s regeneration, 65 wall HP, 8 wall damage/s, 75 Stevie HP,
+and no starting rerolls or rocks. Each wave reward still grants a free reroll.
+Enemy schedules and scaling are unchanged: this pass reduces starting power
+rather than adding enemy pressure. This is an initial tuning pass, not a
+promise of a particular failure wave.
+
+Progress uses `saveStevieNotebookV1` in localStorage on this browser/site origin;
+it does not sync across devices. Existing best-wave and preference keys are
+preserved. Invalid values are sanitized and rank caps enforced. If saving is
+blocked, progression continues for the visit and the notebook explains that
+it is temporary.
+
+Validation includes earnings/double-payout protection, prices/caps,
+next-run stacking/reset, save/reload, blocked storage, and existing combat
+checks. Browser checks covered 1280×900, 393×851, 360×640, and 851×393 layouts,
+purchase locking, images, reload persistence, and pause restoration. A seeded
+opening-wave smoke run using a simple closed-barrier redraw strategy cleared
+with 15 HP under the new kit versus 100 HP under the previous kit; live runs
+will guide subsequent balance adjustments.
+
+To repeat the optional screen checks with Playwright and Chromium installed:
+`node tests/browser-notebook.cjs`. Pass a packaged site directory as the first
+argument to check deployment output. No HTTP server is required for this test.

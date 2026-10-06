@@ -40,6 +40,8 @@ game.dom.$('compendiumBtn').onclick=game.api.openCompendium;
 game.dom.$('closeCompendiumBtn').onclick=game.api.closeCompendium;
 game.dom.$('monsterIntrosEnabled').onchange=e=>game.api.setMonsterIntrosEnabled(e.target.checked);
 game.dom.$('continueMonsterIntroBtn').onclick=game.api.continueMonsterIntro;
+for(const id of ['splashNotebookBtn','deathNotebookBtn','victoryNotebookBtn','buildNotebookBtn'])game.dom.$(id).onclick=game.api.openNotebook;
+game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
 window.addEventListener('keydown',game.api.handleInfoKey);
 game.dom.canvas.addEventListener('pointerdown',e=>{
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
@@ -58,6 +60,7 @@ game.dom.$('newRunBtn').onclick=startRun;
 game.dom.$('continueBtn').onclick=game.api.proceedAfterWave;
 game.dom.$('rerollBtn').onclick=game.api.reroll;
 game.dom.$('endlessBtn').onclick=()=>{
+  game.api.resumeScrapRun();
   game.state.endless=true;game.state.running=true;game.dom.victoryOverlay.style.display='none';
   game.state.wave=21;game.state.betweenWaves=false;game.state.inUpgrade=false;game.state.awaitingSpec=false;game.api.startWave();game.api.updateUI()
 };

@@ -297,3 +297,32 @@ button:disabled{opacity:.5;cursor:default}
 .luck-guide{margin:0 0 14px;padding:8px 10px;border:1px dashed #b1a88e;border-radius:8px;background:#fffdf5}
 .luck-guide summary{font-size:13px;font-weight:bold;cursor:pointer;min-height:24px}
 .luck-guide p,.build-box .build-luck{text-align:left;font-size:13px;line-height:1.5;margin:8px 0;color:#46535b}
+
+/* Permanent progression lives between runs, never under the mobile playfield. */
+.notebook-entry{margin:10px 0;width:100%}
+.notebook-book{background:linear-gradient(#bdd3e322 1px,transparent 1px),#fbf7e9;background-size:100% 28px}
+.notebook-wallet{display:flex;align-items:center;justify-content:center;gap:14px;padding:18px 10px;margin:8px 0 14px;border:2px dashed #b49b58;background:#fff2c6;border-radius:7px 16px 10px 12px}
+.notebook-wallet strong{font-size:38px;color:#715414;display:inline-block;margin-right:8px}
+.notebook-wallet small{display:block;font-size:11px;color:#786438;margin-top:4px}
+.notebook-scrap{font-size:42px;transform:rotate(-12deg)}
+.notebook-earn{padding:12px;border:1px dashed #b1a88e;border-radius:8px;font-size:13px;margin:12px 0}
+.notebook-earn b,.notebook-earn span{display:block;line-height:1.5}
+.notebook-book #notebookNotice,.notebook-book #notebookLoadout{text-align:left;font-size:13px;line-height:1.5}
+.notebook-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.notebook-perk{min-width:0;border:2px solid #a8a08b;border-radius:6px 15px 9px 12px;background:#fffdf5;padding:14px;box-shadow:3px 3px 0 #d8d0bc;display:flex;flex-direction:column}
+.notebook-perk-heading{display:flex;gap:10px;align-items:center}
+.notebook-perk-heading img{width:48px;height:48px;flex-shrink:0}
+.notebook-perk h3{margin:0 0 4px;font-size:18px}
+.notebook-perk-heading span{font-size:12px;color:#65717a}
+.notebook-perk p{font-size:13px;text-align:left;margin:10px 0 0;line-height:1.5}
+.notebook-perk .notebook-effect{font-weight:bold;color:#315d43}
+.notebook-perk .notebook-next{color:#786438;margin-bottom:12px}
+.notebook-perk button{margin-top:auto;width:100%;background:#3562be}
+.notebook-book .notebook-footnote{font-size:12px;line-height:1.5;margin:18px 0 0}
+.cardbox .scrap-summary{font-size:13px;color:#715414;line-height:1.4}
+@media(max-width:600px){
+  .notebook-grid{grid-template-columns:1fr}
+  .notebook-book .build-heading h2{font-size:21px;min-width:0}
+  .notebook-wallet{padding:12px 8px;gap:8px}
+  .notebook-wallet strong{font-size:30px}
+}
