@@ -182,14 +182,7 @@ function applyInkContact(e,dt,wall=null){
     }
   }
 
-  if(game.state.inks.chaos>0){
-    const roll=Math.random();
-    if(roll<.003*game.state.inks.chaos){
-      const randomInk=game.api.pick(['fire','frost','electric','poison','blast','vampire','gravity','repulsion','void']);
-      game.api.animateInkAccent(e,'chaos',0,0,randomInk);
-      game.api.applyOneInk(randomInk,e,dt,true);
-    }
-  }
+  if(game.state.inks.chaos>0)applyChaosContact(e,dt);
 
   if(game.state.inks.fire>0){
     e.burn=Math.max(e.burn,1.5+game.state.inks.fire*.6);
@@ -205,33 +198,63 @@ function applyInkContact(e,dt,wall=null){
     e.chainCd=Math.max(.22,.8-game.state.inks.electric*.12);
   }
   game.api.applyVampireContact(e,dt);
-  if(game.state.inks.repulsion>0){
-    const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;
-    game.api.animateInkAccent(e,'repulsion',dx,dy);
-    e.x+=dx/m*(15+game.state.inks.repulsion*7)*dt;
-    e.y+=dy/m*(15+game.state.inks.repulsion*7)*dt;
-    if(game.state.synergies.has('Rail Ink'))e.charged=Math.max(e.charged,1.1);
-  }
-  if(game.state.inks.void>0){
-    const chance=.0025*game.state.inks.void*dt*60;
-    if(Math.random()<chance){
-      if(e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss)game.api.dealDamage(e,40+game.state.inks.void*25,'void');
-      else game.api.dealDamage(e,e.hp,'void');
-      game.api.burst(e.x,e.y,'#46345e',12);
-    }
+  if(game.state.inks.repulsion>0)applyRepulsionContact(e,dt);
+  if(game.state.inks.void>0&&e.hp>0){
+    const n=game.state.inks.void,t=remainingInkTuning(n);
+    game.api.dealDamage(e,t.voidDps*dt,'void');
+    if(e.hp>0&&!isInkBoss(e)&&e.immunity!=='void'&&e.hp<=e.maxHp*t.voidExecute)game.api.dealDamage(e,e.hp,'void');
   }
   return dps;
 }
 
-function applyOneInk(kind,e,dt,chaos=false){
-  if(kind==='fire'){e.burn=Math.max(e.burn,1.3);e.burnDps=Math.max(e.burnDps,6)}
-  if(kind==='frost')e.freeze=Math.max(e.freeze,.35);
-  if(kind==='electric')game.api.chainLightning(e,1);
-  if(kind==='poison'){e.poison=Math.min(6,e.poison+.7);e.poisonDps=Math.max(e.poisonDps,5)}
-  if(kind==='repulsion'){
-    const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;game.api.animateInkAccent(e,'repulsion',dx,dy);e.x+=dx/m*6;e.y+=dy/m*6
+const contactCharges=new WeakMap();
+function remainingInkTuning(n){return {repulsionDamage:8+4*n,repulsionPush:35+5*n,repulsionInterval:.8,voidDps:4+2*n,voidExecute:Math.min(.3,.12+.025*n),chaosInterval:Math.max(.45,1.4/(1+.18*(n-1))),chaosDamage:2+n}}
+function isInkBoss(e){return e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss}
+function contactPulses(e,kind,dt,interval){
+  let data=contactCharges.get(e);if(!data){data={};contactCharges.set(e,data)}
+  data[kind]=(data[kind]||0)+dt;
+  const count=Math.floor((data[kind]+1e-9)/interval);data[kind]-=count*interval;return count;
+}
+function applyRepulsionContact(e,dt){
+  const t=remainingInkTuning(game.state.inks.repulsion),boss=isInkBoss(e),scale=boss?.5:1;
+  const pulses=contactPulses(e,'repulsion',dt,t.repulsionInterval);
+  for(let i=0;i<pulses&&e.hp>0;i++){
+    const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;
+    game.api.dealDamage(e,t.repulsionDamage,'physical');
+    game.api.animateInkAccent(e,'repulsion',dx,dy);
+    game.api.moveEnemySafely(e,dx/m*t.repulsionPush*scale,dy/m*t.repulsionPush*scale);
+    e.stun=Math.max(e.stun,.12*scale);
+    if(game.state.synergies.has('Rail Ink'))e.charged=Math.max(e.charged,1.1);
   }
-  if(kind==='void'&&!chaos)game.api.dealDamage(e,18,'void');
+}
+function applyChaosContact(e,dt){
+  const n=game.state.inks.chaos,t=remainingInkTuning(n);
+  const pulses=contactPulses(e,'chaos',dt,t.chaosInterval);
+  for(let i=0;i<pulses&&e.hp>0;i++){
+    const kind=game.api.pick(['fire','frost','electric','poison','blast','vampire','gravity','repulsion','void']);
+    game.api.animateInkAccent(e,'chaos',0,0,kind);game.api.applyOneInk(kind,e,dt,true);
+    if(e.hp>0)game.api.dealDamage(e,t.chaosDamage,kind==='void'?'void':'physical');
+  }
+}
+
+function applyOneInk(kind,e,dt,chaos=false){
+  const n=chaos?Math.max(1,game.state.inks.chaos):1;
+  if(kind==='fire'&&e.immunity!=='fire'){e.burn=Math.max(e.burn,1.8);e.burnDps=Math.max(e.burnDps,6+n)}
+  if(kind==='frost'&&e.immunity!=='frost')e.freeze=Math.max(e.freeze,(.3+Math.min(.3,.03*n))*(isInkBoss(e)?.5:1));
+  if(kind==='electric')game.api.chainLightning(e,Math.max(1,Math.ceil(n/2)));
+  if(kind==='poison'&&e.immunity!=='poison'){e.poison=Math.min(6,e.poison+1);e.poisonDps=Math.max(e.poisonDps,5+n)}
+  if(kind==='repulsion'){
+    const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;
+    game.api.animateInkAccent(e,'repulsion',dx,dy);game.api.moveEnemySafely(e,dx/m*30*(isInkBoss(e)?.5:1),dy/m*30*(isInkBoss(e)?.5:1));
+  }
+  if(kind==='void')game.api.dealDamage(e,12+3*n,'void');
+  if(kind==='blast')for(const target of game.state.enemies){if(target.hp>0&&game.api.withinRadius(target.x,target.y,e.x,e.y,65+3*n))game.api.dealDamage(target,10+3*n,'blast')}
+  if(kind==='vampire'){
+    const hp=e.hp;game.api.dealDamage(e,8+2*n,'vampire');const before=game.state.player.hp;
+    if(game.state.player.hp>0)game.api.healStevie(Math.max(0,Math.min(hp,hp-e.hp))*.25);
+    game.api.animateLeech(e,game.state.player.hp-before);
+  }
+  if(kind==='gravity'){e.gravitySlow=Math.max(e.gravitySlow,.55);e.stun=Math.max(e.stun,isInkBoss(e)?.1:.2)}
 }
 
 function chainLightning(source,level){
@@ -300,7 +323,7 @@ function applySynergies(e,dt){
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
-const api = { canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
+const api = { remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
 Object.assign(game.api, api);
 return api;
 };

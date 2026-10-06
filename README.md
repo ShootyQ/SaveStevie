@@ -684,3 +684,24 @@ merging to `main` remains a separate action. Remaining ink animations include
 Repulsion shove trails, Chaos result bursts, Death Ink skull pulses, Fire embers,
 Poison drips, and Void fragments. Contact accents are presentation-only, capped
 at 16 active effects and throttled to one per monster/type every 0.35 seconds.
+
+Remaining ink balance: Repulsion pulses after each 0.8 seconds accumulated
+contact, dealing 8+4L physical damage and safely pushing 35+5L pixels away
+from Stevie, with a 0.12s stagger. Bosses halve push/stagger. Void deals
+4+2L damage/s and executes non-bosses below min(30%,12%+2.5%L) maximum HP;
+immunity blocks both. Chaos rolls after each max(0.45,1.4/(1+0.18(L-1))) seconds
+contact, adds 2+L impact damage and triggers a working level-scaled effect
+from all nine other inks. Charge persists between wall touches per monster;
+new enemies start empty. Timers use elapsed contact time, not frame-count
+probabilities. Existing Event Horizon bonus remains separate.
+
+Death Ink keeps +5 wall DPS/level and adds min(40%,16%+4%L) physical
+damage against enemies starting the hit at half HP or below, including bosses.
+
+In the seeded 15-second single-barrier level-one comparison, baseline dealt
+98.6 damage and lost 435 wall HP; Repulsion dealt 110.4 and lost 180 wall HP;
+Void dealt 172.55; Chaos dealt 211.15; Fire dealt 172.4 and Poison 163.02.
+The 10,000-HP target never reached Void's execute threshold. Chaos results
+vary with its rolled effects; this scenario does not establish campaign balance.
+`tests/browser-ink-balance.cjs` checks actual pulses/execute/rolls and all four
+updated rarity previews at desktop and phone sizes.

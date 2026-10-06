@@ -73,7 +73,7 @@ function showSynergySplash(name,desc,major=false){
 }
 
 function upgradeEffect(name,n=game.state.stacks[name]||0){
-  const f=v=>Number(v.toFixed(2)),s=game.state.stats,t=game.api.supportInkTuning(n);
+  const f=v=>Number(v.toFixed(2)),s=game.state.stats,t=game.api.supportInkTuning(n),r=game.api.remainingInkTuning(n);
   const effects={
     'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${f(game.api.regenStackEffect('Quick Refill',n))} ink/s; diminishing returns`,
     'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 per level`,
@@ -100,14 +100,14 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Fire Ink':()=>`${3+3*n} burn damage/s for ${f(1.5+.6*n)}s; synergies can boost this`,
     'Frost Ink':()=>`${f(t.frostSlow*100)}% contact slow; freeze after ${f(t.frostCharge)}s contact for ${f(t.frostDuration)}s (half on bosses); 1.5s thaw recovery`,
     'Poison Ink':()=>`${f(1+.55*n)} poison stacks/s on contact (cap 6); ${f((2+2.5*n)*.24)} damage/s per poison stack`,
-    'Repulsion Ink':()=>`${15+7*n}px/s push away from Stevie on contact`,
+    'Repulsion Ink':()=>`${r.repulsionDamage} impact damage and ${r.repulsionPush}px safe shove after every 0.8s contact; 0.12s stagger; bosses halve shove and stagger`,
     'Electric Ink':()=>`${3+2*n} source damage; ${4+3*n} damage per jump, up to ${Math.min(12,1+Math.floor(n/2))} additional enemies, ${110+n*18}px reach per hop; repeats every ${f(Math.max(.22,.8-n*.12))}s on contact. Each hit shocks for ${f(Math.min(.45,.12+n*.025))}s (bosses half); immune enemies block shocks. Synergies add reach and jumps (12 maximum).`,
     'Blast Ink':()=>`${35+20*n} explosion damage; ${70+12*n}px radius; synergies can boost this`,
     'Vampire Ink':()=>`${t.vampireDps} life-drain damage/s on contact; heals 25% of actual damage, sharing the 6 HP/s budget`,
     'Gravity Ink':()=>`${t.gravityPull}px/s pull to wall segments within ${t.gravityRange}px (60% pull on bosses); held enemies take +${f(t.gravityBonus*100)}% damage (cap 40%) and bite walls 30% slower`,
-    'Void Ink':()=>`Contact erase chance scales with level ${n}; bosses take ${40+25*n} damage per proc instead`,
-    'Chaos Ink':()=>`${f(.3*n)}% random ink proc chance per contact update`,
-    'Death Ink':()=>`+${5*n} base wall damage/s`
+    'Void Ink':()=>`${r.voidDps} Void damage/s; executes ordinary enemies below ${f(r.voidExecute*100)}% HP (cap 30%); bosses take damage without execution`,
+    'Chaos Ink':()=>`One random ink after every ${f(r.chaosInterval)}s contact; every roll works and adds ${r.chaosDamage} impact damage; rolls scale with Chaos level`,
+    'Death Ink':()=>`+${5*n} base wall damage/s; +${f(Math.min(.4,.16+.04*n)*100)}% physical damage against enemies at half health or lower (cap 40%)`
   };
   return effects[name]?effects[name]():game.catalog.upgrades.find(u=>u.name===name)?.desc||'Active';
 }
