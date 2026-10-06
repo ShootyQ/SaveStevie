@@ -1,4 +1,4 @@
-// Paper-ball refuge artwork and contact boundary in real browsers.
+// Single paper-fort image and rounded contact boundary in real browsers.
 const {chromium}=require('playwright'),assert=require('assert'),fs=require('fs'),path=require('path');
 const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
 (async()=>{
@@ -24,7 +24,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    const paused=await page.evaluate(()=>{const g=testGame;g.state.paused=true;const a=JSON.stringify(g.api.refugeSnapshot());g.api.update(.3);g.api.draw();return a===JSON.stringify(g.api.refugeSnapshot())});assert.equal(paused,true);
    await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>testGame.api.draw());
    const before=await page.evaluate(()=>testGame.api.refugeSnapshot());await page.setViewportSize({width:viewport.width+20,height:viewport.height+20});const after=await page.evaluate(()=>testGame.api.refugeSnapshot());assert.ok(Math.abs((after.hitPoint.x-before.hitPoint.x)-(after.bounds.left-before.bounds.left))<.01);
-   assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' five paper-ball sprites, rectangular boundary contact, impact feedback, pause, reduced motion and resize');await page.close();
+   assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' single chaotic paper-fort image, rounded boundary contact, impact feedback, pause, reduced motion and resize');await page.close();
   }
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

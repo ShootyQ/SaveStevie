@@ -1,4 +1,4 @@
-/* Chapter loops and a calm splash track, unlocked by explicit player gestures. */
+/* Chapter loops and intro autoplay, with a gesture retry when browsers block it. */
 DoodleDefender.systems.music = function createMusic(game) {
 const audio=game.dom.$('gameMusic'),button=game.dom.$('musicBtn'),introButton=game.dom.$('splashMusicBtn'),key='saveStevieMusicMuted';
 const tracks=game.catalog.musicTracks={
@@ -53,6 +53,13 @@ function musicStatus(){return {muted,started,blocked,track}}
 button.onclick=toggleMusic;introButton.onclick=startSplashMusic;
 document.addEventListener?.('visibilitychange',()=>{if(document.hidden){playAttempt++;audio.pause?.()}else playMusic()});
 audio.addEventListener?.('error',()=>{blocked=true;updateMusicButton()});
-updateMusicButton();
+// Respect saved mute; retry denied autoplay inside the next real gesture.
+function retryMusicOnGesture(event){
+  if(event?.target?.closest?.('#musicBtn, #splashMusicBtn, #startBtn'))return;
+  if(blocked&&!muted&&!document.hidden)playMusic();
+}
+document.addEventListener?.('pointerdown',retryMusicOnGesture,{capture:true});
+document.addEventListener?.('keydown',retryMusicOnGesture,{capture:true});
+startMusic('splash');
 const api={applyMusicVolume,selectMusicTrack,startSplashMusic,startMusic,toggleMusic,musicStatus};Object.assign(game.api,api);return api;
 };

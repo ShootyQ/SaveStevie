@@ -739,13 +739,14 @@ pause and resize, and respect live reduced-motion preferences. Monster cards
 and the in-game changelog explain the encounters. Unit and desktop/phone browser
 checks cover each boss; campaign difficulty still needs human playtesting.
 
-Stevie's refuge uses five generated crumpled notebook-paper ball variants in
-`assets/art/paper-balls.png`, repeated with fixed small rotations around a
-124×116px rectangle. The visible dashed outer line matches the contact boundary:
-monster circles touch the rectangle using nearest-point distance, including
-rounded corner reach. Drawn walls still block attacks, contact armor/rewards
-remain unchanged, and bosses retreat beyond the refuge after a cooldown hit.
-The balls mark Stevie's existing health boundary; they do not add wall HP or
-replace the player's drawn defenses. Projectiles still use Stevie's body hitbox.
-Impact feedback pauses and translates on resize, and a vector fallback remains
-if artwork is unavailable. `tests/browser-refuge.cjs` checks desktop and phones.
+Intro music attempts autoplay on page initialization, respects saved mute and
+volume, and retries blocked playback on the next pointer/key gesture. Explicit
+music/start controls retain their own handlers to avoid duplicate toggles.
+
+The refuge now uses one complete transparent illustration,
+`assets/art/paper-fort.png`, instead of repeated ball sprites. Its outer footprint
+is 62×58px (half the previous width and height), with 10px rounded collision
+corners, centered 18px below Stevie so his full-size portrait stays visible.
+The irregular art mixes lined/grid paper, colored scraps, grades and playful
+doodles. Contact uses nearest-point distance to the rounded rectangle; no
+extra health or changes to armor, cover, projectile hitboxes or rewards.
