@@ -222,13 +222,13 @@ game.catalog.upgrades = [
 
   // Ink families
   {name:'Fire Ink',cat:'ink',desc:'Wall contact ignites enemies for damage over time.',apply:()=>game.state.inks.fire++},
-  {name:'Frost Ink',cat:'ink',desc:'Wall contact slows enemies. Higher levels can freeze.',apply:()=>game.state.inks.frost++},
+  {name:'Frost Ink',cat:'ink',desc:'Slows on contact from level one. Sustained contact builds a guaranteed freeze; bosses freeze for half as long.',apply:()=>game.state.inks.frost++},
   {name:'Poison Ink',cat:'ink',desc:'Enemies build stacking poison while touching walls.',apply:()=>game.state.inks.poison++},
   {name:'Repulsion Ink',cat:'ink',desc:'Walls shove enemies away from Stevie.',apply:()=>game.state.inks.repulsion++},
   {name:'Electric Ink',cat:'ink',desc:'Wall contact arcs damage into nearby enemies.',apply:()=>game.state.inks.electric++},
   {name:'Blast Ink',cat:'ink',desc:'Destroyed walls explode and damage nearby enemies.',apply:()=>game.state.inks.blast++},
-  {name:'Vampire Ink',cat:'ink',desc:'A fraction of wall damage heals Stevie.',apply:()=>game.state.inks.vampire++},
-  {name:'Gravity Ink',cat:'ink',desc:'Enemies near walls are pulled toward them.',apply:()=>game.state.inks.gravity++},
+  {name:'Vampire Ink',cat:'ink',desc:'Deals life-drain damage on contact and heals for 25% of damage dealt, sharing the 6 HP/s healing budget.',apply:()=>game.state.inks.vampire++},
+  {name:'Gravity Ink',cat:'ink',desc:'Pulls enemies to wall segments and holds them there. Held enemies take more damage and bite walls 30% slower.',apply:()=>game.state.inks.gravity++},
   {name:'Void Ink',cat:'ink',desc:'Wall contact has a small chance to erase non-boss enemies.',apply:()=>game.state.inks.void++},
   {name:'Chaos Ink',cat:'ink',desc:'Walls occasionally trigger random ink effects.',apply:()=>game.state.inks.chaos++},
   {name:'Death Ink',cat:'ink',desc:'Per level: +5 base wall damage per second.',apply:()=>game.state.stats.wallDamage+=5},

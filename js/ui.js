@@ -73,7 +73,7 @@ function showSynergySplash(name,desc,major=false){
 }
 
 function upgradeEffect(name,n=game.state.stacks[name]||0){
-  const f=v=>Number(v.toFixed(2)),s=game.state.stats;
+  const f=v=>Number(v.toFixed(2)),s=game.state.stats,t=game.api.supportInkTuning(n);
   const effects={
     'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${f(game.api.regenStackEffect('Quick Refill',n))} ink/s; diminishing returns`,
     'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 per level`,
@@ -99,13 +99,13 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Collector':()=>`One-time unlock: ×1.8 selection weight for unowned upgrades`,
     'Greedy Goblin':()=>`One-time unlock: 4 normal reward choices`,
     'Fire Ink':()=>`${3+3*n} burn damage/s for ${f(1.5+.6*n)}s; synergies can boost this`,
-    'Frost Ink':()=>`${12*n}% slow applied on contact (overall slow cap 70%); freeze procs at level 3+`,
+    'Frost Ink':()=>`${f(t.frostSlow*100)}% contact slow; freeze after ${f(t.frostCharge)}s contact for ${f(t.frostDuration)}s (half on bosses); 1.5s thaw recovery`,
     'Poison Ink':()=>`${f(1+.55*n)} poison stacks/s on contact (cap 6); ${f((2+2.5*n)*.24)} damage/s per poison stack`,
     'Repulsion Ink':()=>`${15+7*n}px/s push away from Stevie on contact`,
     'Electric Ink':()=>`${3+2*n} source damage; ${4+3*n} chain damage to ${1+Math.floor(n/2)} nearby targets; synergies can boost this`,
     'Blast Ink':()=>`${35+20*n} explosion damage; ${70+12*n}px radius; synergies can boost this`,
-    'Vampire Ink':()=>`Heals ${f(1.5*n)}% of base wall contact damage`,
-    'Gravity Ink':()=>`${8+5*n}px/s pull toward wall points within ${120+20*n}px`,
+    'Vampire Ink':()=>`${t.vampireDps} life-drain damage/s on contact; heals 25% of actual damage, sharing the 6 HP/s budget`,
+    'Gravity Ink':()=>`${t.gravityPull}px/s pull to wall segments within ${t.gravityRange}px (60% pull on bosses); held enemies take +${f(t.gravityBonus*100)}% damage (cap 40%) and bite walls 30% slower`,
     'Void Ink':()=>`Contact erase chance scales with level ${n}; bosses take ${40+25*n} damage per proc instead`,
     'Chaos Ink':()=>`${f(.3*n)}% random ink proc chance per contact update`,
     'Death Ink':()=>`+${5*n} base wall damage/s`

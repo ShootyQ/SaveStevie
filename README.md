@@ -626,3 +626,42 @@ All four drawing-tool tiers now use matching socketed artwork, with live effect
 icons in the illustrated sockets. See `assets/art/tools/README.md`. Run
 `node tests/browser-dev-tools.cjs [packaged-site-directory]` with Playwright and
 Chromium for manual reward, record protection, artwork and responsive checks.
+
+## Gravity, Vampire and Frost support pass
+
+These effects now provide a useful role from level one. Their tuning and
+per-enemy timers live in `js/support-inks.js`; the same tuning supplies reward
+previews and Tool descriptions.
+
+- **Gravity:** pulls to the nearest actual wall segment at `60 + 10 × level`
+  px/s, within `min(240, 140 + 15 × level)` px. Boss pull strength is 60%.
+  Collision checks keep monsters outside intact walls. Caught monsters count
+  as contacting the wall, bite it 30% slower, and take extra damage of
+  `min(40%, 12% + 4% × level)`. Breaking/removing the wall or replacing Gravity
+  releases the vulnerability. Inward arrows and a purple hold ring show it.
+- **Vampire:** deals `5 + 3 × level` life-drain damage/s during wall contact,
+  and heals Stevie for 25% of damage actually dealt. Full health still gets
+  damage and fang-pulse feedback. Overkill and dead enemies grant no extra
+  healing; drain cannot revive Stevie. All healing shares the existing 6 HP/s
+  budget. Healing droplets and hearts use the existing bounded animation.
+- **Frost:** applies `min(65%, 25% + 5% × (level − 1))` slow on contact. Chill
+  builds over `max(0.45, 1.2 / (1 + 0.18 × (level − 1)))` seconds into a guaranteed
+  freeze lasting `min(1.2, 0.65 + 0.08 × (level − 1))` seconds. Boss freezes last
+  half as long. A 1.5-second thaw recovery precedes the next charge; off-wall
+  chill fades. Frost immunity prevents its slow and freeze. A cyan charge ring
+  leads into the existing ice crystals. Frozen/stunned monsters cannot bite
+  walls, but still receive wall contact damage and effects.
+
+Animations consume no combat randomness, pause with combat, translate on resize,
+reset on fresh waves and respect reduced motion. At most 24 monsters receive
+support ornaments and eight drain pulses can coexist. Existing synergies remain
+active; early predictable freezes help Cryoshock/Thermal Shock, Gravity exposure
+boosts damage against held targets, and healing synergies share the sustain cap.
+
+`node tests/validate.cjs` includes a seeded 15-second single-barrier encounter:
+no effect deals 98.6 damage and takes 435 wall damage; level-one Gravity deals
+131.54 damage and takes 360 wall damage; Vampire deals 197.2 and heals 24.65 HP;
+Frost retains 98.6 damage while taking 360 wall damage. These demonstrate the
+solo roles in that encounter, rather than proving full-campaign balance.
+Run `node tests/browser-support-inks.cjs [packaged-site-directory]` for real
+combat, animation, pause, reduced-motion, preview and resize checks.

@@ -28,6 +28,12 @@ b.sandbox.testGame.api.getUpgrade=force=>{
 };
 Object.assign(b.sandbox.testGame.catalog.balance,{openingDelay:.5,openingGap:2.35,copyDurability:.82,healRate:Infinity,refundRate:Infinity,repairRate:Infinity,quickRegen:3,fountainBonus:.5,bottomlessRegen:8});
 b.sandbox.testGame.api.enemyHpScale=(wave=b.sandbox.testGame.state.wave)=>1+(wave-1)*.024;
+// Retain old support effects only in the original v8 parity fixture. The
+// redesigned support effects have independent combat tests below.
+b.sandbox.testGame.api.applyFrostContact=(e,dt)=>{const g=b.sandbox.testGame,n=g.state.inks.frost;if(n){e.gravitySlow=Math.max(e.gravitySlow,.12*n);if(n>=3&&b.sandbox.Math.random()<.08*dt*n)e.freeze=Math.max(e.freeze,.7)}};
+b.sandbox.testGame.api.applyVampireContact=(e,dt)=>{const g=b.sandbox.testGame;if(g.state.inks.vampire)g.api.healStevie(g.state.stats.wallDamage*dt*.015*g.state.inks.vampire)};
+b.sandbox.testGame.api.gravityDamageMultiplier=()=>1;
+b.sandbox.testGame.api.pullGravity=(e,dt,immobilized)=>{const g=b.sandbox.testGame;if(immobilized||!g.state.inks.gravity)return;const p=g.api.nearestWallPoint(e.x,e.y,120+g.state.inks.gravity*20);if(p){const dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1;g.api.moveEnemySafely(e,dx/d*(8+g.state.inks.gravity*5)*dt,dy/d*(8+g.state.inks.gravity*5)*dt)}};
 legacyStartingKit();b.sandbox.testGame.api.updateUI();
 // Compare unchanged combat against the original without the new presentation labels.
 b.sandbox.testGame.api.damageNumber=()=>{};
@@ -1005,4 +1011,68 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  const reload=load(true,{storage}).sandbox.testGame;assert.equal(reload.api.devModeEnabled(),false,'reload defaults to normal rewards');
  for(const [rank,slots] of [[0,2],[3,2],[6,3],[10,4]]){g.state.tool={rank,slots,name:'Test'};g.api.renderTool('buildTool');const html=env.node('buildTool').innerHTML;assert.match(html,/tool-tiers.png/);assert.equal((html.match(/class="tool-socket"/g)||[]).length,slots);assert.ok(!html.includes('undefined%'));}
  console.log('PASS: deterministic selected rarity rewards, full-slot replacement/cancel, unchanged normal RNG, session-only dev mode, persistent unranked runs, protected scraps/records, restored normal progress and all tool socket tiers.');
+}
+
+// Solo support inks: useful contact roles, predictable control and honest healing.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=9999;g.state.timeLeft=300;
+ const wall={pts:[{x:100,y:200},{x:700,y:200}],thick:8,hp:10000,maxHp:10000,life:300,maxLife:300,closed:false,intersections:0};g.state.walls=[wall];
+ g.state.inks.gravity=1;const e=g.api.spawnEnemy(false,400,100,'tank');e.hp=e.maxHp=10000;e.speed=0;
+ assert.equal(g.api.nearestWallPoint(e.x,e.y,155),null,'sparse endpoints are out of old pull range');g.api.pullGravity(e,.5);assert.equal(e.x,400);assert.equal(e.y,135,'pulls toward segment midpoint, at 70px/s');assert.equal(g.api.gravityDamageMultiplier(e),1,'not vulnerable until held');
+ g.api.pullGravity(e,2);assert.ok(Math.abs(e.y-(200-e.r-4-1.05))<1e-9);assert.ok(g.api.gravityWallHit(e));assert.equal(g.api.gravityDamageMultiplier(e),1.16);
+ const exposedHp=e.hp;g.api.dealDamage(e,10,'fire');assert.ok(Math.abs(e.hp-exposedHp+11.6)<1e-9,'held target takes more damage from other effects');e.immunity='fire';const immune=e.hp;g.api.dealDamage(e,10,'fire');assert.equal(e.hp,immune);e.immunity=null;
+ g.state.inks.gravity=100;assert.equal(g.api.gravityDamageMultiplier(e),1.4,'vulnerability is capped');g.state.walls=[];assert.equal(g.api.gravityDamageMultiplier(e),1,'destroyed walls immediately release vulnerability');g.state.inks.gravity=0;g.state.walls=[wall];
+ const speed=load(true).sandbox.testGame;speed.api.resetRun();speed.state.walls=[{...wall,pts:wall.pts.map(p=>({...p}))}];speed.state.inks.gravity=1;const boss=speed.api.spawnEnemy(false,400,100,'stapler');speed.api.pullGravity(boss,.5);assert.equal(boss.y,121,'boss pull strength is 60%');
+ // Level-one Frost guarantees a freeze, with no random roll or free permanent stun.
+ g.state.inks.frost=1;e.x=400;e.y=180;e.freeze=0;e.gravitySlow=0;g.api.resetSupportInks();
+ const rng=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('support contact must be deterministic')};
+ for(let i=0;i<11;i++){g.api.updateSupportInkTime(.1);g.api.updateSupportInkEnemy(e,.1);g.api.applyFrostContact(e,.1)}assert.equal(e.freeze,0);assert.equal(e.gravitySlow,.25);
+ g.api.updateSupportInkTime(.1);g.api.updateSupportInkEnemy(e,.1);g.api.applyFrostContact(e,.1);assert.equal(e.freeze,.65,'freeze exactly at 1.2s of contact');
+ e.freeze=0;g.api.applyFrostContact(e,5);assert.equal(e.freeze,0,'cooldown cannot be bypassed by contact');
+ g.api.updateSupportInkTime(2.15);g.api.updateSupportInkEnemy(e,2.15);g.api.applyFrostContact(e,1.2);assert.equal(e.freeze,.65,'can freeze again after thaw recovery');
+ env.sandbox.Math.random=rng;
+ const bossFrost=g.api.spawnEnemy(false,500,180,'stapler');g.api.applyFrostContact(bossFrost,1.2);assert.equal(bossFrost.freeze,.325,'boss freeze duration is halved');
+ const frostImmune=g.api.spawnEnemy(false,550,180,'wardling');frostImmune.immunity='frost';env.sandbox.Math.random=rng;g.api.applyFrostContact(frostImmune,5);assert.equal(frostImmune.freeze,0);assert.equal(frostImmune.gravitySlow,0);
+ const cooling=g.api.spawnEnemy(false,600,180,'tank');g.api.applyFrostContact(cooling,.6);g.api.updateSupportInkTime(.5);g.api.updateSupportInkEnemy(cooling,.5);g.api.updateSupportInkTime(.5);g.api.updateSupportInkEnemy(cooling,.5);assert.ok(g.api.supportInkSnapshot().enemies.find(s=>s.x===600).cold<.6,'chill fades off-wall');
+ g.api.resetSupportInks();g.state.enemies=[e];e.hp=1000;e.freeze=0;e.attackCd=0;e.x=400;e.y=181;g.state.inks.frost=1;g.state.inks.vampire=0;
+ for(let i=0;i<40;i++)g.api.update(.033);assert.ok(e.freeze>0,'real wall contact triggers level-one freeze');const frozenHp=e.hp,wallHp=wall.hp;g.api.update(.1);assert.ok(e.hp<frozenHp,'frozen enemies still receive wall damage');assert.equal(wall.hp,wallHp,'frozen enemies cannot bite walls');
+ // Life drain adds useful damage even at full HP and heals only damage actually dealt.
+ g.api.resetSupportInks();g.state.inks.frost=0;g.state.inks.vampire=1;e.hp=100;g.state.player.hp=g.state.player.maxHp;g.api.resetSustain();g.api.applyVampireContact(e,1);assert.equal(e.hp,92);assert.equal(g.state.player.hp,g.state.player.maxHp);assert.equal(g.api.supportInkSnapshot().bites.length,1,'full-health attacks have a fang pulse');
+ g.state.player.hp=50;g.api.applyVampireContact(e,1);assert.equal(e.hp,84);assert.equal(g.state.player.hp,52,'25% drain healing');
+ g.api.resetSustain();e.hp=1;g.state.player.hp=50;g.api.applyVampireContact(e,1);assert.equal(g.state.player.hp,50.25,'overkill never creates extra healing');
+ e.hp=0;g.api.applyVampireContact(e,1);assert.equal(g.state.player.hp,50.25,'dead enemies never heal');
+ e.hp=1000;g.state.player.hp=0;g.api.applyVampireContact(e,1);assert.equal(g.state.player.hp,0,'drain never revives Stevie');
+ g.api.resetSustain();g.state.player.hp=10;g.state.inks.vampire=10;for(let i=0;i<20;i++){e.hp=1000;g.api.applyVampireContact(e,1)}assert.equal(g.state.player.hp,16,'crowds share the existing 6 HP healing reserve');
+ const stateBefore=JSON.stringify(g.state),visualBefore=JSON.stringify(g.api.supportInkSnapshot());env.calls.length=0;g.api.drawSupportInks();assert.equal(JSON.stringify(g.state),stateBefore);assert.equal(JSON.stringify(g.api.supportInkSnapshot()),visualBefore);for(const call of env.calls)for(const v of call.slice(1))if(typeof v==='number')assert.ok(Number.isFinite(v));
+ g.state.paused=true;const paused=JSON.stringify(g.api.supportInkSnapshot());g.api.update(.2);assert.equal(JSON.stringify(g.api.supportInkSnapshot()),paused);g.state.paused=false;
+ g.api.startWave();assert.equal(g.api.supportInkSnapshot().enemies.length+g.api.supportInkSnapshot().bites.length,0);
+ console.log('PASS: segment-based safe Gravity pull/hold/vulnerability/cap, weaker boss pull, deterministic level-one Frost/cooldown/immunity, frozen wall damage, Vampire DPS/full-health visuals/actual-damage healing/no revival/shared budget, pure drawing and reset.');
+}
+
+// A repeatable single-barrier encounter demonstrates the three solo roles.
+{
+ const results={};
+ for(const effect of ['none','gravity','vampire','frost']){
+  const g=load(true).sandbox.testGame;g.api.resetRun();g.state.timeLeft=300;g.state.spawnTimer=9999;g.state.player.hp=20;
+  if(effect!=='none')g.state.inks[effect]=1;
+  const wall={pts:[{x:100,y:200},{x:700,y:200}],thick:8,hp:1e6,maxHp:1e6,life:300,maxLife:300,closed:false,intersections:0};g.state.walls=[wall];
+  const e=g.api.spawnEnemy(false,400,100,'tank');e.speed=30;e.hp=e.maxHp=10000;
+  for(let i=0;i<600;i++)g.api.update(.025);
+  results[effect]={damage:Number((10000-e.hp).toFixed(2)),wallDamage:1e6-wall.hp,healing:Number((g.state.player.hp-20).toFixed(2))};
+ }
+ assert.ok(results.gravity.damage>results.none.damage*1.2,'Gravity improves solo damage through earlier wall contact and exposure');assert.ok(results.gravity.wallDamage<results.none.wallDamage,'Gravity holds reduce wall pressure despite earlier contact');
+ assert.ok(results.vampire.damage>results.none.damage*1.8&&results.vampire.healing>15,'Vampire contributes damage and meaningful sustain');
+ assert.ok(results.frost.wallDamage<results.none.wallDamage*.85,'Frost reduces incoming wall damage without losing baseline DPS');assert.ok(Math.abs(results.frost.damage-results.none.damage)<1);
+ console.log('PASS: seeded 15-second solo encounter '+JSON.stringify(results));
+}
+
+// Gravity's fast contact query remains correct after knockback around a corner.
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.inks.gravity=1;
+ const wall={pts:[{x:100,y:200},{x:300,y:200},{x:300,y:400}],thick:8,hp:1000};g.state.walls=[wall];
+ const e=g.api.spawnEnemy(false,250,179,'tank');g.api.pullGravity(e,0);assert.equal(g.api.gravityDamageMultiplier(e),1.16);
+ e.x=321;e.y=300;assert.equal(g.api.gravityDamageMultiplier(e),1.16,'another segment still holds after knockback');
+ e.x=360;assert.equal(g.api.gravityDamageMultiplier(e),1,'moving clear of the wall releases exposure');
+ wall.pts=wall.pts.map(p=>({x:p.x+60,y:p.y}));assert.equal(g.api.gravityDamageMultiplier(e),1.16,'changed wall geometry invalidates the cached miss');
+ console.log('PASS: cached Gravity contacts preserve corner, knockback and changed-wall behavior.');
 }

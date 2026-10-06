@@ -63,6 +63,7 @@ function startWave(){
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
   game.api.resetAbilityEffects();
+  game.api.resetSupportInks();
   game.api.resetPlaguefire();
   game.api.resetEnemyWave();game.api.resetSustain();
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.particles=[];game.state.floaters=[];
@@ -83,6 +84,7 @@ function waveComplete(){
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
   game.api.resetAbilityEffects();
+  game.api.resetSupportInks();
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);
   game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
 

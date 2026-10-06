@@ -84,6 +84,7 @@ function update(dt){
     }
   }
 
+  game.api.updateSupportInkTime(dt);
   game.api.updatePlaguefire(dt);
 
   for(const e of [...game.state.enemies]){
@@ -91,6 +92,7 @@ function update(dt){
     if(e.hp<=0){game.api.killEnemy(e);continue}
     e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
+    game.api.updateSupportInkEnemy(e,dt);
 
     if(e.burn>0){e.burn-=dt;game.api.dealDamage(e,e.burnDps*dt,'fire')}
     if(e.poison>0){
@@ -112,26 +114,18 @@ function update(dt){
 
     if(e.hp<=0){game.api.killEnemy(e);continue}
     if(game.api.contactStevie(e))continue;
-    if(e.stun>0||e.freeze>0)continue;
-
-    // Gravity ink pulls nearby enemies toward the closest nearby wall point
-    if(game.state.inks.gravity>0&&game.state.walls.length){
-      const bp=game.api.nearestWallPoint(e.x,e.y,120+game.state.inks.gravity*20);
-      if(bp){
-        const gx=bp.x-e.x,gy=bp.y-e.y,m=Math.hypot(gx,gy)||1;
-        game.api.moveEnemySafely(e,gx/m*(8+game.state.inks.gravity*5)*dt,gy/m*(8+game.state.inks.gravity*5)*dt)
-      }
-    }
+    const immobilized=e.stun>0||e.freeze>0;
+    game.api.pullGravity(e,dt,immobilized);
 
     // Bouncers ricochet off a wall a few times and try another angle before
     // eventually giving up and attacking the barrier normally.
-    if(e.type==='bouncer'&&e.bounceTime>0){
+    if(!immobilized&&e.type==='bouncer'&&e.bounceTime>0){
       if(game.api.steerBounce(e,dt)){game.api.contactStevie(e);continue}
     }
 
     const target=game.api.enemyTarget(e);
     let targetX=target.x,targetY=target.y;
-    if(e.type==='flanker'){
+    if(!immobilized&&e.type==='flanker'){
       e.flankCd-=dt;
       if(e.flankCd<=0){
         e.flankAngle+=game.api.rand(.65,1.35)*(Math.random()<.5?-1:1);
@@ -143,9 +137,9 @@ function update(dt){
 
     const dx=targetX-e.x,dy=targetY-e.y,d=Math.hypot(dx,dy)||1;
     const playerDist=game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y);
-    const hit=game.api.nearestWallHit(e);
+    const hit=game.api.nearestWallHit(e)||game.api.gravityWallHit(e);
     if(hit){
-      if(e.type==='bouncer'&&e.bounces>0&&e.attackCd<=0){
+      if(!immobilized&&e.type==='bouncer'&&e.bounces>0&&e.attackCd<=0){
         const i=hit.seg,a=hit.wall.pts[i-1],b=hit.wall.pts[i];
         let tx=b.x-a.x,ty=b.y-a.y,tm=Math.hypot(tx,ty)||1;
         tx/=tm;ty/=tm;
@@ -164,11 +158,12 @@ function update(dt){
         continue;
       }
 
-      e.attackCd-=dt;
+      if(!immobilized)e.attackCd-=dt*(game.api.gravityWallHit(e)?game.api.supportInkTuning(game.state.inks.gravity).gravityAttack:1);
       if(e.type==='sapper'&&e.attackCd>0&&e.attackCd<=.16)game.api.prepareSapperStrike(e);
       const dps=game.api.applyInkContact(e,dt,hit.wall);
       game.api.dealDamage(e,dps*dt,'physical');
       if(game.state.stats.wallStun>0&&Math.random()<game.state.stats.wallStun*dt*.9)e.stun=.45;
+      if(e.stun>0||e.freeze>0||e.hp<=0)continue;
       if(e.attackCd<=0){
         game.api.damageWall(hit.wall,e.dmg*(e.type==='sapper'?2:1),e.x,e.y);
         if(e.type==='sapper')game.api.animateEnemyAction(e,'strike');
@@ -178,6 +173,7 @@ function update(dt){
       continue;
     }
 
+    if(immobilized)continue;
     let speed=e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7));
     if(e.type==='sniper'&&playerDist<190){
       e.shootCd-=dt;

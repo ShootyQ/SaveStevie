@@ -198,19 +198,12 @@ function applyInkContact(e,dt,wall=null){
     e.poison=Math.min(6,e.poison+dt*(1+game.state.inks.poison*.55));
     e.poisonDps=2+game.state.inks.poison*2.5;
   }
-  if(game.state.inks.frost>0){
-    e.gravitySlow=Math.max(e.gravitySlow,.12*game.state.inks.frost);
-    if(game.state.inks.frost>=3&&Math.random()<.08*dt*game.state.inks.frost)e.freeze=Math.max(e.freeze,.7);
-  }
+  game.api.applyFrostContact(e,dt);
   if(game.state.inks.electric>0&&e.chainCd<=0){
     game.api.chainLightning(e,game.state.inks.electric);
     e.chainCd=Math.max(.22,.8-game.state.inks.electric*.12);
   }
-  if(game.state.inks.vampire>0){
-    const before=game.state.player.hp;
-    game.api.healStevie(dps*dt*(.015*game.state.inks.vampire));
-    game.api.animateLeech(e,game.state.player.hp-before);
-  }
+  game.api.applyVampireContact(e,dt);
   if(game.state.inks.repulsion>0){
     const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;
     e.x+=dx/m*(15+game.state.inks.repulsion*7)*dt;
