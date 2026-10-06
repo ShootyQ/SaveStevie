@@ -1,0 +1,76 @@
+name: Build Android test app
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      signed_bundle:
+        description: 'Also build a signed AAB for Google Play internal testing (requires signing secrets)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_VERSION_CODE: ${{ github.run_number }}
+      ANDROID_VERSION_NAME: 0.1.0-test.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - name: Install Android SDK
+        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - run: npm ci
+      - run: npm test
+      - name: Build installable debug APK
+        run: npm run android:debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Save-Stevie-debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - name: Prepare upload signing key
+        if: github.event_name == 'workflow_dispatch' && inputs.signed_bundle
+        env:
+          KEY_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEY_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        shell: bash
+        run: |
+          if [[ -z "$KEY_BASE64" || -z "$KEY_STORE_PASSWORD" || -z "$KEY_ALIAS" || -z "$KEY_PASSWORD" ]]; then
+            echo 'Add the four Android signing secrets listed in docs/android-testing.md.'
+            exit 1
+          fi
+          printf '%s' "$KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/android-upload.keystore"
+          chmod 600 "$RUNNER_TEMP/android-upload.keystore"
+      - name: Build signed internal-testing bundle
+        if: github.event_name == 'workflow_dispatch' && inputs.signed_bundle
+        env:
+          ANDROID_KEYSTORE_PATH: ${{ runner.temp }}/android-upload.keystore
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: npm run android:bundle
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'workflow_dispatch' && inputs.signed_bundle
+        with:
+          name: Save-Stevie-signed-internal-testing-AAB
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+      - name: Remove temporary upload key
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/android-upload.keystore"

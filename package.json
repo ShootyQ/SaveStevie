@@ -1,0 +1,23 @@
+{
+  "name": "save-stevie",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Android development tools for the dependency-free Save Stevie web game",
+  "scripts": {
+    "test": "node tests/validate.cjs",
+    "build:web": "node scripts/build-site.cjs",
+    "android:sync": "node scripts/build-android.cjs && cap sync android",
+    "android:open": "cap open android",
+    "android:debug": "npm run android:sync && node scripts/android-gradle.cjs assembleDebug",
+    "android:bundle": "npm run android:sync && node scripts/android-gradle.cjs bundleRelease"
+  },
+  "dependencies": {
+    "@capacitor/android": "8.5.2",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.2"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.2",
+    "esbuild": "0.28.2"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "appId": "com.shootyq.savestevie",
+  "appName": "Save Stevie",
+  "webDir": "_android_web",
+  "android": {
+    "backgroundColor": "#26333c"
+  }
+}
