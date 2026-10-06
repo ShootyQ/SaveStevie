@@ -375,3 +375,19 @@ button:disabled{opacity:.5;cursor:default}
   #startOverlay #splashMusicBtn{grid-column:1;grid-row:6;margin:0;min-height:36px;padding:7px}
   .splash-footer{grid-column:1 / -1;grid-row:7;font-size:10px}
 }
+
+/* Run effects sit on the permanent drawing tool. */
+.tool-panel { margin:12px 0; padding:12px; border:2px solid #39434b; border-radius:12px; background:#fffaf0; text-align:left; }
+.tool-heading { display:flex; align-items:center; gap:10px; }
+.tool-heading strong { display:block; font-size:18px; }
+.tool-heading span,.tool-slot span { display:block; font-size:12px; }
+.tool-slots { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:10px; }
+.tool-slot { border:1px dashed #80786a; border-radius:8px; padding:8px; min-width:0; }
+.tool-slot img { float:left; margin-right:6px; }
+.tool-slot strong { font-size:13px; }
+.tool-synergies { margin:10px 0 0; font-size:12px; }
+.slot-hint { margin:6px 0; font-size:12px; font-weight:700; }
+.effect-replacement { border:2px solid #8456c9; padding:10px; border-radius:10px; margin-bottom:12px; }
+.effect-replacement[hidden] { display:none; }
+.effect-replacement button { margin:4px; }
+.ucard:focus-visible { outline:3px solid #8456c9; outline-offset:3px; }

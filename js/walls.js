@@ -86,49 +86,39 @@ function repairTouchedWalls(points){
   }
 }
 
+function canStartStroke(){const s=game.state.stats;return (s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6;}
+
 function createWall(points){
   if(points.length<2)return;
   let length=0;
   for(let i=1;i<points.length;i++)length+=game.api.dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
   if(length<8)return;
 
-  game.state.stats.strokeCount++;
-
-  let cost=length*game.state.stats.lineCost;
   const firstStrokeFree=game.state.stats.firstFree&&!game.state.stats.firstStrokeUsed;
-  game.state.stats.firstStrokeUsed=true;
-
-  // FREEHAND: normal ink spending charges the meter. Once charged, it grants a
-  // finite bank of free ink. Tiny strokes cannot meaningfully charge the meter.
-  let bankUsed=0;
-  let paidCost=cost;
-
-  if(firstStrokeFree){
-    paidCost=0;
-  }else if(game.state.stats.freehandLevel>0&&game.state.stats.freehandBank>0){
-    bankUsed=Math.min(cost,game.state.stats.freehandBank);
-    game.state.stats.freehandBank-=bankUsed;
-    paidCost=cost-bankUsed;
-  }
-
-  if(paidCost>game.state.stats.ink){
-    const available=game.state.stats.ink+bankUsed;
-    const ratio=available/Math.max(cost,1);
-    const cut=Math.max(2,Math.floor(points.length*ratio));
-    points=points.slice(0,cut);
-
-    // Recalculate the actual surviving stroke length so a truncated doodle
-    // cannot inherit the durability of the giant line the player attempted.
-    length=0;
+  const bank=game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0;
+  const available=Math.max(0,game.state.stats.ink)+bank;
+  // Every paid stroke costs at least six ink. Never manufacture a two-point
+  // wall when the available ink cannot pay for those points.
+  if(!firstStrokeFree&&available<6){game.api.setMsg('Let your ink refill to 6 before drawing.');return;}
+  if(!firstStrokeFree&&length*game.state.stats.lineCost>available){
+    let remaining=available/game.state.stats.lineCost;
+    const clipped=[points[0]];
+    for(let i=1;i<points.length&&remaining>0;i++){
+      const a=points[i-1],b=points[i],segment=game.api.dist(a.x,a.y,b.x,b.y);
+      if(segment<=remaining){clipped.push(b);remaining-=segment;}
+      else{const t=remaining/segment;clipped.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});remaining=0;}
+    }
+    points=clipped;length=0;
     for(let i=1;i<points.length;i++)length+=game.api.dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
-
-    cost=length*game.state.stats.lineCost;
-    bankUsed=Math.min(cost,bankUsed);
-    paidCost=Math.max(0,cost-bankUsed);
+    if(points.length<2||length<8)return;
   }
-
-  const actualPaid=Math.min(game.state.stats.ink,paidCost);
+  const cost=Math.max(6,length*game.state.stats.lineCost);
+  const bankUsed=firstStrokeFree?0:Math.min(cost,bank);
+  const actualPaid=firstStrokeFree?0:Math.max(0,cost-bankUsed);
+  game.state.stats.freehandBank-=bankUsed;
   game.state.stats.ink=Math.max(0,game.state.stats.ink-actualPaid);
+  game.state.stats.strokeCount++;
+  game.state.stats.firstStrokeUsed=true;
 
   if(game.state.stats.freehandLevel>0&&actualPaid>=5){
     game.state.stats.freehandCharge+=actualPaid;
@@ -306,7 +296,7 @@ function applySynergies(e,dt){
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
-const api = { nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
+const api = { canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
 Object.assign(game.api, api);
 return api;
 };

@@ -21,7 +21,7 @@ function resetRun(){
   for(const k in game.state.stacks)delete game.state.stacks[k];
   game.state.player.maxHp=75;game.state.player.hp=75;game.state.player.rockCd=0;
   game.state.drawing=false;game.state.currentWall=null;
-  game.api.applyNotebookLoadout();game.api.beginScrapRun();
+  game.api.applyNotebookLoadout();game.api.beginScrapRun();game.api.resetRewardPlan();
   game.state.running=true;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
   game.dom.startOverlay.style.display='none';game.dom.gameOverOverlay.style.display='none';game.dom.upgradeOverlay.style.display='none';
   game.dom.waveOverlay.style.display='none';game.dom.victoryOverlay.style.display='none';game.dom.specializeOverlay.style.display='none';

@@ -82,7 +82,9 @@
         <h2>Choose an Upgrade</h2>
         <p id="rewardText">Pick one. Build weird.</p>
         <p id="rewardLuck" class="reward-luck"></p>
-        <details class="luck-guide"><summary>What does Luck do?</summary><p id="rewardLuckDetails"></p><p>Luck helps roll the rarity first. Your specialization and Collector affect which upgrade is picked within that rarity. Better odds still leave room for a bad roll!</p></details>
+        <details class="luck-guide"><summary>What does Luck do?</summary><p id="rewardLuckDetails"></p><p>Equipped effects are favored so you can grow your build. Luck improves other rarity rolls; your specialization and Collector weight the choices. Legendary offers have a separate one-in-ten campaign chance.</p></details>
+        <section id="rewardTool" class="tool-panel" aria-label="Your drawing tool"></section>
+        <div id="effectReplacement" class="effect-replacement" hidden aria-live="polite"></div>
         <div class="cards" id="cards"></div>
         <div id="synergyNote"></div>
         <div class="cardactions">
@@ -178,7 +180,8 @@
     <div class="build-heading"><h2 id="buildTitle">Your Build</h2><button id="closeBuildBtn">Close</button></div>
     <p>The game pauses while you review. Totals include Notebook perks, run upgrades, and your specialization.</p>
     <button class="secondary notebook-entry" id="buildNotebookBtn">Notebook · <span id="buildScraps">0</span> banked scraps</button>
-    <h3>Current totals</h3><div id="buildStats" class="build-stats"></div>
+    <h3>Current totals</h3><section id="buildTool" class="tool-panel" aria-label="Your drawing tool"></section>
+    <div id="buildStats" class="build-stats"></div>
     <h3>Luck &amp; rewards</h3><p id="buildLuck" class="build-luck"></p>
     <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
     <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
@@ -223,6 +226,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>A pencil with a plan</h3><p>Paid strokes need at least 6 ink, fixing empty-ink wall spam. Spend Notebook scraps to grow your pencil into a mechanical pencil, pen, and scented Sharpie with 2–4 effect slots. Rewards favor equipped effects; replace one deliberately to change your build. Legendary offers are reserved for roughly one in ten full campaigns.</p></article>
       <article class="build-entry"><h3>A pencil that stays on the line</h3><p>The splash pencil now follows the actual ink path, with its tip pinned to the drawing edge. It stays lined up on desktop and phone screens.</p></article>
       <article class="build-entry"><h3>The splash doodles come alive</h3><p>Stevie idles, blinks, and tosses a little rock while the monsters fidget and bounce. A pencil traces the scribbled barrier and the flame flickers. These lightweight menu animations pause when the splash is hidden, and reduced-motion settings keep the scene still.</p></article>
       <article class="build-entry"><h3>A soundtrack for every chapter</h3><p>Play intro music on the splash screen for the calm new menu theme. Starting a run switches to Save Stevie, then Pop Quiz Panic, Crayon Catastrophe, and Detention: The Final Draft at waves 6, 11, and 16. Each song loops; waves and menus within a chapter keep its position. The music note still saves your mute choice. Resetting progress returns to the intro track.</p></article>

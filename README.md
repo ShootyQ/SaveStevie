@@ -458,3 +458,38 @@ versioned by the site build like other images.
 The optional `node tests/browser-splash.cjs [packaged-site-directory]` checks
 animation playback/pause, existing sprite loading, keyboard controls, layout
 on desktop/phones, and the reduced-motion scene.
+
+
+## Drawing tools and effect slots
+
+Paid strokes need at least 6 ink and cost at least 6 ink, even for short marks.
+Long strokes stop at the distance the available ink can afford. Quick Sketch's
+one free stroke per wave and Freehand's finite bank still work at zero ink.
+
+Buy **Your Drawing Tool** ranks with scraps in Back of the Notebook. The Pencil
+starts with two effect slots; rank 3 becomes a Mechanical Pencil (two slots),
+rank 6 a Simple Pen (three), and rank 10 a Scented Sharpie (four). Existing
+Notebook purchases and best-wave records keep their save keys. Tool purchases
+apply on the next run; effect levels reset each run.
+
+Ink families, Shock Ink, and Death Ink occupy effect slots. Picking an equipped
+effect levels it up. When slots are full, picking a new effect asks which old
+effect to replace and allows cancellation. Replacement loses that effect's
+levels and removes its bonuses and inactive synergies. Health, capacity,
+regeneration, geometry, and other utility upgrades do not consume slots.
+Rewards favor equipped effects; the reward and Build screens show the tool,
+slot levels, and active synergies.
+
+Ten percent of new campaigns reserve one legendary offer on a randomly chosen
+reward wave from 1–19. Short runs may end before that wave. Rerolling a legendary
+offer gives it up; Luck, Chaos, extra choices, boss rewards, and Endless cannot
+add more legendary offers. This is a probability per campaign, not a guaranteed
+every-tenth-run schedule. Luck still improves the other rarity odds.
+
+A completed campaign banks 61 scraps for wave clears, chapter milestones and
+victory, plus up to 8 kill scraps. Browser storage is device/origin specific;
+blocked storage is reported in the Notebook. `node tests/validate.cjs` checks
+full campaign payout and reload persistence. With Playwright and Chromium,
+`node tests/browser-tools.cjs [packaged-site-directory]` checks drawing at zero
+ink, reward replacement/cancellation, tool layout and artwork, synergies,
+campaign payouts, purchases, and reloads on desktop and phone-sized viewports.

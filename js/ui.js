@@ -114,6 +114,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
 }
 let activeInfo=null,pausedBeforeInfo=false,focusBeforeInfo=null;
 function renderBuild(){
+  game.api.renderTool('buildTool');
   const s=game.state.stats,f=v=>Number(v.toFixed(2));
   const totals=[['Max ink',s.maxInk],['Ink regeneration',f(s.inkRegen)+' /s'],['Stroke cost',f(s.lineCost)+' ink/pixel'],
     ['Wall damage',f(s.wallDamage)+' /s'],['Base wall HP',s.wallHp],['Wall lifetime',s.wallLife+'s'],['Line width',s.lineWidth+'px'],
