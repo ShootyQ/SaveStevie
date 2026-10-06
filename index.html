@@ -52,8 +52,9 @@
         <div class="splash-eyebrow">A NOTEBOOK SURVIVAL GAME <span>IN DEVELOPMENT</span></div>
         <div class="splash-art" aria-hidden="true">
           <svg viewBox="0 0 440 250" xmlns="http://www.w3.org/2000/svg">
-            <path id="splashInkPath" class="splash-ink-stroke" pathLength="1" d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#26333c" stroke-width="10" stroke-linecap="round"/>
-            <path class="splash-ink-stroke" pathLength="1" d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#68747b" stroke-width="2" stroke-linecap="round"/>
+            <defs><pattern id="menuGraphite" patternUnits="userSpaceOnUse" width="4" height="4"><rect width="4" height="4" fill="#514e49"/><path d="M0 1h1m1 2h2" stroke="#a7a093" stroke-width=".6"/></pattern></defs>
+            <path id="splashInkPath" class="splash-ink-stroke" d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#6c675e" stroke-opacity=".35" stroke-width="7" stroke-linecap="round"/>
+            <path class="splash-ink-stroke" d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="url(#menuGraphite)" stroke-width="3.5" stroke-linecap="round"/>
           <g class="splash-pencil" stroke="#26333c" stroke-width="1.8" stroke-linejoin="round">
             <path d="M0 0 6-17 42-53 55-40 19-4Z" fill="#edc958"/>
             <path d="m42-53 5-5 13 13-5 5Z" fill="#e69a93"/>
@@ -291,6 +292,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>The pencil actually draws</h3><p>The menu pencil tip and graphite line now use the same measured path and drawing progress. It makes one short, quiet scribble pass every 18 seconds, with a longer rest between passes. Scribble audio respects effects volume and stops when you leave the menu.</p></article>
       <article class="build-entry"><h3>Recess in the notebook</h3><p>A refreshed paper main menu and pencil-tray controls make the notebook feel more like school. Pause opens a menu with Settings, your tool, monster notes and Resume. Return to main menu asks first: your run ends, but earned scraps and permanent upgrades stay saved.</p></article>
       <article class="build-entry"><h3>The first bosses fight back</h3><p>Wave 5 and 10 bosses have 80% more health, move twice as fast and use abilities more often. Boxed-in King Doodle-Doom prioritises stronger wall swipes; Staple Snack’s charges hit walls harder. Their attacks still give you a warning, and enclosing a boss still increases your damage.</p></article>
       <article class="build-entry"><h3>Finish the fight</h3><p>Regular waves stop sending monsters when the timer reaches zero. Defeat every remaining monster to clear the wave. Boss waves have no countdown: defeat the boss to move on.</p></article>
