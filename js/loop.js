@@ -26,7 +26,7 @@ function update(dt){
   // Ink slowly fades even when nobody is touching it.
   // It remains solid for most of its life, then visibly ghosts out before disappearing.
   for(const w of [...game.state.walls]){
-    w.life-=dt;
+    w.life-=dt;if(w.sealAge!==undefined)w.sealAge+=dt;
     if(w.life<=0)game.state.walls=game.state.walls.filter(x=>x!==w);
   }
 

@@ -1,5 +1,29 @@
 /* walls: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.walls = function createWallsSystem(game) {
+function loopUtilityTuning(levels=(game.state.stacks['Closed Loop']||0)+(game.state.stacks['Fortress Geometry']||0)){
+ if(levels<=0)return {refund:0,repair:0,damage:0};
+ const fall=Math.pow(.8,levels-1);return {refund:.35-.2*fall,repair:.3-.15*fall,damage:.25-.15*fall};
+}
+function insideLoop(e,w){
+ const bounds=game.api.wallGeometry(w.pts);if(e.x<bounds.minX||e.x>bounds.maxX||e.y<bounds.minY||e.y>bounds.maxY)return false;
+ let inside=false;for(let i=0,j=w.pts.length-1;i<w.pts.length;j=i++){
+  const a=w.pts[i],b=w.pts[j];if((a.y>e.y)!==(b.y>e.y)&&e.x<(b.x-a.x)*(e.y-a.y)/(b.y-a.y)+a.x)inside=!inside;
+ }return inside;
+}
+function loopDamageMultiplier(enemy){const t=loopUtilityTuning();return t.damage&&game.state.walls.some(w=>w.closed&&w.hp>0&&w.life>0&&insideLoop(enemy,w))?1+t.damage:1}
+function rewardClosedLoop(wall,paid){
+ const t=loopUtilityTuning();if(!t.refund||paid<=0)return;
+ const refund=Math.min(paid*t.refund,game.state.stats.maxInk-game.state.stats.ink);game.state.stats.ink+=refund;
+ const requests=[];
+ for(const w of game.state.walls){if(w===wall||w.hp<=0||w.hp>=w.maxHp)continue;
+  const touched=w.pts.some(p=>insideLoop(p,wall))||w.pts.some(p=>{const near=game.api.nearestPointOnWall(p,wall);return near&&Math.hypot(near.x-p.x,near.y-p.y)<=wall.thick+w.thick});
+  if(touched)requests.push({w,amount:(w.maxHp-w.hp)*t.repair});
+ }
+ const total=requests.reduce((n,r)=>n+r.amount,0),scale=total?Math.min(1,paid*.5/total):0;
+ for(const r of requests)r.w.hp=Math.min(r.w.maxHp,r.w.hp+r.amount*scale);
+ const center=game.api.wallGeometry(wall.pts);wall.sealAge=0;
+ game.api.floatText((center.minX+center.maxX)/2,(center.minY+center.maxY)/2,'SEALED! +'+refund.toFixed(1)+' ink','#456d49');
+}
 function nearestWallHit(e){
   for(const wall of game.state.walls){
     const bounds=game.api.wallGeometry(wall.pts),radius=e.r+wall.thick/2;
@@ -159,6 +183,7 @@ function createWall(points){
       game.state.walls.push({pts:shifted,hp:hp*game.catalog.balance.copyDurability,maxHp:hp*game.catalog.balance.copyDurability,thick:base.thick,life,maxLife:life,closed:false,intersections:0});
     }
   }
+  if(base.closed)rewardClosedLoop(base,actualPaid);
   game.api.updateUI();
 }
 
@@ -326,7 +351,7 @@ function applySynergies(e,dt){
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
-const api = { remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
+const api = { loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
 Object.assign(game.api, api);
 return api;
 };

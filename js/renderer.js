@@ -480,6 +480,12 @@ function draw(){
     drawToolStroke(w.pts,w.thick,.08+.92*visualRatio,col);
 
     drawWallTextures(w.pts,w.thick,.08+.92*visualRatio);
+    if(w.sealAge!==undefined&&w.sealAge<.65){
+      const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#638466';ctx.globalAlpha=(1-w.sealAge/.65)*.65;ctx.lineWidth=w.thick+3;ctx.lineCap='round';
+      ctx.beginPath();ctx.moveTo(w.pts[0].x,w.pts[0].y);
+      const count=motionReduced?w.pts.length:Math.max(2,Math.ceil(w.pts.length*w.sealAge/.4));
+      for(let i=1;i<Math.min(w.pts.length,count);i++)ctx.lineTo(w.pts[i].x,w.pts[i].y);ctx.stroke();ctx.restore();
+    }
 
     if(w.closed&&game.state.synergies.has('THE BLACK HOLE')){
       let cx=0,cy=0;for(const p of w.pts){cx+=p.x;cy+=p.y}cx/=w.pts.length;cy/=w.pts.length;

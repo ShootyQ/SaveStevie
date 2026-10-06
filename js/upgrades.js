@@ -90,6 +90,11 @@ function upgradePreview(u){
   const pair=(label,before,after,unit='')=>({label,before:String(f(before))+unit,after:String(f(after))+unit});
   if(effectKeys[u.name])return {label:'Effect level',before:n?'Level '+n:'Not equipped',after:'Level '+(n+levels),beforeDetail:n?game.api.upgradeEffect(u.name,n):'No '+u.name+' effect yet.',afterDetail:game.api.upgradeEffect(u.name,n+levels)};
   const regen=(name)=>{let value=name==='Living Fountain Pen'?1:0;for(let i=0;i<levels;i++){const step=game.api.regenPick(name,n+i);if(name==='Living Fountain Pen')value*=step;else value+=step;}return value;};
+  function loopPreview(durability){
+    const combined=(game.state.stacks['Closed Loop']||0)+(game.state.stacks['Fortress Geometry']||0),a=game.api.loopUtilityTuning(combined),b=game.api.loopUtilityTuning(combined+levels);
+    const detail=t=>Math.round(t.refund*1000)/10+'% paid ink back · '+Math.round(t.repair*1000)/10+'% missing HP repair · +'+Math.round(t.damage*1000)/10+'% damage inside';
+    return {...pair('Closed-shape durability',s.closedBonus,s.closedBonus+durability*levels,'×'),beforeDetail:detail(a),afterDetail:detail(b)};
+  }
   const previews={
     'Bigger Ink Tank':()=>pair('Maximum ink',s.maxInk,s.maxInk+35*levels),
     'Quick Refill':()=>pair('Ink regeneration',s.inkRegen,s.inkRegen+regen(u.name),' /s'),
@@ -99,7 +104,7 @@ function upgradePreview(u){
     'Fat Marker':()=>pair('Line width',s.lineWidth,s.lineWidth+2*levels,' px'),
     'Lucky Scribble':()=>pair('Luck',s.luck,s.luck+8*levels),
     'Recycling':()=>pair('Ink per kill',s.refund,s.refund+5*levels),
-    'Closed Loop':()=>pair('Closed-shape durability',s.closedBonus,s.closedBonus+.4*levels,'×'),
+    'Closed Loop':()=>loopPreview(.4),
     'Permanent Marker':()=>pair('Wall lifetime',s.wallLife,s.wallLife+10*levels,'s'),
     'Archival Ink':()=>pair('Wall lifetime',s.wallLife,s.wallLife+25*levels,'s'),
     'Architect':()=>pair('Durability per intersection',s.intersectBonus*100,(s.intersectBonus+.15*levels)*100,'%'),
@@ -110,7 +115,7 @@ function upgradePreview(u){
     'Living Fountain Pen':()=>pair('Ink regeneration',s.inkRegen,s.inkRegen*regen(u.name),' /s'),
     'Triple Stroke':()=>pair('Walls per stroke',s.doubleLine?2:1,3),
     'Bottomless Pen':()=>pair('Maximum ink',s.maxInk,s.maxInk+40*levels),
-    'Fortress Geometry':()=>pair('Closed-shape durability',s.closedBonus,s.closedBonus+.5*levels,'×'),
+    'Fortress Geometry':()=>loopPreview(.5),
     'Bandages':()=>pair('Between-wave healing',5+s.playerRegen,5+s.playerRegen+8*levels,' HP'),
     'Helmet':()=>pair('Contact damage reduction',s.playerArmor*100,Math.min(.55,s.playerArmor+.1*levels)*100,'%'),
     'Pocket Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+9*levels),
@@ -121,8 +126,8 @@ function upgradePreview(u){
     'Reroll Coupon':()=>pair('Rerolls available',game.state.rerolls,Math.min(5,game.state.rerolls+2*levels))
   };
   const result=previews[u.name]?.()||{label:'Unlock',before:'Not unlocked',after:'Unlocked'};
-  result.beforeDetail=n?game.api.upgradeEffect(u.name,n):'No ranks taken in this run.';
-  result.afterDetail=game.api.upgradeEffect(u.name,n+levels);
+  result.beforeDetail??=n?game.api.upgradeEffect(u.name,n):'No ranks taken in this run.';
+  result.afterDetail??=game.api.upgradeEffect(u.name,n+levels);
   if(u.name==='First Aid')result.afterDetail+=' Current health: '+f(p.hp)+' → '+f(Math.min(p.maxHp+18*levels,p.hp+18*levels))+' HP.';
   if(u.name==='Fine Tip')result.afterDetail+=' Paid strokes still cost at least 6 ink.';
   if(u.name==='Fat Marker')result.afterDetail+=' Base wall HP: '+f(s.wallHp)+' → '+f(s.wallHp+15*levels)+'.';
@@ -190,7 +195,7 @@ game.catalog.upgrades = [
   {name:'Fat Marker',cat:'defense',desc:'+2 line width and +15 wall HP.',apply:()=>{game.state.stats.lineWidth+=2;game.state.stats.wallHp+=15}},
   {name:'Lucky Scribble',cat:'economy',desc:'+8 Luck: improves rarity odds for future upgrades and rerolls.',apply:()=>game.state.stats.luck+=8},
   {name:'Recycling',cat:'economy',desc:'Kills refund 5 ink, sharing an 8 ink/s refill budget.',apply:()=>game.state.stats.refund+=5},
-  {name:'Closed Loop',cat:'defense',desc:'Closed shapes gain +40% durability.',apply:()=>game.state.stats.closedBonus+=.4},
+  {name:'Closed Loop',cat:'defense',desc:'Closed shapes gain +40% durability. First loop-utility level: 15% paid ink back, repair nearby walls by 15% of missing HP, and +10% damage inside. Later levels have diminishing gains; repair is capped by ink spent.',apply:()=>game.state.stats.closedBonus+=.4},
   {name:'Permanent Marker',cat:'defense',desc:'Walls fade 10 seconds more slowly.',apply:()=>game.state.stats.wallLife+=10},
   {name:'Archival Ink',cat:'defense',desc:'Walls fade 25 seconds more slowly.',apply:()=>game.state.stats.wallLife+=25},
   {name:'Architect',cat:'defense',desc:'Each wall intersection adds 15% durability.',apply:()=>game.state.stats.intersectBonus+=.15},
@@ -202,7 +207,7 @@ game.catalog.upgrades = [
   {name:'Living Fountain Pen',cat:'draw',desc:'35% faster ink regeneration on the first pick; smaller multipliers on repeats.',apply:()=>game.state.stats.inkRegen*=game.api.regenPick('Living Fountain Pen')},
   {name:'Triple Stroke',exclusiveRarity:'legendary',rarity:'legendary',cat:'draw',desc:'Every stroke adds TWO parallel walls, each with 60% durability.',apply:()=>{game.state.stats.doubleLine=true;game.state.stats.tripleLine=true}},
   {name:'Bottomless Pen',cat:'draw',desc:'Per level: +40 max ink and +2 ink/s at first, with smaller regeneration bonuses on repeats.',apply:()=>{game.state.stats.maxInk+=40;game.state.stats.inkRegen+=game.api.regenPick('Bottomless Pen')}},
-  {name:'Fortress Geometry',cat:'defense',desc:'Per level: +50% closed-shape durability.',apply:()=>game.state.stats.closedBonus+=.5},
+  {name:'Fortress Geometry',cat:'defense',desc:'Per level: +50% closed-shape durability. Shares Closed Loop’s diminishing ink refund, completion repair and enclosed-enemy damage bonus (15% / 15% / 10% at the first utility level).',apply:()=>game.state.stats.closedBonus+=.5},
 
   // Stevie
   {name:'Bandages',cat:'stevie',desc:'Heal 8 extra HP between waves.',apply:()=>game.state.stats.playerRegen+=8},

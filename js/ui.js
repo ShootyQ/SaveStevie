@@ -78,13 +78,14 @@ function showSynergySplash(name,desc,major=false){
 }
 
 function upgradeEffect(name,n=game.state.stacks[name]||0){
+  const loopDetails=(levels,other)=>{const t=game.api.loopUtilityTuning(levels+(game.state.stacks[other]||0));return (t.refund*100).toFixed(1)+'% paid ink back; '+(t.repair*100).toFixed(1)+'% missing HP repair (ink-spend cap); +'+(t.damage*100).toFixed(1)+'% damage inside'};
   const f=v=>Number(v.toFixed(2)),s=game.state.stats,t=game.api.supportInkTuning(n),r=game.api.remainingInkTuning(n);
   const effects={
     'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${f(game.api.regenStackEffect('Quick Refill',n))} ink/s; diminishing returns`,
     'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 per level`,
     'Fine Tip':()=>`${f((1-Math.pow(.88,n))*100)}% cheaper strokes (multiplicative)`,
     'Fat Marker':()=>`+${2*n}px width; +${15*n} base wall HP`, 'Lucky Scribble':()=>`+${8*n} Luck — better rarity odds on rewards and rerolls`,
-    'Recycling':()=>`+${5*n} ink per kill; shared 8 ink/s budget`, 'Closed Loop':()=>`+${40*n}% closed-wall durability`,
+    'Recycling':()=>`+${5*n} ink per kill; shared 8 ink/s budget`, 'Closed Loop':()=>`+${40*n}% closed-wall durability; `+loopDetails(n,'Fortress Geometry'),
     'Permanent Marker':()=>`+${10*n}s wall lifetime`, 'Archival Ink':()=>`+${25*n}s wall lifetime`,
     'Architect':()=>`+${15*n}% durability per intersection`, 'Patchwork':()=>`+${18*n} HP per repaired wall`,
     'Double Stroke':()=>`One-time unlock: 2 walls per stroke (3 with Triple Stroke); extra walls have 60% HP`,
@@ -92,7 +93,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Patch Job':()=>`Up to ${3*n} HP per wall per kill; shared 12 HP/s budget`, 'Freehand':()=>`${40+(n-1)*20} free-ink bank; charge with ${s.freehandThreshold} spent ink`,
     'Living Fountain Pen':()=>`×${f(game.api.regenStackEffect('Living Fountain Pen',n))} ink regeneration; diminishing returns`,
     'Triple Stroke':()=>`One-time unlock: 3 walls per stroke; extra walls have 60% HP`,
-    'Bottomless Pen':()=>`+${40*n} max ink; +${f(game.api.regenStackEffect('Bottomless Pen',n))} ink/s; diminishing returns`, 'Fortress Geometry':()=>`+${50*n}% closed-wall durability`,
+    'Bottomless Pen':()=>`+${40*n} max ink; +${f(game.api.regenStackEffect('Bottomless Pen',n))} ink/s; diminishing returns`, 'Fortress Geometry':()=>`+${50*n}% closed-wall durability; `+loopDetails(n,'Closed Loop'),
     'Bandages':()=>`+${8*n} HP healed between waves`, 'Helmet':()=>`${f(Math.min(.55,.1*n)*100)}% damage reduction (cap 55%)`,
     'Pocket Rocks':()=>`+${9*n} rock damage; unlocks throwing without slowing improved throws`,
     'Better Rocks':()=>`+${12*n} rock damage; each level reduces throw interval by 0.12s, floor 0.45s`,
