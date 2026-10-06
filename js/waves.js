@@ -64,7 +64,7 @@ function startWave(){
   game.api.resetAbilityEffects();
   game.api.resetSupportInks();
   game.api.resetPlaguefire();
-  game.api.resetRefuge();game.api.resetEnemyWave();game.api.resetSustain();
+  game.api.resetSoundEffects();game.api.resetRefuge();game.api.resetEnemyWave();game.api.resetSustain();
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.particles=[];game.state.floaters=[];
   game.state.finalOvertime=false; game.state.finalBossDefeated=false;
   game.state.stats.ink=game.state.stats.maxInk;
@@ -78,6 +78,7 @@ function startWave(){
 
 function waveComplete(){
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending())return;
+  game.api.stopSoundEffects();
   game.state.betweenWaves=true;
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
@@ -116,6 +117,7 @@ function proceedAfterWave(){
 }
 
 function gameOver(){
+  game.api.stopSoundEffects();
   game.api.finishScrapRun();renderStevieNote();
   game.state.running=false;
   game.dom.$('finalWave').textContent=game.state.wave;game.dom.$('finalKills').textContent=game.state.kills;game.dom.$('finalScore').textContent=game.state.score;

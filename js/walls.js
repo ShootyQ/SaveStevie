@@ -24,6 +24,7 @@ function wallNear(x,y,r){
 }
 
 function damageWall(wall,amount,x,y){
+  if(amount>0&&wall.hp>0)game.api.playSound('wall');
   wall.hp-=amount;
   if(wall.hp<=0){
     if(game.state.stats.explode||game.state.inks.blast>0){
@@ -117,6 +118,7 @@ function createWall(points){
   const actualPaid=firstStrokeFree?0:Math.max(0,cost-bankUsed);
   game.state.stats.freehandBank-=bankUsed;
   game.state.stats.ink=Math.max(0,game.state.stats.ink-actualPaid);
+  game.api.playSound('pencil');
   game.state.stats.strokeCount++;
   game.state.stats.firstStrokeUsed=true;
 
@@ -259,6 +261,7 @@ function applyOneInk(kind,e,dt,chaos=false){
 
 function chainLightning(source,level){
   if(source.hp<=0)return;
+  game.api.playSound('electric');
   let count=1+Math.floor(level/2),range=110+level*18,mult=1;
   if(game.state.synergies.has('Cryoshock')&&source.freeze>0){range+=70;count+=2;mult+=.55}
   if(game.state.synergies.has('Tesla Well')&&source.gravitySlow>.15){range+=45;count+=1;mult+=.35}

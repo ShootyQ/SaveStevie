@@ -5,7 +5,7 @@ function pointerPos(e){
 }
 
 function endDraw(){
-  if(!game.state.drawing)return;game.state.drawing=false;if(game.state.currentWall)game.api.createWall(game.state.currentWall);game.state.currentWall=null
+  if(!game.state.drawing)return;game.state.drawing=false;game.api.stopSoundEffects('scribble');if(game.state.currentWall)game.api.createWall(game.state.currentWall);game.state.currentWall=null
 }
 function screenSupported(){return typeof document.documentElement?.requestFullscreen==='function'}
 function updateScreenButton(){
@@ -57,7 +57,7 @@ game.dom.canvas.addEventListener('pointerdown',e=>{
 game.dom.canvas.addEventListener('pointermove',e=>{
   if(!game.state.drawing||!game.state.currentWall)return;
   const p=game.api.pointerPos(e),q=game.state.currentWall.at(-1);
-  if(game.api.dist(p.x,p.y,q.x,q.y)>6)game.state.currentWall.push(p)
+  if(game.api.dist(p.x,p.y,q.x,q.y)>6){game.state.currentWall.push(p);game.api.playSound('scribble')}
 });
 game.dom.canvas.addEventListener('pointerup',game.api.endDraw);
 game.dom.canvas.addEventListener('pointercancel',game.api.endDraw);

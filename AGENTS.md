@@ -12,5 +12,7 @@ Run `node tests/validate.cjs` for gameplay/UI changes. For layout or interaction
 changes, check relevant screens at desktop and phone-sized browser viewports.
 Keep the static site dependency-free and preserve existing best-wave records.
 
-Use the `dev` branch for ongoing development and pushes unless the user specifies
-another branch. Do not merge or deploy automatically.
+Start each new change on a fresh descriptive feature branch from current `main`.
+Push that branch and create a pull request into `main`, providing its direct link
+for the user to review and merge. Continue on an existing feature branch when
+updating its open PR. Do not merge or deploy automatically.

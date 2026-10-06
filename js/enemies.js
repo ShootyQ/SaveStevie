@@ -123,6 +123,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
 
 function killEnemy(e){
   if(!game.state.enemies.includes(e))return;
+  game.api.playSound('defeated');
   game.state.kills++;game.state.waveKills++;game.state.score+=10;
   game.api.awardKillScraps(e);
   game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
@@ -171,6 +172,7 @@ function updateProjectiles(dt){
     const dx=p.target.x-p.x,dy=p.target.y-p.y,d=Math.hypot(dx,dy)||1;
     p.x+=dx/d*p.speed*dt;p.y+=dy/d*p.speed*dt;
     if(d<10+p.target.r){
+      game.api.playSound('rock');
       game.api.dealDamage(p.target,p.damage,'physical');
       if(game.state.synergies.has('Hot Rocks')){
         p.target.burn=Math.max(p.target.burn,2);
