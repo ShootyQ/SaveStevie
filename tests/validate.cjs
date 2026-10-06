@@ -919,6 +919,7 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  for(const rarity of ['common','uncommon','rare','legendary']){
   const levels={common:1,uncommon:2,rare:3,legendary:4}[rarity];
   for(const template of load(true).sandbox.testGame.catalog.upgrades){
+   if(template.exclusiveRarity&&template.exclusiveRarity!==rarity)continue;
    const g=load(true).sandbox.testGame,reference=load(true).sandbox.testGame;
    g.api.resetRun();reference.api.resetRun();
    const base=g.catalog.upgrades.find(u=>u.name===template.name),offer={...base,rarity};
@@ -1182,7 +1183,7 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  for(const [x,y] of [[b.right+11,p.y],[b.left-11,p.y],[p.x,b.top-11],[p.x,b.bottom+11]]){
   const e=g.api.spawnEnemy(false,x,y,'grunt');assert.equal(g.api.touchesRefuge(e),true);const hp=p.hp;g.api.contactStevie(e);assert.equal(p.hp,hp-e.dmg);assert.ok(!g.state.enemies.includes(e));p.hp=75;
  }
- const corner={x:b.right+8,y:b.bottom+8,r:11};assert.equal(g.api.touchesRefuge(corner),false,'corners use circle distance rather than a square enemy collider');corner.x=b.right+3;corner.y=b.bottom+3;assert.equal(g.api.touchesRefuge(corner),true);
+ const corner={x:b.right+8,y:b.bottom+8,r:11};assert.equal(g.api.touchesRefuge(corner),false,'corners use circle distance rather than a square enemy collider');corner.x=b.right+2;corner.y=b.bottom+2;assert.equal(g.api.touchesRefuge(corner),true);
  const e=g.api.spawnEnemy(false,b.right+11.1,p.y,'grunt');const hp=p.hp;assert.equal(g.api.contactStevie(e),false);assert.equal(p.hp,hp);e.x-=.2;assert.equal(g.api.contactStevie(e),true);
  const state=JSON.stringify(g.state),snapshot=JSON.stringify(g.api.refugeSnapshot());g.api.draw();assert.equal(JSON.stringify(g.state),state);assert.equal(JSON.stringify(g.api.refugeSnapshot()),snapshot);g.state.paused=true;g.api.update(.3);assert.equal(JSON.stringify(g.api.refugeSnapshot()),snapshot);g.api.moveRefuge(10,5);assert.equal(g.api.refugeSnapshot().hitPoint.x,JSON.parse(snapshot).hitPoint.x+10);g.api.resetRefuge();assert.equal(g.api.refugeSnapshot().hitPoint,null);
  console.log('PASS: rectangular refuge edge/corner contact, outside safety, damage/removal, draw purity, paused impact, resize and reset.');
@@ -1195,10 +1196,10 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  console.log('PASS: denied intro autoplay retries on first gesture, successful playback stays uninterrupted and mute is respected.');
 }
 {
- const g=load(true).sandbox.testGame,b=g.api.refugeBounds();assert.equal(b.halfWidth,31);assert.equal(b.halfHeight,29);assert.equal(b.cornerRadius,10);
+ const g=load(true).sandbox.testGame,b=g.api.refugeBounds();assert.equal(b.halfWidth,56);assert.equal(b.halfHeight,52);assert.equal(b.cornerRadius,18);
  assert.equal(g.api.touchesRefuge({x:b.right,y:b.bottom,r:0}),false,'square outer corner lies outside rounded fort');assert.equal(g.api.touchesRefuge({x:b.right,y:b.centerY,r:0}),true);
- const p=g.api.refugePoint(b.right+50,b.bottom+2);const cx=b.right-10,cy=b.bottom-10;assert.ok(Math.abs(Math.hypot(p.x-cx,p.y-cy)-10)<1e-9,'far diagonal projects onto the curved corner');
- console.log('PASS: half-size refuge footprint and exact rounded-corner projection.');
+ const p=g.api.refugePoint(b.right+50,b.bottom+2);const cx=b.right-b.cornerRadius,cy=b.bottom-b.cornerRadius;assert.ok(Math.abs(Math.hypot(p.x-cx,p.y-cy)-b.cornerRadius)<1e-9,'far diagonal projects onto the curved corner');
+ console.log('PASS: visible refuge footprint and exact rounded-corner projection.');
 }
 
 (async()=>{
@@ -1224,3 +1225,10 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  g.api.setAudioVolume('effectsVolume',0);assert.equal(g.api.playSound('rock'),false);assert.equal(g.api.audioSettings().musicVolume,.35);g.api.setAudioVolume('effectsVolume',.4);ctx.currentTime=2;assert.equal(g.api.playSound('rock'),true);g.api.resetSoundEffects();assert.equal(g.api.soundEffectsSnapshot().voices.length,0);
  env.sandbox.Math.random=random;console.log('PASS: eleven decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
 })().catch(error=>{console.error(error);process.exitCode=1});
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();const triple=g.catalog.upgrades.find(u=>u.name==='Triple Stroke');assert.equal(triple.exclusiveRarity,'legendary');
+ for(const rarity of ['common','uncommon','rare']){g.api.rarityRoll=()=>rarity;for(let i=0;i<200;i++)assert.notEqual(g.api.getUpgrade().name,'Triple Stroke');const wave=g.state.wave;g.api.chooseUpgrade({...triple,rarity});assert.equal(g.state.stats.tripleLine,false);assert.equal(g.state.wave,wave,'lower-tier Triple cannot be applied');}
+ g.api.weightedPick=pool=>pool.find(u=>u.name==='Triple Stroke')||pool[0];g.state.legendaryWave=g.state.wave;g.state.legendaryOffered=false;g.api.rollCards();assert.match(env.node('cards').children[0].innerHTML,/Triple Stroke/);assert.match(env.node('cards').children[0].className,/legendary/);
+ g.api.chooseUpgrade({...triple,rarity:'legendary'});assert.equal(g.state.stats.tripleLine,true);assert.equal(g.state.stacks['Triple Stroke'],1);assert.equal(g.api.upgradeAvailable(triple),false);
+ console.log('PASS: Triple Stroke excluded from all ordinary tiers, available in reserved Legendary pool, lower-tier application rejected and unlock remains one-time.');
+}

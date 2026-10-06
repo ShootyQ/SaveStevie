@@ -76,6 +76,8 @@ function renderTool(id){
 }
 const rarityLevels={common:1,uncommon:2,rare:3,legendary:4};
 function upgradeLevels(u){
+  const required=game.catalog.upgrades.find(base=>base.name===u.name)?.exclusiveRarity;
+  if(required&&u.rarity&&u.rarity!==required)return 0;
   if(oneTimeUpgrades.has(u.name))return 1;
   let levels=rarityLevels[u.rarity]||1;
   if(u.name==='Helmet')levels=Math.min(levels,Math.ceil((.55-game.state.stats.playerArmor-1e-9)/.1));
@@ -198,7 +200,7 @@ game.catalog.upgrades = [
   {name:'Patch Job',cat:'defense',desc:'Every kill repairs walls by up to 3 HP each, sharing a 12 wall HP/s budget.',apply:()=>game.state.stats.repairOnKill+=3},
   {name:'Freehand',cat:'draw',desc:'Spend 80 real ink to charge a limited free-ink bank. Stacking increases the free bank.',apply:()=>{game.state.stats.freehandLevel++;game.state.stats.freehandBankSize=40+(game.state.stats.freehandLevel-1)*20;game.state.stats.freehandCharge=Math.min(game.state.stats.freehandCharge,game.state.stats.freehandThreshold)}},
   {name:'Living Fountain Pen',cat:'draw',desc:'35% faster ink regeneration on the first pick; smaller multipliers on repeats.',apply:()=>game.state.stats.inkRegen*=game.api.regenPick('Living Fountain Pen')},
-  {name:'Triple Stroke',cat:'draw',desc:'Every stroke adds TWO parallel walls, each with 60% durability.',apply:()=>{game.state.stats.doubleLine=true;game.state.stats.tripleLine=true}},
+  {name:'Triple Stroke',exclusiveRarity:'legendary',rarity:'legendary',cat:'draw',desc:'Every stroke adds TWO parallel walls, each with 60% durability.',apply:()=>{game.state.stats.doubleLine=true;game.state.stats.tripleLine=true}},
   {name:'Bottomless Pen',cat:'draw',desc:'Per level: +40 max ink and +2 ink/s at first, with smaller regeneration bonuses on repeats.',apply:()=>{game.state.stats.maxInk+=40;game.state.stats.inkRegen+=game.api.regenPick('Bottomless Pen')}},
   {name:'Fortress Geometry',cat:'defense',desc:'Per level: +50% closed-shape durability.',apply:()=>game.state.stats.closedBonus+=.5},
 
@@ -259,7 +261,7 @@ function weightedPick(pool){
 
 function getUpgrade(forceRare=false){
   const rarity=game.api.rarityRoll(forceRare);
-  const available=game.catalog.upgrades.filter(u=>game.api.upgradeAvailable(u));
+  const available=game.catalog.upgrades.filter(u=>game.api.upgradeAvailable(u)&&(!u.exclusiveRarity||u.exclusiveRarity===rarity));
   const owned=equippedEffects().filter(u=>game.api.upgradeAvailable(u));
   const pool=owned.length&&Math.random()<.45?owned:available;
   const u=game.api.weightedPick(pool);
@@ -290,7 +292,7 @@ function rollCards(forceRare=false){
   game.dom.cardsEl.className='cards '+(count===4?'four':'');
   const picks=[];
   if(game.state.legendaryWave===game.state.wave&&!game.state.legendaryOffered){
-    const pool=game.catalog.upgrades.filter(u=>!oneTimeUpgrades.has(u.name)&&game.api.upgradeAvailable(u));
+    const pool=game.catalog.upgrades.filter(u=>(!oneTimeUpgrades.has(u.name)||u.exclusiveRarity==='legendary')&&game.api.upgradeAvailable(u));
     if(pool.length){picks.push({...game.api.weightedPick(pool),rarity:'legendary'});game.state.legendaryOffered=true;}
   }
   let attempts=0;
@@ -299,7 +301,7 @@ function rollCards(forceRare=false){
     if(u&&!picks.some(p=>p.name===u.name))picks.push(u);
   }
   if(picks.length<count){
-    for(const u of game.catalog.upgrades.filter(u=>game.api.upgradeAvailable(u)))if(!picks.some(p=>p.name===u.name)&&picks.length<count)picks.push({...u,rarity:forceRare?'rare':game.api.rarityRoll()});
+    for(const u of game.catalog.upgrades.filter(u=>!u.exclusiveRarity&&game.api.upgradeAvailable(u)))if(!picks.some(p=>p.name===u.name)&&picks.length<count)picks.push({...u,rarity:forceRare?'rare':game.api.rarityRoll()});
   }
   renderUpgradeCards(picks,count);
 }
@@ -340,12 +342,13 @@ function renderDevReward(){
   const previous=select.value;
   select.innerHTML=available.map(u=>`<option value="${u.name}">${u.name}${effectKeys[u.name]?' · effect':' · utility'}</option>`).join('');
   select.value=available.some(u=>u.name===previous)?previous:available[0]?.name||'';
-  const rarity=Object.hasOwn(rarityLevels,game.dom.$('devRarity').value)?game.dom.$('devRarity').value:'common';
+  const base=available.find(u=>u.name===select.value);
+  for(const option of game.dom.$('devRarity').options||[])option.disabled=!!base?.exclusiveRarity&&option.value!==base.exclusiveRarity;
+  const rarity=base?.exclusiveRarity||(Object.hasOwn(rarityLevels,game.dom.$('devRarity').value)?game.dom.$('devRarity').value:'common');
   game.dom.$('devRarity').value=rarity;
   game.dom.rewardText.textContent='DEV MODE · Choose one upgrade and its rarity for the next wave.';
   game.api.renderTool('rewardTool');game.dom.$('effectReplacement').hidden=true;
   game.dom.synergyNote.innerHTML='';
-  const base=available.find(u=>u.name===select.value);
   renderUpgradeCards(base?[{...base,rarity}]:[]);
 }
 
