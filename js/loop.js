@@ -7,21 +7,17 @@ function update(dt){
   if(game.state.betweenWaves&&!game.state.paused&&!game.state.inUpgrade&&!game.state.awaitingSpec)game.api.updateStevieCelebration(dt);
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
 
+  if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
   game.api.updateRefuge(dt);
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
-  if(!game.state.finalOvertime) game.state.timeLeft-=dt;
-  if(game.state.timeLeft<=0){
-    game.state.timeLeft=0;
-    if(game.api.campaignBossPending()){
-      game.state.finalOvertime=true;
-      game.api.ensureWaveBoss();game.api.setMsg('TIME SURVIVED. NOW DEFEAT '+game.api.monsterName(game.api.bossTypeForWave()).toUpperCase()+'!');
-    }else{
+  game.state.waveElapsed+=dt;
+  if(game.state.wave%5!==0){
+    const previous=game.state.timeLeft;
+    game.state.timeLeft=Math.max(0,previous-dt);
+    if(previous>0&&game.state.timeLeft===0)game.api.setMsg('No more arrivals. Defeat the remaining monsters!');
+    if(game.state.timeLeft===0&&!game.state.enemies.some(e=>e.hp>0)){
       game.api.waveComplete();return;
     }
-  }
-
-  if(game.state.wave===20&&!game.state.endless&&game.state.finalBossDefeated){
-    game.api.waveComplete();return;
   }
 
   game.api.updateSustain(dt);
@@ -207,6 +203,7 @@ function update(dt){
   game.state.floaters=game.state.floaters.filter(f=>f.t>0);
 
   if(game.state.player.hp<=0)game.api.gameOver();
+  else if(game.api.bossFightResolved()||(game.state.wave%5!==0&&game.state.timeLeft===0&&!game.state.enemies.some(e=>e.hp>0)))game.api.waveComplete();
   game.api.updateUI();
 }
 

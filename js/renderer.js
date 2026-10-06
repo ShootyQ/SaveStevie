@@ -377,7 +377,7 @@ function inkSprite(kind,pulse,time,i){
 function drawWallTextures(points,thick,opacity){
   const inks=game.state.inks,active=Object.keys(inks).filter(k=>inks[k]>0);
   if(!active.length)return;
-  const ctx=game.dom.ctx,time=(game.state.waveTime-game.state.timeLeft)*3;
+  const ctx=game.dom.ctx,time=(game.state.waveElapsed||0)*3;
   const samples=textureSamples(points);
   ctx.save();ctx.globalAlpha=opacity;ctx.lineCap='round';ctx.lineJoin='round';
   for(let i=0;i<samples.length;i++){

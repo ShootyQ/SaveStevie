@@ -278,8 +278,8 @@ function spawnGap(){
   return Math.max(.12,base/(game.api.wavePressure()*surge));
 }
 function spawnWaveEnemies(dt){
-  if(game.state.finalOvertime)return;
-  if(game.state.wave%5===0){if(game.state.waveTime-game.state.timeLeft>=2)game.api.ensureWaveBoss();return}
+  if(game.state.wave%5===0){game.api.ensureWaveBoss();return}
+  if(game.state.timeLeft<=0)return;
   const elapsed=game.state.waveTime-game.state.timeLeft;
   if([4,6,9,11,14,16,19,21].includes(game.state.wave)&&relocatedSpawned<3&&elapsed>=[12,28,44][relocatedSpawned]){
     for(let i=0;i<2;i++)game.api.spawnEnemy(false,null,null,game.state.wave>=16?'sapper':game.state.wave>=11?'brood':game.state.wave>=6?'fast':'grunt');relocatedSpawned++;

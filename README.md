@@ -340,8 +340,7 @@ Ink and Event Horizon damage them rather than instantly erasing them.
 
 Both have original transparent doodle sprites, compendium entries, and grouped
 wave-start introductions. Wave 20 keeps The Big Rub-Out; other endless boss
-waves use King Doodle-Doom. Chapter-ending campaign waves require surviving
-the timer and removing the boss; the wave 20 finale still ends immediately when resolved. Run `node tests/validate.cjs` for combat checks and the optional
+waves use King Doodle-Doom. Chapter-ending campaign waves have no timer and clear when the boss is defeated. Run `node tests/validate.cjs` for combat checks and the optional
 `node tests/browser-bosses.cjs [packaged-site-directory]` for desktop/phone
 artwork, introductions, live warning rendering, and compendium checks.
 
@@ -386,13 +385,11 @@ unchanged. Wave 1 delays its first arrival to 1.5s and uses a 2.7s spawn gap.
 At 20s and 40s elapsed, later chapters add small groups from alternating sides,
 using only already-introduced monster types and respecting the 180-enemy cap.
 
-Waves 5, 10, and 15 require both the timer and the boss to be resolved.
-Overtime pauses normal arrivals and shows the named boss objective; boss
-specials and existing enemies continue fighting. Early boss kills still require
-surviving the wave. Wave 20 retains its immediate-clear final-boss rule.
-Surviving a boss contact hit resolves it, preserving the contact explosion
-rule; lethal contact loses the run. A required boss is ensured if it was not
-spawned before time expired. Endless retains timed wave completion.
+Boss waves have no countdown and clear immediately when their boss is defeated,
+including endless boss waves. Boss contact damages Stevie but does not remove
+the boss. Regular waves stop scheduled arrivals at zero seconds and require
+clearing the remaining monsters before rewards appear.
+
 
 Quick Refill adds `2 / (1 + 0.4 × prior picks)` ink/s. Bottomless Pen still adds
 120 max ink, with `4 / (1 + 0.4 × prior picks)` ink/s. Living Fountain Pen
@@ -777,6 +774,11 @@ Triple Stroke is a Legendary-only one-time unlock. Ordinary Common/Uncommon/
 Rare pools and fallback offers exclude it; the reserved Legendary pool includes
 it. DEV MODE locks its rarity to Legendary, and application rejects lower-tier
 Triple Stroke cards. Other special unlocks keep their existing rarity behavior.
+
+Regular waves stop scheduled arrivals at zero seconds and continue combat until
+no living enemies remain. Boss waves hide the countdown and time bar and end
+when their boss dies, clearing its summoned minions. Effect animation uses a
+separate elapsed clock so it continues throughout untimed fights and cleanup.
 
 Drawing tools have distinct presentation-only wall strokes: broad scratchy graphite
 for Pencil, finer graphite for Mechanical Pencil, crisp ink for Simple Pen, and

@@ -15,21 +15,26 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   });
   await page.goto('http://127.0.0.1:8001/');await page.click('#startBtn');
   const height=await page.locator('#game').evaluate(c=>c.getBoundingClientRect().height);
-  for(const wave of [5,10,15]){
+  for(const wave of [5,10,15,20]){
    const name=await page.evaluate(wave=>{const g=testGame;g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,g.state.player.x-110,g.state.player.y);boss.freeze=100;g.state.timeLeft=.01;g.api.update(.02);g.api.draw();return g.api.monsterName(boss.type)},wave);
+   assert.equal(await page.locator('#waveCountdown').isVisible(),false);assert.equal(await page.locator('#timeBar').isVisible(),false);
    assert.equal(await page.locator('#bossOvertime').isVisible(),true);assert.match(await page.textContent('#bossOvertime'),new RegExp(name));
    assert.equal(await page.locator('#game').evaluate(c=>c.getBoundingClientRect().height),height,'overtime never shrinks playfield');
    assert.equal(await page.locator('#bossOvertime').evaluate(c=>c.scrollWidth<=c.clientWidth+1),true,'objective fits phone');
    await page.screenshot({path:'/tmp/difficulty-overtime-'+wave+'-'+viewport.width+'.png'});
    await page.evaluate(()=>{const g=testGame;g.api.killEnemy(g.state.enemies.find(e=>e.waveBoss));g.api.update(.016)});
-   assert.equal(await page.locator('#waveOverlay').isVisible(),true);assert.equal(await page.locator('#bossOvertime').isVisible(),false);
+   assert.equal(await page.locator(wave===20?'#victoryOverlay':'#waveOverlay').isVisible(),true);assert.equal(await page.locator('#bossOvertime').isVisible(),false);
   }
+  await page.evaluate(()=>{const g=testGame;g.api.resetRun();const e=g.api.spawnEnemy(false,100,100,'grunt');e.freeze=999;g.state.timeLeft=.01;g.state.spawnTimer=0;g.api.update(.02);g.api.draw()});
+  assert.equal(await page.locator('#waveCountdown').isVisible(),true);assert.match(await page.textContent('#bossOvertime'),/1 left/);assert.equal(await page.locator('#waveOverlay').isVisible(),false);
+  await page.screenshot({path:'/tmp/wave-cleanup-'+viewport.width+'.png'});
+  await page.evaluate(()=>{const g=testGame;g.api.killEnemy(g.state.enemies[0]);g.api.update(.02)});assert.equal(await page.locator('#waveOverlay').isVisible(),true);
   await page.evaluate(()=>{const g=testGame;g.api.resetRun();for(const name of ['Quick Refill','Quick Refill','Living Fountain Pen','Recycling','Patch Job','Emergency Medicine','Triple Stroke'])g.api.chooseUpgrade(g.catalog.upgrades.find(u=>u.name===name));g.api.openBuild()});
   assert.match(await page.textContent('#buildStats'),/Combat healing budget/);assert.match(await page.textContent('#buildStats'),/12 HP/);assert.match(await page.textContent('#buildUpgrades'),/diminishing returns/);assert.match(await page.textContent('#buildUpgrades'),/60%/);
   await page.click('#buildNotebookBtn');assert.match(await page.locator('.notebook-earn').first().textContent(),/25 kills/);assert.match(await page.locator('.notebook-earn').first().textContent(),/Chapter-clear bonuses/);await page.click('#closeNotebookBtn');
   await page.evaluate(()=>{const g=testGame;g.state.wave=1;const names=['Quick Refill','Recycling','Patch Job'];let i=0;g.api.getUpgrade=()=>g.catalog.upgrades.find(u=>u.name===names[i++%3]);g.api.openUpgrade()});
   assert.match(await page.textContent('#cards'),/smaller bonuses/);assert.equal(await page.locator('#cards .ucard').evaluateAll(cards=>cards.every(c=>c.scrollWidth<=c.clientWidth+1)),true);
-  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' boss overtime objective/completion, stable playfield, accurate Build/regeneration/budget/Notebook text and reward-card fit');await page.close();
+  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' untimed bosses and regular-wave cleanup, stable playfield, accurate Build/regeneration/budget/Notebook text and reward-card fit');await page.close();
  }
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
