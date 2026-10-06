@@ -705,3 +705,36 @@ The 10,000-HP target never reached Void's execute threshold. Chaos results
 vary with its rolled effects; this scenario does not establish campaign balance.
 `tests/browser-ink-balance.cjs` checks actual pulses/execute/rolls and all four
 updated rarity previews at desktop and phone sizes.
+
+Boss encounters now use `js/boss-encounters.js`. Waves 5/10/15/20 (and later
+five-wave milestones) spawn one required boss after two seconds without normal
+arrivals. Defeating it clears the wave immediately and clears summons/hazards;
+contact cannot resolve it. Neighbors 4/6/9/11/14/16/19/21 receive three small
+pairs at 12/28/44 seconds, respecting the normal enemy cap rather than moving
+an entire boss-wave crowd into one burst.
+
+Bosses choose reachable orbit/probe waypoints using wall collision checks.
+A closed drawn wall enclosing a boss grants 35% damage exposure. Enclosed
+bosses target nearby walls for escape. Enclosure is a reward, not a mandatory
+win condition. Boss contact deals 10 damage before armor every 1.2 seconds
+and attempts a safe retreat. All casts warn for 1.2 seconds and freeze/stun
+cancels them. Normal attack recovery is 4.5 seconds; below 40% HP it is 3.2.
+
+King Doodle-Doom fires three aimed ink shots or summons two Niblets, with six
+living owned summons maximum. Staple Snack alternates safe charges (60 nearby
+wall damage, 80 in its final phase) and three/five staple fans. Its final phase
+can queue a separately warned second charge. Count Crayon cycles red damage,
+blue ink-drain and green hatch runes, plus crayon volleys. Runes warn another
+1.2 seconds, last five seconds total, and are canceled by drawing a wall through
+their center. Red deals 4 HP/s before armor; blue drains 4 ink/s; green hatches
+two Niblets at the rune. Its final phase paints two runes. The Big Rub-Out swipes
+only walls within 130px for 65/90 damage, or clears burn/poison and fires crumb
+shots when no wall is nearby. Swipes and cleaning give 1.5/2-second exposed
+recoveries. Boss shots deal 6 damage before armor, travel at 125px/s, and respect
+wall cover. Active runes cap at eight; enemy shots cap at 32 for boss volleys.
+
+Procedural warnings, charge trails, color strokes, swipe dust, recovery rings,
+and distinct staple/crayon/crumb/ink projectiles advance with combat, preserve
+pause and resize, and respect live reduced-motion preferences. Monster cards
+and the in-game changelog explain the encounters. Unit and desktop/phone browser
+checks cover each boss; campaign difficulty still needs human playtesting.

@@ -269,7 +269,7 @@ function resize(){
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
     game.api.movePlaguefire(dx,dy);
-    game.api.moveSupportInkVisuals(dx,dy);
+    game.api.moveSupportInkVisuals(dx,dy);game.api.moveBossFields(dx,dy);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
   game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;
@@ -449,11 +449,23 @@ function draw(){
     ctx.setLineDash([5,7]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();
     ctx.setLineDash([]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();
   }
+  game.api.drawBossEncounters();
   for(const shot of game.state.enemyShots){
     const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));
     const image=doodles.arrow;
     // The front tip stays on the projectile collision point; the visible shaft
     // trails behind it, so the arrow cannot disappear before its tip arrives.
+    if(shot.bossKind){
+      ctx.strokeStyle=shot.bossKind==='crumb'?'#bd5d7e':shot.bossKind==='staple'?'#8b6d38':'#8650a2';ctx.fillStyle=ctx.strokeStyle;ctx.lineWidth=2;
+      if(!motionReduced){ctx.globalAlpha=.45;ctx.beginPath();ctx.moveTo(-26,-3);ctx.lineTo(-15,-3);ctx.moveTo(-23,3);ctx.lineTo(-14,3);ctx.stroke();ctx.globalAlpha=1}
+      if(shot.bossKind==='staple'){ctx.beginPath();ctx.moveTo(-12,5);ctx.lineTo(-12,-5);ctx.lineTo(0,-5);ctx.lineTo(0,5);ctx.stroke();ctx.strokeStyle='#d7c58f';ctx.lineWidth=1;ctx.stroke()}
+      else if(shot.bossKind==='crayon'){
+        ctx.fillStyle='#a769c5';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-5,-4);ctx.lineTo(-17,-4);ctx.lineTo(-17,4);ctx.lineTo(-5,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#e9cdf5';ctx.beginPath();ctx.moveTo(-12,-3);ctx.lineTo(-12,3);ctx.moveTo(-8,-3);ctx.lineTo(-8,3);ctx.stroke();
+      }else if(shot.bossKind==='crumb'){
+        if(!motionReduced)ctx.rotate(shot.life*5);ctx.beginPath();for(let i=0;i<7;i++){const a=i*Math.PI*2/6,r=i%2?3:5;if(i)ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);else ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.fill();ctx.strokeStyle='#edb5c6';ctx.lineWidth=1;ctx.stroke();
+      }else{ctx.beginPath();ctx.arc(-4,0,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ce8fbc';ctx.beginPath();ctx.arc(-5,-1,1.3,0,Math.PI*2);ctx.fill()}
+      ctx.restore();continue;
+    }
     if(image){const width=30,height=width*image.naturalHeight/image.naturalWidth;ctx.drawImage(image,-width,-height/2,width,height)}
     else{
       ctx.strokeStyle='#fff8e9';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-27,0);ctx.lineTo(-5,0);ctx.stroke();

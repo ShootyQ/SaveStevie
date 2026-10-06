@@ -53,6 +53,7 @@ function bossTypeForWave(wave=game.state.wave){
 }
 // Specials never damage Stevie directly. Telegraphs track the actual target wall.
 function updateBossAbility(e,dt){
+  if(e.waveBoss){game.api.updateBossEncounter(e,dt);return}
   if(e.type!=='stapler'&&e.type!=='crayon')return;
   if(e.hp<=0||e.freeze>0||e.stun>0){e.bossWindup=0;e.bossTarget=null;e.bossCd=Math.max(e.bossCd,2);return}
   if(e.bossWindup>0){
@@ -228,7 +229,7 @@ function updateEnemyShots(dt){
     }
     if(hitTime!==null){
       const damage=shot.damage*(1-game.state.stats.playerArmor);
-      damageStevie(damage,'Sniper arrow ('+game.api.monsterName('sniper')+')',{x:endX,y:endY,r:shot.r,type:'arrow'});
+      damageStevie(damage,shot.bossKind?'Boss '+shot.bossKind:'Sniper arrow ('+game.api.monsterName('sniper')+')',{x:endX,y:endY,r:shot.r,type:'arrow'});
       game.api.floatText(player.x,player.y-28,'SHOT −'+Number(damage.toFixed(1)),'#3562be');
       game.api.burst(player.x,player.y,'#4b79d8',6);continue;
     }
@@ -238,7 +239,7 @@ function updateEnemyShots(dt){
 }
 
 function eraserAttack(e,dt){
-  if(e.type!=='eraser')return;
+  if(e.type!=='eraser'||e.waveBoss)return;
   e.eraseCd-=dt;
   if(e.eraseCd<=0&&game.state.walls.length){
     const w=game.api.pick(game.state.walls);
@@ -251,8 +252,9 @@ function eraserAttack(e,dt){
   }
 }
 
-let bossSpawned=false,bossResolved=false,groupsSpawned=0;
-function resetEnemyWave(){bossSpawned=false;bossResolved=false;groupsSpawned=0}
+let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0;
+function resetEnemyWave(){bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;game.api.resetBossEncounters()}
+function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
 function spawnChapterGroup(){
@@ -275,7 +277,11 @@ function spawnGap(){
 }
 function spawnWaveEnemies(dt){
   if(game.state.finalOvertime)return;
+  if(game.state.wave%5===0){if(game.state.waveTime-game.state.timeLeft>=2)game.api.ensureWaveBoss();return}
   const elapsed=game.state.waveTime-game.state.timeLeft;
+  if([4,6,9,11,14,16,19,21].includes(game.state.wave)&&relocatedSpawned<3&&elapsed>=[12,28,44][relocatedSpawned]){
+    for(let i=0;i<2;i++)game.api.spawnEnemy(false,null,null,game.state.wave>=16?'sapper':game.state.wave>=11?'brood':game.state.wave>=6?'fast':'grunt');relocatedSpawned++;
+  }
   if(game.state.wave>=6&&groupsSpawned<2&&elapsed>=[20,40][groupsSpawned]){game.api.spawnChapterGroup();groupsSpawned++}
   game.state.spawnTimer-=dt;
   if(game.state.spawnTimer<=0){
@@ -304,6 +310,7 @@ function updateEnemyBehavior(e,dt){
 }
 function enemyMoveScale(e){return game.api.enemySpeedScale()*(e.type==='sprinter'&&e.dashTime>=2.6?2.6:1)}
 function enemyTarget(e){
+  if(e.waveBoss)return game.api.bossTarget(e);
   let target=game.state.player;
   if(e.type==='sapper'){
     let distance=Infinity;
@@ -367,6 +374,7 @@ function contactStevie(e){
   const player=game.state.player;
   if(game.api.dist(e.x,e.y,player.x,player.y)>=player.r+e.r+2)return false;
   if(game.api.shotBlocked(e.x,e.y,player.x,player.y,0))return false;
+  if(e.waveBoss)return game.api.bossContact(e);
   const damage=e.dmg*(1-game.state.stats.playerArmor);
   damageStevie(damage,game.api.monsterName(e.type)+' contact',e);
   game.api.floatText(player.x,player.y-28,'-'+Number(damage.toFixed(1)),'#b44141');
@@ -383,7 +391,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

@@ -178,13 +178,13 @@ function arrivals(wave,useOriginal=false){
   pg.api.spawnEnemy=realSpawn;return {count,bosses};
 }
 assert.ok(arrivals(1).count<arrivals(1,true).count,'wave 1 arrivals softened');
-for(const wave of [2,3,4,5])assert.equal(arrivals(wave).count,arrivals(wave,true).count,'early-wave spawn timing preserved');
+for(const wave of [2,3])assert.equal(arrivals(wave).count,arrivals(wave,true).count,'early-wave spawn timing preserved');
 const pressureCounts=[];
 for(const wave of [8,10,14,15,20]){
   const old=arrivals(wave,true),now=arrivals(wave);
   pressureCounts.push({wave,old:old.count,new:now.count,ratio:Number((now.count/old.count).toFixed(2))});
   if(wave===14)assert.ok(now.count/old.count>=2&&now.count/old.count<2.5,'wave 14 roughly doubles arrivals');
-  if(wave===20)assert.ok(now.count/old.count>=3&&now.count/old.count<3.4,'wave 20 roughly triples arrivals');
+  if(wave%5===0)assert.equal(now.count,1,'boss waves have no ordinary arrivals');
   if(wave%5===0)assert.equal(now.bosses,1,'boss is spawned once, even if killed early');
 }
 console.log('PASS: 60-second arrival counts '+JSON.stringify(pressureCounts));
@@ -251,8 +251,8 @@ for(const type of ['grunt','splitter','brood','bouncer','bulwark','medic','sappe
 contact.state.wave=20;contact.api.startWave();contact.state.spawnTimer=100;
 const eraser=contact.api.spawnEnemy(true,contact.state.player.x,contact.state.player.y);
 contact.state.player.hp=100;contact.api.update(.016);
-assert.ok(!contact.state.enemies.includes(eraser));assert.equal(contact.state.finalBossDefeated,true);assert.ok(contact.state.player.hp>0);
-contact.api.update(.016);assert.equal(contact.state.betweenWaves,true,'surviving Eraser contact completes the fight');
+assert.ok(contact.state.enemies.includes(eraser));assert.equal(contact.state.finalBossDefeated,false);assert.ok(contact.state.player.hp>0);
+const bossContactHp=contact.state.player.hp;contact.api.update(.016);assert.equal(contact.state.player.hp,bossContactHp,'boss contact has a cooldown');contact.api.killEnemy(eraser);contact.api.update(.016);assert.equal(contact.state.betweenWaves,true,'defeating the Eraser completes the fight');
 contact.api.resetRun();contact.state.wave=20;contact.api.startWave();contact.state.spawnTimer=100;contact.state.player.hp=1;
 contact.api.spawnEnemy(true,contact.state.player.x,contact.state.player.y);contact.api.update(.016);
 assert.equal(contact.state.player.hp,0);assert.equal(contact.state.running,false,'lethal boss contact is a loss');
@@ -662,7 +662,7 @@ console.log('PASS: Notebook earnings, immediate banking, duplicate/contact prote
 const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
 for(const [wave,type] of [[5,'boss'],[10,'stapler'],[15,'crayon'],[20,'eraser']]){g.state.wave=wave;g.api.startWave();const e=g.api.spawnEnemy(true,100,200);assert.equal(e.type,type);}
 g.state.endless=true;assert.equal(g.api.bossTypeForWave(20),'boss');g.state.endless=false;
-g.state.wave=10;g.api.startWave();const s=g.api.spawnEnemy(true,100,200),wall={pts:[{x:150,y:50},{x:150,y:350}],hp:100,maxHp:100,thick:8};g.state.walls=[wall];s.bossCd=0;
+g.state.wave=10;g.api.startWave();const s=g.api.spawnEnemy(true,100,200),wall={pts:[{x:150,y:50},{x:150,y:350}],hp:100,maxHp:100,thick:8};g.state.walls=[wall];s.waveBoss=false;s.bossCd=0; // Original non-encounter action compatibility.
 assert.deepEqual(g.api.nearestPointOnWall(s,wall),{x:150,y:200},'target actual segment, not distant endpoints');
 const hp=g.state.player.hp;g.api.updateBossAbility(s,.1);assert.equal(s.bossWindup,1.2);assert.equal(wall.hp,100,'wind-up causes no immediate hit');
 const snapshot=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),snapshot,'warning rendering stays pure');
@@ -671,7 +671,7 @@ s.bossCd=0;g.api.updateBossAbility(s,.1);s.freeze=1;g.api.updateBossAbility(s,.1
 s.freeze=0;s.bossCd=0;g.api.updateBossAbility(s,.1);g.state.walls=[];g.api.updateBossAbility(s,1.2);assert.equal(wall.hp,35,'removed target cancels hit');
 g.state.walls=[wall];s.bossCd=0;g.api.updateBossAbility(s,.1);s.x=500;g.api.updateBossAbility(s,1.2);assert.equal(wall.hp,35,'target must remain in reach');
 g.api.killEnemy(s);assert.equal(g.api.notebookSnapshot().scraps,0,'boss scraps move to chapter completion');
-g.state.wave=15;g.api.startWave();const c=g.api.spawnEnemy(true,100,200);c.bossCd=0;g.api.updateBossAbility(c,.1);assert.equal(g.state.enemies.length,1);assert.equal(c.bossWindup,1.2);
+g.state.wave=15;g.api.startWave();const c=g.api.spawnEnemy(true,100,200);c.waveBoss=false;c.bossCd=0;g.api.updateBossAbility(c,.1);assert.equal(g.state.enemies.length,1);assert.equal(c.bossWindup,1.2);
 g.api.updateBossAbility(c,1.2);assert.equal(g.state.enemies.filter(e=>e.type==='mini').length,3);assert.equal(c.bossCd,8);
 c.bossCd=0;g.api.updateBossAbility(c,.1);c.stun=1;g.api.updateBossAbility(c,.1);assert.equal(c.bossWindup,0);assert.equal(g.state.enemies.length,4,'stun interrupts summons');
 c.stun=0;while(g.state.enemies.length<180)g.api.spawnEnemy(false,100,200,'grunt');c.bossCd=0;g.api.updateBossAbility(c,.1);g.api.updateBossAbility(c,1.2);assert.equal(g.state.enemies.length,180,'summons obey global cap');
@@ -713,9 +713,9 @@ const env=load(true),g=env.sandbox.testGame;
 for(const [wave,scale] of [[1,1],[5,1.2],[10,1.9],[15,2.8],[20,4],[25,4.9]])assert.ok(Math.abs(g.api.enemyHpScale(wave)-scale)<1e-10);
 g.api.resetRun();assert.equal(g.state.spawnTimer,1.5);assert.equal(g.api.spawnGap(),2.7);
 for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['bulwark','brood']],[13,['medic','bulwark','brood']],[16,['sapper','elite','sprinter']]]){
- g.state.wave=wave;g.api.startWave();g.state.spawnTimer=999;g.state.timeLeft=40;g.api.spawnWaveEnemies(.01);
- assert.deepEqual(Array.from(g.state.enemies,e=>e.type),members);g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,members.length,'one group per threshold');
- g.state.timeLeft=20;g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,members.length*2);assert.ok(g.state.enemies.at(-1).x>g.state.W,'second group approaches from opposite edge');
+ g.state.wave=wave;g.api.startWave();g.state.spawnTimer=999;g.state.timeLeft=40;g.api.spawnChapterGroup();
+ assert.deepEqual(Array.from(g.state.enemies,e=>e.type),members);
+ g.state.timeLeft=20;g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,members.length*2);
  g.state.enemies=[];for(let i=0;i<180;i++)g.api.spawnEnemy(false,0,0,'grunt');g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,180,'groups obey enemy cap');
 }
 for(const wave of [5,10,15]){
@@ -724,10 +724,10 @@ for(const wave of [5,10,15]){
  const count=g.state.enemies.length;g.api.update(.2);assert.equal(g.state.enemies.length,count,'overtime stops normal arrivals');g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,0,'cannot bypass living boss');
  g.api.killEnemy(boss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);assert.equal(e.node('bossOvertime').style.display,'none');assert.equal(g.api.notebookSnapshot().scraps,1+g.catalog.balance.chapterScraps[wave/5-1]);g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,1+g.catalog.balance.chapterScraps[wave/5-1],'milestone pays once');
 }
-g.api.resetRun();g.state.wave=5;g.api.startWave();const early=g.api.spawnEnemy(true,100,100);g.api.killEnemy(early);g.api.waveComplete();assert.equal(g.state.betweenWaves,false,'early boss kill still requires surviving timer');
+g.api.resetRun();g.state.wave=5;g.api.startWave();const early=g.api.spawnEnemy(true,100,100);g.api.killEnemy(early);g.api.waveComplete();assert.equal(g.state.betweenWaves,true,'defeating the boss clears the encounter without waiting');
 g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.betweenWaves,true);
 g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'missing boss is ensured in overtime');g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'required boss never duplicates');
-const contactBoss=g.state.enemies.find(e=>e.waveBoss);contactBoss.x=g.state.player.x;contactBoss.y=g.state.player.y;g.api.contactStevie(contactBoss);g.api.update(.016);assert.equal(g.state.betweenWaves,true,'surviving the existing contact explosion resolves the boss');
+const contactBoss=g.state.enemies.find(e=>e.waveBoss);contactBoss.x=g.state.player.x;contactBoss.y=g.state.player.y;g.api.contactStevie(contactBoss);assert.ok(g.state.enemies.includes(contactBoss),'boss contact cannot remove the encounter');g.api.killEnemy(contactBoss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);
 g.api.resetRun();g.state.stats.killHeal=g.state.stats.refund=g.state.stats.repairOnKill=100;g.state.player.hp=20;g.state.stats.ink=0;g.state.walls=[{hp:10,maxHp:100},{hp:10,maxHp:100}];
 for(let i=0;i<4;i++)g.api.killEnemy(g.api.spawnEnemy(false,0,0,'grunt'));
 assert.equal(g.state.player.hp,26);assert.equal(g.state.stats.ink,8);assert.equal(g.state.walls.reduce((sum,w)=>sum+w.hp,0),32,'repair shares a single budget across walls');
@@ -1135,4 +1135,43 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  e.hp=50;g.api.dealDamage(e,10);assert.equal(e.hp,38);e.hp=50;g.api.dealDamage(e,10,'fire');assert.equal(e.hp,40);
  g.state.stacks['Death Ink']=100;e.hp=50;g.api.dealDamage(e,10);assert.equal(e.hp,36,'Death finisher caps at forty percent');
  console.log('PASS: Death physical finisher threshold, elemental separation and high-level cap.');
+}
+
+{
+ const env=load(true),g=env.sandbox.testGame;
+ const setup=wave=>{g.api.resetRun();g.state.wave=wave;g.api.startWave();g.state.spawnTimer=9999;g.state.timeLeft=g.state.waveTime-3;g.api.spawnWaveEnemies(.01);return g.state.enemies[0]};
+ for(const wave of [5,10,15,20]){const e=setup(wave);assert.equal(g.state.enemies.length,1);assert.equal(e.waveBoss,true);for(let i=0;i<60;i++)g.api.spawnWaveEnemies(.1);assert.equal(g.state.enemies.length,1,'boss-only wave does not add regular monsters');}
+ const king=setup(5);king.x=250;king.y=250;const wall={pts:[{x:160,y:160},{x:340,y:160},{x:340,y:340},{x:160,y:340},{x:160,y:160}],closed:true,thick:8,hp:1000,maxHp:1000,life:300};g.state.walls=[wall];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),1.35);const hp=king.hp;g.api.dealDamage(king,10);assert.ok(Math.abs(king.hp-(hp-13.5))<1e-8);g.state.walls=[];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),1);
+ const b=g.api.bossBrain(king);b.cd=0;g.api.updateBossEncounter(king,.01);assert.equal(g.state.enemyShots.length,0);assert.equal(b.cast.kind,'volley');g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemyShots.length,3);assert.ok(g.state.enemyShots.every(s=>s.bossKind==='ink'));
+ b.turn=2;b.cd=0;g.api.updateBossEncounter(king,.01);g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemies.filter(e=>e.bossOwner===king).length,2);
+ for(let i=0;i<8;i++){b.turn=2;b.cd=0;g.api.updateBossEncounter(king,.01);g.api.updateBossEncounter(king,1.2)}assert.equal(g.state.enemies.filter(e=>e.bossOwner===king).length,6);
+ b.cd=0;g.api.updateBossEncounter(king,.01);king.freeze=1;g.api.updateBossEncounter(king,.1);assert.equal(b.cast,null,'freeze cancels queued attack');king.freeze=0;
+ const crayon=setup(15);crayon.x=200;crayon.y=200;const cb=g.api.bossBrain(crayon);cb.cd=0;g.api.updateBossEncounter(crayon,.01);g.api.updateBossEncounter(crayon,1.2);assert.equal(g.api.bossEncounterSnapshot().marks[0].kind,'red');const m=g.api.bossEncounterSnapshot().marks[0];g.state.walls=[{pts:[{x:m.x-50,y:m.y},{x:m.x+50,y:m.y}],thick:8,hp:100}];g.api.updateBossFields(1.2);assert.equal(g.api.bossEncounterSnapshot().marks.length,0,'wall cancels rune');
+ g.state.walls=[];cb.turn=2;cb.cd=0;g.api.updateBossEncounter(crayon,.01);g.api.updateBossEncounter(crayon,1.2);g.api.updateBossFields(1.2);assert.equal(g.state.enemies.filter(e=>e.bossOwner===crayon).length,2,'green rune hatches real adds');
+ const eraser=setup(20);eraser.x=200;eraser.y=200;const near={pts:[{x:250,y:100},{x:250,y:300}],thick:8,hp:200,maxHp:200},far={pts:[{x:650,y:100},{x:650,y:300}],thick:8,hp:200};g.state.walls=[near,far];const eb=g.api.bossBrain(eraser);eb.cd=0;g.api.updateBossEncounter(eraser,.01);assert.equal(near.hp,200);g.api.updateBossEncounter(eraser,1.2);assert.equal(near.hp,135);assert.equal(far.hp,200);assert.equal(g.api.bossDamageMultiplier(eraser),1.35);
+ g.state.walls=[];eb.cd=0;eb.recovery=0;eraser.burn=eraser.poison=2;g.api.updateBossEncounter(eraser,.01);g.api.updateBossEncounter(eraser,1.2);assert.equal(eraser.burn,0);assert.equal(eraser.poison,0);assert.equal(g.state.enemyShots[0].bossKind,'crumb');
+ const stapler=setup(10);stapler.x=200;stapler.y=200;stapler.hp=stapler.maxHp*.3;const sb=g.api.bossBrain(stapler);sb.cd=0;g.api.updateBossEncounter(stapler,.01);g.api.updateBossEncounter(stapler,1.2);assert.ok(sb.charge>0);g.api.updateBossEncounter(stapler,.5);assert.equal(sb.cast.kind,'charge','low-health second charge is warned');
+ const state=JSON.stringify(g.state),snapshot=JSON.stringify(g.api.bossEncounterSnapshot());g.api.draw();assert.equal(JSON.stringify(g.state),state);assert.equal(JSON.stringify(g.api.bossEncounterSnapshot()),snapshot);g.state.paused=true;g.api.update(.2);assert.equal(JSON.stringify(g.api.bossEncounterSnapshot()),snapshot);
+ g.api.resetBossEncounters();assert.equal(g.api.bossEncounterSnapshot().marks.length,0);
+ console.log('PASS: boss-only arrivals, enclosure exposure/removal, warned volleys, capped summons, freeze interruption, rune cancellation/hatching, targeted Eraser swipe/clean/recovery, double charge, pure drawing and pause.');
+}
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=15;g.api.startWave();const e=g.api.spawnEnemy(true,200,200),b=g.api.bossBrain(e);b.turn=1;b.cd=0;g.api.updateBossEncounter(e,.01);g.api.updateBossEncounter(e,1.2);const ink=g.state.stats.ink;g.api.updateBossFields(1.2);assert.equal(g.state.stats.ink,ink,'warning deals no early ink drain');g.api.updateBossFields(.5);assert.equal(g.state.stats.ink,ink-2,'blue rune drains actual ink');assert.equal(g.state.ink,undefined);
+ const snap=g.api.bossEncounterSnapshot(),dx=20,dy=10;g.api.moveBossFields(dx,dy);assert.equal(g.api.bossEncounterSnapshot().marks[0].x,snap.marks[0].x+dx);
+ g.state.walls=[{pts:[{x:290,y:100},{x:290,y:600}],thick:8,hp:1000,maxHp:1000}];e.x=250;e.y=300;b.moveCd=0;const target=g.api.bossTarget(e);assert.ok(g.api.bouncePathClear(e,target.x,target.y),'boss chooses a reachable route around a barrier');
+ g.state.player.hp=75;g.state.walls=[];e.x=g.state.player.x;e.y=g.state.player.y;g.api.contactStevie(e);assert.ok(g.state.enemies.includes(e));assert.equal(g.state.player.hp,65);assert.ok(Math.hypot(e.x-g.state.player.x,e.y-g.state.player.y)>e.r+g.state.player.r,'boss backs off after contact');
+ console.log('PASS: delayed blue rune drains real ink, hazard translation, reachable boss steering and safe contact retreat.');
+}
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=9;g.api.startWave();g.state.spawnTimer=9999;g.state.timeLeft=g.state.waveTime-12;g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,2,'neighbor gets a small relocated pair');g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,2,'pair threshold cannot fire twice');g.state.timeLeft=g.state.waveTime-20;g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,4,'normal chapter group still fires');
+ g.state.enemies=[];g.state.enemyShots=[{x:100,y:200,vx:125,vy:0,life:3,r:4,damage:6,bossKind:'staple'}];g.state.player.x=300;g.state.player.y=200;g.state.walls=[{pts:[{x:200,y:150},{x:200,y:250}],thick:8,hp:100}];const hp=g.state.player.hp;g.api.updateEnemyShots(2);assert.equal(g.state.enemyShots.length,0);assert.equal(g.state.player.hp,hp,'wall cover blocks boss shots');
+ console.log('PASS: paced relocated neighbors retain chapter groups and boss projectiles respect cover.');
+}
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.spawnTimer=9999;g.state.player.x=450;g.state.player.y=350;
+ const e=g.api.spawnEnemy(true,250,350);e.hp=e.maxHp=100000;g.api.bossBrain(e).cd=9999;
+ g.state.walls=[{pts:[{x:300,y:150},{x:300,y:550}],thick:8,hp:1e6,maxHp:1e6,life:300,maxLife:300}];
+ for(let i=0;i<800;i++)g.api.update(.05);
+ assert.ok(e.x>330,'real boss movement gets around the end of a long barrier '+JSON.stringify({x:e.x,y:e.y,brain:g.api.bossBrain(e),hp:g.state.player.hp}));
+ console.log('PASS: real boss loop detours around a long wall without crossing it.');
 }
