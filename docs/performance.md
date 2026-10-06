@@ -116,3 +116,17 @@ Validation also exercises more than 32 mixed sprites, repeated cache hits,
 eviction over many status combinations, storage limits, run reuse, and render
 purity. `rendererCacheStats()` exposes cloned counts for profiling without
 exposing images or changing combat state.
+
+## Support ink pass
+
+The crowded simulation benchmark also exercises the redesigned Gravity, Vampire
+and Frost effects. Gravity remembers its nearest segment for damage/hold checks;
+a whole-wall fallback handles knockback onto a different segment. A bounds
+rejection avoids unnecessary distant queries. This removes repeated segment
+scans from damage and drawing without changing combat outcomes.
+
+On this host the current crowded case measured a 10.1ms median update + draw,
+3.5ms median update and 6.4ms median draw submission (16.6ms combined p95).
+The combat/randomness digest matched the initial whole-wall implementation:
+`320f86392586475c93f27f7fd058c9e3377834e4a503cd83d2da64fc02f57558`.
+These are synthetic CPU measurements, not physical-phone frame rates.

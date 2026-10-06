@@ -73,7 +73,7 @@ function showSynergySplash(name,desc,major=false){
 }
 
 function upgradeEffect(name,n=game.state.stacks[name]||0){
-  const f=v=>Number(v.toFixed(2)),s=game.state.stats;
+  const f=v=>Number(v.toFixed(2)),s=game.state.stats,t=game.api.supportInkTuning(n);
   const effects={
     'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${f(game.api.regenStackEffect('Quick Refill',n))} ink/s; diminishing returns`,
     'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 per level`,
@@ -84,7 +84,6 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Architect':()=>`+${15*n}% durability per intersection`, 'Patchwork':()=>`+${18*n} HP per repaired wall`,
     'Double Stroke':()=>`One-time unlock: 2 walls per stroke (3 with Triple Stroke); extra walls have 60% HP`,
     'Quick Sketch':()=>`One-time unlock: first stroke each wave is free`,
-    'Shock Ink':()=>`Stun factor ${f(Math.min(.55,.16*n))} (capped at 0.55); contact can stun for 0.45s`,
     'Patch Job':()=>`Up to ${3*n} HP per wall per kill; shared 12 HP/s budget`, 'Freehand':()=>`${40+(n-1)*20} free-ink bank; charge with ${s.freehandThreshold} spent ink`,
     'Living Fountain Pen':()=>`×${f(game.api.regenStackEffect('Living Fountain Pen',n))} ink regeneration; diminishing returns`,
     'Triple Stroke':()=>`One-time unlock: 3 walls per stroke; extra walls have 60% HP`,
@@ -99,13 +98,13 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Collector':()=>`One-time unlock: ×1.8 selection weight for unowned upgrades`,
     'Greedy Goblin':()=>`One-time unlock: 4 normal reward choices`,
     'Fire Ink':()=>`${3+3*n} burn damage/s for ${f(1.5+.6*n)}s; synergies can boost this`,
-    'Frost Ink':()=>`${12*n}% slow applied on contact (overall slow cap 70%); freeze procs at level 3+`,
+    'Frost Ink':()=>`${f(t.frostSlow*100)}% contact slow; freeze after ${f(t.frostCharge)}s contact for ${f(t.frostDuration)}s (half on bosses); 1.5s thaw recovery`,
     'Poison Ink':()=>`${f(1+.55*n)} poison stacks/s on contact (cap 6); ${f((2+2.5*n)*.24)} damage/s per poison stack`,
     'Repulsion Ink':()=>`${15+7*n}px/s push away from Stevie on contact`,
-    'Electric Ink':()=>`${3+2*n} source damage; ${4+3*n} chain damage to ${1+Math.floor(n/2)} nearby targets; synergies can boost this`,
+    'Electric Ink':()=>`${3+2*n} source damage; ${4+3*n} damage per jump, up to ${Math.min(12,1+Math.floor(n/2))} additional enemies, ${110+n*18}px reach per hop; repeats every ${f(Math.max(.22,.8-n*.12))}s on contact. Each hit shocks for ${f(Math.min(.45,.12+n*.025))}s (bosses half); immune enemies block shocks. Synergies add reach and jumps (12 maximum).`,
     'Blast Ink':()=>`${35+20*n} explosion damage; ${70+12*n}px radius; synergies can boost this`,
-    'Vampire Ink':()=>`Heals ${f(1.5*n)}% of base wall contact damage`,
-    'Gravity Ink':()=>`${8+5*n}px/s pull toward wall points within ${120+20*n}px`,
+    'Vampire Ink':()=>`${t.vampireDps} life-drain damage/s on contact; heals 25% of actual damage, sharing the 6 HP/s budget`,
+    'Gravity Ink':()=>`${t.gravityPull}px/s pull to wall segments within ${t.gravityRange}px (60% pull on bosses); held enemies take +${f(t.gravityBonus*100)}% damage (cap 40%) and bite walls 30% slower`,
     'Void Ink':()=>`Contact erase chance scales with level ${n}; bosses take ${40+25*n} damage per proc instead`,
     'Chaos Ink':()=>`${f(.3*n)}% random ink proc chance per contact update`,
     'Death Ink':()=>`+${5*n} base wall damage/s`

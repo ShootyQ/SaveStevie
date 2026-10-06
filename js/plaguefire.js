@@ -56,9 +56,20 @@ function drawScorch(ctx,scar,opacity=1){
     ctx.save();ctx.translate(scar.x,scar.y);ctx.globalAlpha=opacity;
     outline(ctx,scar.r+4,scar.seed);ctx.fillStyle='#b48647';ctx.fill();
     outline(ctx,scar.r+1,scar.seed);ctx.fillStyle='#503929';ctx.fill();
-    outline(ctx,scar.r-3,scar.seed);ctx.fillStyle='#24272a';ctx.fill();
-    ctx.strokeStyle='#111b22';ctx.lineWidth=2;ctx.stroke();
-    ctx.save();ctx.clip();ctx.translate(2,5);outline(ctx,scar.r-5,scar.seed);ctx.fillStyle='#141d24';ctx.fill();ctx.restore();
+    outline(ctx,scar.r-3,scar.seed);ctx.fillStyle='#ba8550';ctx.fill();
+    ctx.strokeStyle='#2e2119';ctx.lineWidth=3;ctx.stroke();
+    ctx.save();ctx.clip();
+    // Continuous honey-colored desk grain, visible through every paper hole.
+    ctx.strokeStyle='#8e5d35';ctx.lineWidth=1;
+    for(let i=-8;i<=8;i++){
+      const y=i*7-(scar.y%7);ctx.beginPath();ctx.moveTo(-scar.r,y);
+      ctx.bezierCurveTo(-scar.r*.3,y-2,scar.r*.4,y+2,scar.r,y);ctx.stroke();
+      ctx.strokeStyle=i%3?'#9a683d':'#d5aa72';
+    }
+    ctx.strokeStyle='#70533b';ctx.lineWidth=.8;
+    for(let i=0;i<3;i++){const x=Math.sin(scar.seed*2+i)*scar.r*.65,y=Math.cos(scar.seed+i)*scar.r*.6;ctx.beginPath();ctx.moveTo(x-6,y+2);ctx.lineTo(x+8,y-1);ctx.stroke()}
+    // A dark inner edge gives the charred paper some thickness.
+    outline(ctx,scar.r-3,scar.seed);ctx.strokeStyle='#463024';ctx.lineWidth=5;ctx.stroke();ctx.restore();
     // Short cream fibers at the rim make the hole read as torn paper.
     ctx.strokeStyle='#e5c98d';ctx.lineWidth=1;
     for(let i=0;i<10;i++){

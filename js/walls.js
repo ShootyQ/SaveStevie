@@ -198,19 +198,12 @@ function applyInkContact(e,dt,wall=null){
     e.poison=Math.min(6,e.poison+dt*(1+game.state.inks.poison*.55));
     e.poisonDps=2+game.state.inks.poison*2.5;
   }
-  if(game.state.inks.frost>0){
-    e.gravitySlow=Math.max(e.gravitySlow,.12*game.state.inks.frost);
-    if(game.state.inks.frost>=3&&Math.random()<.08*dt*game.state.inks.frost)e.freeze=Math.max(e.freeze,.7);
-  }
+  game.api.applyFrostContact(e,dt);
   if(game.state.inks.electric>0&&e.chainCd<=0){
     game.api.chainLightning(e,game.state.inks.electric);
     e.chainCd=Math.max(.22,.8-game.state.inks.electric*.12);
   }
-  if(game.state.inks.vampire>0){
-    const before=game.state.player.hp;
-    game.api.healStevie(dps*dt*(.015*game.state.inks.vampire));
-    game.api.animateLeech(e,game.state.player.hp-before);
-  }
+  game.api.applyVampireContact(e,dt);
   if(game.state.inks.repulsion>0){
     const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;
     e.x+=dx/m*(15+game.state.inks.repulsion*7)*dt;
@@ -240,17 +233,32 @@ function applyOneInk(kind,e,dt,chaos=false){
 }
 
 function chainLightning(source,level){
-  let count=1+Math.floor(level/2);
-  let range=110+level*18;
-  let mult=1;
+  if(source.hp<=0)return;
+  let count=1+Math.floor(level/2),range=110+level*18,mult=1;
   if(game.state.synergies.has('Cryoshock')&&source.freeze>0){range+=70;count+=2;mult+=.55}
   if(game.state.synergies.has('Tesla Well')&&source.gravitySlow>.15){range+=45;count+=1;mult+=.35}
   if(game.state.synergies.has('THE STORM')){range+=65;count+=2;mult+=.45}
-  const nearby=[];
-  for(const e of game.state.enemies){if(e!==source&&game.api.withinRadius(e.x,e.y,source.x,source.y,range)){nearby.push(e);if(nearby.length===count)break}}
+  count=Math.min(12,count);
+  const nearby=[],visited=new Set([source]);let from=source;
+  for(let hop=0;hop<count;hop++){
+    let next=null,best=range*range;
+    for(const e of game.state.enemies){
+      if(e.hp<=0||visited.has(e))continue;
+      const d=(e.x-from.x)**2+(e.y-from.y)**2;
+      if(d<=best&&(!next||d<best)){next=e;best=d}
+    }
+    if(!next)break;
+    nearby.push(next);visited.add(next);from=next;
+  }
   game.api.animateChainLightning(source,nearby);
-  game.api.dealDamage(source,(3+level*2)*mult,'electric');
-  nearby.forEach(e=>{game.api.dealDamage(e,(4+level*3)*mult,'electric');game.api.burst(e.x,e.y,'#7ea7ff',4)});
+  const shock=e=>{
+    if(e.immunity==='electric')return;
+    const boss=e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss;
+    const duration=Math.min(.45,.12+level*.025)*(boss?.5:1);
+    e.stun=Math.max(e.stun||0,duration);game.api.animateElectricShock(e,duration);
+  };
+  shock(source);game.api.dealDamage(source,(3+level*2)*mult,'electric');
+  nearby.forEach(e=>{shock(e);game.api.dealDamage(e,(4+level*3)*mult,'electric');game.api.burst(e.x,e.y,'#7ea7ff',4)});
   game.api.burst(source.x,source.y,'#7ea7ff',5);
 }
 

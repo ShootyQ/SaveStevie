@@ -16,7 +16,6 @@ function stevieNote(victory=false){
     'Repulsion Ink':'Watching them bounce off your walls? Ten out of ten.',
     'Void Ink':'You drew a hole in reality. Please do not lose the pencil.',
     'Chaos Ink':'I do not know what that ink did. I think the ink agrees.',
-    'Shock Ink':'They stopped. I ran. Excellent teamwork.',
     'Death Ink':'That pencil has a very serious attitude.'
   };
   return {
@@ -63,6 +62,7 @@ function startWave(){
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
   game.api.resetAbilityEffects();
+  game.api.resetSupportInks();
   game.api.resetPlaguefire();
   game.api.resetEnemyWave();game.api.resetSustain();
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.particles=[];game.state.floaters=[];
@@ -83,6 +83,7 @@ function waveComplete(){
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
   game.api.resetAbilityEffects();
+  game.api.resetSupportInks();
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);
   game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
 

@@ -27,7 +27,7 @@ function syncDamageLabels(){
 const monsterMotion=new WeakMap();
 let motionIndex=0;
 const damageStyles={
-  physical:{color:'#354354'},fire:{color:'#c44c17'},poison:{color:'#427b24'},
+  vampire:{color:'#a13b69'},physical:{color:'#354354'},fire:{color:'#c44c17'},poison:{color:'#427b24'},
   electric:{color:'#315fd2'},blast:{color:'#a46a12'},void:{color:'#7740a0'},frost:{color:'#167f99'}
 };
 function damageMotion(enemy){
@@ -73,6 +73,7 @@ function dealDamage(enemy,amount,kind='physical'){
     if(enemy.immuneCd<=0){game.api.floatText(enemy.x,enemy.y-enemy.r-8,'IMMUNE '+kind.toUpperCase(),damageStyles[kind]?.color||'#7740a0');enemy.immuneCd=1.1}
     return;
   }
+  amount*=game.api.gravityDamageMultiplier(enemy);
   if(enemy.type==='bulwark'&&kind==='physical'&&amount>0)amount*=.35;
   const before=enemy.hp,actual=Math.min(Math.max(0,before),amount);
   enemy.hp-=amount;

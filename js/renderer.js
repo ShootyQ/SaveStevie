@@ -269,6 +269,7 @@ function resize(){
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
     game.api.movePlaguefire(dx,dy);
+    game.api.moveSupportInkVisuals(dx,dy);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
   game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;
@@ -579,6 +580,7 @@ function draw(){
   for(const p of game.state.particles){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1
   }
+  game.api.drawSupportInks();
   game.api.drawInkStatusEffects();
   game.api.drawInkBursts();
   game.api.drawChainLightning();

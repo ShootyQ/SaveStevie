@@ -38,7 +38,7 @@ game.catalog.synergyDefs = [
 ];
 
 // Effect slots belong to this run's permanent tool; utility upgrades stay free.
-const effectKeys={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Repulsion Ink':'repulsion','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Void Ink':'void','Chaos Ink':'chaos','Shock Ink':'shock','Death Ink':'death'};
+const effectKeys={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Repulsion Ink':'repulsion','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Void Ink':'void','Chaos Ink':'chaos','Death Ink':'death'};
 function equippedEffects(){return game.catalog.upgrades.filter(u=>effectKeys[u.name]&&game.state.stacks[u.name]>0);}
 function resetRewardPlan(){
   // One reserved offer in 10% of campaigns. Rerolls, Luck and Endless cannot
@@ -48,8 +48,7 @@ function resetRewardPlan(){
 }
 function removeEffect(u){
   const key=effectKeys[u.name],n=game.state.stacks[u.name]||0;
-  if(key==='shock')game.state.stats.wallStun=0;
-  else if(key==='death')game.state.stats.wallDamage-=5*n;
+  if(key==='death')game.state.stats.wallDamage-=5*n;
   else game.state.inks[key]=0;
   delete game.state.stacks[u.name];
 }
@@ -80,7 +79,6 @@ function upgradeLevels(u){
   if(oneTimeUpgrades.has(u.name))return 1;
   let levels=rarityLevels[u.rarity]||1;
   if(u.name==='Helmet')levels=Math.min(levels,Math.ceil((.55-game.state.stats.playerArmor-1e-9)/.1));
-  if(u.name==='Shock Ink')levels=Math.min(levels,Math.ceil((.55-game.state.stats.wallStun-1e-9)/.16));
   if(u.name==='Reroll Coupon')levels=Math.min(levels,Math.ceil((5-game.state.rerolls)/2));
   return Math.max(0,levels);
 }
@@ -197,7 +195,6 @@ game.catalog.upgrades = [
   {name:'Patchwork',cat:'defense',desc:'Drawing across an old wall repairs 18 HP.',apply:()=>game.state.stats.repairDraw+=18},
   {name:'Double Stroke',cat:'draw',desc:'Each stroke adds a parallel wall with 60% of the original durability.',apply:()=>game.state.stats.doubleLine=true},
   {name:'Quick Sketch',cat:'draw',desc:'Your first stroke every wave is free.',apply:()=>game.state.stats.firstFree=true},
-  {name:'Shock Ink',cat:'defense',desc:'Wall contact can briefly stun enemies.',apply:()=>game.state.stats.wallStun=Math.min(.55,game.state.stats.wallStun+.16)},
   {name:'Patch Job',cat:'defense',desc:'Every kill repairs walls by up to 3 HP each, sharing a 12 wall HP/s budget.',apply:()=>game.state.stats.repairOnKill+=3},
   {name:'Freehand',cat:'draw',desc:'Spend 80 real ink to charge a limited free-ink bank. Stacking increases the free bank.',apply:()=>{game.state.stats.freehandLevel++;game.state.stats.freehandBankSize=40+(game.state.stats.freehandLevel-1)*20;game.state.stats.freehandCharge=Math.min(game.state.stats.freehandCharge,game.state.stats.freehandThreshold)}},
   {name:'Living Fountain Pen',cat:'draw',desc:'35% faster ink regeneration on the first pick; smaller multipliers on repeats.',apply:()=>game.state.stats.inkRegen*=game.api.regenPick('Living Fountain Pen')},
@@ -222,13 +219,13 @@ game.catalog.upgrades = [
 
   // Ink families
   {name:'Fire Ink',cat:'ink',desc:'Wall contact ignites enemies for damage over time.',apply:()=>game.state.inks.fire++},
-  {name:'Frost Ink',cat:'ink',desc:'Wall contact slows enemies. Higher levels can freeze.',apply:()=>game.state.inks.frost++},
+  {name:'Frost Ink',cat:'ink',desc:'Slows on contact from level one. Sustained contact builds a guaranteed freeze; bosses freeze for half as long.',apply:()=>game.state.inks.frost++},
   {name:'Poison Ink',cat:'ink',desc:'Enemies build stacking poison while touching walls.',apply:()=>game.state.inks.poison++},
   {name:'Repulsion Ink',cat:'ink',desc:'Walls shove enemies away from Stevie.',apply:()=>game.state.inks.repulsion++},
-  {name:'Electric Ink',cat:'ink',desc:'Wall contact arcs damage into nearby enemies.',apply:()=>game.state.inks.electric++},
+  {name:'Electric Ink',cat:'ink',desc:'Wall contact shocks enemies and sparks a jumping chain. Each level adds reach; every two levels add another jump.',apply:()=>game.state.inks.electric++},
   {name:'Blast Ink',cat:'ink',desc:'Destroyed walls explode and damage nearby enemies.',apply:()=>game.state.inks.blast++},
-  {name:'Vampire Ink',cat:'ink',desc:'A fraction of wall damage heals Stevie.',apply:()=>game.state.inks.vampire++},
-  {name:'Gravity Ink',cat:'ink',desc:'Enemies near walls are pulled toward them.',apply:()=>game.state.inks.gravity++},
+  {name:'Vampire Ink',cat:'ink',desc:'Deals life-drain damage on contact and heals for 25% of damage dealt, sharing the 6 HP/s healing budget.',apply:()=>game.state.inks.vampire++},
+  {name:'Gravity Ink',cat:'ink',desc:'Pulls enemies to wall segments and holds them there. Held enemies take more damage and bite walls 30% slower.',apply:()=>game.state.inks.gravity++},
   {name:'Void Ink',cat:'ink',desc:'Wall contact has a small chance to erase non-boss enemies.',apply:()=>game.state.inks.void++},
   {name:'Chaos Ink',cat:'ink',desc:'Walls occasionally trigger random ink effects.',apply:()=>game.state.inks.chaos++},
   {name:'Death Ink',cat:'ink',desc:'Per level: +5 base wall damage per second.',apply:()=>game.state.stats.wallDamage+=5},
@@ -239,7 +236,6 @@ function upgradeAvailable(u){
   if(oneTimeUpgrades.has(u.name)&&game.state.stacks[u.name])return false;
   if(u.name==='Double Stroke'&&game.state.stats.doubleLine)return false;
   if(u.name==='Helmet'&&game.state.stats.playerArmor>=.55)return false;
-  if(u.name==='Shock Ink'&&game.state.stats.wallStun>=.55)return false;
   if(u.name==='Reroll Coupon'&&game.state.rerolls>=5)return false;
   return true;
 }

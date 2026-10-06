@@ -1,10 +1,10 @@
 /* Bounded, presentation-only ability animations. Geometry never uses combat RNG. */
 DoodleDefender.systems.abilityEffects = function createAbilityEffects(game) {
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
-let reduced=!!preference?.matches,lightning=[],explosions=[],serial=0,statusClock=0,statuses=[],voids=[],leeches=[],lastLeech=-Infinity;
-const limits={casts:8,targets:6,explosions:4,wallPoints:48,fragments:16,statusMonsters:24,voids:8,leeches:6};
+let reduced=!!preference?.matches,lightning=[],explosions=[],serial=0,statusClock=0,statuses=[],voids=[],leeches=[],lastLeech=-Infinity,electricUntil=new WeakMap();
+const limits={casts:8,targets:12,explosions:4,wallPoints:48,fragments:16,statusMonsters:24,voids:8,leeches:6};
 preference?.addEventListener?.('change',event=>{reduced=event.matches;resetAbilityEffects()});
-function resetAbilityEffects(){lightning=[];explosions=[];statuses=[];voids=[];leeches=[];serial=0;statusClock=0;lastLeech=-Infinity}
+function resetAbilityEffects(){lightning=[];explosions=[];statuses=[];voids=[];leeches=[];serial=0;statusClock=0;lastLeech=-Infinity;electricUntil=new WeakMap()}
 function boundedPush(list,item,limit){if(list.length>=limit)list.shift();list.push(item)}
 function boltPath(dx,dy,seed,phase){
   const length=Math.hypot(dx,dy),steps=Math.max(4,Math.min(12,Math.ceil(length/16)));
@@ -15,13 +15,14 @@ function boltPath(dx,dy,seed,phase){
   }
   return points;
 }
+function animateElectricShock(enemy,duration){electricUntil.set(enemy,statusClock+duration)}
 function animateChainLightning(source,targets){
-  const seed=++serial,arcs=[];
+  const seed=++serial,arcs=[];let previous=source;
   for(const target of targets.slice(0,limits.targets)){
-    const dx=target.x-source.x,dy=target.y-source.y;
-    arcs.push({dx,dy,immune:target.immunity==='electric',paths:[0,1,2].map(phase=>boltPath(dx,dy,seed+arcs.length,phase))});
+    const dx=target.x-previous.x,dy=target.y-previous.y;
+    arcs.push({x:previous.x-source.x,y:previous.y-source.y,dx,dy,immune:target.immunity==='electric',paths:[0,1,2].map(phase=>boltPath(dx,dy,seed+arcs.length,phase))});previous=target;
   }
-  boundedPush(lightning,{x:source.x,y:source.y,immune:source.immunity==='electric',arcs,age:0,life:reduced?.24:.34},limits.casts);
+  boundedPush(lightning,{x:source.x,y:source.y,immune:source.immunity==='electric',arcs,age:0,life:reduced?.3:.45+arcs.length*.025},limits.casts);
 }
 function animateWallExplosion(wall,x,y,radius,inferno=false){
   const seed=++serial,points=[],anchors=[],fragments=[],n=wall.pts.length;
@@ -59,8 +60,8 @@ function updateAbilityEffects(dt){
   statusClock+=dt;statuses=[];
   for(const e of game.state.enemies){
     if(e.hp<=0)continue;
-    const fire=e.burn>0&&e.immunity!=='fire',poison=e.poison>0&&e.immunity!=='poison',frost=e.freeze>0;
-    if(fire||poison||frost)statuses.push({enemy:e,fire,poison,frost});
+    const fire=e.burn>0&&e.immunity!=='fire',poison=e.poison>0&&e.immunity!=='poison',frost=e.freeze>0,electric=e.stun>0&&(electricUntil.get(e)||0)>statusClock&&e.immunity!=='electric';
+    if(fire||poison||frost||electric)statuses.push({enemy:e,fire,poison,frost,electric});
     if(statuses.length===limits.statusMonsters)break;
   }
   for(const effect of voids)effect.age+=dt;
@@ -73,10 +74,10 @@ function updateAbilityEffects(dt){
 function moveAbilityEffects(dx,dy){for(const effect of [...lightning,...explosions,...voids,...leeches]){effect.x+=dx;effect.y+=dy}}
 function abilityEffectsSnapshot(){
   return {
-    statuses:statuses.map(s=>({x:s.enemy.x,y:s.enemy.y,fire:s.fire,poison:s.poison,frost:s.frost,clock:statusClock})),
+    statuses:statuses.map(s=>({x:s.enemy.x,y:s.enemy.y,fire:s.fire,poison:s.poison,frost:s.frost,electric:s.electric,clock:statusClock})),
     voids:voids.map(e=>({x:e.x,y:e.y,age:e.age})),
     leeches:leeches.map(e=>({x:e.x,y:e.y,targetX:e.x+e.dx,targetY:e.y+e.dy,age:e.age})),
-    lightning:lightning.map(e=>({x:e.x,y:e.y,age:e.age,targets:e.arcs.map(a=>({x:e.x+a.dx,y:e.y+a.dy,immune:a.immune})),pathPoints:e.arcs.reduce((n,a)=>n+a.paths[0].length/2,0)})),
+    lightning:lightning.map(e=>({x:e.x,y:e.y,age:e.age,targets:e.arcs.map(a=>({x:e.x+a.x+a.dx,y:e.y+a.y+a.dy,immune:a.immune})),pathPoints:e.arcs.reduce((n,a)=>n+a.paths[0].length/2,0)})),
     explosions:explosions.map(e=>({x:e.x,y:e.y,age:e.age,radius:e.radius,points:e.points.map(p=>({x:e.x+p.x,y:e.y+p.y})),anchors:e.anchors.map(p=>({x:e.x+p.x,y:e.y+p.y})),fragments:e.fragments.length,inferno:e.inferno}))
   };
 }
@@ -94,12 +95,14 @@ function drawChainLightning(){
     const progress=cast.age/cast.life,phase=reduced?0:Math.min(2,Math.floor(cast.age/.055));
     const strength=(1-progress)*(reduced?.65:cast.age<.11?1:.7);
     ctx.save();ctx.translate(cast.x,cast.y);ctx.globalAlpha=strength;ctx.lineCap='round';ctx.lineJoin='round';
-    for(const arc of cast.arcs){
+    for(const [index,arc] of cast.arcs.entries()){
+      if(!reduced&&cast.age<index*.025)continue;
+      ctx.save();ctx.translate(arc.x,arc.y);
       traceBolt(ctx,arc.paths[phase]);
       ctx.strokeStyle='#233f78';ctx.lineWidth=reduced?3:6;ctx.stroke();
       ctx.strokeStyle='#5fa3ff';ctx.lineWidth=reduced?2:3.6;ctx.stroke();
       if(!reduced){ctx.strokeStyle='#fff4b4';ctx.lineWidth=1.35;ctx.stroke()}
-      zapSpark(ctx,arc.dx,arc.dy,strength,arc.immune);
+      zapSpark(ctx,arc.dx,arc.dy,strength,arc.immune);ctx.restore();
     }
     zapSpark(ctx,0,0,strength,cast.immune);ctx.restore();
   }
@@ -152,6 +155,14 @@ function drawInkStatusEffects(){
     const e=s.enemy;if(e.hp<=0)continue;
     const r=Math.min(30,e.r*1.15),phase=statusClock*5+e.type.length;
     ctx.save();ctx.translate(e.x,e.y);ctx.lineWidth=1.5;ctx.lineJoin='round';
+    if(s.electric){
+      ctx.strokeStyle='#315fd2';ctx.lineWidth=2;
+      for(let i=0;i<3;i++){
+        const a=i*Math.PI*2/3+(reduced?0:statusClock*3),d=r+5;
+        ctx.save();ctx.rotate(a);ctx.beginPath();ctx.moveTo(d,-7);ctx.lineTo(d+5,-2);ctx.lineTo(d-2,1);ctx.lineTo(d+3,7);ctx.stroke();
+        ctx.strokeStyle='#f5c84c';ctx.lineWidth=1;ctx.stroke();ctx.restore();
+      }
+    }
     if(s.fire){
       for(const side of [-1,1]){
         const height=reduced?9:10+Math.sin(phase+side)*4,x=side*(r+3),y=r*.4;
@@ -213,6 +224,6 @@ function drawInkBursts(){
     ctx.restore();
   }
 }
-const api={animateVoidHit,animateLeech,drawInkStatusEffects,drawInkBursts,animateChainLightning,animateWallExplosion,updateAbilityEffects,resetAbilityEffects,moveAbilityEffects,abilityEffectsSnapshot,drawChainLightning,drawWallExplosions};
+const api={animateElectricShock,animateVoidHit,animateLeech,drawInkStatusEffects,drawInkBursts,animateChainLightning,animateWallExplosion,updateAbilityEffects,resetAbilityEffects,moveAbilityEffects,abilityEffectsSnapshot,drawChainLightning,drawWallExplosions};
 Object.assign(game.api,api);return api;
 };
