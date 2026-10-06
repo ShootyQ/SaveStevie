@@ -20,7 +20,7 @@ function enterScreen(){
   try{const request=document.documentElement.requestFullscreen();request?.catch(()=>{});}catch{}
 }
 function startRun(){
-  game.api.startMusic();
+  game.api.startMusic('margin-mischief');
   if(window.matchMedia?.('(pointer: coarse)').matches)enterScreen();
   game.api.resetRun();
 }

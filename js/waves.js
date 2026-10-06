@@ -29,6 +29,7 @@ function resetRun(){
 }
 
 function startWave(){
+  game.api.selectMusicTrack(game.api.chapterForWave().id);
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
   game.api.resetAbilityEffects();

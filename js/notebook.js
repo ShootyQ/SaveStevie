@@ -82,6 +82,7 @@ function resetNotebookProgress(){
   progress=fresh;storageIssue=false;
   game.api.closeInfo();game.state.best=1;game.api.resetRun();game.api.closeInfo();
   game.state.running=false;game.state.paused=false;runActive=false;runScraps=0;killScraps=0;
+  game.api.selectMusicTrack('splash');
   game.dom.startOverlay.style.display='grid';updateScrapCounters();game.api.updateUI();
   game.dom.$('startBtn').focus?.();return true;
 }

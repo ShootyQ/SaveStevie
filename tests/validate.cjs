@@ -546,9 +546,9 @@ const stored=new Map([['doodleDefenderBestV4','15']]),events={},storage={getItem
 const audio={currentTime:12,play(){plays++;return {then(fn){fn();return {catch(){}}}}},pause(){pauses++}};
 const env=load(true,{audio,storage,documentEvents:events}),g=env.sandbox.testGame;
 assert.equal(plays,0,'music waits for a gesture');assert.equal(env.node('gameMusic').loop,true);assert.equal(env.node('gameMusic').volume,.35);
-env.node('startBtn').onclick();assert.equal(plays,1);assert.equal(g.api.musicStatus().started,true);g.api.startWave();assert.equal(plays,1,'wave changes do not restart music');assert.equal(env.node('gameMusic').currentTime,12);
-env.node('musicBtn').onclick();assert.equal(pauses,1);assert.equal(stored.get('saveStevieMusicMuted'),'yes');env.node('musicBtn').onclick();assert.equal(plays,2);assert.equal(stored.get('saveStevieMusicMuted'),'no');
-env.sandbox.document.hidden=true;events.visibilitychange();assert.equal(pauses,2);env.sandbox.document.hidden=false;events.visibilitychange();assert.equal(plays,3,'returning from background resumes');
+env.node('startBtn').onclick();assert.equal(plays,1);assert.equal(g.api.musicStatus().started,true);g.api.startWave();assert.equal(plays,1,'wave changes do not restart music');assert.equal(env.node('gameMusic').currentTime,0);
+env.node('musicBtn').onclick();assert.equal(pauses,2);assert.equal(stored.get('saveStevieMusicMuted'),'yes');env.node('musicBtn').onclick();assert.equal(plays,2);assert.equal(stored.get('saveStevieMusicMuted'),'no');
+env.sandbox.document.hidden=true;events.visibilitychange();assert.equal(pauses,3);env.sandbox.document.hidden=false;events.visibilitychange();assert.equal(plays,3,'returning from background resumes');
 env.node('gameMusic').play=()=>({then(){return{catch(fn){fn(Error('autoplay denied'))}}}});g.api.startMusic();assert.equal(g.api.musicStatus().blocked,true,'playback rejection is handled');env.node('gameMusic').play=audio.play;env.node('musicBtn').onclick();assert.equal(g.api.musicStatus().blocked,false,'music button retries blocked playback');assert.equal(stored.get('doodleDefenderBestV4'),'15');
 g.api.toggleMusic();const reloaded=load(true,{audio,storage}).sandbox.testGame;const count=plays;reloaded.api.startMusic();assert.equal(reloaded.api.musicStatus().muted,true);assert.equal(plays,count,'saved mute survives reload');
 assert.match(fs.readFileSync(path.join(root,'index.html'),'utf8'),/preload="none" loop/);assert.ok(fs.statSync(path.join(root,'assets/audio/save-stevie.mp3')).size>1000000);
@@ -715,4 +715,16 @@ g.api.resetRun();g.state.stats.tripleLine=true;g.api.createWall([{x:100,y:100},{
 g.api.resetRun();for(let i=1;i<=12;i++){g.state.kills=i*25;g.api.awardKillScraps()}assert.equal(g.api.notebookSnapshot().runScraps,8,'kill scraps capped across a run');g.api.resumeScrapRun();g.state.kills=325;g.api.awardKillScraps();assert.equal(g.api.notebookSnapshot().runScraps,8,'endless cannot reset kill cap');
 g.api.resetRun();for(let wave=1;wave<=20;wave++){g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;if(wave%5===0)g.api.killEnemy(g.api.spawnEnemy(true,0,0));g.api.waveComplete();g.state.betweenWaves=false}assert.equal(g.api.notebookSnapshot().runScraps,61,'20 clears + chapter milestones + victory');
 console.log('PASS: HP curve, gentler opening, timed/capped groups, required boss overtime/contact/early kills, shared sustain budgets, pause/death protection, diminishing returns, thinner copies, and capped/milestone scraps.');
+}
+
+{
+let plays=0;const env=load(true,{audio:{play(){plays++;return Promise.resolve()},pause(){}}}),g=env.sandbox.testGame;
+assert.equal(g.api.musicStatus().track,'splash');assert.equal(plays,0,'splash never autoplays');env.node('splashMusicBtn').onclick();assert.equal(plays,1);assert.equal(g.api.musicStatus().muted,false);
+env.node('startBtn').onclick();assert.equal(g.api.musicStatus().track,'margin-mischief');assert.equal(plays,2);env.node('gameMusic').currentTime=12;g.state.wave=5;g.api.startWave();assert.equal(env.node('gameMusic').currentTime,12);assert.equal(plays,2);
+for(const [wave,id] of [[6,'pop-quiz-panic'],[11,'crayon-catastrophe'],[16,'final-draft']]){g.state.wave=wave;g.api.startWave();assert.equal(g.api.musicStatus().track,id);assert.equal(env.node('gameMusic').currentTime,0);assert.ok(env.node('gameMusic').src.includes(g.catalog.musicTracks[id].file));assert.ok(fs.statSync(path.join(root,'assets/audio',g.catalog.musicTracks[id].file)).size>1000000)}
+const count=plays;g.state.wave=21;g.api.startWave();assert.equal(plays,count,'endless keeps final loop');g.api.toggleMusic();g.state.wave=6;g.api.startWave();assert.equal(plays,count,'muted transitions stay muted');assert.equal(g.api.musicStatus().track,'pop-quiz-panic');g.api.toggleMusic();assert.equal(plays,count+1);
+env.sandbox.confirm=()=>true;g.api.resetNotebookProgress();assert.equal(g.api.musicStatus().track,'splash');assert.equal(g.state.running,false);
+const pending=[];const race=load(true,{audio:{play(){const r={};pending.push(r);return {then(fn){r.resolve=fn;return {catch(fn){r.reject=fn}}}}},pause(){}}}).sandbox.testGame;
+race.api.startSplashMusic();race.api.resetRun();pending[0].reject();assert.equal(race.api.musicStatus().blocked,false,'old rejected play cannot block the new chapter');pending[1].reject();assert.equal(race.api.musicStatus().blocked,true);race.api.toggleMusic();pending[2].resolve();assert.equal(race.api.musicStatus().blocked,false);race.api.toggleMusic();pending[2].reject();assert.equal(race.api.musicStatus().blocked,false,'stale rejection cannot undo mute');
+console.log('PASS: five soundtrack loops, explicit splash unlock, chapter transitions/no restarts, muted switching/endless/reset, supplied files, and stale playback-promise protection.');
 }

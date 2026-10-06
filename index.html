@@ -71,6 +71,7 @@
         </div>
         <button id="startBtn">Let's save Stevie <span aria-hidden="true">→</span></button>
         <button class="secondary notebook-entry" id="splashNotebookBtn">Back of the Notebook · <span id="splashScraps">0</span> scraps</button>
+        <button class="secondary" id="splashMusicBtn">♫ Play intro music</button>
         <div class="splash-footer">Bosses every 5 waves · A fresh page every wave</div>
       </div>
     </div>
@@ -169,7 +170,7 @@
   </div>
 </div>
 <div id="message" hidden></div>
-<audio id="gameMusic" src="assets/audio/save-stevie.mp3" preload="none" loop></audio>
+<audio id="gameMusic" src="assets/audio/save-stevie-splash.mp3" preload="none" loop></audio>
 
 <div class="overlay build-overlay" id="buildOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="buildTitle">
   <div class="cardbox build-box">
@@ -221,6 +222,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>A soundtrack for every chapter</h3><p>Play intro music on the splash screen for the calm new menu theme. Starting a run switches to Save Stevie, then Pop Quiz Panic, Crayon Catastrophe, and Detention: The Final Draft at waves 6, 11, and 16. Each song loops; waves and menus within a chapter keep its position. The music note still saves your mute choice. Resetting progress returns to the intro track.</p></article>
       <article class="build-entry"><h3>A smoother start and tougher chapter endings</h3><p>Wave 1 gives you more drawing time and fewer arrivals. Enemy HP climbs to 1.2× on wave 5, 1.9× on 10, 2.8× on 15, and 4× on 20. Later chapters add small coordinated groups. Chapter bosses must be removed before advancing; overtime stops new arrivals while you finish the fight. A surviving boss contact still resolves it, as before.</p><p>Repeated ink-regeneration picks give smaller bonuses. Extra parallel walls have 60% durability. Combat healing, kill ink refunds, and kill repairs share refillable budgets, preventing crowds from supplying unlimited sustain. Scraps now favor cleared chapters over kill farming; the Notebook explains the new payouts. Existing scraps and perks are kept.</p></article>
       <article class="build-entry"><h3>Four pages, four paper worlds</h3><p>Custom backgrounds now mark each five-wave chapter: Margin Mischief (1–5), Pop Quiz Panic (6–10), Crayon Catastrophe (11–15), and Detention: The Final Draft (16–20). Faint paper texture and edge doodles keep the fighting space readable. Wave-clear screens name the current chapter; new runs return to the first page.</p></article>
       <article class="build-entry"><h3>A fresh notebook whenever you need it</h3><p>Back of the Notebook now includes Reset game progress. Confirming clears this browser’s scraps, permanent perks, best-wave record, and current run, then returns to the splash screen. Music and monster-intro settings stay as you chose them.</p></article>

@@ -241,9 +241,11 @@ private visuals use no combat randomness, freeze while gameplay is paused,
 reset between waves, and move with the arena on resize. Reduced motion uses
 static crystals, bubbles, and short fading rings instead of moving effects.
 
-The supplied Save Stevie song plays on a loop after starting a run. The **♫**
-button mutes/resumes it and saves the choice on this device. Wave changes and
-menus keep the song playing; hiding the tab pauses it and returning resumes
+The supplied Save Stevie song loops in chapter 1 after starting a run.
+The splash and later chapters have their own songs; see the soundtrack section
+below. The **♫**
+button mutes/resumes it and saves the choice on this device. Wave changes within a chapter and
+menus keep its song playing; hiding the tab pauses it and returning resumes
 from the same position. Music loads on demand, starts from a player gesture,
 and cannot block gameplay if playback is unavailable. The MP3 is packaged and
 versioned with the static site. See `assets/audio/README.md` for track details.
@@ -367,8 +369,7 @@ rendering and combat state. Images cover the arena with a centered crop for
 portrait/landscape devices, and keep a quiet pale center for readable enemies
 and ink effects. Paper/grid layers remain underneath if an image cannot load.
 Asset URLs use the deployment build version. The background system itself has no gameplay, reward,
-collision, difficulty, or music effects; supplied
-chapter tracks can be integrated separately.
+collision, difficulty, or music effects; chapter tracks are selected by the music system.
 
 Run `node tests/browser-chapters.cjs [packaged-site-directory]` with Playwright
 and Chromium for the optional desktop/phone asset, switching, reset, wave-clear
@@ -419,3 +420,23 @@ formulas, parallel durability, and scrap caps/milestones. The optional
 Build/upgrade text and Notebook earnings on desktop and phone viewports.
 A seeded closed-barrier opening smoke test survived with 33 HP versus 15 HP
 under the previous spawn timing; later balance still needs human playtests.
+
+
+## Chapter soundtrack
+
+The supplied MP3 files are copied unchanged. **Play intro music** on the splash
+screen explicitly enables its calm theme; browsers never need to autoplay.
+Starting a run uses the original Save Stevie song for waves 1–5. Pop Quiz Panic,
+Crayon Catastrophe, and Detention: The Final Draft begin at waves 6, 11, and 16.
+Each loops at 35% volume. Same-chapter waves and menus retain playback position;
+chapter changes start the new song at zero, using one audio element. Endless
+keeps chapter 4; resetting game progress returns to the intro song.
+
+Mute remains device-local under `saveStevieMusicMuted`; muted chapter changes
+stay muted. Explicitly playing intro music enables sound. Hidden tabs pause
+and resume their current song on return. Rejected play requests leave gameplay
+usable; the note button retries. Stale play promises cannot overwrite a newer
+track or mute action. Track URLs carry the build version, with `preload=none`.
+See `assets/audio/README.md` for file names and durations. The optional
+`node tests/browser-music.cjs [packaged-site-directory]` verifies native MP3
+playback and chapter selection on desktop and phone-sized browsers.
