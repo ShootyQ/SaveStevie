@@ -22,6 +22,10 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.waitForFunction(()=>document.querySelector('.stevie-note img').naturalWidth>0,null,{polling:50});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.waitForFunction(()=>getComputedStyle(document.querySelector('#gameOverOverlay .stevie-note')).opacity==='1',null,{polling:50});
+  await page.evaluate(()=>document.fonts.ready);
+  assert.equal(await page.evaluate(()=>document.fonts.check('20px "Stevie Pencil"')),true,'bundled handwriting font loaded');
+  assert.match(await page.locator('#deathNoteMessage').evaluate(e=>getComputedStyle(e).fontFamily),/Stevie Pencil/);
+  assert.equal(await page.locator('.note-signature').first().textContent(),'— StEvie ♡');
   await page.screenshot({path:'/tmp/stevie-note-death-'+viewport.width+'.png'});
   await page.click('#againBtn');assert.equal(await page.locator('#gameOverOverlay').isVisible(),false);
   await page.evaluate(()=>{
