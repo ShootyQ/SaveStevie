@@ -678,3 +678,9 @@ still add range, jumps, and damage. Shock never occupies its own reward slot.
 Lightning uses bounded staggered hand-drawn bolts and orbiting status sparks;
 Plaguefire scars expose honey-colored scratched school-desk grain beneath
 charred paper edges. These visuals do not consume combat RNG.
+
+Development work now uses the `dev` branch. Push updates there; publishing or
+merging to `main` remains a separate action. Remaining ink animations include
+Repulsion shove trails, Chaos result bursts, Death Ink skull pulses, Fire embers,
+Poison drips, and Void fragments. Contact accents are presentation-only, capped
+at 16 active effects and throttled to one per monster/type every 0.35 seconds.

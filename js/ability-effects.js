@@ -1,10 +1,10 @@
 /* Bounded, presentation-only ability animations. Geometry never uses combat RNG. */
 DoodleDefender.systems.abilityEffects = function createAbilityEffects(game) {
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
-let reduced=!!preference?.matches,lightning=[],explosions=[],serial=0,statusClock=0,statuses=[],voids=[],leeches=[],lastLeech=-Infinity,electricUntil=new WeakMap();
+let reduced=!!preference?.matches,lightning=[],explosions=[],serial=0,statusClock=0,statuses=[],voids=[],leeches=[],lastLeech=-Infinity,electricUntil=new WeakMap(),accents=[],accentCooldown=new WeakMap();
 const limits={casts:8,targets:12,explosions:4,wallPoints:48,fragments:16,statusMonsters:24,voids:8,leeches:6};
 preference?.addEventListener?.('change',event=>{reduced=event.matches;resetAbilityEffects()});
-function resetAbilityEffects(){lightning=[];explosions=[];statuses=[];voids=[];leeches=[];serial=0;statusClock=0;lastLeech=-Infinity;electricUntil=new WeakMap()}
+function resetAbilityEffects(){lightning=[];explosions=[];statuses=[];voids=[];leeches=[];serial=0;statusClock=0;lastLeech=-Infinity;electricUntil=new WeakMap();accents=[];accentCooldown=new WeakMap()}
 function boundedPush(list,item,limit){if(list.length>=limit)list.shift();list.push(item)}
 function boltPath(dx,dy,seed,phase){
   const length=Math.hypot(dx,dy),steps=Math.max(4,Math.min(12,Math.ceil(length/16)));
@@ -14,6 +14,14 @@ function boltPath(dx,dy,seed,phase){
     points[i*2]=dx*t+nx*jitter;points[i*2+1]=dy*t+ny*jitter;
   }
   return points;
+}
+// Per-monster throttles and a global cap keep contact accents small in crowds.
+function animateInkAccent(enemy,kind,dx=0,dy=0,result=''){
+  let times=accentCooldown.get(enemy);if(!times){times={};accentCooldown.set(enemy,times)}
+  if(statusClock-(times[kind]??-Infinity)<.35)return;
+  times[kind]=statusClock;
+  const length=Math.hypot(dx,dy)||1;
+  boundedPush(accents,{x:enemy.x,y:enemy.y,r:Math.min(30,enemy.r||12),kind,dx:dx/length,dy:dy/length,result,age:0,life:reduced?.3:.6},16);
 }
 function animateElectricShock(enemy,duration){electricUntil.set(enemy,statusClock+duration)}
 function animateChainLightning(source,targets){
@@ -64,6 +72,7 @@ function updateAbilityEffects(dt){
     if(fire||poison||frost||electric)statuses.push({enemy:e,fire,poison,frost,electric});
     if(statuses.length===limits.statusMonsters)break;
   }
+  for(const effect of accents)effect.age+=dt;accents=accents.filter(e=>e.age<e.life);
   for(const effect of voids)effect.age+=dt;
   for(const effect of leeches)effect.age+=dt;
   voids=voids.filter(e=>e.age<e.life);leeches=leeches.filter(e=>e.age<e.life);
@@ -71,9 +80,10 @@ function updateAbilityEffects(dt){
   for(const effect of explosions)effect.age+=dt;
   lightning=lightning.filter(e=>e.age<e.life);explosions=explosions.filter(e=>e.age<e.life);
 }
-function moveAbilityEffects(dx,dy){for(const effect of [...lightning,...explosions,...voids,...leeches]){effect.x+=dx;effect.y+=dy}}
+function moveAbilityEffects(dx,dy){for(const effect of [...lightning,...explosions,...voids,...leeches,...accents]){effect.x+=dx;effect.y+=dy}}
 function abilityEffectsSnapshot(){
   return {
+    accents:accents.map(e=>({...e})),
     statuses:statuses.map(s=>({x:s.enemy.x,y:s.enemy.y,fire:s.fire,poison:s.poison,frost:s.frost,electric:s.electric,clock:statusClock})),
     voids:voids.map(e=>({x:e.x,y:e.y,age:e.age})),
     leeches:leeches.map(e=>({x:e.x,y:e.y,targetX:e.x+e.dx,targetY:e.y+e.dy,age:e.age})),
@@ -163,6 +173,11 @@ function drawInkStatusEffects(){
         ctx.strokeStyle='#f5c84c';ctx.lineWidth=1;ctx.stroke();ctx.restore();
       }
     }
+    if(s.fire&&!reduced){
+      ctx.fillStyle='#db742b';
+      for(let i=0;i<2;i++){const t=(statusClock*.9+i*.5)%1;ctx.globalAlpha=Math.sin(t*Math.PI)*.8;ctx.beginPath();ctx.arc((i?1:-1)*(r+3)+Math.sin(t*6)*3,-t*22,1.5,0,Math.PI*2);ctx.fill()}
+      ctx.globalAlpha=1;
+    }
     if(s.fire){
       for(const side of [-1,1]){
         const height=reduced?9:10+Math.sin(phase+side)*4,x=side*(r+3),y=r*.4;
@@ -173,6 +188,8 @@ function drawInkStatusEffects(){
       }
     }
     if(s.poison){
+      ctx.strokeStyle='#6b9637';ctx.fillStyle='#b2d568';ctx.lineWidth=1;
+      for(const side of [-1,1]){const x=side*(r*.6),y=r+2+(reduced?0:Math.sin(phase+side)*2);ctx.beginPath();ctx.moveTo(x,y-4);ctx.quadraticCurveTo(x-5,y+3,x,y+4);ctx.quadraticCurveTo(x+5,y+3,x,y-4);ctx.fill();ctx.stroke()}
       for(let i=0;i<2;i++){
         const t=reduced?.35:(statusClock*.7+i*.5)%1,x=(i?-1:1)*(r+5)+(!reduced?Math.sin(t*5+i)*3:0),y=r*.3-t*24;
         ctx.globalAlpha=reduced?.7:Math.sin(t*Math.PI)*.8;ctx.fillStyle='#c5e882';ctx.strokeStyle='#528133';
@@ -194,6 +211,25 @@ function drawInkStatusEffects(){
 }
 function drawInkBursts(){
   const ctx=game.dom.ctx;
+  for(const e of accents){
+    const t=e.age/e.life,p=reduced?0:t;
+    ctx.save();ctx.translate(e.x,e.y);ctx.globalAlpha=(1-t)*.85;ctx.lineWidth=1.8;ctx.lineJoin='round';
+    if(e.kind==='repulsion'){
+      const angle=Math.atan2(e.dy,e.dx);ctx.rotate(angle);ctx.strokeStyle='#3a887e';
+      for(let i=0;i<3;i++){const x=-e.r-7-i*7+p*14,w=7-i;ctx.beginPath();ctx.moveTo(x-w,-w);ctx.lineTo(x,0);ctx.lineTo(x-w,w);ctx.stroke()}
+      ctx.strokeStyle='#90cdb4';ctx.beginPath();ctx.moveTo(-e.r-25,-5);ctx.lineTo(-e.r-8+p*10,-5);ctx.moveTo(-e.r-28,5);ctx.lineTo(-e.r-10+p*10,5);ctx.stroke();
+    }else if(e.kind==='chaos'){
+      const colors=['#cf5277','#d7a832','#599949','#428cca','#8961bb'];
+      for(let i=0;i<5;i++){const a=i*Math.PI*2/5+p*1.3,d=e.r+5+p*15,x=Math.cos(a)*d,y=Math.sin(a)*d;ctx.strokeStyle=colors[i];ctx.beginPath();ctx.moveTo(x-3,y);ctx.lineTo(x,y-4);ctx.lineTo(x+3,y);ctx.lineTo(x,y+4);ctx.closePath();ctx.stroke()}
+      ctx.fillStyle='#694079';ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(e.result.toUpperCase(),0,-e.r-12-p*10);
+    }else if(e.kind==='death'){
+      const y=-e.r-8-p*12;ctx.strokeStyle='#59516a';ctx.fillStyle='#f4ede0';ctx.beginPath();ctx.arc(0,y,6,Math.PI,Math.PI*2);ctx.lineTo(5,y+5);ctx.lineTo(-5,y+5);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle='#59516a';for(const x of [-2.5,2.5]){ctx.beginPath();ctx.arc(x,y,1.4,0,Math.PI*2);ctx.fill()}
+      ctx.beginPath();ctx.moveTo(-2,y+3);ctx.lineTo(-2,y+6);ctx.moveTo(2,y+3);ctx.lineTo(2,y+6);ctx.stroke();
+    }
+    ctx.restore();
+  }
+
   for(const e of voids){
     const t=e.age/e.life,r=e.r*(reduced?.65:1-t*.8);
     ctx.save();ctx.translate(e.x,e.y);ctx.globalAlpha=(1-t)*.85;ctx.lineWidth=2;ctx.strokeStyle='#704b9b';
@@ -203,6 +239,7 @@ function drawInkBursts(){
       for(let arm=0;arm<2;arm++){
         ctx.beginPath();for(let i=0;i<=20;i++){const a=i/20*Math.PI*2+t*5+arm*Math.PI,rr=r*(1-i/24),x=Math.cos(a)*rr,y=Math.sin(a)*rr;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y)}ctx.stroke();
       }
+      ctx.strokeStyle='#ac89ce';for(let i=0;i<3;i++){const a=i*Math.PI*2/3+t*3,d=e.r*(1-t);ctx.beginPath();ctx.moveTo(Math.cos(a)*d,Math.sin(a)*d);ctx.lineTo(Math.cos(a)*(d+4),Math.sin(a)*(d+4));ctx.stroke()}
       ctx.fillStyle='#a88acc';ctx.beginPath();ctx.arc(0,0,Math.max(1,r*.12),0,Math.PI*2);ctx.fill();
     }
     ctx.restore();
@@ -224,6 +261,6 @@ function drawInkBursts(){
     ctx.restore();
   }
 }
-const api={animateElectricShock,animateVoidHit,animateLeech,drawInkStatusEffects,drawInkBursts,animateChainLightning,animateWallExplosion,updateAbilityEffects,resetAbilityEffects,moveAbilityEffects,abilityEffectsSnapshot,drawChainLightning,drawWallExplosions};
+const api={animateInkAccent,animateElectricShock,animateVoidHit,animateLeech,drawInkStatusEffects,drawInkBursts,animateChainLightning,animateWallExplosion,updateAbilityEffects,resetAbilityEffects,moveAbilityEffects,abilityEffectsSnapshot,drawChainLightning,drawWallExplosions};
 Object.assign(game.api,api);return api;
 };
