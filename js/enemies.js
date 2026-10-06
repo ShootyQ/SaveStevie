@@ -63,15 +63,18 @@ function updateBossAbility(e,dt){
       if(game.state.walls.includes(w)){
         const point=game.api.nearestPointOnWall(e,w);
         if(point&&game.api.withinRadius(e.x,e.y,point.x,point.y,125)){
+          game.api.animateEnemyAction(e,'slam');
           game.api.damageWall(w,65,point.x,point.y);
           game.api.burst(point.x,point.y,'#c98a32',16);game.api.floatText(point.x,point.y,'CLACK!','#986216');
         }
       }
     }else{
+      const before=game.state.enemies.length;
       for(let i=0;i<3;i++){
         const a=i*Math.PI*2/3;
         game.api.spawnEnemy(false,e.x+Math.cos(a)*40,e.y+Math.sin(a)*40,'mini');
       }
+      if(game.state.enemies.length>before)game.api.animateEnemyAction(e,'summon');
       game.api.burst(e.x,e.y,'#9354b9',16);game.api.floatText(e.x,e.y-45,'DOODLE DOODLE!','#9354b9');
     }
     e.bossTarget=null;e.bossCd=e.type==='stapler'?5:8;return;
@@ -243,6 +246,7 @@ function eraserAttack(e,dt){
     const w=game.api.pick(game.state.walls);
     game.state.walls=game.state.walls.filter(x=>x!==w);
     const mid=w.pts[Math.floor(w.pts.length/2)]||{x:e.x,y:e.y};
+    game.api.animateEnemyAction(e,'erase',mid);
     game.api.burst(mid.x,mid.y,'#ef8ba6',18);
     game.api.floatText(mid.x,mid.y,'ERASED','#b84768');
     e.eraseCd=Math.max(.55,1.7-game.state.wave*.015);
