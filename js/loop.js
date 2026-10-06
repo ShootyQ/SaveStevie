@@ -6,6 +6,7 @@ function update(dt){
   if(game.state.betweenWaves&&!game.state.paused&&!game.state.inUpgrade&&!game.state.awaitingSpec)game.api.updateStevieCelebration(dt);
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
 
+  game.api.updateRefuge(dt);
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
   if(!game.state.finalOvertime) game.state.timeLeft-=dt;
   if(game.state.timeLeft<=0){

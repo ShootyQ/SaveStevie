@@ -12,7 +12,7 @@ function bossDamageMultiplier(e){return e.waveBoss&&(bossBrain(e).enclosed||boss
 function bossWallHit(e){if(!e.waveBoss)return null;const hit=nearestBossWall(e,e.r+20);return hit&&Math.hypot(hit.x-e.x,hit.y-e.y)<=e.r+hit.wall.thick/2+3?{wall:hit.wall,seg:1}:null}
 function bossContact(e){
  const b=bossBrain(e),p=game.state.player;if(b.contactCd<=0){game.api.damageStevie(10*(1-game.state.stats.playerArmor),game.api.monsterName(e.type)+' contact',e);b.contactCd=1.2}
- const angle=Math.atan2(e.y-p.y,e.x-p.x),distance=e.r+p.r+6;
+ const angle=Math.atan2(e.y-p.y,e.x-p.x),distance=e.r+Math.hypot(game.api.refugeBounds().halfWidth,game.api.refugeBounds().halfHeight)+6;
  for(let i=0;i<12;i++){const a=angle+i*Math.PI/6,x=p.x+Math.cos(a)*distance,y=p.y+Math.sin(a)*distance;if(game.api.moveEnemySafely(e,x-e.x,y-e.y))break}
  b.moveCd=0;return true;
 }
