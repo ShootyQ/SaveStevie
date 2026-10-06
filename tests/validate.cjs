@@ -1279,3 +1279,23 @@ for(const [wave,hp,speed] of [[5,745.2,37.08],[10,1402.2,40.28],[15,1512,18.53],
 }
 console.log('PASS: stronger/faster early bosses, unchanged later/ordinary stats, quicker warned enclosure response and freeze interruption.');
 }
+
+{
+const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
+const pts=[{x:100,y:100},{x:150,y:100},{x:200,y:100},{x:200,y:150},{x:200,y:200},{x:150,y:200},{x:100,y:200},{x:100,y:150},{x:100,y:100}];
+g.api.chooseUpgrade(g.catalog.upgrades.find(u=>u.name==='Closed Loop'));g.state.inUpgrade=false;g.state.betweenWaves=false;
+g.state.stats.ink=g.state.stats.maxInk=1000;
+const old={pts:[{x:125,y:140},{x:175,y:140}],hp:50,maxHp:100,life:30,thick:8};g.state.walls=[old];g.api.createWall(pts);
+assert.ok(Math.abs(g.state.stats.ink-(1000-124*.85))<1e-8);assert.equal(old.hp,57.5);assert.equal(g.state.walls[1].sealAge,0);
+const enemy={x:150,y:150,hp:100,maxHp:100,r:10};g.api.dealDamage(enemy,10,'fire');assert.equal(enemy.hp,89);
+g.state.walls.push({...g.state.walls[1]});assert.equal(g.api.loopDamageMultiplier(enemy),1.1,'overlapping loops apply once');
+enemy.x=250;assert.equal(g.api.loopDamageMultiplier(enemy),1);enemy.x=150;
+const boss=g.api.spawnEnemy(true,150,150);g.api.bossBrain(boss).enclosed=true;const hp=boss.hp;g.api.dealDamage(boss,10,'physical');assert.ok(Math.abs(boss.hp-(hp-13.5))<1e-8,'boss exposure does not multiply with loop damage');
+g.state.walls[1].hp=0;g.state.walls[2].life=0;assert.equal(g.api.loopDamageMultiplier(enemy),1,'dead/expired loops do not boost');
+g.state.walls=[];g.state.stats.ink=1000;g.state.stats.firstFree=true;g.state.stats.firstStrokeUsed=false;g.api.createWall(pts);assert.equal(g.state.stats.ink,1000);assert.equal(g.state.walls[0].sealAge,undefined,'free stroke earns no completion reward');
+g.state.walls=[];g.state.stats.firstFree=false;g.state.stats.freehandLevel=1;g.state.stats.freehandBank=124;g.api.createWall(pts);assert.equal(g.state.stats.ink,1000,'bank-only stroke earns no refund');
+g.state.walls=[];g.state.stats.freehandBank=0;g.state.stats.tripleLine=true;g.api.createWall(pts);assert.equal(g.state.walls.length,3);assert.equal(g.state.walls.filter(w=>w.sealAge===0).length,1,'copies do not reward again');
+const p=g.api.upgradePreview({...g.catalog.upgrades.find(u=>u.name==='Fortress Geometry'),rarity:'legendary'});assert.match(p.afterDetail,/damage inside/);
+for(const n of [2,4,20,100]){const t=g.api.loopUtilityTuning(n);assert.ok(t.refund<=.35&&t.damage<=.25&&t.repair<=.3)}
+console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss limits, expired loops, free/banked ink, copied strokes, diminishing caps and previews.');
+}

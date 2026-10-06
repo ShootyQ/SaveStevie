@@ -821,3 +821,13 @@ Chapter backgrounds use a CSS nine-slice layer (`#chapterPaper`) behind the
 transparent combat canvas. The original 18% corner slices scale to 80–112px, with
 the edges and quiet middle filling the remaining space. The layer starts below
 the HUD; gameplay dimensions and input coordinates remain unchanged.
+
+Closed Loop and Fortress Geometry retain their individual durability bonuses and
+share utility progression based on their combined levels. Level one refunds 15%
+of actually paid ink, repairs 15% of missing HP on existing walls inside/touching
+the completed loop, and boosts all damage to enclosed enemies by 10%. Gains
+diminish toward 35% refund / 30% missing-HP repair / 25% damage. Completion repair
+shares a cap of half the ink actually paid; free/banked ink and copied strokes
+produce no extra rewards. Damage overlaps apply once and use the stronger of
+loop utility and boss enclosure/recovery exposure. A short deterministic pulse
+and ink popup mark paid closure; reduced motion shows a static fading outline.

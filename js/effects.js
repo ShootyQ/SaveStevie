@@ -73,7 +73,7 @@ function dealDamage(enemy,amount,kind='physical'){
     if(enemy.immuneCd<=0){game.api.floatText(enemy.x,enemy.y-enemy.r-8,'IMMUNE '+kind.toUpperCase(),damageStyles[kind]?.color||'#7740a0');enemy.immuneCd=1.1}
     return;
   }
-  amount*=game.api.gravityDamageMultiplier(enemy)*game.api.bossDamageMultiplier(enemy);
+  amount*=game.api.gravityDamageMultiplier(enemy)*Math.max(game.api.bossDamageMultiplier(enemy),game.api.loopDamageMultiplier(enemy));
   if(enemy.type==='bulwark'&&kind==='physical'&&amount>0)amount*=.35;
   const death=game.state.stacks['Death Ink']||0;
   if(kind==='physical'&&death>0&&enemy.hp<=enemy.maxHp*.5)amount*=1+Math.min(.4,.16+.04*death);
