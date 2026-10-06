@@ -6,6 +6,7 @@ function update(dt){
   if(game.state.betweenWaves&&!game.state.paused&&!game.state.inUpgrade&&!game.state.awaitingSpec)game.api.updateStevieCelebration(dt);
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
 
+  if(game.api.bossFightResolved()){game.api.waveComplete();return}
   if(!game.state.finalOvertime) game.state.timeLeft-=dt;
   if(game.state.timeLeft<=0){
     game.state.timeLeft=0;
@@ -87,6 +88,7 @@ function update(dt){
   game.api.updateSupportInkTime(dt);
   game.api.updatePlaguefire(dt);
 
+  game.api.updateBossFields(dt);
   for(const e of [...game.state.enemies]){
     if(game.state.player.hp<=0)break;
     if(e.hp<=0){game.api.killEnemy(e);continue}
@@ -137,7 +139,7 @@ function update(dt){
 
     const dx=targetX-e.x,dy=targetY-e.y,d=Math.hypot(dx,dy)||1;
     const playerDist=game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y);
-    const hit=game.api.nearestWallHit(e)||game.api.gravityWallHit(e);
+    const hit=game.api.nearestWallHit(e)||game.api.gravityWallHit(e)||game.api.bossWallHit(e);
     if(hit){
       if(!immobilized&&e.type==='bouncer'&&e.bounces>0&&e.attackCd<=0){
         const i=hit.seg,a=hit.wall.pts[i-1],b=hit.wall.pts[i];
@@ -163,6 +165,13 @@ function update(dt){
       const dps=game.api.applyInkContact(e,dt,hit.wall);
       game.api.dealDamage(e,dps*dt,'physical');
       if(e.stun>0||e.freeze>0||e.hp<=0)continue;
+      if(e.waveBoss){
+        const brain=game.api.bossBrain(e);
+        if(!brain.enclosed&&!brain.cast&&brain.recovery<=0&&brain.charge<=0&&game.api.bossPathClear(e,targetX,targetY)){
+          const pace=e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7));
+          if(game.api.moveEnemySafely(e,dx/d*pace*dt,dy/d*pace*dt))continue;
+        }
+      }
       if(e.attackCd<=0){
         game.api.damageWall(hit.wall,e.dmg*(e.type==='sapper'?2:1),e.x,e.y);
         if(e.type==='sapper')game.api.animateEnemyAction(e,'strike');
@@ -181,7 +190,8 @@ function update(dt){
         e.shootCd=1.7
       }
     }else{
-      e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt
+      if(e.waveBoss)game.api.moveEnemySafely(e,dx/d*speed*dt,dy/d*speed*dt);
+      else {e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt}
     }
     game.api.contactStevie(e);
   }

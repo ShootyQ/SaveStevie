@@ -78,12 +78,11 @@ function startWave(){
 
 function waveComplete(){
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending())return;
-  if(!game.state.endless&&game.state.wave<20&&game.state.wave%5===0&&game.state.timeLeft>0)return;
   game.state.betweenWaves=true;
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
   game.api.resetAbilityEffects();
-  game.api.resetSupportInks();
+  game.api.resetSupportInks();game.api.resetBossEncounters();
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);
   game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
 
