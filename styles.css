@@ -551,3 +551,16 @@ button:disabled { transform:none; }
  .splash-links #splashMusicBtn { font-size:10px; flex:1; min-width:0; line-height:12px; }
  .instrument-hero { max-width:380px; }
 }
+
+/* A small keepsake from the little person you have been protecting. */
+.stevie-note{position:relative;display:flex;gap:12px;align-items:center;margin:18px 0;padding:18px 16px;background:#fff5bc;border:1px solid #dec781;border-radius:3px 14px 4px 5px;box-shadow:2px 5px 0 #26333c15;text-align:left;transform:rotate(-1deg);animation:stevieNoteArrives .4s ease-out both}
+.stevie-note::before{content:"";position:absolute;top:-8px;left:42%;width:64px;height:18px;background:#b9d4d6a6;transform:rotate(7deg);border:1px solid #7c9fa333}
+.stevie-note>img{width:72px;height:72px;object-fit:contain;flex:none}
+.note-label{font-size:9px;letter-spacing:1.7px;font-weight:800;color:#827039}
+.stevie-note h3{font-size:14px;line-height:1.3;margin:6px 0;color:#33443b}
+.cardbox .stevie-note p{text-align:left;font-size:14px;line-height:1.5;color:#4e5744;margin:0 0 9px}
+.stevie-note small{display:block;color:#786f48;font-size:11px}
+.note-signature{display:block;text-align:right;margin-top:8px;color:#466b78;font-family:cursive;font-size:19px}
+@keyframes stevieNoteArrives{from{opacity:0;transform:translateY(12px) rotate(-4deg)}to{opacity:1;transform:translateY(0) rotate(-1deg)}}
+@media(max-width:420px){.stevie-note{padding:14px 10px;gap:8px}.stevie-note>img{width:48px;height:56px}.stevie-note h3{font-size:12px}.cardbox .stevie-note p{font-size:12px}.note-label{font-size:8px;letter-spacing:1px}}
+@media(prefers-reduced-motion:reduce){.stevie-note{animation:none;transform:none}}

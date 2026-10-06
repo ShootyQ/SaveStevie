@@ -546,3 +546,10 @@ The splash's SVG pencil anchors its actual graphite point to the ink path.
 `node tests/browser-options-workbench.cjs` checks the new screens and saved
 preferences at desktop and three phone viewports; pass a packaged site directory
 as the optional argument to check deployment output.
+
+Stevie leaves a small personal note on victory and defeat. The message reflects
+his strongest currently equipped effect (catalog order breaks ties), with
+fallbacks for utility-only builds and encouragement based on the reached wave.
+Notes are presentation only: no random draws, progression changes, or new save
+keys. Their entrance animation follows the device's reduced-motion preference.
+Run `node tests/browser-stevie-notes.cjs` for desktop/phone end-screen checks.

@@ -878,3 +878,18 @@ console.log('PASS: real Gnawer bites, Sprinter anticipation/dashes, Bouncer rico
  g.state.paused=true;g.api.openStatistics();g.api.closeStatistics();assert.equal(g.state.paused,true);
 }
 console.log('PASS: safe persisted audio/live volume, unavailable storage, exact next-pick previews including diminishing returns, read-only stats and pause restoration.');
+
+// End-of-run notes reflect the equipped build and never consume combat RNG.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();const originalRandom=env.sandbox.Math.random;
+ env.sandbox.Math.random=()=>{throw Error('Stevie notes must not draw randomness')};
+ const before=JSON.stringify(g.state);assert.match(g.api.stevieNote().message,/breathing room/);assert.equal(JSON.stringify(g.state),before);
+ g.state.stacks['Fire Ink']=2;g.state.inks.fire=2;g.state.stacks['Poison Ink']=8;g.state.inks.poison=8;
+ assert.match(g.api.stevieNote().message,/green ink/);assert.equal(g.api.stevieNote().keepsake,'Favorite scribble: Poison Ink · level 8');
+ delete g.state.stacks['Poison Ink'];g.state.inks.poison=0;assert.match(g.api.stevieNote().message,/on fire/);
+ g.state.wave=18;assert.match(g.api.stevieNote().heading,/ALMOST/);assert.match(g.api.stevieNote(true).heading,/SAVED/);
+ env.sandbox.Math.random=originalRandom;g.api.gameOver();assert.match(env.node('deathNoteMessage').textContent,/on fire/);
+ g.state.wave=20;g.state.running=true;g.state.betweenWaves=false;g.state.finalBossDefeated=true;g.state.timeLeft=0;g.state.enemies=[];
+ g.api.startWave();g.state.timeLeft=0;g.api.killEnemy(g.api.spawnEnemy(true,100,100));g.api.waveComplete();assert.match(env.node('victoryNoteHeading').textContent,/SAVED/);
+}
+console.log('PASS: personal end-of-run notes, strongest equipped ink, replacement cleanup, victory/death integration and no RNG/state mutation.');

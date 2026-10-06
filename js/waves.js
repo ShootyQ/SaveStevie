@@ -1,5 +1,34 @@
 /* waves: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.waves = function createWavesSystem(game) {
+// Stevie leaves a personal doodled note after each run. Pure presentation:
+// stable build-based selection, no random draws and no changes to progression.
+function stevieNote(victory=false){
+  const s=game.state,effects=game.api.equippedEffects().slice().sort((a,b)=>(s.stacks[b.name]||0)-(s.stacks[a.name]||0));
+  const favorite=effects[0];
+  const remarks={
+    'Fire Ink':'The walls were on fire. I have several questions. Mostly: can we do that again?',
+    'Frost Ink':'Cold walls. Warm friendship. Very slippery monsters.',
+    'Poison Ink':'That green ink smells suspicious. I am choosing to trust you.',
+    'Electric Ink':'My hair is still standing up. Worth it.',
+    'Blast Ink':'You drew a wall and it EXPLODED. Best art class ever.',
+    'Vampire Ink':'The walls had teeth. Somehow, this was reassuring.',
+    'Gravity Ink':'The monsters came to us. Very polite of the universe.',
+    'Repulsion Ink':'Watching them bounce off your walls? Ten out of ten.',
+    'Void Ink':'You drew a hole in reality. Please do not lose the pencil.',
+    'Chaos Ink':'I do not know what that ink did. I think the ink agrees.',
+    'Shock Ink':'They stopped. I ran. Excellent teamwork.',
+    'Death Ink':'That pencil has a very serious attitude.'
+  };
+  return {
+    heading:victory?'YOU SAVED MY LITTLE DOODLED LIFE.':s.wave>=15?'WE ALMOST HAD THAT ERASER.':s.wave>=5?'THAT WAS A PROPER ADVENTURE.':'SAME NOTEBOOK. FRESH PAGE.',
+    message:favorite?remarks[favorite.name]:s.stats.tripleLine?'Three walls from one scribble. You are definitely the teacher’s favorite.':s.stats.rockDamage?'You gave me rocks. I gave it my best shot. Literally.':'Thanks for drawing me a little breathing room. Next page, we try again.',
+    keepsake:favorite?'Favorite scribble: '+favorite.name+' · level '+s.stacks[favorite.name]:'Drawn with love · '+s.tool.name
+  };
+}
+function renderStevieNote(victory=false){
+  const note=stevieNote(victory),prefix=victory?'victory':'death';
+  for(const [key,suffix] of [['heading','Heading'],['message','Message'],['keepsake','Keepsake']])game.dom.$(prefix+'Note'+suffix).textContent=note[key];
+}
 function waveDuration(){
   return 60;
 }
@@ -69,7 +98,7 @@ function waveComplete(){
   game.dom.$('waveClearTitle').textContent='Wave '+game.state.wave+' cleared!';
 
   if(game.state.wave===20&&!game.state.endless){
-    game.api.finishScrapRun(true);
+    game.api.finishScrapRun(true);renderStevieNote(true);
     game.state.running=false;game.dom.$('victoryScore').textContent=game.state.score;game.dom.victoryOverlay.style.display='grid';
     if(game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
     game.api.updateUI();return;
@@ -85,13 +114,13 @@ function proceedAfterWave(){
 }
 
 function gameOver(){
-  game.api.finishScrapRun();
+  game.api.finishScrapRun();renderStevieNote();
   game.state.running=false;
   game.dom.$('finalWave').textContent=game.state.wave;game.dom.$('finalKills').textContent=game.state.kills;game.dom.$('finalScore').textContent=game.state.score;
   game.dom.gameOverOverlay.style.display='grid';
   if(game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
 }
-const api = { waveDuration, resetRun, startWave, waveComplete, proceedAfterWave, gameOver };
+const api = { stevieNote, renderStevieNote, waveDuration, resetRun, startWave, waveComplete, proceedAfterWave, gameOver };
 Object.assign(game.api, api);
 return api;
 };
