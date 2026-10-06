@@ -1,6 +1,6 @@
 /* One chaotic paper fort with a matching rounded contact boundary. */
 DoodleDefender.systems.refuge=function(game){
-const halfWidth=31,halfHeight=29,cornerRadius=10,offsetY=18;
+const halfWidth=56,halfHeight=52,cornerRadius=18,offsetY=4;
 let hitAge=Infinity,hitPoint=null;
 function refugeBounds(){const p=game.state.player;return {left:p.x-halfWidth,right:p.x+halfWidth,top:p.y+offsetY-halfHeight,bottom:p.y+offsetY+halfHeight,halfWidth,halfHeight,cornerRadius,centerX:p.x,centerY:p.y+offsetY}}
 function refugePoint(x,y){

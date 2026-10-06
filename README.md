@@ -745,8 +745,8 @@ music/start controls retain their own handlers to avoid duplicate toggles.
 
 The refuge now uses one complete transparent illustration,
 `assets/art/paper-fort.png`, instead of repeated ball sprites. Its outer footprint
-is 62×58px (half the previous width and height), with 10px rounded collision
-corners, centered 18px below Stevie so his full-size portrait stays visible.
+is 112×104px, with 18px rounded collision
+corners, centered 4px below Stevie so his full-size portrait stays visible.
 The irregular art mixes lined/grid paper, colored scraps, grades and playful
 doodles. Contact uses nearest-point distance to the rounded rectangle; no
 extra health or changes to armor, cover, projectile hitboxes or rewards.
@@ -772,3 +772,8 @@ Use a fresh descriptive branch from current `main` for each new change, push
 it, then open a PR into `main` for review/merge. Continue on the same branch
 for revisions to an open PR. If PR API access is unavailable, provide a
 prefilled GitHub compare link for the user to create the PR.
+
+Triple Stroke is a Legendary-only one-time unlock. Ordinary Common/Uncommon/
+Rare pools and fallback offers exclude it; the reserved Legendary pool includes
+it. DEV MODE locks its rarity to Legendary, and application rejects lower-tier
+Triple Stroke cards. Other special unlocks keep their existing rarity behavior.
