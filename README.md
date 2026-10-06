@@ -795,3 +795,9 @@ Enclosed King prioritises swipes for 100/140 wall damage, while Staple Snack
 charges deal 110/150 wall damage. Existing 1.2s warnings, stun/freeze interruption,
 recovery and 35% enclosure exposure remain. Later bosses and ordinary enemies
 retain their previous tuning.
+
+Pause opens a paper menu with Resume, Settings, Tool, Monster notes and Return
+to main menu. Submenus opened from Pause return there on Close/Escape. Leaving
+requires confirmation, saves already-earned scraps without an extra quit reward,
+and preserves permanent ranks and best-wave records. The cover menu and bottom
+pencil tray share paper styling; phone controls retain at least 44px height.

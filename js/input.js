@@ -78,9 +78,17 @@ game.dom.$('clearBtn').onclick=()=>{
   game.api.setMsg('Walls erased. Reclaimed a little ink.')
 };
 game.dom.$('pauseBtn').onclick=()=>{
+  if(game.dom.$('pauseOverlay').style.display==='grid'){game.api.closeInfo(false);return}
   if(game.api.infoOpen()||!game.state.running||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
-  game.state.paused=!game.state.paused;game.dom.$('pauseBtn').textContent=game.state.paused?'Resume':'Pause'
+  game.api.openInfo('pause');
 };
+game.dom.$('resumeBtn').onclick=()=>game.api.closeInfo(false);
+game.dom.$('pauseSettingsBtn').onclick=game.api.openOptions;
+game.dom.$('pauseToolBtn').onclick=()=>game.api.openInfo('build');
+game.dom.$('pauseMonstersBtn').onclick=()=>game.api.openInfo('compendium');
+game.dom.$('returnMenuBtn').onclick=()=>{game.dom.$('pauseActions').hidden=true;game.dom.$('quitConfirmation').hidden=false;game.dom.$('cancelQuitBtn').focus?.()};
+game.dom.$('cancelQuitBtn').onclick=()=>{game.dom.$('quitConfirmation').hidden=true;game.dom.$('pauseActions').hidden=false;game.dom.$('returnMenuBtn').focus?.()};
+game.dom.$('confirmQuitBtn').onclick=game.api.returnToMenu;
 }
 const api = { pointerPos, endDraw, bind };
 Object.assign(game.api, api);

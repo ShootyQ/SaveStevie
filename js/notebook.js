@@ -48,9 +48,9 @@ function awardWaveScraps(){
   const wave=game.state.wave,chapter=!game.state.endless&&wave<=20&&wave%5===0;
   game.api.awardScraps(1+(chapter?game.catalog.balance.chapterScraps[wave/5-1]:0));
 }
-function finishScrapRun(victory=false){
+function finishScrapRun(victory=false,consolation=true){
   if(!runActive)return;
-  if(victory)awardScraps(game.catalog.balance.victoryScraps);else if(runScraps===0)awardScraps(1);
+  if(victory)awardScraps(game.catalog.balance.victoryScraps);else if(consolation&&runScraps===0)awardScraps(1);
   runActive=false;updateScrapCounters();
 }
 function applyNotebookLoadout(){

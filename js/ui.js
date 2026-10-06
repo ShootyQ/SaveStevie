@@ -9,6 +9,7 @@ function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
   game.api.updateChapterBackground();
+  game.dom.$('app').classList?.toggle('menu-view',!game.state.running&&game.dom.startOverlay.style.display!=='none');
   const overtime=game.dom.$('bossOvertime'),bossWave=game.state.wave%5===0;
   const active=game.state.running&&!game.state.betweenWaves&&!game.state.inUpgrade;
   overtime.style.display=active&&(bossWave||game.state.timeLeft===0)?'block':'none';
@@ -115,7 +116,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
   };
   return effects[name]?effects[name]():game.catalog.upgrades.find(u=>u.name===name)?.desc||'Active';
 }
-let activeInfo=null,pausedBeforeInfo=false,focusBeforeInfo=null;
+let activeInfo=null,pausedBeforeInfo=false,focusBeforeInfo=null,returnToPause=false;
 function renderBuild(){
   game.api.renderTool('buildTool');
   const s=game.state.stats,f=v=>Number(v.toFixed(2));
@@ -135,13 +136,17 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
-const infoButtons={build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(activeInfo===kind||activeInfo==='monsterIntro')return;
-  if(activeInfo)closeInfo();
+  if(activeInfo){const back=returnToPause||activeInfo==='pause';closeInfo(false);returnToPause=back&&kind!=='pause'}
   game.api.endDraw();pausedBeforeInfo=game.state.paused;focusBeforeInfo=document.activeElement;
   game.state.paused=true;activeInfo=kind;
+  if(kind==='pause'){
+    game.dom.$('quitConfirmation').hidden=true;game.dom.$('pauseActions').hidden=false;
+    game.dom.$('pauseSummary').textContent='Wave '+game.state.wave+' · '+game.state.tool.name+' · '+game.api.notebookSnapshot().runScraps+' scraps earned';
+  }
   if(kind==='build')renderBuild();
   if(kind==='compendium')game.api.renderCompendium();
   if(kind==='notebook')game.api.renderNotebook();
@@ -153,21 +158,26 @@ function openInfo(kind){
   if(cards)cards.scrollTop=0;
   if(kind==='monsterIntro')game.dom.$('monsterIntroCards').scrollTop=0;
 }
-function closeInfo(){
+function closeInfo(back=true){
   if(!activeInfo)return;
-  const kind=activeInfo;activeInfo=null;game.state.paused=pausedBeforeInfo;
+  const kind=activeInfo,goBack=back&&returnToPause;returnToPause=false;activeInfo=null;game.state.paused=pausedBeforeInfo;
   game.dom.$(kind+'Overlay').style.display='none';
+  if(goBack){openInfo('pause');return}
   if(kind==='monsterIntro'||(focusBeforeInfo?.getClientRects&&focusBeforeInfo.getClientRects().length===0))game.dom.$('pauseBtn').focus?.();else focusBeforeInfo?.focus?.();
 }
 function handleInfoKey(e){
-  if(!activeInfo)return;
+  if(!activeInfo){
+    if(e.key==='Escape'&&game.state.running&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec){e.preventDefault();openInfo('pause')}
+    return;
+  }
   if(e.key==='Escape'){
     e.preventDefault();
+    if(activeInfo==='pause'&&!game.dom.$('quitConfirmation').hidden){game.dom.$('cancelQuitBtn').onclick();return}
     if(activeInfo==='monsterIntro')game.api.continueMonsterIntro();else closeInfo();
   }
   if(e.key==='Tab'){
     const overlay=game.dom.$(activeInfo+'Overlay');
-    const controls=Array.from(overlay.querySelectorAll('button:not([disabled]),input:not([disabled])'));
+    const controls=Array.from(overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')).filter(el=>!el.getClientRects||el.getClientRects().length>0);
     const first=controls[0],last=controls.at(-1);
     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
     else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
