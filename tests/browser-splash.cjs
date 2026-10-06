@@ -15,6 +15,19 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   });
   await page.goto('http://127.0.0.1:8001/');
   await page.waitForFunction(()=>Array.from(document.querySelectorAll('.splash-art img')).every(i=>i.complete&&i.naturalWidth),null,{polling:50});
+  await page.waitForFunction(()=>Array.from(document.querySelectorAll('.splash-art svg image')).every(i=>performance.getEntriesByName(new URL(i.href.baseVal,document.baseURI).href).length>0),null,{polling:50});
+  // The anchored pencil tip must meet the visible end of the ink on all screen sizes.
+  for(const time of [0,480,900,1600,2500,3240,5700]){
+   const error=await page.evaluate(time=>{
+    document.querySelectorAll('.splash-art *').forEach(e=>e.getAnimations().forEach(a=>{a.pause();a.currentTime=time}));
+    const path=document.querySelector('#splashInkPath'),pencil=document.querySelector('.splash-pencil');
+    const progress=1-parseFloat(getComputedStyle(path).strokeDashoffset);
+    const end=path.getPointAtLength(path.getTotalLength()*progress).matrixTransform(path.getScreenCTM());
+    const tip=new DOMPoint(0,0).matrixTransform(pencil.getScreenCTM());
+    return Math.hypot(end.x-tip.x,end.y-tip.y);
+   },time);
+   assert.ok(error<1,'pencil tip meets ink at '+time+'ms ('+error+'px)');
+  }
   const controls=await page.locator('#startBtn').boundingBox();
   // Freeze a real CSS animation at its throw pose, without advancing the game.
   await page.evaluate(()=>document.querySelectorAll('.splash-art *').forEach(e=>e.getAnimations().forEach(a=>{a.pause();a.currentTime=4000})));
@@ -47,7 +60,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   assert.equal(await page.locator('.splash-rock').evaluate(e=>getComputedStyle(e).display),'none');
   assert.equal(await page.locator('.splash-stevie-frames').evaluate(e=>getComputedStyle(e).transform),'none');
   await page.screenshot({path:'/tmp/splash-still-'+viewport.width+'.png'});
-  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' sprite throw, stationary reachable controls, music/notebook/start/reset and reduced motion');await page.close();
+  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' pencil/ink alignment, sprite throw, stationary reachable controls, music/notebook/start/reset and reduced motion');await page.close();
  }
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
