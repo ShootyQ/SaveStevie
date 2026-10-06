@@ -33,7 +33,7 @@ function waveDuration(){
 }
 
 function resetRun(){
-  game.api.closeInfo();
+  game.api.closeInfo(false);
   game.dom.$('lastHitText').textContent='';
   game.state.wave=1;game.state.kills=0;game.state.score=0;game.state.waveKills=0;game.state.rerolls=0;game.state.endless=false;game.state.specialization='none';game.state.finalOvertime=false;game.state.finalBossDefeated=false;
   game.state.walls=[];game.state.enemies=[];game.state.particles=[];game.state.floaters=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.synergies.clear();
@@ -116,6 +116,15 @@ function proceedAfterWave(){
   }else game.api.openUpgrade();
 }
 
+function returnToMenu(){
+  game.api.closeInfo(false);game.api.finishScrapRun(false,false);game.api.stopSoundEffects();
+  game.state.running=false;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
+  game.state.drawing=false;game.state.currentWall=null;
+  game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
+  game.api.resetAbilityEffects();game.api.resetSupportInks();game.api.resetBossEncounters();game.api.resetPlaguefire();
+  for(const id of ['upgradeOverlay','waveOverlay','victoryOverlay','gameOverOverlay','specializeOverlay'])game.dom.$(id).style.display='none';
+  game.dom.startOverlay.style.display='grid';game.api.selectMusicTrack('splash');game.api.updateUI();game.dom.$('startBtn').focus?.();
+}
 function gameOver(){
   game.api.stopSoundEffects();
   game.api.finishScrapRun();renderStevieNote();
@@ -124,7 +133,7 @@ function gameOver(){
   game.dom.gameOverOverlay.style.display='grid';
   if(!game.api.devRunActive()&&game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
 }
-const api = { stevieNote, renderStevieNote, waveDuration, resetRun, startWave, waveComplete, proceedAfterWave, gameOver };
+const api = { stevieNote, renderStevieNote, waveDuration, returnToMenu, resetRun, startWave, waveComplete, proceedAfterWave, gameOver };
 Object.assign(game.api, api);
 return api;
 };

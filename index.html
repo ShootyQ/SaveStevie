@@ -74,12 +74,12 @@
         <p class="splash-tagline">Your ink. His life. One very chaotic notebook.</p>
         <div class="splash-howto">
           <div><img class="howto-icon" src="assets/art/ui/draw.svg" alt="" width="24" height="24"><b>01 / DRAW</b><span>Drag to build walls.</span></div>
-          <div><img class="howto-icon" src="assets/art/ui/defend.svg" alt="" width="24" height="24"><b>02 / DEFEND</b><span>Keep Stevie safe for 60s.</span></div>
+          <div><img class="howto-icon" src="assets/art/ui/defend.svg" alt="" width="24" height="24"><b>02 / DEFEND</b><span>Clear waves. Beat bosses.</span></div>
           <div><img class="howto-icon" src="assets/art/ui/upgrade.svg" alt="" width="24" height="24"><b>03 / UPGRADE</b><span>Stack inks. Build weird.</span></div>
         </div>
         <button id="startBtn">Let's save Stevie <span aria-hidden="true">→</span></button>
         <button class="secondary notebook-entry" id="splashNotebookBtn">Back of the Notebook · <span id="splashScraps">0</span> scraps</button>
-        <div class="splash-links"><button class="secondary" id="splashMusicBtn">♫ Play intro music</button><button class="secondary" id="splashOptionsBtn">Options</button><button class="secondary" id="splashStatsBtn">Stats</button></div>
+        <div class="splash-links"><button class="secondary" id="splashMusicBtn">♫ Play intro music</button><button class="secondary" id="splashOptionsBtn">Settings</button><button class="secondary" id="splashStatsBtn">Stats</button></div>
         <div class="splash-footer">Bosses every 5 waves · A fresh page every wave</div>
       </div>
     </div>
@@ -182,16 +182,16 @@
     </div>
   </div>
 
-  <div class="bottom">
+  <nav class="bottom" aria-label="Drawing tools and game controls">
     <button class="secondary" id="clearBtn" title="Erase all walls">Erase</button>
 
     <button class="secondary" id="buildBtn">Tool</button>
     <button class="secondary" id="compendiumBtn">Monsters</button>
-    <button class="secondary" id="optionsBtn">Options</button>
+    <button class="secondary" id="optionsBtn">Settings</button>
     <button class="secondary" id="fullscreenBtn" title="Toggle fullscreen">Screen</button>
     <button id="pauseBtn">Pause</button>
     <button class="secondary" id="musicBtn" aria-label="Mute music" title="Mute music">♫</button>
-  </div>
+  </nav>
 </div>
 <div id="message" hidden></div>
 <audio id="gameMusic" src="assets/audio/save-stevie-splash.mp3" preload="none" loop></audio>
@@ -209,9 +209,26 @@
     <h3>Monster notes</h3><p>Open Monsters in the toolbar for the full illustrated compendium.</p>
   </div>
 </div>
+<div class="overlay build-overlay" id="pauseOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+  <div class="cardbox pause-book">
+    <span class="section-kicker">PENCIL DOWN · TAKE A BREATHER</span><h2 id="pauseTitle">Recess.</h2>
+    <p id="pauseSummary" class="pause-summary"></p>
+    <div id="pauseActions" class="pause-actions">
+      <button id="resumeBtn">Back to the doodles →</button>
+      <button class="secondary" id="pauseSettingsBtn">Settings</button>
+      <div class="pause-reference"><button class="secondary" id="pauseToolBtn">Your tool</button><button class="secondary" id="pauseMonstersBtn">Monster notes</button></div>
+      <button class="secondary" id="returnMenuBtn">Return to main menu</button>
+      <p class="option-help">Your page stays right here until you resume.</p>
+    </div>
+    <section id="quitConfirmation" hidden aria-labelledby="quitTitle">
+      <h3 id="quitTitle">Close this notebook?</h3><p>Your current run and its upgrades will be lost. Scraps you’ve already earned stay saved, along with your permanent Notebook upgrades.</p>
+      <div class="cardactions"><button class="secondary" id="cancelQuitBtn">Keep playing</button><button id="confirmQuitBtn">Save scraps &amp; leave</button></div>
+    </section>
+  </div>
+</div>
 <div class="overlay build-overlay" id="optionsOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="optionsTitle">
   <div class="cardbox build-box options-book">
-    <div class="build-heading"><div><span class="section-kicker">MAKE IT YOUR NOTEBOOK</span><h2 id="optionsTitle">Options</h2></div><button id="closeOptionsBtn">Close</button></div>
+    <div class="build-heading"><div><span class="section-kicker">MAKE IT YOUR NOTEBOOK</span><h2 id="optionsTitle">Settings</h2></div><button id="closeOptionsBtn">Close</button></div>
     <p class="dialog-intro">Take a breather. Your run pauses while you’re here.</p>
     <section class="option-section"><h3>Sound &amp; music</h3>
       <label class="volume-label" for="musicVolume"><span>Music volume</span><output id="musicVolumeValue" for="musicVolume">35%</output></label>
@@ -274,6 +291,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Recess in the notebook</h3><p>A refreshed paper main menu and pencil-tray controls make the notebook feel more like school. Pause opens a menu with Settings, your tool, monster notes and Resume. Return to main menu asks first: your run ends, but earned scraps and permanent upgrades stay saved.</p></article>
       <article class="build-entry"><h3>The first bosses fight back</h3><p>Wave 5 and 10 bosses have 80% more health, move twice as fast and use abilities more often. Boxed-in King Doodle-Doom prioritises stronger wall swipes; Staple Snack’s charges hit walls harder. Their attacks still give you a warning, and enclosing a boss still increases your damage.</p></article>
       <article class="build-entry"><h3>Finish the fight</h3><p>Regular waves stop sending monsters when the timer reaches zero. Defeat every remaining monster to clear the wave. Boss waves have no countdown: defeat the boss to move on.</p></article>
       <article class="build-entry"><h3>Every tool leaves its mark</h3><p>The starter pencil draws broad, scratchy graphite. Mechanical Pencil draws a finer graphite core, Simple Pen leaves crisp ink, and Scented Sharpie lays down a dense marker stroke. Your drawing preview matches the tool, with all effect doodles still layered along the walls.</p></article>

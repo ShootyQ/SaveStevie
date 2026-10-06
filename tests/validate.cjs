@@ -411,7 +411,7 @@ g.state.paused=false;g.api.update(.7);assert.equal(env.node('hitNotice').style.d
 g.api.resetRun();g.state.player.hp=1;g.state.stats.killHeal=100;g.state.spawnTimer=999;
 g.api.spawnEnemy(false,x,y,'grunt');const dead=g.api.spawnEnemy(false,x+100,y,'grunt');dead.hp=0;g.api.update(.016);
 assert.equal(g.state.player.hp,0,'later kill healing cannot undo lethal contact');assert.equal(g.state.running,false);assert.match(env.node('lastHitText').textContent,/Scribble Gribble contact/);
-assert.doesNotMatch(fs.readFileSync(path.join(root,'index.html'),'utf8').match(/<div class="bottom">([\s\S]*?)<\/div>/)[1],/id="message"/,'footer contains no growing message');
+assert.doesNotMatch(fs.readFileSync(path.join(root,'index.html'),'utf8').match(/<nav class="bottom"[^>]*>([\s\S]*?)<\/nav>/)[1],/id="message"/,'footer contains no growing message');
 console.log('PASS: gravity and black-hole cover at waves 8–10, wall-aware contact, persistent/paused hit evidence, lethal contact, and no footer message.');
 }
 

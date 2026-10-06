@@ -582,3 +582,51 @@ button:disabled { transform:none; }
 .cards.dev-preview { grid-template-columns:minmax(0,1fr); max-width:420px; margin:0 auto; }
 .dev-run-banner { position:fixed; top:0; left:50%; transform:translateX(-50%); z-index:100; padding:3px 10px; border-radius:0 0 8px 8px; background:#513963; color:#fff; font-size:9px; pointer-events:none; white-space:nowrap; }
 @media(max-width:420px){.dev-reward-picker{grid-template-columns:1fr;gap:8px}.tool-tier-art .socket-level{font-size:8px;min-width:14px;height:14px}}
+
+/* Notebook cover, paper tabs and the pencil tray. */
+#startOverlay{background:repeating-linear-gradient(90deg,#344b5b 0 2px,#304656 2px 12px);padding:18px}
+.splash-box{transform:none;border-color:#796d54;border-radius:5px 16px 12px 5px;box-shadow:7px 8px 0 #1f303b,0 16px 38px #0004;padding:28px 34px 22px 48px;background:linear-gradient(90deg,transparent 35px,#db9b9b 35px 36px,transparent 36px),repeating-linear-gradient(0deg,#fffaf0 0 27px,#dce4e8 27px 28px)}
+.splash-box::before{left:12px;top:20px;width:12px;height:calc(100% - 40px);background:radial-gradient(circle,#344b5b 0 4px,#beb5a2 4px 5px,transparent 5px) center top/12px 42px repeat-y;transform:none}
+.splash-title{font-family:'Stevie Pencil',sans-serif;font-weight:400;letter-spacing:-1px;font-size:clamp(52px,8vw,76px)}
+.splash-tagline{font-family:'Stevie Pencil',sans-serif;font-size:20px!important}
+.splash-howto > div:nth-child(2){transform:rotate(1deg);background:#fff0bf}
+.splash-howto > div:nth-child(3){transform:rotate(-1deg);background:#eef4e8}
+.splash-links{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.splash-links button{flex:1;min-height:44px;margin:0!important}
+.splash-footer{font-family:'Stevie Pencil',sans-serif;font-size:16px;color:#786b54;margin-top:14px}
+.bottom{background:#e2d2ad;border:1px solid #b2a17e;border-radius:5px 5px 12px 12px;padding:6px 8px 9px;gap:6px;box-shadow:inset 0 2px 0 #f5eacb}
+.bottom button{flex:1;min-width:0;border-color:#9e927b;background:#fffaf0;box-shadow:0 3px 0 #b9a98b;font-size:11px;min-height:48px}
+.bottom #clearBtn{background:#fbe3df}.bottom #buildBtn{background:#fff0b8}.bottom #pauseBtn{background:#dbead5;border-color:#718269}.bottom #musicBtn{background:#e9d9b7}
+.pause-book{position:relative;width:min(100%,440px);padding:30px;border:2px solid #80745d;border-radius:6px 13px 8px 11px;background:repeating-linear-gradient(0deg,#fffaf0 0 27px,#dce4e8 27px 28px);box-shadow:6px 7px 0 #a69879}
+.pause-book::before{content:'';position:absolute;top:4px;right:25px;width:72px;height:18px;background:url(assets/art/ui/tape.svg) center/contain no-repeat;transform:rotate(6deg)}
+.pause-book h2{font-family:'Stevie Pencil',sans-serif;font-size:52px;font-weight:400;margin:8px 0;color:#3562be}
+.pause-summary{padding:10px;border:1px dashed #b5a582;background:#fff0bf;font-size:13px}
+.pause-actions{display:grid;gap:12px;margin-top:20px}.pause-actions[hidden]{display:none}
+.pause-actions button{min-height:48px}.pause-reference{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#resumeBtn{background:#456d49}#returnMenuBtn{border-style:dashed;color:#7e4741}
+#quitConfirmation{margin-top:22px;padding:14px;background:#fff1df;border:2px dashed #bb7866;border-radius:8px}#quitConfirmation h3{font-family:'Stevie Pencil',sans-serif;font-size:28px;margin:0}
+#confirmQuitBtn{background:#9b4941}.pause-book .cardactions{flex-wrap:wrap}.pause-book .cardactions button{flex:1;min-height:44px}
+.options-book,.statistics-book,.notebook-book{border-color:#8d8067;box-shadow:6px 7px 0 #b6a584;border-radius:5px 14px 8px 12px}
+.options-book .build-heading h2,.statistics-book .build-heading h2,.notebook-book .build-heading h2{font-family:'Stevie Pencil',sans-serif;font-size:34px;font-weight:400;color:#3562be}
+@media(max-width:760px),(pointer:coarse){
+ .bottom{height:62px;flex:0 0 62px;padding:5px 3px 8px;gap:3px;border-radius:0;border-width:1px 0 0}
+ .bottom button{height:46px;min-height:46px;font-size:9px;border-width:1px;padding:2px 1px;box-shadow:0 2px 0 #baa989}
+ .bottom #musicBtn{min-width:32px;flex:0 0 32px}
+ #startOverlay{padding:10px}.splash-box{padding:22px 16px 18px 32px}.splash-box::before{left:8px;width:10px}
+ .splash-links{gap:6px}.splash-links button{font-size:11px;padding:8px 5px}
+ .pause-book{padding:24px 20px}.pause-book h2{font-size:44px}
+}
+@media(min-width:800px) and (min-height:600px){
+ .splash-box{width:min(100%,770px);display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;align-items:center}
+ .splash-eyebrow{grid-column:1/-1}.splash-art{grid-column:1;grid-row:2/span 5;width:100%;margin:0}
+ .splash-title,.splash-tagline,.splash-howto,#startBtn,#splashNotebookBtn,.splash-links{grid-column:2;margin:4px 0}
+ .splash-title{font-size:62px}.splash-footer{grid-column:1/-1}
+}
+@media(max-height:520px) and (min-width:600px){
+ #startOverlay{padding:8px}.splash-box{padding:12px 18px 12px 32px;gap:4px 16px}.splash-title{font-size:36px}
+ .splash-tagline{font-size:16px!important}.splash-footer{margin-top:4px;font-size:12px}.splash-links button{min-height:36px}
+ .pause-book{max-height:calc(100dvh - 24px);padding:16px 22px}.pause-book h2{font-size:34px}.pause-actions{gap:8px;margin-top:10px}.pause-actions button{min-height:40px}
+}
+
+.menu-view .bottom{display:none}
+.menu-view #devRunBanner{display:none}
