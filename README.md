@@ -777,3 +777,10 @@ Triple Stroke is a Legendary-only one-time unlock. Ordinary Common/Uncommon/
 Rare pools and fallback offers exclude it; the reserved Legendary pool includes
 it. DEV MODE locks its rarity to Legendary, and application rejects lower-tier
 Triple Stroke cards. Other special unlocks keep their existing rarity behavior.
+
+Drawing tools have distinct presentation-only wall strokes: broad scratchy graphite
+for Pencil, finer graphite for Mechanical Pencil, crisp ink for Simple Pen, and
+dense marker ink for Scented Sharpie. Preview and completed walls share the same
+renderer. A faint full-width graphite band preserves the visible contact footprint;
+wall thickness, durability, ink cost and effect attachments retain their gameplay
+values. Grain is cached, capped and deterministic without consuming combat RNG.

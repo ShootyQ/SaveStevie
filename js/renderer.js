@@ -400,6 +400,52 @@ function drawWallTextures(points,thick,opacity){
   ctx.restore();
 }
 
+// Cached, deterministic paper grain: presentation never consumes combat RNG.
+const graphiteGrain=new WeakMap();
+function pencilGrain(points){
+  if(graphiteGrain.has(points))return graphiteGrain.get(points);
+  const grain=[];
+  let distance=0;
+  for(let i=1;i<points.length;i++){
+    const a=points[i-1],b=points[i],len=Math.hypot(b.x-a.x,b.y-a.y);
+    if(!len)continue;
+    for(let d=6-distance;d<len;d+=6){
+      const t=Math.max(0,d)/len;
+      grain.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t,nx:-(b.y-a.y)/len,ny:(b.x-a.x)/len});
+      if(grain.length>=128)break;
+    }
+    distance=(distance+len)%6;
+    if(grain.length>=128)break;
+  }
+  graphiteGrain.set(points,grain);return grain;
+}
+function drawToolStroke(points,thick,opacity,color){
+  const ctx=game.dom.ctx,rank=game.state.tool?.rank||0;
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle=color;ctx.globalAlpha=opacity;
+  ctx.beginPath();ctx.moveTo(points[0].x,points[0].y);
+  for(let i=1;i<points.length;i++)ctx.lineTo(points[i].x,points[i].y);
+  if(rank>=6){
+    // Ballpoint has a crisp core; the marker lays down dense, broad ink.
+    ctx.lineWidth=thick;ctx.globalAlpha=opacity*(rank>=10?.95:.28);ctx.stroke();
+    ctx.lineWidth=thick*(rank>=10?.86:.55);ctx.globalAlpha=opacity;ctx.stroke();
+  }else{
+    const mechanical=rank>=3;
+    // Pale rubbed graphite keeps the full wall footprint readable.
+    ctx.lineWidth=thick;ctx.globalAlpha=opacity*(mechanical?.16:.24);ctx.stroke();
+    ctx.lineWidth=thick*(mechanical?.32:.72);ctx.globalAlpha=opacity*(mechanical?.85:.57);ctx.stroke();
+    ctx.lineWidth=mechanical?.65:1.1;ctx.globalAlpha=opacity*(mechanical?.28:.35);
+    ctx.beginPath();
+    const grain=pencilGrain(points);
+    for(let i=0;i<grain.length;i++){
+      const p=grain[i],offset=Math.sin(i*2.399)*thick*(mechanical?.22:.36),reach=mechanical?.8:2.1;
+      const x=p.x+p.nx*offset,y=p.y+p.ny*offset;
+      ctx.moveTo(x-p.nx*reach,y-p.ny*reach);ctx.lineTo(x+p.nx*reach,y+p.ny*reach);
+    }
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function draw(){
   drawWaveStevie();
   game.dom.ctx.clearRect(0,0,game.state.W,game.state.H);game.dom.ctx.save();
@@ -412,12 +458,9 @@ function draw(){
     const hpRatio=game.api.clamp(w.hp/w.maxHp,0,1);
     const lifeRatio=game.api.clamp(w.life/w.maxLife,0,1);
     const visualRatio=Math.min(hpRatio,lifeRatio);
-    let col=`rgba(31,42,51,${.08+.92*visualRatio})`;
-    if(game.state.inks.chaos>0)col=`hsla(${(performance.now()/30+w.hp)%360},55%,30%,${.12+.88*visualRatio})`;
-    game.dom.ctx.lineCap='round';game.dom.ctx.lineJoin='round';game.dom.ctx.lineWidth=w.thick;game.dom.ctx.strokeStyle=col;
-    game.dom.ctx.beginPath();game.dom.ctx.moveTo(w.pts[0].x,w.pts[0].y);
-    for(let i=1;i<w.pts.length;i++)game.dom.ctx.lineTo(w.pts[i].x,w.pts[i].y);
-    game.dom.ctx.stroke();
+    let col='#343638';
+    if(game.state.inks.chaos>0)col=`hsl(${(performance.now()/30+w.hp)%360},55%,30%)`;
+    drawToolStroke(w.pts,w.thick,.08+.92*visualRatio,col);
 
     drawWallTextures(w.pts,w.thick,.08+.92*visualRatio);
 
@@ -431,10 +474,9 @@ function draw(){
     }
   }
   if(game.state.currentWall&&game.state.currentWall.length>1){
-    game.dom.ctx.lineWidth=game.state.stats.lineWidth;game.dom.ctx.strokeStyle='rgba(31,42,51,.72)';game.dom.ctx.lineCap='round';game.dom.ctx.lineJoin='round';
-    game.dom.ctx.beginPath();game.dom.ctx.moveTo(game.state.currentWall[0].x,game.state.currentWall[0].y);game.state.currentWall.slice(1).forEach(p=>game.dom.ctx.lineTo(p.x,p.y));game.dom.ctx.stroke();
-    // The preview array grows in place, so refresh its cached geometry.
-    wallSamples.delete(game.state.currentWall);
+    // The preview grows in place; refresh both presentation caches.
+    wallSamples.delete(game.state.currentWall);graphiteGrain.delete(game.state.currentWall);
+    drawToolStroke(game.state.currentWall,game.state.stats.lineWidth,.72,'#343638');
     drawWallTextures(game.state.currentWall,game.state.stats.lineWidth,.72)
   }
 
