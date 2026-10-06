@@ -14,3 +14,9 @@ Art is decorative; visible control labels and numeric scrap counters remain
 text. Decorations never intercept pointer input or enter the gameplay canvas.
 CSS icons and HTML images receive the same content-derived build version in
 the packaged Pages site. Original file opening continues to work.
+
+`options.svg` is an original gear drawing. `../tools/slot-pencil.png` is original
+transparent generated artwork, retained unedited: a yellow wooden pencil with
+two empty metal sockets. Effect icons and numeric levels are separate HTML
+layers so they follow the actual equipped build. The splash pencil is an inline
+SVG with its graphite point at the animation origin for precise ink alignment.

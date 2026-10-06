@@ -54,12 +54,60 @@ function removeEffect(u){
   delete game.state.stacks[u.name];
 }
 function renderTool(id){
-  const tool=game.state.tool,effects=equippedEffects(),version=document.documentElement?.dataset?.build;
+  const tool=game.state.tool,effects=equippedEffects(),version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
+  const art=tool.rank<3?'slot-pencil.png':tool.rank<6?'mechanical.svg':tool.rank<10?'pen.svg':'sharpie.svg';
   const slots=Array.from({length:tool.slots},(_,i)=>{
-    const u=effects[i];return `<div class="tool-slot">${u?`<img src="${game.api.upgradeArtwork(u)}${version?'?v='+encodeURIComponent(version):''}" alt="" width="32" height="32"><strong>${u.name}</strong><span>Level ${game.state.stacks[u.name]}</span>`:'<strong>Empty slot</strong><span>Choose an effect</span>'}</div>`;
+    const u=effects[i];return `<div class="tool-slot"><span class="slot-number">SLOT ${i+1}</span>${u?`<img src="${game.api.upgradeArtwork(u)}${query}" alt="" width="32" height="32"><strong>${u.name}</strong><span>Level ${game.state.stacks[u.name]}</span>`:'<strong>Empty socket</strong><span>Find your first effect</span>'}</div>`;
+  }).join('');
+  const sockets=Array.from({length:tool.slots},(_,i)=>{
+    const u=effects[i];return `<span class="tool-socket" style="--socket:${i}">${u?`<img src="${game.api.upgradeArtwork(u)}${query}" alt=""><span class="socket-level">${game.state.stacks[u.name]}</span>`:'<span class="socket-plus">+</span>'}</span>`;
   }).join('');
   const synergies=game.catalog.synergyDefs.filter(d=>d.req()).map(d=>d.name).join(' · ');
-  game.dom.$(id).innerHTML=`<div class="tool-heading"><img src="assets/art/tools/${tool.rank>=10?'sharpie':tool.rank>=6?'pen':tool.rank>=3?'mechanical':'pencil'}.svg${version?'?v='+encodeURIComponent(version):''}" alt="" width="42" height="42"><div><strong>${tool.name}</strong><span>Tool rank ${tool.rank} · ${effects.length}/${tool.slots} effects</span></div></div><div class="tool-slots">${slots}</div><p class="tool-synergies">${synergies?'Active synergies: '+synergies:'Combine slotted effects to discover synergies.'}</p>`;
+  game.dom.$(id).innerHTML=`<div class="tool-heading"><div><span class="section-kicker">YOUR DRAWING TOOL</span><strong>${tool.name}</strong></div><span class="tool-rank">Rank ${tool.rank} · ${effects.length}/${tool.slots} effects</span></div><div class="instrument-hero ${tool.rank<3?'wooden-pencil':'advanced-tool'}" style="--slots:${tool.slots}" aria-hidden="true"><img class="instrument-art" src="assets/art/tools/${art}${query}" alt="">${sockets}</div><div class="tool-slots">${slots}</div><p class="tool-synergies">${synergies?'✦ Active synergies: '+synergies:'Two compatible effects can unlock a synergy. Make this pencil yours.'}</p>`;
+}
+// Read-only previews: never apply a card to discover its effects.
+function upgradePreview(u){
+  const s=game.state.stats,p=game.state.player,n=game.state.stacks[u.name]||0,f=v=>Number(v.toFixed(3));
+  const pair=(label,before,after,unit='')=>({label,before:String(f(before))+unit,after:String(f(after))+unit});
+  if(effectKeys[u.name])return {label:'Effect level',before:n?'Level '+n:'Not equipped',after:'Level '+(n+1),beforeDetail:n?game.api.upgradeEffect(u.name,n):'No '+u.name+' effect yet.',afterDetail:game.api.upgradeEffect(u.name,n+1)};
+  const previews={
+    'Bigger Ink Tank':()=>pair('Maximum ink',s.maxInk,s.maxInk+35),
+    'Quick Refill':()=>pair('Ink regeneration',s.inkRegen,s.inkRegen+game.api.regenPick(u.name,n),' /s'),
+    'Thick Ink':()=>pair('Base wall durability',s.wallHp,s.wallHp+20,' HP'),
+    'First Aid':()=>pair('Stevie maximum health',p.maxHp,p.maxHp+18,' HP'),
+    'Fine Tip':()=>pair('Stroke cost',s.lineCost,s.lineCost*.88,' ink/px'),
+    'Fat Marker':()=>pair('Line width',s.lineWidth,s.lineWidth+2,' px'),
+    'Lucky Scribble':()=>pair('Luck',s.luck,s.luck+8),
+    'Recycling':()=>pair('Ink per kill',s.refund,s.refund+5),
+    'Closed Loop':()=>pair('Closed-shape durability',s.closedBonus,s.closedBonus+.4,'×'),
+    'Permanent Marker':()=>pair('Wall lifetime',s.wallLife,s.wallLife+10,'s'),
+    'Archival Ink':()=>pair('Wall lifetime',s.wallLife,s.wallLife+25,'s'),
+    'Architect':()=>pair('Durability per intersection',s.intersectBonus*100,(s.intersectBonus+.15)*100,'%'),
+    'Patchwork':()=>pair('Drawing repair',s.repairDraw,s.repairDraw+18,' HP'),
+    'Double Stroke':()=>pair('Walls per stroke',s.tripleLine?3:s.doubleLine?2:1,2),
+    'Patch Job':()=>pair('Repair per kill per wall',s.repairOnKill,s.repairOnKill+3,' HP'),
+    'Freehand':()=>pair('Free-ink bank size',s.freehandLevel?s.freehandBankSize:0,40+s.freehandLevel*20),
+    'Living Fountain Pen':()=>pair('Ink regeneration',s.inkRegen,s.inkRegen*game.api.regenPick(u.name,n),' /s'),
+    'Triple Stroke':()=>pair('Walls per stroke',s.doubleLine?2:1,3),
+    'Bottomless Pen':()=>pair('Maximum ink',s.maxInk,s.maxInk+120),
+    'Fortress Geometry':()=>pair('Closed-shape durability',s.closedBonus,s.closedBonus+1.5,'×'),
+    'Bandages':()=>pair('Between-wave healing',5+s.playerRegen,13+s.playerRegen,' HP'),
+    'Helmet':()=>pair('Contact damage reduction',s.playerArmor*100,Math.min(.55,s.playerArmor+.1)*100,'%'),
+    'Pocket Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+9),
+    'Better Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+12),
+    'Emergency Medicine':()=>pair('Healing per kill',s.killHeal,s.killHeal+2,' HP'),
+    'Really Good Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+24),
+    'Stevie Has Had Enough':()=>pair('Rock damage',s.rockDamage,s.rockDamage+45),
+    'Reroll Coupon':()=>pair('Rerolls available',game.state.rerolls,Math.min(5,game.state.rerolls+2))
+  };
+  const result=previews[u.name]?.()||{label:'Unlock',before:'Not unlocked',after:'Unlocked'};
+  result.beforeDetail=n?game.api.upgradeEffect(u.name,n):'No ranks taken in this run.';
+  result.afterDetail=game.api.upgradeEffect(u.name,n+1);
+  if(u.name==='First Aid')result.afterDetail+=' Current health: '+f(p.hp)+' → '+f(Math.min(p.maxHp+18,p.hp+18))+' HP.';
+  if(u.name==='Fine Tip')result.afterDetail+=' Paid strokes still cost at least 6 ink.';
+  if(u.name==='Fat Marker')result.afterDetail+=' Base wall HP: '+f(s.wallHp)+' → '+f(s.wallHp+15)+'.';
+  if(u.name==='Bottomless Pen')result.afterDetail+=' Ink regeneration: '+f(s.inkRegen)+' → '+f(s.inkRegen+game.api.regenPick(u.name,n))+'/s.';
+  return result;
 }
 function selectReward(u){
   if(effectKeys[u.name]&&!game.state.stacks[u.name]&&equippedEffects().length>=game.state.tool.slots){
@@ -97,6 +145,7 @@ function openUpgrade(){
   game.state.rerolls=Math.min(3,game.state.rerolls+1);
   game.dom.upgradeOverlay.style.display='grid';
   const boss=game.state.wave%5===0;
+  game.dom.$('rewardTitle').textContent='Upgrade your '+game.state.tool.name.toLowerCase();
   game.dom.rewardText.textContent=boss?'Boss reward: four choices, all Rare or better.':'Choose one upgrade.';
   game.api.rollCards(boss);
 }
@@ -252,7 +301,8 @@ function rollCards(forceRare=false){
     if(related.length)hint+='<div style="margin-top:7px;font-size:10px;font-weight:900;color:#8456c9">Potential synergy nearby…</div>';
     const build=document.documentElement?.dataset?.build;
     const icon=`<img class="upgrade-art" src="${game.api.upgradeArtwork(u)}${build?'?v='+encodeURIComponent(build):''}" alt="" width="48" height="48">`;
-    c.innerHTML=`${icon}<div class="rarity">${u.rarity}</div><h3>${u.name}</h3><p>${u.desc}</p>${hint}<div class="stack">${oneTimeUpgrades.has(u.name)?'One-time unlock':(stack?'Owned ×'+stack+' → ×'+(stack+1):'New upgrade → ×1')}<br>${game.api.upgradeEffect(u.name,stack+1)}</div>`;
+    const preview=game.api.upgradePreview(u);
+    c.innerHTML=`${icon}<div class="rarity">${u.rarity} · ${effectKeys[u.name]?'EFFECT':'UTILITY'}</div><h3>${u.name}</h3><p>${u.desc}</p><div class="reward-change"><span class="change-label">${preview.label}</span><div class="change-values"><div><small>NOW</small><strong>${preview.before}</strong></div><span aria-hidden="true">→</span><div><small>AFTER</small><strong>${preview.after}</strong></div></div></div>${hint}<div class="effect-comparison"><p><b>Now:</b> ${preview.beforeDetail}</p><p><b>After:</b> ${preview.afterDetail}</p></div><div class="stack">${oneTimeUpgrades.has(u.name)?'One-time unlock':(stack?'Owned ×'+stack+' → ×'+(stack+1):'New upgrade → ×1')}<span class="pick-label">${effectKeys[u.name]&&!stack&&equippedEffects().length>=game.state.tool.slots?'Choose a replacement':'Take this upgrade'} →</span></div>`;
     const art=c.querySelector?.('.upgrade-art');
     art?.addEventListener('error',()=>{
       // A tiny pen stays visible even if a deployment asset cannot be loaded.
@@ -285,7 +335,7 @@ function chooseSpecialization(spec){
   game.api.openUpgrade();
   game.api.setMsg('Specialization: '+({defense:'Fortress',ink:'Ink Alchemist',chaos:'Chaos'}[spec]))
 }
-const api = { equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
+const api = { upgradePreview, equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
 Object.assign(game.api, api);
 return api;
 };

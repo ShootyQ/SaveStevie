@@ -518,7 +518,7 @@ const before=JSON.stringify(g.state);g.api.update(.2);assert.equal(JSON.stringif
 g.api.closeCompendium();assert.equal(g.state.paused,false);g.state.paused=true;g.api.openCompendium();g.api.closeCompendium();assert.equal(g.state.paused,true);
 g.api.setMonsterIntrosEnabled(true);assert.equal(saved.get('saveStevieMonsterIntros'),'on');g.api.resetRun();assert.equal(g.api.infoOpen(),true,'setting can be re-enabled');
 g.api.resetRun();assert.equal(g.state.paused,true,'reset replaces an open introduction safely');g.api.handleInfoKey({key:'Escape',preventDefault(){}});assert.equal(g.state.paused,false,'Escape explicitly continues the introduction');
-const blocked={getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}};const fallback=load(true,{intros:true,storage:{getItem:key=>key==='doodleDefenderBestV4'?null:blocked.getItem(),setItem:blocked.setItem}}).sandbox.testGame;
+const blocked={getItem(k){if(k==='saveStevieAudioV1')throw Error('blocked');return null},setItem(k){if(k==='saveStevieAudioV1')throw Error('blocked')}};const fallback=load(true,{intros:true,storage:{getItem:key=>key==='doodleDefenderBestV4'?null:blocked.getItem(),setItem:blocked.setItem}}).sandbox.testGame;
 fallback.api.setMonsterIntrosEnabled(false);fallback.api.resetRun();assert.equal(fallback.state.paused,false,'blocked preference storage does not prevent gameplay');
 console.log('PASS: all 21 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
 }
@@ -846,3 +846,35 @@ console.log('PASS: minimum ink and affordable clipping, free-stroke limits, 2–
  reduced.api.animateEnemyAction(still,'summon');reduced.api.updateEnemyAnimations(.1);assert.equal(reduced.api.enemyActionCue(still),null);assert.equal(reduced.api.enemyAnimationPose(still).sx,1);
 }
 console.log('PASS: real Gnawer bites, Sprinter anticipation/dashes, Bouncer ricochets, boss wind-ups/slams/summons and Eraser swipes; unchanged combat, no cosmetic RNG, pause/freeze/stun/reduced motion and reset.');
+
+// Preferences tolerate unavailable/malformed storage, remain independent of progress,
+// and preview exact next-pick values without changing combat or drawing randomness.
+{
+ const values=new Map([['saveStevieAudioV1','{"musicVolume":3,"effectsVolume":"bad"}']]);
+ const storage={getItem:k=>values.get(k)||null,setItem:(k,v)=>values.set(k,v)};
+ const env=load(true,{storage,audio:{play(){},pause(){}}}),g=env.sandbox.testGame;
+ assert.equal(g.api.audioSettings().musicVolume,1);assert.equal(g.api.audioSettings().effectsVolume,.7);
+ assert.equal(g.api.setAudioVolume('musicVolume',NaN),false);assert.equal(g.api.setAudioVolume('unknown',.4),false);
+ g.api.setAudioVolume('musicVolume',.21);assert.equal(env.node('gameMusic').volume,.21);
+ g.api.setAudioVolume('effectsVolume',-.3);assert.equal(g.api.audioSettings().effectsVolume,0);
+ const reload=load(true,{storage});assert.equal(reload.sandbox.testGame.api.audioSettings().musicVolume,.21);
+ const broken=load(true,{storage:{getItem(k){if(k==='saveStevieAudioV1')throw Error('blocked');return null},setItem(k){if(k==='saveStevieAudioV1')throw Error('blocked')}}}).sandbox.testGame;
+ assert.equal(broken.api.audioSettings().musicVolume,.35);broken.api.setAudioVolume('musicVolume',.8);
+ assert.equal(broken.api.audioSettings().musicVolume,.8);assert.equal(broken.api.audioSettings().storageIssue,true);
+ const malformed=load(true,{storage:{getItem:k=>k==='saveStevieAudioV1'?'{broken':null,setItem(){}}}).sandbox.testGame;
+ assert.equal(malformed.api.audioSettings().effectsVolume,.7);
+ g.api.resetRun();const upgrade=name=>g.catalog.upgrades.find(u=>u.name===name);
+ for(const [name,prop] of [['Bigger Ink Tank','maxInk'],['Quick Refill','inkRegen'],['Fine Tip','lineCost'],['Helmet','playerArmor'],['Living Fountain Pen','inkRegen'],['Bottomless Pen','maxInk']]){
+  for(let rank=0;rank<4;rank++){
+   const snapshot=JSON.stringify(g.state),preview=g.api.upgradePreview(upgrade(name));
+   assert.equal(JSON.stringify(g.state),snapshot,'preview leaves state unchanged');
+   g.api.chooseUpgrade(upgrade(name));const actual=g.state.stats[prop]*(name==='Helmet'?100:1);
+   assert.equal(parseFloat(preview.after),Number(actual.toFixed(3)),name+' next-pick value at rank '+rank);
+  }
+ }
+ const snapshot=JSON.stringify(g.state);env.sandbox.Math.random=()=>{throw Error('UI cannot draw randomness')};
+ for(const u of g.catalog.upgrades)g.api.upgradePreview(u);g.api.renderStatistics();assert.equal(JSON.stringify(g.state),snapshot);
+ g.state.paused=false;g.api.openOptions();assert.equal(g.state.paused,true);g.api.closeOptions();assert.equal(g.state.paused,false);
+ g.state.paused=true;g.api.openStatistics();g.api.closeStatistics();assert.equal(g.state.paused,true);
+}
+console.log('PASS: safe persisted audio/live volume, unavailable storage, exact next-pick previews including diminishing returns, read-only stats and pause restoration.');

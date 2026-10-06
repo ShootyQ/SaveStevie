@@ -465,3 +465,89 @@ button:disabled { transform:none; }
  .splash-howto b { font-size:9px; letter-spacing:.3px; line-height:11px; margin:0 0 2px; }
  .splash-howto span { font-size:10px; line-height:12px; }
 }
+/* A workbench for your pencil, plus the small pages behind the notebook. */
+.section-kicker { display:block; font-size:9px; font-weight:900; letter-spacing:1.4px; color:#79653c; margin-bottom:5px; }
+.splash-links { display:flex; gap:4px; align-items:center; justify-content:center; }
+.splash-links button { min-height:36px; font-size:11px; padding:4px 7px; background:transparent; border-color:transparent; box-shadow:none; color:#526069; }
+.splash-links #splashMusicBtn { margin:0; font-size:11px; }
+#optionsBtn::before { background-image:url(assets/art/ui/options.svg); }
+#buildBtn::before { background-image:url(assets/art/ui/draw.svg); }
+.options-book,.statistics-book { max-width:620px; background:linear-gradient(#fff9e9e8,#fff9e9e8),repeating-linear-gradient(0deg,#b5cddd 0 1px,transparent 1px 28px); }
+.build-heading > div { min-width:0; }
+.option-section { border:1px solid #d2c3a1; border-radius:12px; background:#fffdf5; padding:16px; margin:12px 0; }
+.option-section h3 { margin:0 0 15px; }
+.volume-label { display:flex; justify-content:space-between; gap:12px; font-size:15px; font-weight:bold; }
+.volume-label output { color:#3562be; min-width:45px; text-align:right; }
+.option-section input[type=range] { display:block; width:100%; min-height:44px; margin:0; accent-color:#3562be; cursor:pointer; }
+.cardbox .option-help,.cardbox .dialog-intro,.cardbox .save-note { text-align:left; font-size:12px; line-height:1.5; color:#627078; }
+.cardbox .option-help { margin:0 0 14px; }
+.cardbox .save-note { border-top:1px dashed #c6b797; padding-top:14px; margin-bottom:0; }
+.options-links { display:flex; flex-wrap:wrap; gap:8px; }
+.journal-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+.journal-stat { border:1px solid #d2c3a1; background:#fffdf5; padding:14px; border-radius:8px 12px 10px 8px; min-width:0; }
+.journal-stat span { display:block; font-size:11px; color:#6d726d; }
+.journal-stat strong { display:block; font-size:24px; margin-top:5px; overflow-wrap:anywhere; }
+.journal-progress { height:10px; border-radius:6px; background:#e6ddc4; overflow:hidden; margin:16px 0 6px; }
+.journal-progress span { display:block; height:100%; background:#4a9b66; }
+.reward-workbench { width:min(100%,980px); background:linear-gradient(#fff9ecee,#fff9ecee),repeating-linear-gradient(0deg,#c0d3e0 0 1px,transparent 1px 28px); }
+.reward-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.reward-heading h2 { font-size:28px; text-align:left; }
+.reward-heading button { flex-shrink:0; font-size:12px; }
+#rewardText { text-align:left; font-size:12px; margin:6px 0 12px; }
+.tool-panel { background:#fff9e9; padding:12px 16px; border:1px solid #d5bf7a; border-radius:12px 18px 12px 16px; box-shadow:0 3px 0 #e5d8b8; }
+.tool-heading { justify-content:space-between; align-items:center; }
+.tool-heading strong { font-size:22px; }
+.tool-rank { font-size:11px; background:#f4e9c8; border:1px solid #d5bf7a; border-radius:20px; padding:7px 9px; }
+.instrument-hero { position:relative; width:min(100%,620px); aspect-ratio:3 / 1; margin:0 auto; }
+.instrument-art { display:block; width:100%; height:100%; object-fit:contain; }
+.tool-socket { display:grid; place-items:center; position:absolute; top:49.3%; left:43.8%; width:11.5%; aspect-ratio:1; transform:translate(-50%,-50%); }
+.tool-socket:nth-of-type(2) { left:65.5%; }
+.tool-socket img { width:80%; height:80%; object-fit:contain; }
+.socket-plus { font-size:clamp(15px,4vw,32px); font-weight:bold; color:#a88b40; }
+.socket-level { position:absolute; right:-2px; bottom:-3px; background:#26333c; color:#fff; font-size:11px; font-weight:bold; border:2px solid #fff7df; border-radius:50%; min-width:23px; height:23px; display:grid; place-items:center; }
+.advanced-tool .instrument-art { transform:rotate(45deg); }
+.advanced-tool .tool-socket { left:calc(27% + var(--socket) * (56% / var(--slots))); background:#fff8e6; border:2px solid #26333c; border-radius:50%; box-shadow:2px 2px 0 #c7b99a; }
+.tool-slots { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:0; }
+.tool-slot { padding:8px 10px; border:1px dashed #c0af82; background:#fffdf5; border-radius:7px; }
+.slot-number { display:block; font-size:8px!important; letter-spacing:1px; color:#917b48; margin-bottom:4px; }
+.tool-slot strong { font-size:12px; }
+.tool-slot img { width:28px; height:28px; }
+.tool-panel .tool-synergies { text-align:left; font-size:11px; margin:10px 0 0; padding-top:8px; border-top:1px dashed #d5c8a4; }
+.cardbox .reward-help { text-align:left; font-size:11px; line-height:1.5; color:#68747b; margin:10px 0; }
+.reward-workbench .reward-luck { text-align:left; font-size:10px; margin-bottom:6px; }
+.reward-workbench .luck-guide { margin-bottom:12px; padding:5px 8px; }
+.reward-workbench .luck-guide summary { font-size:11px; min-height:18px; }
+.reward-workbench .ucard { background:#fffdf7; padding:12px; border-width:2px; border-radius:8px 13px 9px 12px; }
+.reward-workbench .ucard h3 { font-size:17px; }
+.reward-workbench .ucard .rarity { font-size:9px; letter-spacing:.5px; }
+.reward-change { margin:12px 0 8px; padding:9px; background:#f4efdf; border-radius:8px; }
+.change-label { display:block; font-size:10px; color:#6d726d; margin-bottom:7px; }
+.change-values { display:grid; grid-template-columns:minmax(0,1fr) 16px minmax(0,1fr); align-items:center; gap:4px; }
+.change-values small { display:block; font-size:8px; color:#6d726d; letter-spacing:.7px; }
+.change-values strong { display:block; font-size:15px; line-height:1.3; overflow-wrap:anywhere; }
+.change-values div:last-child strong { color:#315d43; }
+.effect-comparison { display:grid; gap:6px; margin:7px 0; }
+.reward-workbench .effect-comparison p { font-size:11px; line-height:1.4; }
+.effect-comparison p:last-child { color:#315d43; }
+.pick-label { display:block; margin-top:9px; border-top:1px dashed #c6b797; padding-top:8px; font-size:12px; color:#26333c; }
+@media(max-width:600px) {
+ .reward-workbench { padding:14px; }
+ .reward-heading h2 { font-size:22px; }
+ .reward-heading { gap:7px; }
+ .reward-heading button { font-size:10px; padding:6px 8px; min-height:40px; }
+ .tool-panel { padding:10px; }
+ .tool-heading strong { font-size:20px; }
+ .tool-rank { font-size:9px; padding:5px 7px; }
+ .tool-slot { padding:7px; }
+ .tool-slot strong { font-size:11px; }
+ .tool-slot span { font-size:10px; }
+ .socket-level { min-width:17px; height:17px; font-size:9px; border-width:1px; }
+ .journal-stat { padding:12px; }
+ .journal-stat strong { font-size:21px; }
+}
+@media(max-height:520px) and (min-width:600px) {
+ .splash-links { grid-column:1; grid-row:6; gap:0; align-self:center; }
+ .splash-links button { padding:3px; font-size:10px; }
+ .splash-links #splashMusicBtn { font-size:10px; flex:1; min-width:0; line-height:12px; }
+ .instrument-hero { max-width:380px; }
+}
