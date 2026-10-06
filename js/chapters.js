@@ -14,6 +14,9 @@ function updateChapterBackground(){
   const version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
   // The existing paper/grid remains beneath the image if artwork cannot load.
   game.dom.canvas.style.backgroundImage=`url("assets/art/backgrounds/${chapter.id}.png${query}"),linear-gradient(rgba(76,132,183,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(76,132,183,.08) 1px,transparent 1px)`;
+  const paper=game.dom.$('chapterPaper');
+  paper.style.borderImageSource=`url("assets/art/backgrounds/${chapter.id}.png${query}")`;
+  paper.dataset.chapter=chapter.id;
   game.dom.canvas.dataset.chapter=chapter.id;
   game.dom.$('waveChapter').textContent=chapter.name+' · Waves '+chapter.firstWave+'–'+chapter.lastWave;
 }
