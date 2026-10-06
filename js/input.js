@@ -42,6 +42,7 @@ game.dom.$('monsterIntrosEnabled').onchange=e=>game.api.setMonsterIntrosEnabled(
 game.dom.$('continueMonsterIntroBtn').onclick=game.api.continueMonsterIntro;
 for(const id of ['splashNotebookBtn','deathNotebookBtn','victoryNotebookBtn','buildNotebookBtn'])game.dom.$(id).onclick=game.api.openNotebook;
 game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
+game.dom.$('resetNotebookBtn').onclick=game.api.resetNotebookProgress;
 window.addEventListener('keydown',game.api.handleInfoKey);
 game.dom.canvas.addEventListener('pointerdown',e=>{
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;

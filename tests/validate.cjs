@@ -649,3 +649,14 @@ g.api.killEnemy(c);assert.equal(g.api.notebookSnapshot().scraps,10);
 for(const type of ['stapler','crayon']){g.state.enemies=[];const e=g.api.spawnEnemy(false,100,200,type);g.state.inks.void=1;env.sandbox.Math.random=()=>0;const before=e.hp;g.api.applyInkContact(e,.1);assert.ok(e.hp>0&&e.hp<before,'Void damages new bosses instead of instantly erasing them');}
 console.log('PASS: distinct campaign bosses, actual-segment telegraphs, slam safety/range/stale targets, freeze/stun cancellation, capped summons, pause, boss scraps, and Void boss protection.');
 }
+
+{
+const stored=new Map([['doodleDefenderBestV4','15'],['saveStevieMusicMuted','yes'],['saveStevieMonsterIntros','off']]);
+const storage={getItem:k=>stored.get(k)??null,setItem:(k,v)=>stored.set(k,String(v))},env=load(true,{storage}),g=env.sandbox.testGame;
+g.api.resetRun();g.api.awardScraps(20);g.api.gameOver();g.api.buyNotebookPerk('health');g.api.resetRun();g.api.openNotebook();
+const before=JSON.stringify(g.api.notebookSnapshot());env.sandbox.confirm=()=>false;assert.equal(g.api.resetNotebookProgress(),false);assert.equal(JSON.stringify(g.api.notebookSnapshot()),before);assert.equal(g.state.player.maxHp,83);
+env.sandbox.confirm=()=>true;assert.equal(g.api.resetNotebookProgress(),true);assert.equal(g.state.running,false);assert.equal(g.api.infoOpen(),false);assert.equal(env.node('startOverlay').style.display,'grid');assert.equal(g.state.player.maxHp,75);assert.equal(g.state.best,1);assert.equal(g.api.notebookSnapshot().scraps,0);assert.equal(g.api.notebookSnapshot().lifetimeScraps,0);assert.ok(Object.values(g.api.notebookSnapshot().levels).every(n=>n===0));assert.equal(g.api.notebookSnapshot().runActive,false);
+const reload=load(true,{storage}).sandbox.testGame;assert.equal(reload.state.best,1);assert.equal(reload.api.notebookSnapshot().scraps,0);assert.equal(stored.get('saveStevieMusicMuted'),'yes');assert.equal(stored.get('saveStevieMonsterIntros'),'off');
+const blocked=load(true,{storage:{getItem:()=>null,setItem(){throw Error('blocked')}}});blocked.sandbox.confirm=()=>true;blocked.sandbox.testGame.api.resetRun();blocked.sandbox.testGame.api.awardScraps(7);assert.equal(blocked.sandbox.testGame.api.resetNotebookProgress(),false);assert.equal(blocked.sandbox.testGame.api.notebookSnapshot().scraps,7);assert.match(blocked.node('notebookNotice').textContent,/Could not reset/);
+console.log('PASS: confirmed/cancelled full progress reset, fresh splash/loadout, save reload, preserved preferences, and blocked-storage failure.');
+}

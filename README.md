@@ -338,3 +338,13 @@ waves use King Doodle-Doom. Midgame waves keep the existing timer completion
 rule. Run `node tests/validate.cjs` for combat checks and the optional
 `node tests/browser-bosses.cjs [packaged-site-directory]` for desktop/phone
 artwork, introductions, live warning rendering, and compendium checks.
+
+
+## Resetting progression for testing
+
+**Back of the Notebook → Reset game progress** asks for confirmation before
+clearing this browser’s scraps, permanent perk ranks, best-wave record, and
+current run. It returns to the splash screen with a fresh starting kit.
+Cancelling keeps everything. Music and monster-intro preferences are retained.
+A storage failure displays an error rather than resetting only the visible
+session. The confirmed reset is the explicit exception to preserving records.

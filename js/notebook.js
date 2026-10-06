@@ -61,6 +61,25 @@ function buyNotebookPerk(id){
   const bought=game.dom.$('notebookBuy-'+id);
   (bought.disabled?game.dom.$('closeNotebookBtn'):bought).focus?.({preventScroll:true});return true;
 }
+function resetNotebookProgress(){
+  if(!window.confirm('Start over? This erases all scraps, permanent Notebook perks, your best-wave record, and the current run on this browser. Music and monster-intro settings stay.'))return false;
+  const fresh={version:1,scraps:0,lifetimeScraps:0,levels:Object.fromEntries(perks.map(p=>[p.id,0]))};
+  let oldBest=null;
+  try{
+    oldBest=localStorage.getItem('doodleDefenderBestV4');
+    localStorage.setItem('doodleDefenderBestV4','1');
+    localStorage.setItem(key,JSON.stringify(fresh));
+  }catch{
+    try{if(oldBest!==null)localStorage.setItem('doodleDefenderBestV4',oldBest)}catch{}
+    game.dom.$('notebookNotice').textContent='Could not reset saved progress. Check this browser’s storage settings and try again.';
+    return false;
+  }
+  progress=fresh;storageIssue=false;
+  game.api.closeInfo();game.state.best=1;game.api.resetRun();game.api.closeInfo();
+  game.state.running=false;game.state.paused=false;runActive=false;runScraps=0;
+  game.dom.startOverlay.style.display='grid';updateScrapCounters();game.api.updateUI();
+  game.dom.$('startBtn').focus?.();return true;
+}
 function renderNotebook(){
   updateScrapCounters();const locked=!canSpendScraps(),version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
   game.dom.$('notebookNotice').textContent=storageIssue?'This browser is not saving progress. Scraps and purchases are kept for this visit.':locked?'Your run is paused. Purchases unlock after it ends and apply to the next run.':'Spend scraps on your next attempt. Permanent perks stack with the upgrades you earn during a run.';
@@ -78,6 +97,6 @@ function renderNotebook(){
 }
 function openNotebook(){game.api.openInfo('notebook')}
 function closeNotebook(){game.api.closeInfo()}
-const api={notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
+const api={resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;
 };
