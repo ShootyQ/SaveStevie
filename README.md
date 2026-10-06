@@ -779,3 +779,10 @@ Regular waves stop scheduled arrivals at zero seconds and continue combat until
 no living enemies remain. Boss waves hide the countdown and time bar and end
 when their boss dies, clearing its summoned minions. Effect animation uses a
 separate elapsed clock so it continues throughout untimed fights and cleanup.
+
+Drawing tools have distinct presentation-only wall strokes: broad scratchy graphite
+for Pencil, finer graphite for Mechanical Pencil, crisp ink for Simple Pen, and
+dense marker ink for Scented Sharpie. Preview and completed walls share the same
+renderer. A faint full-width graphite band preserves the visible contact footprint;
+wall thickness, durability, ink cost and effect attachments retain their gameplay
+values. Grain is cached, capped and deterministic without consuming combat RNG.

@@ -14,6 +14,23 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
   });
   await page.goto('http://127.0.0.1:8001/');await page.click('#startBtn');
+  await page.waitForFunction(()=>testGame.api.artworkReady());
+  const strokeImages=[];
+  for(const rank of [0,3,6,10]){
+   const image=await page.evaluate(rank=>{
+    const g=testGame;g.state.tool.rank=rank;
+    g.state.walls=[{pts:[{x:80,y:180},{x:150,y:160},{x:220,y:190},{x:290,y:175}],thick:8,hp:100,maxHp:100,life:50,maxLife:50}];
+    g.state.currentWall=[{x:80,y:240},{x:150,y:220},{x:220,y:250},{x:290,y:235}];
+    g.state.inks.fire=1;g.state.inks.poison=1;
+    const before=JSON.stringify(g.state);g.api.draw();
+    if(before!==JSON.stringify(g.state))throw Error('tool drawing changed gameplay');
+    return g.dom.ctx.canvas.toDataURL();
+   },rank);
+   strokeImages.push(image);
+   await page.screenshot({path:'/tmp/tool-stroke-'+rank+'-'+viewport.width+'.png'});
+  }
+  assert.equal(new Set(strokeImages).size,4,'all four tools render distinct strokes with effect attachments');
+  await page.evaluate(()=>testGame.api.resetRun());
   await page.evaluate(()=>{testGame.state.stats.ink=0;testGame.api.updateUI();});
   const canvas=await page.locator('#game').boundingBox();
   await page.mouse.move(canvas.x+40,canvas.y+40);await page.mouse.down();await page.mouse.move(canvas.x+70,canvas.y+40);await page.mouse.up();

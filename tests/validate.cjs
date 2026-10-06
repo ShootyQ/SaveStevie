@@ -44,8 +44,8 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed'].includes(key)?undefined:value),JSON.parse(a.snapshot()),label+' state');// Upgraded artwork intentionally differs; keep exact canvas parity for basic walls.
-if(!Object.values(b.sandbox.testGame.state.inks).some(Boolean))assert.deepStrictEqual(JSON.stringify(b.calls),JSON.stringify(a.calls),label+' canvas');for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed'].includes(key)?undefined:value),JSON.parse(a.snapshot()),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
+for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
 // Preserve legacy comparison for unchanged systems; test the new contact rule separately.
@@ -68,10 +68,17 @@ both(e=>api(e).createWall(points));compare('Freehand bank spending');
 both(e=>api(e).spawnEnemy(false,260,310,'grunt'));compare('spawn contact enemy');
 both(e=>{const s=state(e);api(e).applyInkContact(s.enemies.at(-1),.016,s.walls[0]);});compare('stacked ink contact');
 for(let i=2001;i<=2100;i++)both(e=>e.sandbox.frame(i*16));compare('stacked ink rendering and simulation');
-console.log(`PASS: ${checks} original/refactored state and HUD comparisons (basic canvas parity), including 2,100 frames.`);
+console.log(`PASS: ${checks} original/refactored state and HUD comparisons (tool artwork intentionally differs), including 2,100 frames.`);
 const visual=load(true),g=visual.sandbox.testGame;
 g.state.walls=[{pts:[{x:100,y:100},{x:420,y:100}],thick:8,hp:100,maxHp:100,life:50,maxLife:50}];
 function render(){visual.calls.length=0;const before=visual.snapshot();g.api.draw();assert.equal(visual.snapshot(),before,'render must not mutate simulation');for(const call of visual.calls)for(const v of call.slice(1))if(typeof v==='number')assert.ok(Number.isFinite(v),'finite canvas coordinates');return visual.calls.length;}
+const toolMarks=[];
+for(const rank of [0,3,6,10]){
+ g.state.tool.rank=rank;render();const first=JSON.stringify(visual.calls);render();
+ assert.equal(JSON.stringify(visual.calls),first,'tool grain is stable between frames');toolMarks.push(first);
+}
+assert.equal(new Set(toolMarks).size,3,'graphite grain differs from the solid pen/marker path');
+g.state.tool.rank=0;
 const basic=render(),sizes=[];
 for(const kind of Object.keys(g.state.inks)){
   g.state.inks[kind]=1;const size=render();assert.ok(size>basic,kind+' has texture');sizes.push(size);
