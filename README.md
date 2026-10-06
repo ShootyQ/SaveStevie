@@ -571,7 +571,7 @@ Double Stroke, Triple Stroke, Quick Sketch, Loaded Deck, Collector and Greedy
 Goblin remain one-time unlocks. Armor, stun and reroll inventory caps still apply;
 cards show the actual usable level gain near a cap.
 
-Normal rewards start at 43% Common, 33% Uncommon and 24% Rare; Luck and Chaos
+Normal rewards start at 72% Common, 20% Uncommon and 8% Rare; Luck and Chaos
 shift rolls upward. Boss cards are Rare, except for a reserved Legendary card.
 One Legendary offer remains reserved in 10% of campaigns, independent of Luck.
 Rerolls cannot recreate it. Offers never repeat an upgrade on the same screen.

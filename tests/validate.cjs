@@ -602,8 +602,9 @@ for(let i=0;i<g.catalog.upgrades.length;i+=3){g.api.rollCards();for(const card o
 g.state.stats.luck=8;g.api.rollCards();assert.match(env.node('rewardLuck').textContent,/Luck 8/);assert.match(env.node('rewardLuckDetails').textContent,/rerolls\. Boss rewards grant Rare/);assert.match(env.node('rewardLuckDetails').textContent,/does not change damage/);
 g.api.renderBuild();assert.match(env.node('buildLuck').textContent,/Your Luck: 8/);assert.match(g.catalog.upgrades.find(u=>u.name==='Lucky Scribble').desc,/rarity odds/);
 const roll=(random,luck,boss=false)=>{env.sandbox.Math.random=()=>random;g.state.stats.luck=luck;return g.api.rarityRoll(boss)};
-assert.equal(roll(.009,0),'rare');assert.equal(roll(.239,0),'rare');assert.equal(roll(.25,0),'uncommon');assert.equal(roll(.25,8),'rare');assert.equal(roll(.58,0),'common');assert.equal(roll(.58,8),'uncommon');assert.equal(roll(.99,100,true),'rare');
-g.state.specialization='chaos';assert.equal(roll(.26,0),'rare');assert.equal(roll(.99,0,true),'rare','boss rewards stay Rare, without extra Legendary chances');assert.match(g.api.luckExplanation(),/separate \+12/);g.state.stats.uncommonFloor=true;assert.equal(roll(.99,0),'uncommon');assert.match(g.api.luckExplanation(),/Loaded Deck/);
+assert.equal(roll(.0799,0),'rare');assert.equal(roll(.08,0),'uncommon');assert.equal(roll(.2799,0),'uncommon');assert.equal(roll(.28,0),'common');assert.equal(roll(.10,8),'rare');assert.equal(roll(.30,8),'uncommon');assert.equal(roll(.99,100,true),'rare');
+for(const [luck,rare,uncommon] of [[0,800,2000],[16,1280,2256],[40,2000,2640]]){const counts={common:0,uncommon:0,rare:0};for(let i=0;i<10000;i++)counts[roll((i+.5)/10000,luck)]++;assert.equal(counts.rare,rare);assert.equal(counts.uncommon,uncommon);assert.equal(counts.common,10000-rare-uncommon);}
+g.state.specialization='chaos';assert.equal(roll(.115,0),'rare');assert.equal(roll(.116,0),'uncommon');assert.equal(roll(.99,0,true),'rare','boss rewards stay Rare, without extra Legendary chances');assert.match(g.api.luckExplanation(),/separate \+12/);g.state.stats.uncommonFloor=true;assert.equal(roll(.99,0),'uncommon');assert.match(g.api.luckExplanation(),/Loaded Deck/);
 console.log('PASS: artwork for every upgrade, rendered reward pictures, current Luck/help text, and accurate normal/boss/Chaos rarity explanations.');
 }
 
