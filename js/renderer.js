@@ -51,13 +51,13 @@ function stevieAnimationFrame(){
 }
 // Weak records follow living monsters; only 20 short-lived split echoes survive
 // removal. Motion never moves a collider or consumes the combat random stream.
-const stillEnemyPose=Object.freeze({y:0,angle:0,sx:1,sy:1});
+const stillEnemyPose=Object.freeze({x:0,y:0,angle:0,sx:1,sy:1});
 let enemyMotion=new WeakMap(),splitEchoes=[],motionTime=0,motionSerial=0;
 function motionFor(e){
   let m=enemyMotion.get(e);
   if(!m){
     const heavy=['tank','brute','bulwark','boss','stapler','crayon','eraser'].includes(e.type);
-    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,action:null,readyUntil:-1,sprite:null,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
+    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,action:null,readyUntil:-1,sprite:null,facing:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
   }
   return m;
 }
@@ -76,24 +76,26 @@ function animateEnemySplit(e){
 }
 function enemyAnimationPose(e){return motionReduced?stillEnemyPose:(enemyMotion.get(e)?.pose||stillEnemyPose)}
 function enemyAnimationCount(){return splitEchoes.length}
-function animateEnemyAction(e,action){
+function animateEnemyAction(e,action,target=null){
   if(motionReduced)return;
-  const m=motionFor(e);m.action=action;m.actionAge=0;
+  const m=motionFor(e);m.action=action;m.actionAge=0;m.actionFacing=target&&target.x!==e.x?(target.x<e.x?-1:1):m.facing;
 }
 function prepareSapperStrike(e){if(!motionReduced)motionFor(e).readyUntil=motionTime+.05}
+function enemyActionCue(e){return motionReduced?null:(enemyMotion.get(e)?.cue||null)}
 function enemyActionFrame(e){return motionReduced?null:(enemyMotion.get(e)?.sprite||null)}
 function updateEnemyAnimations(dt){
   motionTime+=dt;
   if(motionReduced){splitEchoes=[];return}
   for(const e of game.state.enemies){
     const m=motionFor(e),distance=Math.hypot(e.x-m.x,e.y-m.y),heavy=m.heavy;
+    if(Math.abs(e.x-m.x)>.001)m.facing=e.x<m.x?-1:1;
     m.x=e.x;m.y=e.y;m.hitAge+=dt;m.birthAge+=dt;m.actionAge+=dt;
     const moving=distance>.001&&e.freeze<=0&&e.stun<=0;
     if(moving)m.phase=(m.phase+Math.min(distance,e.r)* (heavy?.16:.27))%(Math.PI*2);
     const step=moving?Math.sin(m.phase):0,hop=moving?Math.abs(step)*m.hop:0;
     const hit=m.hitAge<.14?Math.sin(m.hitAge/.14*Math.PI)*.12:0;
     const birth=m.birthAge<.28?Math.sin(m.birthAge/.28*Math.PI):0;
-    const p=m.pose;p.y=-hop-birth*5;p.angle=step*(heavy?.035:.055);
+    const p=m.pose;p.x=0;p.y=-hop-birth*5;p.angle=step*(heavy?.035:.055);
     p.sx=1+hit+birth*.14;p.sy=1-hit-birth*.1;
     m.sprite=null;
     if(e.freeze<=0&&e.stun<=0){
@@ -105,6 +107,43 @@ function updateEnemyAnimations(dt){
         else if(m.readyUntil>motionTime)m.sprite='sapper-ready';
       }else if(e.type==='medic'&&m.action==='heal'&&m.actionAge<.1)m.sprite=motionTime% .6<.3?'medic-ready':'medic-heal';
     }
+    m.cue=null;m.cueProgress=0;
+    if(e.freeze>0||e.stun>0)continue;
+    // Distinct silhouettes reuse the existing art. These offsets never touch
+    // enemy coordinates, attack timers, damage, or the combat random stream.
+    if(moving&&(e.type==='fast'||e.type==='mini')){p.angle+=m.facing*.09;p.sx+=step*.05;p.sy-=step*.05;}
+    if(moving&&e.type==='grunt'){p.sx+=step*.035;p.sy-=step*.035;}
+    if(e.type==='bouncer'){
+      if(moving){p.y-=Math.abs(step)*2;p.sx+=step*.08;p.sy-=step*.08;}
+      if(m.action==='bounce'&&m.actionAge<.16){
+        const impact=Math.sin(m.actionAge/.16*Math.PI);m.cue='bounce';p.sx+=impact*.25;p.sy-=impact*.2;
+      }else if(e.bounceTime>0&&moving){m.cue='bounce';p.angle+=m.facing*.15;p.sx+=.12;p.sy-=.08;}
+    }else if((e.type==='gnawer'||e.type==='grunt')&&m.action==='bite'&&m.actionAge<.18){
+      const bite=Math.sin(m.actionAge/.18*Math.PI);
+      const strength=e.type==='gnawer'?1:.65;
+      m.cue='bite';m.cueProgress=bite;p.x=m.actionFacing*bite*3*strength;p.sx+=bite*.17*strength;p.sy-=bite*.1*strength;
+    }else if(e.type==='sprinter'){
+      if(e.dashTime>=2.6&&moving){m.cue='dash';p.x=m.facing*2;p.angle=m.facing*.22;p.sx+=.15;p.sy-=.12;}
+      else if(e.dashTime>2.1&&e.dashTime<2.6){
+        const charge=(e.dashTime-2.1)/.5;m.cue='charge';m.cueProgress=charge;
+        p.y+=charge*2;p.sx+=charge*.16;p.sy-=charge*.18;p.angle-=m.facing*charge*.1;
+      }
+    }else if(e.type==='stapler'){
+      if(e.bossWindup>0){
+        const ready=1-e.bossWindup/1.2;m.cue='slam-ready';m.cueProgress=ready;p.y-=ready*4;p.angle-=ready*.16;p.sy+=ready*.1;
+      }else if(m.action==='slam'&&m.actionAge<.32){
+        const slam=Math.sin(m.actionAge/.32*Math.PI);m.cue='slam';m.cueProgress=slam;p.y+=slam*4;p.sx+=slam*.22;p.sy-=slam*.24;
+      }
+    }else if(e.type==='crayon'){
+      if(e.bossWindup>0){
+        const ready=1-e.bossWindup/1.2;m.cue='cast-ready';m.cueProgress=ready;p.y-=Math.sin(ready*Math.PI)*5;p.angle+=Math.sin(ready*Math.PI*4)*.12;
+      }else if(m.action==='summon'&&m.actionAge<.45){
+        const cast=Math.sin(m.actionAge/.45*Math.PI);m.cue='summon';m.cueProgress=cast;p.y-=cast*6;p.sx-=cast*.08;p.sy+=cast*.12;
+      }
+    }else if(e.type==='eraser'&&m.action==='erase'&&m.actionAge<.36){
+      const swipe=Math.sin(m.actionAge/.36*Math.PI);m.cue='erase';m.cueProgress=swipe;p.x=m.actionFacing*swipe*5;p.angle+=m.actionFacing*swipe*.2;p.sx+=swipe*.1;
+    }
+
   }
   for(const echo of splitEchoes)echo.age+=dt;
   splitEchoes=splitEchoes.filter(e=>e.age<.28);
@@ -121,6 +160,33 @@ function drawSplitAnimations(){
       drawDoodleEnemy(echo,1);ctx.restore();
     }
   }
+}
+// Three short marks per acting monster, no particles or new canvases.
+function drawEnemyActionMarks(e){
+  const m=enemyMotion.get(e);if(motionReduced||!m?.cue||e.freeze>0||e.stun>0)return;
+  const ctx=game.dom.ctx,cue=m.cue,p=m.cueProgress;
+  if(cue==='charge'||cue==='slam-ready')return; // The body's anticipation is enough.
+  ctx.save();ctx.strokeStyle=e.color;ctx.lineWidth=1.8;ctx.lineCap='round';
+  ctx.globalAlpha=.75;ctx.beginPath();
+  for(let i=0;i<3;i++){
+    if(cue==='dash'||cue==='bounce'){
+      const x=-m.facing*(e.r+4),y=(i-1)*5;
+      ctx.moveTo(x,y);ctx.lineTo(x-m.facing*(5+i*2),y);
+    }else if(cue==='bite'){
+      const x=m.actionFacing*(e.r+2);
+      ctx.moveTo(x,(i-1)*5);ctx.lineTo(x+(x<0?-1:1)*(2+p*4),(i-1)*7);
+    }else if(cue==='slam'){
+      const x=(i-1)*e.r*.6,y=e.r+2;
+      ctx.moveTo(x,y);ctx.lineTo(x+(i-1)*p*5,y+p*6);
+    }else if(cue==='erase'){
+      const y=(i-1)*7,x=-m.actionFacing*(e.r+8);ctx.moveTo(x,y);ctx.quadraticCurveTo(x-m.actionFacing*(6+p*6),y-4,x,y-8);
+    }else{
+      const angle=i*Math.PI*2/3+motionTime*2,r=e.r+6+p*7;
+      const x=Math.cos(angle)*r,y=Math.sin(angle)*r;
+      ctx.moveTo(x-2,y);ctx.lineTo(x+2,y);ctx.moveTo(x,y-2);ctx.lineTo(x,y+2);
+    }
+  }
+  ctx.stroke();ctx.restore();
 }
 function tintedDoodle(name,colors){
   const image=doodles[name];if(!colors.length)return image;
@@ -151,7 +217,7 @@ function drawDoodleEnemy(e,hpRatio){
   const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(e.type==='sniper'?3.4:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
-  ctx.save();ctx.translate(0,pose.y);ctx.rotate(pose.angle);
+  ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
   // Squash around the feet so hit reactions remain small and planted.
   const foot=top+height;ctx.translate(0,foot);ctx.scale(pose.sx,pose.sy);ctx.translate(0,-foot);
   if(e.type==='sniper'&&game.state.player.x<e.x)ctx.scale(-1,1);
@@ -500,6 +566,7 @@ function draw(){
         game.dom.ctx.beginPath();game.dom.ctx.moveTo(-e.r-4,0);game.dom.ctx.lineTo(-e.r-9,-5);game.dom.ctx.moveTo(-e.r-4,0);game.dom.ctx.lineTo(-e.r-9,5);game.dom.ctx.stroke()
       }
     }
+    drawEnemyActionMarks(e);
     game.dom.ctx.restore();
   }
 
@@ -530,7 +597,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 return api;
 };

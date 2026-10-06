@@ -157,6 +157,7 @@ function update(dt){
         e.bounceTime=.72;
         e.bounces--;
         e.attackCd=.35;
+        game.api.animateEnemyAction(e,'bounce');
         game.api.floatText(e.x,e.y,'BOING','#2e7f77');
         continue;
       }
@@ -169,6 +170,7 @@ function update(dt){
       if(e.attackCd<=0){
         game.api.damageWall(hit.wall,e.dmg*(e.type==='sapper'?2:1),e.x,e.y);
         if(e.type==='sapper')game.api.animateEnemyAction(e,'strike');
+        else if(e.type==='gnawer'||e.type==='grunt')game.api.animateEnemyAction(e,'bite',game.api.nearestPointOnWall(e,hit.wall));
         e.attackCd=e.type==='gnawer'?.24:.42
       }
       continue;

@@ -493,3 +493,24 @@ full campaign payout and reload persistence. With Playwright and Chromium,
 `node tests/browser-tools.cjs [packaged-site-directory]` checks drawing at zero
 ink, reward replacement/cancellation, tool layout and artwork, synergies,
 campaign payouts, purchases, and reloads on desktop and phone-sized viewports.
+
+
+## More doodle personality
+
+Grunts and Gnawers chomp when they actually hit a wall; Fast and Mini lean and
+skitter as they travel. Bouncers compress on ricochet and stretch while bouncing.
+Sprinters crouch during their existing dash warning and lean into the dash.
+Staple Snack lifts during its wall-slam wind-up, then squashes with a clack.
+Count Crayon rocks through its summoning ritual and pops upward when minions
+appear. The Eraser leans into a short swipe when it removes a wall.
+
+These reuse the original sprites with small transforms and short comic pen
+marks. Presentation records live outside combat state and consume no randomness;
+colliders, movement, attack timing and damage stay unchanged. Pause freezes the
+poses, freeze/stun suppress special motion, and reduced motion keeps neutral art.
+No new image assets, particles, sprite canvases or tint combinations are needed.
+
+Run `node tests/validate.cjs` for combat/event and animation regressions. The
+optional `node tests/browser-enemy-animation.cjs [packaged-site-directory]`
+checks real attack triggers, changing canvas pixels, desktop/phone rendering,
+pause, freeze/stun and live reduced-motion changes with Playwright/Chromium.

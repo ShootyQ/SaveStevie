@@ -805,3 +805,44 @@ console.log('PASS: five soundtrack loops, explicit splash unlock, chapter transi
  }
 }
 console.log('PASS: minimum ink and affordable clipping, free-stroke limits, 2–4 tool slots, replacement/cancellation and synergy cleanup, owned-effect weighting, 10% campaign legendary plans, and full-campaign scrap persistence.');
+
+// Personality motion is driven by real combat actions and lives outside state.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;
+ const wall=(x=200)=>({pts:[{x,y:80},{x,y:280}],hp:500,maxHp:500,thick:8,life:72,maxLife:72});
+ const gnawer=g.api.spawnEnemy(false,190,160,'gnawer');gnawer.speed=0;g.state.walls=[wall()];
+ g.api.update(.03);assert.equal(g.api.enemyActionCue(gnawer),'bite');assert.equal(g.state.walls[0].hp,500-gnawer.dmg,'one actual bite');
+ assert.ok(g.api.enemyAnimationPose(gnawer).x>0,'chomp points toward the wall');
+ g.state.walls=[];g.api.update(.3);assert.equal(g.api.enemyActionCue(gnawer),null,'no phantom bites');
+ const grunt=g.api.spawnEnemy(false,190,200,'grunt');grunt.speed=0;g.state.walls=[wall()];g.api.update(.03);
+ assert.equal(g.api.enemyActionCue(grunt),'bite','opening-wave Grunts chomp on real wall hits');g.state.walls=[];
+ const fast=g.api.spawnEnemy(false,100,100,'fast');g.api.updateEnemyAnimations(.016);fast.x+=2;g.api.updateEnemyAnimations(.016);assert.ok(g.api.enemyAnimationPose(fast).angle>.05,'little runners lean into their travel');
+ const sprinter=g.api.spawnEnemy(false,100,200,'sprinter');g.api.updateEnemyAnimations(.016);sprinter.dashTime=2.4;
+ g.api.updateEnemyAnimations(.016);assert.equal(g.api.enemyActionCue(sprinter),'charge');assert.ok(g.api.enemyAnimationPose(sprinter).sy<1);
+ sprinter.dashTime=2.7;const start={x:sprinter.x,y:sprinter.y};sprinter.x+=2;g.api.updateEnemyAnimations(.016);
+ assert.equal(g.api.enemyActionCue(sprinter),'dash');assert.equal(sprinter.x,start.x+2);assert.equal(sprinter.y,start.y,'pose never moves collider');
+ const bounce=g.api.spawnEnemy(false,190,180,'bouncer');g.state.enemies=[bounce];g.state.walls=[wall()];g.api.update(.03);
+ assert.equal(g.api.enemyActionCue(bounce),'bounce');assert.equal(bounce.bounces,2,'one combat ricochet');assert.ok(g.api.enemyAnimationPose(bounce).sx>1);
+ g.state.enemies=[];g.state.walls=[wall()];const stapler=g.api.spawnEnemy(false,150,180,'stapler');stapler.bossCd=0;
+ g.api.updateBossAbility(stapler,.01);g.api.updateEnemyAnimations(.05);assert.equal(g.api.enemyActionCue(stapler),'slam-ready');
+ g.api.updateBossAbility(stapler,.6);g.api.updateEnemyAnimations(.05);assert.ok(g.api.enemyAnimationPose(stapler).y<0);
+ const hp=g.state.walls[0].hp;g.api.updateBossAbility(stapler,.7);g.api.updateEnemyAnimations(.08);
+ assert.equal(g.api.enemyActionCue(stapler),'slam');assert.equal(g.state.walls[0].hp,hp-65);assert.ok(g.api.enemyAnimationPose(stapler).sy<1);
+ stapler.bossCd=0;g.api.updateBossAbility(stapler,.01);g.state.walls=[];g.api.updateBossAbility(stapler,1.3);g.api.updateEnemyAnimations(.4);
+ assert.equal(g.api.enemyActionCue(stapler),null,'lost target never clacks');
+ const crayon=g.api.spawnEnemy(false,120,200,'crayon');crayon.bossCd=0;g.api.updateBossAbility(crayon,.01);g.api.updateEnemyAnimations(.05);
+ assert.equal(g.api.enemyActionCue(crayon),'cast-ready');const count=g.state.enemies.length;g.api.updateBossAbility(crayon,1.3);g.api.updateEnemyAnimations(.1);
+ assert.equal(g.api.enemyActionCue(crayon),'summon');assert.equal(g.state.enemies.length,count+3);assert.ok(g.api.enemyAnimationPose(crayon).y<0);
+ const eraser=g.api.spawnEnemy(false,100,200,'eraser');eraser.eraseCd=0;g.state.walls=[wall()];g.api.eraserAttack(eraser,.01);g.api.updateEnemyAnimations(.1);
+ assert.equal(g.api.enemyActionCue(eraser),'erase');assert.equal(g.state.walls.length,0);assert.ok(g.api.enemyAnimationPose(eraser).x>0);
+ const pose=JSON.stringify(g.api.enemyAnimationPose(eraser));g.state.paused=true;g.api.update(.5);assert.equal(JSON.stringify(g.api.enemyAnimationPose(eraser)),pose);g.state.paused=false;
+ const snapshot=JSON.stringify(g.state);env.sandbox.Math.random=()=>{throw Error('presentation cannot draw randomness');};g.api.updateEnemyAnimations(.01);g.api.draw();g.api.draw();assert.equal(JSON.stringify(g.state),snapshot);
+ for(const e of [sprinter,stapler,crayon,eraser]){
+  if(!g.state.enemies.includes(e))g.state.enemies.push(e);e.freeze=1;g.api.updateEnemyAnimations(.01);assert.equal(g.api.enemyActionCue(e),null,'freeze suppresses personality motion');
+  e.freeze=0;e.stun=1;g.api.updateEnemyAnimations(.01);assert.equal(g.api.enemyActionCue(e),null,'stun suppresses personality motion');
+ }
+ g.api.startWave();assert.equal(g.api.enemyActionCue(eraser),null,'wave reset clears action records');
+ const reduced=load(true,{reduced:true}).sandbox.testGame;reduced.api.resetRun();const still=reduced.api.spawnEnemy(false,100,100,'crayon');still.bossWindup=.5;
+ reduced.api.animateEnemyAction(still,'summon');reduced.api.updateEnemyAnimations(.1);assert.equal(reduced.api.enemyActionCue(still),null);assert.equal(reduced.api.enemyAnimationPose(still).sx,1);
+}
+console.log('PASS: real Gnawer bites, Sprinter anticipation/dashes, Bouncer ricochets, boss wind-ups/slams/summons and Eraser swipes; unchanged combat, no cosmetic RNG, pause/freeze/stun/reduced motion and reset.');
