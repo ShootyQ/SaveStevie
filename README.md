@@ -786,3 +786,12 @@ dense marker ink for Scented Sharpie. Preview and completed walls share the same
 renderer. A faint full-width graphite band preserves the visible contact footprint;
 wall thickness, durability, ink cost and effect attachments retain their gameplay
 values. Grain is cached, capped and deterministic without consuming combat RNG.
+
+Wave 5 and 10 encounter bosses receive 1.8× HP and 2× base movement speed
+(745.2 HP / 37.08 px/s for King Doodle-Doom; 1402.2 HP / 40.28 px/s
+for Staple Snack before existing movement modifiers). Their normal/furious
+ability cooldowns are 3.5/2.5s; enclosure caps the waiting cooldown at 1.8s.
+Enclosed King prioritises swipes for 100/140 wall damage, while Staple Snack
+charges deal 110/150 wall damage. Existing 1.2s warnings, stun/freeze interruption,
+recovery and 35% enclosure exposure remain. Later bosses and ordinary enemies
+retain their previous tuning.
