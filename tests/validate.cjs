@@ -35,6 +35,7 @@ b.sandbox.testGame.api.applyVampireContact=(e,dt)=>{const g=b.sandbox.testGame;i
 b.sandbox.testGame.api.gravityDamageMultiplier=()=>1;
 b.sandbox.testGame.api.pullGravity=(e,dt,immobilized)=>{const g=b.sandbox.testGame;if(immobilized||!g.state.inks.gravity)return;const p=g.api.nearestWallPoint(e.x,e.y,120+g.state.inks.gravity*20);if(p){const dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1;g.api.moveEnemySafely(e,dx/d*(8+g.state.inks.gravity*5)*dt,dy/d*(8+g.state.inks.gravity*5)*dt)}};
 vm.runInContext("{const game=testGame;game.api.chainLightning=function chainLightning(source,level){\n  let count=1+Math.floor(level/2);\n  let range=110+level*18;\n  let mult=1;\n  if(game.state.synergies.has('Cryoshock')&&source.freeze>0){range+=70;count+=2;mult+=.55}\n  if(game.state.synergies.has('Tesla Well')&&source.gravitySlow>.15){range+=45;count+=1;mult+=.35}\n  if(game.state.synergies.has('THE STORM')){range+=65;count+=2;mult+=.45}\n  const nearby=[];\n  for(const e of game.state.enemies){if(e!==source&&game.api.withinRadius(e.x,e.y,source.x,source.y,range)){nearby.push(e);if(nearby.length===count)break}}\n  game.api.animateChainLightning(source,nearby);\n  game.api.dealDamage(source,(3+level*2)*mult,'electric');\n  nearby.forEach(e=>{game.api.dealDamage(e,(4+level*3)*mult,'electric');game.api.burst(e.x,e.y,'#7ea7ff',4)});\n  game.api.burst(source.x,source.y,'#7ea7ff',5);\n}\n;}",b.sandbox);
+vm.runInContext("{const game=testGame;game.api.applyInkContact=function applyInkContact(e,dt,wall=null){\n  let dps=game.state.stats.wallDamage;\n\n  if(game.state.synergies.has('Ring of Fire')&&wall&&wall.closed){\n    e.burn=Math.max(e.burn,2.3);\n    e.burnDps=Math.max(e.burnDps,8+game.state.inks.fire*3);\n  }\n\n  if(game.state.synergies.has('Needlepoint')&&game.state.stacks['Fine Tip']){\n    e.poison=Math.min(6,e.poison+dt*(1.8+game.state.inks.poison*.85));\n    e.poisonDps=Math.max(e.poisonDps,4+game.state.inks.poison*3);\n  }\n\n  if(game.state.synergies.has('Event Horizon')&&e.gravitySlow>.12&&game.state.inks.void>0){\n    const c=.006*game.state.inks.void*dt*60;\n    if(Math.random()<c){\n      if(e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss)game.api.dealDamage(e,65+game.state.inks.void*30,'void');\n      else game.api.dealDamage(e,e.hp,'void');\n      game.api.burst(e.x,e.y,'#46345e',14);\n    }\n  }\n\n  if(game.state.inks.chaos>0){\n    const roll=Math.random();\n    if(roll<.003*game.state.inks.chaos){\n      const randomInk=game.api.pick(['fire','frost','electric','poison','blast','vampire','gravity','repulsion','void']);\n      game.api.animateInkAccent(e,'chaos',0,0,randomInk);\n      game.api.applyOneInk(randomInk,e,dt,true);\n    }\n  }\n\n  if(game.state.inks.fire>0){\n    e.burn=Math.max(e.burn,1.5+game.state.inks.fire*.6);\n    e.burnDps=Math.max(e.burnDps,3+game.state.inks.fire*3);\n  }\n  if(game.state.inks.poison>0){\n    e.poison=Math.min(6,e.poison+dt*(1+game.state.inks.poison*.55));\n    e.poisonDps=2+game.state.inks.poison*2.5;\n  }\n  game.api.applyFrostContact(e,dt);\n  if(game.state.inks.electric>0&&e.chainCd<=0){\n    game.api.chainLightning(e,game.state.inks.electric);\n    e.chainCd=Math.max(.22,.8-game.state.inks.electric*.12);\n  }\n  game.api.applyVampireContact(e,dt);\n  if(game.state.inks.repulsion>0){\n    const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;\n    game.api.animateInkAccent(e,'repulsion',dx,dy);\n    e.x+=dx/m*(15+game.state.inks.repulsion*7)*dt;\n    e.y+=dy/m*(15+game.state.inks.repulsion*7)*dt;\n    if(game.state.synergies.has('Rail Ink'))e.charged=Math.max(e.charged,1.1);\n  }\n  if(game.state.inks.void>0){\n    const chance=.0025*game.state.inks.void*dt*60;\n    if(Math.random()<chance){\n      if(e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss)game.api.dealDamage(e,40+game.state.inks.void*25,'void');\n      else game.api.dealDamage(e,e.hp,'void');\n      game.api.burst(e.x,e.y,'#46345e',12);\n    }\n  }\n  return dps;\n}\n;}",b.sandbox);
 legacyStartingKit();b.sandbox.testGame.api.updateUI();
 // Compare unchanged combat against the original without the new presentation labels.
 b.sandbox.testGame.api.damageNumber=()=>{};
@@ -1053,7 +1054,7 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
 // A repeatable single-barrier encounter demonstrates the three solo roles.
 {
  const results={};
- for(const effect of ['none','gravity','vampire','frost']){
+ for(const effect of ['none','gravity','vampire','frost','repulsion','void','chaos','fire','poison']){
   const g=load(true).sandbox.testGame;g.api.resetRun();g.state.timeLeft=300;g.state.spawnTimer=9999;g.state.player.hp=20;
   if(effect!=='none')g.state.inks[effect]=1;
   const wall={pts:[{x:100,y:200},{x:700,y:200}],thick:8,hp:1e6,maxHp:1e6,life:300,maxLife:300,closed:false,intersections:0};g.state.walls=[wall];
@@ -1064,6 +1065,7 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  assert.ok(results.gravity.damage>results.none.damage*1.2,'Gravity improves solo damage through earlier wall contact and exposure');assert.ok(results.gravity.wallDamage<results.none.wallDamage,'Gravity holds reduce wall pressure despite earlier contact');
  assert.ok(results.vampire.damage>results.none.damage*1.8&&results.vampire.healing>15,'Vampire contributes damage and meaningful sustain');
  assert.ok(results.frost.wallDamage<results.none.wallDamage*.85,'Frost reduces incoming wall damage without losing baseline DPS');assert.ok(Math.abs(results.frost.damage-results.none.damage)<1);
+ assert.ok(results.repulsion.wallDamage<results.none.wallDamage*.5,'Repulsion buys substantial wall protection');assert.ok(results.void.damage>results.none.damage*1.5,'Void provides reliable solo damage');
  console.log('PASS: seeded 15-second solo encounter '+JSON.stringify(results));
 }
 
@@ -1098,7 +1100,7 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
 
 {
  const active=load(true),control=load(true),g=active.sandbox.testGame,c=control.sandbox.testGame;c.api.animateInkAccent=()=>{};
- for(const game of [g,c]){game.api.resetRun();game.state.spawnTimer=9999;game.state.inks.repulsion=2;game.state.stacks['Death Ink']=1;const e=game.api.spawnEnemy(false,240,260,'tank');game.api.applyInkContact(e,.1,{});game.api.dealDamage(e,3);}
+ for(const game of [g,c]){game.api.resetRun();game.state.spawnTimer=9999;game.state.inks.repulsion=2;game.state.stacks['Death Ink']=1;const e=game.api.spawnEnemy(false,240,260,'tank');game.api.applyInkContact(e,.8,{});game.api.dealDamage(e,3);}
  assert.equal(JSON.stringify(g.state),JSON.stringify(c.state),'new contact visuals preserve combat and RNG');
  const enemy=g.state.enemies[0];g.api.animateInkAccent(enemy,'chaos',0,0,'fire');let fx=g.api.abilityEffectsSnapshot();assert.equal(fx.accents.length,3);assert.equal(fx.accents.find(e=>e.kind==='chaos').result,'fire');
  for(let i=0;i<50;i++)g.api.animateInkAccent(enemy,'repulsion',1,0);assert.equal(g.api.abilityEffectsSnapshot().accents.length,3,'contact throttle prevents per-frame duplicates');
@@ -1107,4 +1109,30 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  g.state.paused=true;g.api.update(.2);assert.equal(JSON.stringify(g.api.abilityEffectsSnapshot()),before);g.state.paused=false;
  g.api.moveAbilityEffects(12,8);assert.equal(g.api.abilityEffectsSnapshot().accents[0].x,112);g.api.updateAbilityEffects(1);assert.equal(g.api.abilityEffectsSnapshot().accents.length,0);g.api.animateInkAccent(enemy,'death');g.api.resetAbilityEffects();assert.equal(g.api.abilityEffectsSnapshot().accents.length,0);
  console.log('PASS: remaining ink accents preserve combat/RNG, show Chaos results, throttle/cap, pause, draw purity, move, expire and reset.');
+}
+
+{
+ const setup=()=>{const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=9999;g.state.enemies=[];const e=g.api.spawnEnemy(false,250,200,'tank');e.hp=e.maxHp=10000;e.speed=0;return {env,g,e}};
+ const a=setup(),b=setup();a.g.state.inks.repulsion=b.g.state.inks.repulsion=1;
+ for(let i=0;i<80;i++)a.g.api.applyRepulsionContact(a.e,.01);b.g.api.applyRepulsionContact(b.e,.8);
+ assert.equal(a.e.hp,9988);assert.equal(b.e.hp,a.e.hp);assert.ok(Math.abs(a.e.x-b.e.x)<1e-8);assert.equal(a.e.stun,.12);
+ const wall={pts:[{x:260,y:100},{x:260,y:300}],thick:8,hp:100,maxHp:100};a.g.state.walls=[wall];a.e.x=220;a.e.y=200;a.g.state.player.x=100;a.g.api.applyRepulsionContact(a.e,.8);assert.ok(a.e.x<260-a.e.r-4,'shove cannot tunnel through intact wall');
+ const v=setup();v.g.state.inks.void=1;v.e.hp=1450;v.g.api.applyInkContact(v.e,.1);assert.ok(v.e.hp<=0,'Void executes below 14.5%');v.e.hp=1450;v.e.immunity='void';v.g.api.applyInkContact(v.e,.1);assert.equal(v.e.hp,1450,'immunity blocks execute and steady damage');v.e.immunity='';v.e.type='boss';v.g.api.applyInkContact(v.e,.1);assert.ok(Math.abs(v.e.hp-1449.4)<1e-8,'boss receives steady damage without execute');
+ const results={};for(const kind of ['fire','frost','electric','poison','blast','vampire','gravity','repulsion','void']){
+  const {g,e}=setup();g.state.inks.chaos=1;g.state.player.hp=30;g.api.pick=()=>kind;
+  g.api.applyChaosContact(e,1.39);assert.equal(e.hp,10000);g.api.applyChaosContact(e,.01);
+  results[kind]=10000-e.hp;assert.ok(results[kind]>=3,kind+' gives guaranteed impact damage');
+  if(kind==='fire')assert.ok(e.burn>0);if(kind==='frost')assert.ok(e.freeze>0);if(kind==='poison')assert.ok(e.poison>0);if(kind==='vampire')assert.ok(g.state.player.hp>30);if(kind==='gravity')assert.ok(e.gravitySlow>0);if(kind==='repulsion')assert.ok(e.x!==250);
+ }
+ const c=setup(),d=setup();for(const {g} of [c,d]){g.state.inks.chaos=1;g.api.pick=()=> 'void'}
+ for(let i=0;i<280;i++)c.g.api.applyChaosContact(c.e,.01);d.g.api.applyChaosContact(d.e,2.8);assert.equal(c.e.hp,d.e.hp);assert.equal(10000-c.e.hp,36);
+ assert.equal(c.g.api.remainingInkTuning(100).voidExecute,.3);assert.equal(c.g.api.remainingInkTuning(100).chaosInterval,.45);
+ console.log('PASS: timed Repulsion damage/safe shove/frame independence, Void execute/immunity/boss damage, every Chaos roll works, level caps and elapsed-time equivalence '+JSON.stringify(results));
+}
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.stacks['Death Ink']=1;
+ const e=g.api.spawnEnemy(false,200,200,'tank');e.hp=e.maxHp=100;g.api.dealDamage(e,10);assert.equal(e.hp,90);
+ e.hp=50;g.api.dealDamage(e,10);assert.equal(e.hp,38);e.hp=50;g.api.dealDamage(e,10,'fire');assert.equal(e.hp,40);
+ g.state.stacks['Death Ink']=100;e.hp=50;g.api.dealDamage(e,10);assert.equal(e.hp,36,'Death finisher caps at forty percent');
+ console.log('PASS: Death physical finisher threshold, elemental separation and high-level cap.');
 }
