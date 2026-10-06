@@ -505,8 +505,6 @@ button:disabled { transform:none; }
 .tool-socket img { width:80%; height:80%; object-fit:contain; }
 .socket-plus { font-size:clamp(15px,4vw,32px); font-weight:bold; color:#a88b40; }
 .socket-level { position:absolute; right:-2px; bottom:-3px; background:#26333c; color:#fff; font-size:11px; font-weight:bold; border:2px solid #fff7df; border-radius:50%; min-width:23px; height:23px; display:grid; place-items:center; }
-.advanced-tool .instrument-art { transform:rotate(45deg); }
-.advanced-tool .tool-socket { left:calc(27% + var(--socket) * (56% / var(--slots))); background:#fff8e6; border:2px solid #26333c; border-radius:50%; box-shadow:2px 2px 0 #c7b99a; }
 .tool-slots { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:0; }
 .tool-slot { padding:8px 10px; border:1px dashed #c0af82; background:#fffdf5; border-radius:7px; }
 .slot-number { display:block; font-size:8px!important; letter-spacing:1px; color:#917b48; margin-bottom:4px; }
@@ -564,3 +562,23 @@ button:disabled { transform:none; }
 @keyframes stevieNoteArrives{from{opacity:0;transform:translateY(12px) rotate(-4deg)}to{opacity:1;transform:translateY(0) rotate(-1deg)}}
 @media(max-width:420px){.stevie-note{padding:14px 10px;gap:8px}.stevie-note>img{width:48px;height:56px}.stevie-note h3{font-size:18px}.cardbox .stevie-note p{font-size:18px}.note-label{font-size:8px;letter-spacing:1px}}
 @media(prefers-reduced-motion:reduce){.stevie-note{animation:none;transform:none}}
+
+/* Shared four-tier tool artwork, with live effects aligned to drawn sockets. */
+.tool-tier-art { aspect-ratio:1536 / var(--art-height); overflow:hidden; }
+.tool-tier-art .instrument-art { position:absolute; width:100%; height:var(--art-image-height); object-fit:fill; transform:translateY(calc(-1 * var(--art-offset))); }
+.tool-tier-art .tool-socket { left:var(--socket-x); top:var(--socket-y); width:7.4%; background:none; border:0; box-shadow:none; }
+.tool-tier-art .socket-plus { font-size:clamp(10px,2.5vw,23px); }
+.tool-tier-art .socket-level { font-size:9px; min-width:18px; height:18px; border-width:1px; right:-4px; bottom:-5px; }
+.notebook-perk>.tool-tier-art { width:100%; margin:0 0 10px; }
+.dev-mode-section { margin-top:16px; padding-top:12px; border-top:1px dashed #c6b797; }
+.dev-mode-button { font-size:10px; letter-spacing:1px; padding:8px 12px; min-height:40px; }
+.dev-mode-button[aria-pressed=true] { background:#e9d7f5; border-color:#8456c9; }
+.dev-mode-section .option-help { margin:8px 0 0; }
+.dev-reward-picker { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:12px; margin:12px 0; border:1px dashed #8456c9; border-radius:10px; background:#f6effa; }
+.dev-reward-picker[hidden],.dev-run-banner[hidden] { display:none; }
+.dev-reward-picker label { font-size:12px; font-weight:bold; min-width:0; }
+.dev-reward-picker select { display:block; width:100%; min-width:0; min-height:44px; margin-top:5px; padding:8px; border:1px solid #b7a6c0; border-radius:6px; background:#fffdf7; color:#26333c; font:inherit; }
+.cardbox .dev-reward-picker p { grid-column:1 / -1; font-size:11px; margin:0; text-align:left; }
+.cards.dev-preview { grid-template-columns:minmax(0,1fr); max-width:420px; margin:0 auto; }
+.dev-run-banner { position:fixed; top:0; left:50%; transform:translateX(-50%); z-index:100; padding:3px 10px; border-radius:0 0 8px 8px; background:#513963; color:#fff; font-size:9px; pointer-events:none; white-space:nowrap; }
+@media(max-width:420px){.dev-reward-picker{grid-template-columns:1fr;gap:8px}.tool-tier-art .socket-level{font-size:8px;min-width:14px;height:14px}}

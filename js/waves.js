@@ -50,6 +50,7 @@ function resetRun(){
   for(const k in game.state.stacks)delete game.state.stacks[k];
   game.state.player.maxHp=75;game.state.player.hp=75;game.state.player.rockCd=0;
   game.state.drawing=false;game.state.currentWall=null;
+  game.api.beginDevRun();
   game.api.applyNotebookLoadout();game.api.beginScrapRun();game.api.resetRewardPlan();
   game.state.running=true;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
   game.dom.startOverlay.style.display='none';game.dom.gameOverOverlay.style.display='none';game.dom.upgradeOverlay.style.display='none';
@@ -62,6 +63,7 @@ function startWave(){
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
   game.api.resetAbilityEffects();
+  game.api.resetPlaguefire();
   game.api.resetEnemyWave();game.api.resetSustain();
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.particles=[];game.state.floaters=[];
   game.state.finalOvertime=false; game.state.finalBossDefeated=false;
@@ -100,7 +102,7 @@ function waveComplete(){
   if(game.state.wave===20&&!game.state.endless){
     game.api.finishScrapRun(true);renderStevieNote(true);
     game.state.running=false;game.dom.$('victoryScore').textContent=game.state.score;game.dom.victoryOverlay.style.display='grid';
-    if(game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
+    if(!game.api.devRunActive()&&game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
     game.api.updateUI();return;
   }
   game.dom.waveOverlay.style.display='grid';game.api.updateUI();
@@ -118,7 +120,7 @@ function gameOver(){
   game.state.running=false;
   game.dom.$('finalWave').textContent=game.state.wave;game.dom.$('finalKills').textContent=game.state.kills;game.dom.$('finalScore').textContent=game.state.score;
   game.dom.gameOverOverlay.style.display='grid';
-  if(game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
+  if(!game.api.devRunActive()&&game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
 }
 const api = { stevieNote, renderStevieNote, waveDuration, resetRun, startWave, waveComplete, proceedAfterWave, gameOver };
 Object.assign(game.api, api);

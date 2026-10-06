@@ -947,3 +947,62 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  assert.ok(cards.every(c=>!c.className.includes('epic')));
  console.log('PASS: all four tiers for every upgrade, multi-level/common equivalence, read-only full previews, one-wave advancement, replacement/cancellation, capped gains and distinct offers.');
 }
+
+// Plaguefire replaces infection hopping with bounded ground hazards and scars.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=1000;
+ const equip=name=>g.api.chooseUpgrade(g.catalog.upgrades.find(u=>u.name===name));
+ equip('Fire Ink');equip('Poison Ink');
+ const source=g.api.spawnEnemy(false,150,150,'grunt');source.burn=2;source.poison=2;source.hp=0;g.api.killEnemy(source);
+ let snap=g.api.plaguefireSnapshot();assert.equal(snap.patches.length,1,'defeated burning poisoned enemy drops a patch');assert.equal(snap.patches[0].r,9);
+ const target=g.api.spawnEnemy(false,150,150,'tank'),outside=g.api.spawnEnemy(false,230,150,'tank');
+ const hp=target.hp,outsideHp=outside.hp,playerHp=g.state.player.hp,wall={pts:[{x:130,y:150},{x:170,y:150}],hp:100,maxHp:100};g.state.walls=[wall];
+ g.api.updatePlaguefire(1);assert.equal(target.hp,hp-10.5,'one-second Fire 6 + Poison 4.5 damage');assert.equal(outside.hp,outsideHp);assert.equal(g.state.player.hp,playerHp);assert.equal(wall.hp,100,'hazards never hurt Stevie or walls');
+ assert.equal(g.api.plaguefireSnapshot().patches[0].r,11.9);
+ const burning=g.api.spawnEnemy(false,180,150,'tank');burning.burn=2;burning.poison=2;g.api.applySynergies(burning,1);assert.equal(target.poison,0,'no old infection hopping');
+ g.api.dropPlaguefire(source);const before=target.hp;g.api.updatePlaguefire(1);assert.equal(target.hp,before-10.5,'overlapping patches do not stack');
+ target.immunity='fire';const immuneHp=target.hp;g.api.updatePlaguefire(.5);assert.equal(target.hp,immuneHp-2.25,'fire immunity still permits poison damage');
+ target.immunity='poison';const poisonImmuneHp=target.hp;g.api.updatePlaguefire(.5);assert.equal(target.hp,poisonImmuneHp-3);
+ for(const flag of ['paused','inUpgrade','betweenWaves','awaitingSpec']){g.state[flag]=true;const frozen=JSON.stringify(g.api.plaguefireSnapshot());g.api.updatePlaguefire(1);assert.equal(JSON.stringify(g.api.plaguefireSnapshot()),frozen,flag+' freezes lifetime');g.state[flag]=false;}
+ g.state.running=false;const stopped=JSON.stringify(g.api.plaguefireSnapshot());g.api.updatePlaguefire(1);assert.equal(JSON.stringify(g.api.plaguefireSnapshot()),stopped);g.state.running=true;
+ const unchanged=JSON.stringify(g.api.plaguefireSnapshot()),combat=JSON.stringify(g.state);env.calls.length=0;g.api.drawPlaguefire();g.api.drawPlaguefire();assert.equal(JSON.stringify(g.api.plaguefireSnapshot()),unchanged);assert.equal(JSON.stringify(g.state),combat,'drawing never changes combat');for(const call of env.calls)for(const n of call.slice(1))if(typeof n==='number')assert.ok(Number.isFinite(n));
+ g.api.movePlaguefire(20,-10);assert.equal(g.api.plaguefireSnapshot().patches[0].x,170);assert.equal(g.api.plaguefireSnapshot().patches[0].y,140);
+ // The first patch has three seconds elapsed; expire exactly at ten seconds.
+ g.state.enemies=[];g.api.updatePlaguefire(6.9);assert.equal(g.api.plaguefireSnapshot().scars.length,0);g.api.updatePlaguefire(.1);assert.equal(g.api.plaguefireSnapshot().scars.length,1);assert.equal(g.api.plaguefireSnapshot().scars[0].r,38);
+ g.api.updatePlaguefire(20);assert.equal(g.api.plaguefireSnapshot().patches.length,0);assert.equal(g.api.plaguefireSnapshot().scars.length,2,'burnout retains paper holes');
+ env.calls.length=0;g.api.drawPlaguefire();for(const call of env.calls)for(const n of call.slice(1))if(typeof n==='number')assert.ok(Number.isFinite(n));
+ for(let batch=0;batch<4;batch++){for(let i=0;i<30;i++)g.api.dropPlaguefire({...source,x:50+i,y:70});assert.equal(g.api.plaguefireSnapshot().patches.length,12);g.api.updatePlaguefire(10);}
+ assert.equal(g.api.plaguefireSnapshot().scars.length,24,'scar memory is bounded');
+ g.api.startWave();assert.equal(g.api.plaguefireSnapshot().scars.length,0,'next wave is fresh paper');assert.equal(g.api.plaguefireSnapshot().patches.length,0);
+ g.api.dropPlaguefire({...source,poison:0});g.api.dropPlaguefire({...source,burn:0});g.api.dropPlaguefire({...source,immunity:'fire'});assert.equal(g.api.plaguefireSnapshot().patches.length,0,'both actual statuses required');
+ g.state.synergies.delete('Plaguefire');g.api.dropPlaguefire(source);assert.equal(g.api.plaguefireSnapshot().patches.length,0,'synergy required');
+ // Real simulation handles patch kills/rewards once through the existing path.
+ g.state.synergies.add('Plaguefire');g.api.dropPlaguefire(source);const victim=g.api.spawnEnemy(false,150,150,'grunt');victim.hp=.1;victim.speed=0;const kills=g.state.kills;
+ g.api.update(.033);assert.equal(g.state.enemies.includes(victim),false);assert.equal(g.state.kills,kills+1);g.api.update(.033);assert.equal(g.state.kills,kills+1);
+ console.log('PASS: Plaguefire death drops, ten-second growth/burnout, damage/immunity/overlap, no infection hopping, pause/pure rendering, movement, bounded pools/scars, fresh waves and real kill rewards.');
+}
+
+// Manual rewards are session-only, deterministic, and never pollute progression.
+{
+ const saved=new Map([['doodleDefenderBestV4','1'],['saveStevieNotebookV1',JSON.stringify({version:1,scraps:42,lifetimeScraps:50,levels:{}})]]);
+ const storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,String(v))};
+ const env=load(true,{storage}),g=env.sandbox.testGame;assert.equal(g.api.devModeEnabled(),false);
+ const original=new Map(saved);g.api.setDevMode(true);g.api.resetRun();assert.equal(g.api.devRunActive(),true);
+ const get=g.api.getUpgrade;g.api.getUpgrade=()=>{throw Error('dev rewards must not roll RNG')};
+ g.state.legendaryWave=g.state.wave;g.state.legendaryOffered=false;
+ env.node('devUpgrade').value='Blast Ink';env.node('devRarity').value='rare';env.node('cards').children=[];g.api.openUpgrade();
+ assert.equal(env.node('devRewardPicker').hidden,false);assert.equal(env.node('rerollBtn').hidden,true);assert.equal(env.node('cards').children.length,1);assert.equal(g.state.legendaryOffered,false);
+ assert.match(env.node('cards').children[0].innerHTML,/Blast Ink/);assert.match(env.node('cards').children[0].innerHTML,/Level 3/);
+ const rerolls=g.state.rerolls;g.api.reroll();assert.equal(g.state.rerolls,rerolls);
+ env.node('cards').children[0].onclick();assert.equal(g.state.inks.blast,3);assert.equal(g.state.wave,2);assert.equal(g.state.best,1);
+ env.node('devUpgrade').value='Poison Ink';env.node('devRarity').value='legendary';env.node('cards').children=[];g.api.openUpgrade();env.node('cards').children[0].onclick();assert.equal(g.state.inks.poison,4);
+ env.node('devUpgrade').value='Fire Ink';env.node('devRarity').value='uncommon';env.node('cards').children=[];g.api.openUpgrade();env.node('cards').children[0].onclick();assert.equal(env.node('effectReplacement').hidden,false);assert.equal(g.state.inks.fire,0);
+ env.node('effectReplacement').children.at(-1).onclick();assert.equal(g.state.inks.blast,3);g.api.chooseUpgrade({...g.catalog.upgrades.find(u=>u.name==='Fire Ink'),rarity:'uncommon'},'Blast Ink');assert.equal(g.state.inks.fire,2);assert.equal(g.state.inks.blast,0);assert.ok(g.state.synergies.has('Plaguefire'));
+ g.api.awardScraps(100);g.state.kills=25;g.api.awardKillScraps();g.api.awardWaveScraps();g.api.finishScrapRun(true);assert.equal(g.api.notebookSnapshot().scraps,42);
+ g.api.setDevMode(false);assert.equal(g.api.devRunActive(),true,'turning off cannot rank a modified run');g.state.wave=50;g.api.gameOver();assert.equal(g.state.best,1);assert.deepEqual([...saved],[...original],'no dev-run progress writes');
+ g.api.getUpgrade=get;g.api.resetRun();assert.equal(g.api.devRunActive(),false);g.api.awardScraps(1);assert.equal(g.api.notebookSnapshot().scraps,43,'new normal run earns progress');
+ g.api.setDevMode(true);assert.equal(g.api.devRunActive(),true,'enabling mid-run marks the whole remaining run');g.api.setDevMode(false);g.api.awardScraps(10);assert.equal(g.api.notebookSnapshot().scraps,43);g.state.wave=60;g.api.gameOver();assert.equal(g.state.best,1);
+ const reload=load(true,{storage}).sandbox.testGame;assert.equal(reload.api.devModeEnabled(),false,'reload defaults to normal rewards');
+ for(const [rank,slots] of [[0,2],[3,2],[6,3],[10,4]]){g.state.tool={rank,slots,name:'Test'};g.api.renderTool('buildTool');const html=env.node('buildTool').innerHTML;assert.match(html,/tool-tiers.png/);assert.equal((html.match(/class="tool-socket"/g)||[]).length,slots);assert.ok(!html.includes('undefined%'));}
+ console.log('PASS: deterministic selected rarity rewards, full-slot replacement/cancel, unchanged normal RNG, session-only dev mode, persistent unranked runs, protected scraps/records, restored normal progress and all tool socket tiers.');
+}

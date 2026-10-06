@@ -11,7 +11,25 @@ function setAudioVolume(name,value){
   try{localStorage.setItem(key,JSON.stringify(preferences));storageIssue=false;}catch{storageIssue=true;}
   game.api.applyMusicVolume?.();renderOptions();return true;
 }
+// Session-only manual rewards. Once used, a run stays unranked until reset.
+let devEnabled=false,testRun=false;
+function devModeEnabled(){return devEnabled}
+function devRunActive(){return testRun}
+function beginDevRun(){testRun=devEnabled;renderDevMode()}
+function setDevMode(enabled){
+  devEnabled=!!enabled;
+  if(devEnabled&&game.state.running)testRun=true;
+  renderDevMode();
+  if(game.state.running&&game.state.inUpgrade)game.api.rollCards(game.state.wave%5===0);
+}
+function renderDevMode(){
+  const button=game.dom.$('devModeBtn');button.textContent=devEnabled?'DEV MODE · ON':'DEV MODE';
+  button.setAttribute?.('aria-pressed',String(devEnabled));
+  game.dom.$('devModeNote').textContent=devEnabled?'Manual rewards enabled for this visit. Dev runs earn no scraps or best-wave records.':testRun?'Manual rewards off. This run remains a dev run; start a new run for normal progress.':'Choose your upgrade and rarity after each wave. Combat plays normally.';
+  game.dom.$('devRunBanner').hidden=!testRun;
+}
 function renderOptions(){
+  renderDevMode();
   for(const [name,id] of [['musicVolume','musicVolume'],['effectsVolume','effectsVolume']]){
     game.dom.$(id).value=Math.round(preferences[name]*100);game.dom.$(id+'Value').textContent=Math.round(preferences[name]*100)+'%';
   }
@@ -32,8 +50,9 @@ function openOptions(){game.api.openInfo('options');}
 function closeOptions(){game.api.closeInfo();}
 function openStatistics(){game.api.openInfo('statistics');}
 function closeStatistics(){game.api.closeInfo();}
-const api={audioSettings,setAudioVolume,renderOptions,renderStatistics,openOptions,closeOptions,openStatistics,closeStatistics};Object.assign(game.api,api);
+const api={devModeEnabled,devRunActive,beginDevRun,setDevMode,renderDevMode,audioSettings,setAudioVolume,renderOptions,renderStatistics,openOptions,closeOptions,openStatistics,closeStatistics};Object.assign(game.api,api);
 for(const name of ['musicVolume','effectsVolume'])game.dom.$(name).oninput=e=>setAudioVolume(name,Number(e.target.value)/100);
 game.dom.$('optionsIntros').onchange=e=>game.api.setMonsterIntrosEnabled(e.target.checked);
+game.dom.$('devModeBtn').onclick=()=>setDevMode(!devEnabled);
 renderOptions();return api;
 };

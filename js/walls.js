@@ -255,12 +255,6 @@ function chainLightning(source,level){
 }
 
 function applySynergies(e,dt){
-  if(game.state.synergies.has('Plaguefire')&&e.burn>0&&e.poison>1){
-    for(const n of game.state.enemies){
-      if(n!==e&&game.api.withinRadius(n.x,n.y,e.x,e.y,72))n.poison=Math.min(6,n.poison+dt*.9)
-    }
-  }
-
   if(game.state.synergies.has('Cryoshock')&&e.freeze>0)game.api.dealDamage(e,Math.max(4,game.state.inks.electric*7)*dt,'electric');
   if(game.state.synergies.has('Black Ice')&&e.freeze>0)e.gravitySlow=Math.max(e.gravitySlow,.62);
   if(game.state.synergies.has('Leech Ink')&&e.poison>0){
