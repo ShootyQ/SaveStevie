@@ -440,3 +440,19 @@ track or mute action. Track URLs carry the build version, with `preload=none`.
 See `assets/audio/README.md` for file names and durations. The optional
 `node tests/browser-music.cjs [packaged-site-directory]` verifies native MP3
 playback and chapter selection on desktop and phone-sized browsers.
+
+## Animated splash scene
+
+The splash reuses Stevie’s four-column/two-row sprite sheet for idle, blink and
+throw poses. A small CSS rock arc is synchronized with his throw and the
+sniper’s reaction. The grunt shifts, the splitter bounces, the fire wiggles,
+and the pencil retraces the ink barrier in a six-second loop. Buttons remain
+stationary. These decorative CSS animations never use combat state, random
+numbers, or another JavaScript frame loop. Animation playback pauses when
+startOverlay is hidden; prefers-reduced-motion disables movement, leaves the
+full barrier visible, and hides the decorative rock. The sprite sheet is
+versioned by the site build like other images.
+
+The optional `node tests/browser-splash.cjs [packaged-site-directory]` checks
+animation playback/pause, existing sprite loading, keyboard controls, layout
+on desktop/phones, and the reduced-motion scene.

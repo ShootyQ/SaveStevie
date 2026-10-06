@@ -333,3 +333,45 @@ button:disabled{opacity:.5;cursor:default}
 #bossOvertime{position:absolute;top:58px;left:50%;transform:translateX(-50%);max-width:calc(100% - 24px);padding:6px 10px;border:2px dashed #a56a16;border-radius:8px;background:#fff6ddf5;color:#815019;font-size:12px;font-weight:bold;text-align:center;pointer-events:none;z-index:6}
 
 #splashMusicBtn{font-size:12px;min-height:36px;margin:0 0 8px}
+
+/* The splash uses existing art and a six-second doodle scene, outside combat. */
+.splash-art .splash-stevie{position:absolute;aspect-ratio:128 / 136;overflow:hidden;pointer-events:none;animation:splashStevieSway 3s ease-in-out infinite}
+.splash-art .splash-stevie-frames{width:400%;max-width:none;left:0;top:0;animation:splashStevieFrames 6s step-end infinite}
+.splash-grunt{transform-origin:50% 85%;animation:splashGruntWiggle 2.6s ease-in-out infinite}
+.splash-sniper{transform-origin:50% 80%;animation:splashSniperReact 6s ease-in-out infinite}
+.splash-splitter{transform-origin:50% 90%;animation:splashSplitterBounce 1.8s ease-in-out infinite}
+.splash-pencil{animation:splashPencilTrace 6s ease-in-out infinite}
+.splash-fire{transform-origin:50% 100%;animation:splashFireFlicker .9s ease-in-out infinite}
+.splash-ink-stroke{stroke-dasharray:1;animation:splashInkTrace 6s ease-in-out infinite}
+.splash-scribble{animation:splashNoteWiggle 3.8s ease-in-out infinite}
+.splash-rock{position:absolute;left:57%;top:55%;width:2%;aspect-ratio:5 / 4;border:1px solid #5f5a53;border-radius:45% 60% 40% 50%;background:#aea088;opacity:0;pointer-events:none;animation:splashRockToss 6s linear infinite}
+#startOverlay .splash-art *{animation-play-state:var(--splash-motion,running)}
+#startOverlay[style*="display: none"]{--splash-motion:paused}
+@keyframes splashStevieFrames{
+  0%,97%{transform:translate(0,0)}16%{transform:translate(-25%,0)}29%{transform:translate(-50%,0)}31%{transform:translate(-75%,0)}44%{transform:translate(0,0)}
+  58%{transform:translate(0,-50%)}61%{transform:translate(-25%,-50%)}65%{transform:translate(-50%,-50%)}70%{transform:translate(-75%,-50%)}75%{transform:translate(0,0)}90%{transform:translate(-25%,0)}
+}
+@keyframes splashStevieSway{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-2px) rotate(1deg)}}
+@keyframes splashGruntWiggle{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(-3deg) translateY(-3px)}}
+@keyframes splashSplitterBounce{0%,100%{transform:rotate(-5deg) scale(1.03,.97)}45%{transform:translateY(-6px) rotate(3deg) scale(.97,1.03)}}
+@keyframes splashSniperReact{0%,55%,80%,100%{transform:rotate(7deg)}65%{transform:rotate(3deg)}73%{transform:translateX(3px) rotate(12deg)}76%{transform:rotate(4deg)}}
+@keyframes splashFireFlicker{0%,100%{transform:rotate(-25deg) scale(.96,1)}50%{transform:rotate(-19deg) scale(1.05,1.08)}}
+@keyframes splashPencilTrace{0%,58%,100%{transform:rotate(-10deg)}8%{transform:translate(135%,-15%) rotate(10deg)}30%{transform:translate(145%,-195%) rotate(40deg)}44%{transform:translate(350%,-220%) rotate(80deg)}54%{transform:translate(420%,-20%) rotate(100deg)}}
+@keyframes splashInkTrace{0%,8%,100%{stroke-dashoffset:1}54%,94%{stroke-dashoffset:0}}
+@keyframes splashRockToss{0%,64%{opacity:0;transform:translate(0,0)}65%{opacity:1;transform:translate(0,0)}69%{opacity:1;transform:translate(700%,-1000%) rotate(160deg)}73%{opacity:1;transform:translate(1350%,-400%) rotate(300deg)}74%,100%{opacity:0;transform:translate(1350%,-400%) rotate(300deg)}}
+@keyframes splashNoteWiggle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(-5deg)}}
+@media(prefers-reduced-motion:reduce){
+  .splash-art *{animation:none!important}
+  .splash-ink-stroke{stroke-dashoffset:0}
+  .splash-rock{display:none}
+}
+@media(max-height:520px) and (min-width:600px){
+  .splash-box{gap:4px 18px;padding:10px 20px}
+  .splash-art{grid-row:2 / span 4}
+  .splash-title{font-size:32px}
+  .splash-howto{padding:4px 0}
+  .splash-howto span{font-size:11px}
+  #splashNotebookBtn{grid-column:2;grid-row:6;min-height:36px;font-size:11px;margin:0;padding:7px}
+  #startOverlay #splashMusicBtn{grid-column:1;grid-row:6;margin:0;min-height:36px;padding:7px}
+  .splash-footer{grid-column:1 / -1;grid-row:7;font-size:10px}
+}
