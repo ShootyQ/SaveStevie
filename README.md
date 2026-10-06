@@ -514,3 +514,19 @@ Run `node tests/validate.cjs` for combat/event and animation regressions. The
 optional `node tests/browser-enemy-animation.cjs [packaged-site-directory]`
 checks real attack triggers, changing canvas pixels, desktop/phone rendering,
 pause, freeze/stun and live reduced-motion changes with Playwright/Chromium.
+
+
+## Illustrated notebook interface
+
+The Notebook wallet and scrap summaries use a custom transparent torn-paper
+scrap collectible. Illustrated toolbar buttons, drawing/defending/upgrading
+stickers, paper tape and quiet splash doodles share the existing notebook palette.
+The tool purchase card shows your current drawing instrument. Text labels and
+keyboard focus remain visible, and the splash keeps its animated characters.
+Short phone landscapes use compact sticker rows to keep all menu controls in view.
+
+See `assets/art/ui/README.md` for artwork details. The site packager now versions
+local PNG/SVG references in CSS as well as HTML resources, so new interface art
+refreshes together with the deployment. The game still needs no dependencies.
+Run `node tests/validate.cjs`; the existing optional `browser-splash.cjs`,
+`browser-notebook.cjs`, and `browser-tools.cjs` suites check the affected screens.
