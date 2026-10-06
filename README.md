@@ -604,3 +604,25 @@ Run `node tests/validate.cjs` and, with Playwright/Chromium,
 `node tests/browser-plaguefire.cjs [packaged-site-directory]`. The browser suite
 checks real death triggers, changing canvas pixels, pause, live reduced-motion
 changes, burnout, resizing and fresh-wave reset at desktop and phone sizes.
+
+## Manual rewards for playtesting
+
+Open **Options → DEV MODE** to choose an upgrade and its rarity on each wave's
+reward screen. The dropdown includes every currently available effect and
+utility; the preview shows its full gain. Select Common (+1), Uncommon (+2),
+Rare (+3), or Legendary (+4), then take the preview card. Normal effect slots,
+replacement/cancellation, stat caps and one-time unlock rules still apply.
+Boss rewards also allow manual choices. Enemy behavior and combat still play
+normally; this bypasses reward randomness rather than all combat randomness.
+
+DEV MODE is session-only and defaults off after a reload. Enabling it during
+an existing run marks that run as a dev run. Dev runs earn no further Notebook
+scraps or best-wave records; turning it off does not make a modified run ranked.
+Turn it off and start a new run to resume normal rewards and saved progress.
+A small banner identifies dev runs. Your existing saves and permanent perks
+remain available and unchanged by dev rewards.
+
+All four drawing-tool tiers now use matching socketed artwork, with live effect
+icons in the illustrated sockets. See `assets/art/tools/README.md`. Run
+`node tests/browser-dev-tools.cjs [packaged-site-directory]` with Playwright and
+Chromium for manual reward, record protection, artwork and responsive checks.

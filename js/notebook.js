@@ -32,12 +32,12 @@ function updateScrapCounters(){
   for(const id of ['waveRunScraps','deathRunScraps','victoryRunScraps'])game.dom.$(id).textContent=runScraps;
 }
 function awardScraps(amount){
-  if(!runActive||!Number.isSafeInteger(amount)||amount<=0)return;
+  if(game.api.devRunActive()||!runActive||!Number.isSafeInteger(amount)||amount<=0)return;
   const earned=Math.min(amount,maxCurrency-progress.scraps);
   progress.scraps+=earned;progress.lifetimeScraps=Math.min(maxCurrency,progress.lifetimeScraps+earned);runScraps+=earned;
   saveNotebook();updateScrapCounters();
 }
-function beginScrapRun(){runScraps=0;killScraps=0;runActive=true;updateScrapCounters()}
+function beginScrapRun(){runScraps=0;killScraps=0;runActive=!game.api.devRunActive();updateScrapCounters()}
 function resumeScrapRun(){runActive=true}
 function awardKillScraps(){
   if(!runActive)return;
@@ -100,7 +100,7 @@ function renderNotebook(){
   for(const perk of perks){
     const rank=l[perk.id],maxed=rank===perk.max,price=perkPrice(perk,rank),card=document.createElement('article');card.className='notebook-perk';
     const art=perk.id==='tool'?'assets/art/tools/'+(rank>=10?'sharpie':rank>=6?'pen':rank>=3?'mechanical':'pencil')+'.svg':'assets/art/upgrades/'+perk.art+'.svg';
-    card.innerHTML=`<div class="notebook-perk-heading"><img src="${art}${query}" alt="" width="48" height="48"><div><h3>${perk.name}</h3><span>Rank ${rank} / ${perk.max}</span></div></div><p>${perk.desc}</p><p class="notebook-effect">${perk.effect(rank)}</p><p class="notebook-next">${maxed?'All ranks unlocked.':'Next rank: '+perk.effect(rank+1)}</p>`;
+    card.innerHTML=`${perk.id==='tool'?game.api.toolIllustration(rank):''}<div class="notebook-perk-heading"><img src="${art}${query}" alt="" width="48" height="48"><div><h3>${perk.name}</h3><span>Rank ${rank} / ${perk.max}</span></div></div><p>${perk.desc}</p><p class="notebook-effect">${perk.effect(rank)}</p><p class="notebook-next">${maxed?'All ranks unlocked.':'Next rank: '+perk.effect(rank+1)}</p>`;
     const button=document.createElement('button');button.id='notebookBuy-'+perk.id;
     button.disabled=maxed||locked||progress.scraps<price;
     button.textContent=maxed?'Fully upgraded':locked?'Available after this run':'Buy rank '+(rank+1)+' · '+price+' scraps';

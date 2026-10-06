@@ -981,3 +981,28 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  g.api.update(.033);assert.equal(g.state.enemies.includes(victim),false);assert.equal(g.state.kills,kills+1);g.api.update(.033);assert.equal(g.state.kills,kills+1);
  console.log('PASS: Plaguefire death drops, ten-second growth/burnout, damage/immunity/overlap, no infection hopping, pause/pure rendering, movement, bounded pools/scars, fresh waves and real kill rewards.');
 }
+
+// Manual rewards are session-only, deterministic, and never pollute progression.
+{
+ const saved=new Map([['doodleDefenderBestV4','1'],['saveStevieNotebookV1',JSON.stringify({version:1,scraps:42,lifetimeScraps:50,levels:{}})]]);
+ const storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,String(v))};
+ const env=load(true,{storage}),g=env.sandbox.testGame;assert.equal(g.api.devModeEnabled(),false);
+ const original=new Map(saved);g.api.setDevMode(true);g.api.resetRun();assert.equal(g.api.devRunActive(),true);
+ const get=g.api.getUpgrade;g.api.getUpgrade=()=>{throw Error('dev rewards must not roll RNG')};
+ g.state.legendaryWave=g.state.wave;g.state.legendaryOffered=false;
+ env.node('devUpgrade').value='Blast Ink';env.node('devRarity').value='rare';env.node('cards').children=[];g.api.openUpgrade();
+ assert.equal(env.node('devRewardPicker').hidden,false);assert.equal(env.node('rerollBtn').hidden,true);assert.equal(env.node('cards').children.length,1);assert.equal(g.state.legendaryOffered,false);
+ assert.match(env.node('cards').children[0].innerHTML,/Blast Ink/);assert.match(env.node('cards').children[0].innerHTML,/Level 3/);
+ const rerolls=g.state.rerolls;g.api.reroll();assert.equal(g.state.rerolls,rerolls);
+ env.node('cards').children[0].onclick();assert.equal(g.state.inks.blast,3);assert.equal(g.state.wave,2);assert.equal(g.state.best,1);
+ env.node('devUpgrade').value='Poison Ink';env.node('devRarity').value='legendary';env.node('cards').children=[];g.api.openUpgrade();env.node('cards').children[0].onclick();assert.equal(g.state.inks.poison,4);
+ env.node('devUpgrade').value='Fire Ink';env.node('devRarity').value='uncommon';env.node('cards').children=[];g.api.openUpgrade();env.node('cards').children[0].onclick();assert.equal(env.node('effectReplacement').hidden,false);assert.equal(g.state.inks.fire,0);
+ env.node('effectReplacement').children.at(-1).onclick();assert.equal(g.state.inks.blast,3);g.api.chooseUpgrade({...g.catalog.upgrades.find(u=>u.name==='Fire Ink'),rarity:'uncommon'},'Blast Ink');assert.equal(g.state.inks.fire,2);assert.equal(g.state.inks.blast,0);assert.ok(g.state.synergies.has('Plaguefire'));
+ g.api.awardScraps(100);g.state.kills=25;g.api.awardKillScraps();g.api.awardWaveScraps();g.api.finishScrapRun(true);assert.equal(g.api.notebookSnapshot().scraps,42);
+ g.api.setDevMode(false);assert.equal(g.api.devRunActive(),true,'turning off cannot rank a modified run');g.state.wave=50;g.api.gameOver();assert.equal(g.state.best,1);assert.deepEqual([...saved],[...original],'no dev-run progress writes');
+ g.api.getUpgrade=get;g.api.resetRun();assert.equal(g.api.devRunActive(),false);g.api.awardScraps(1);assert.equal(g.api.notebookSnapshot().scraps,43,'new normal run earns progress');
+ g.api.setDevMode(true);assert.equal(g.api.devRunActive(),true,'enabling mid-run marks the whole remaining run');g.api.setDevMode(false);g.api.awardScraps(10);assert.equal(g.api.notebookSnapshot().scraps,43);g.state.wave=60;g.api.gameOver();assert.equal(g.state.best,1);
+ const reload=load(true,{storage}).sandbox.testGame;assert.equal(reload.api.devModeEnabled(),false,'reload defaults to normal rewards');
+ for(const [rank,slots] of [[0,2],[3,2],[6,3],[10,4]]){g.state.tool={rank,slots,name:'Test'};g.api.renderTool('buildTool');const html=env.node('buildTool').innerHTML;assert.match(html,/tool-tiers.png/);assert.equal((html.match(/class="tool-socket"/g)||[]).length,slots);assert.ok(!html.includes('undefined%'));}
+ console.log('PASS: deterministic selected rarity rewards, full-slot replacement/cancel, unchanged normal RNG, session-only dev mode, persistent unranked runs, protected scraps/records, restored normal progress and all tool socket tiers.');
+}

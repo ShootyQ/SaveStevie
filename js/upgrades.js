@@ -53,17 +53,27 @@ function removeEffect(u){
   else game.state.inks[key]=0;
   delete game.state.stacks[u.name];
 }
+function toolArt(rank){
+  if(rank>=10)return {offset:69.3359375,height:250,y:51.2,sockets:[32.5,44,55.5,66.9]};
+  if(rank>=6)return {offset:48.828125,height:230,y:55.65,sockets:[36.5,51.9,67.4]};
+  if(rank>=3)return {offset:26.5625,height:230,y:55.65,sockets:[44.1,64.9]};
+  return {offset:3.90625,height:230,y:56.52,sockets:[44.1,64.9]};
+}
+function toolIllustration(rank,sockets=''){
+  const version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
+  return `<div class="instrument-hero tool-tier-art" style="--art-offset:${toolArt(rank).offset}%;--art-height:${toolArt(rank).height};--art-image-height:${1024/toolArt(rank).height*100}%" aria-hidden="true"><img class="instrument-art" src="assets/art/tools/tool-tiers.png${query}" alt="">${sockets}</div>`;
+}
 function renderTool(id){
   const tool=game.state.tool,effects=equippedEffects(),version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
-  const art=tool.rank<3?'slot-pencil.png':tool.rank<6?'mechanical.svg':tool.rank<10?'pen.svg':'sharpie.svg';
+
   const slots=Array.from({length:tool.slots},(_,i)=>{
     const u=effects[i];return `<div class="tool-slot"><span class="slot-number">SLOT ${i+1}</span>${u?`<img src="${game.api.upgradeArtwork(u)}${query}" alt="" width="32" height="32"><strong>${u.name}</strong><span>Level ${game.state.stacks[u.name]}</span>`:'<strong>Empty socket</strong><span>Find your first effect</span>'}</div>`;
   }).join('');
   const sockets=Array.from({length:tool.slots},(_,i)=>{
-    const u=effects[i];return `<span class="tool-socket" style="--socket:${i}">${u?`<img src="${game.api.upgradeArtwork(u)}${query}" alt=""><span class="socket-level">${game.state.stacks[u.name]}</span>`:'<span class="socket-plus">+</span>'}</span>`;
+    const u=effects[i];return `<span class="tool-socket" style="--socket-x:${toolArt(tool.rank).sockets[i]}%;--socket-y:${toolArt(tool.rank).y}%">${u?`<img src="${game.api.upgradeArtwork(u)}${query}" alt=""><span class="socket-level">${game.state.stacks[u.name]}</span>`:'<span class="socket-plus">+</span>'}</span>`;
   }).join('');
   const synergies=game.catalog.synergyDefs.filter(d=>d.req()).map(d=>d.name).join(' · ');
-  game.dom.$(id).innerHTML=`<div class="tool-heading"><div><span class="section-kicker">YOUR DRAWING TOOL</span><strong>${tool.name}</strong></div><span class="tool-rank">Rank ${tool.rank} · ${effects.length}/${tool.slots} effects</span></div><div class="instrument-hero ${tool.rank<3?'wooden-pencil':'advanced-tool'}" style="--slots:${tool.slots}" aria-hidden="true"><img class="instrument-art" src="assets/art/tools/${art}${query}" alt="">${sockets}</div><div class="tool-slots">${slots}</div><p class="tool-synergies">${synergies?'✦ Active synergies: '+synergies:'Two compatible effects can unlock a synergy. Make this pencil yours.'}</p>`;
+  game.dom.$(id).innerHTML=`<div class="tool-heading"><div><span class="section-kicker">YOUR DRAWING TOOL</span><strong>${tool.name}</strong></div><span class="tool-rank">Rank ${tool.rank} · ${effects.length}/${tool.slots} effects</span></div>${toolIllustration(tool.rank,sockets)}<div class="tool-slots">${slots}</div><p class="tool-synergies">${synergies?'✦ Active synergies: '+synergies:'Two compatible effects can unlock a synergy. Make this pencil yours.'}</p>`;
 }
 const rarityLevels={common:1,uncommon:2,rare:3,legendary:4};
 function upgradeLevels(u){
@@ -271,6 +281,10 @@ function luckExplanation(){
   return description;
 }
 function rollCards(forceRare=false){
+  const dev=game.api.devModeEnabled();
+  game.dom.$('devRewardPicker').hidden=!dev;game.dom.$('rerollBtn').hidden=dev;game.dom.$('rewardLuck').hidden=dev;game.dom.$('rewardLuckGuide').hidden=dev;
+  if(dev){renderDevReward();return;}
+  game.dom.rewardText.textContent=forceRare?'Boss reward: four choices, Rare +3 levels or better.':'Common +1 · Uncommon +2 · Rare +3 · Legendary +4. Unlocks are one-time.';
   game.dom.$('rewardLuck').textContent='Luck '+game.state.stats.luck+' · Higher Luck makes rarer upgrades more likely.';
   game.dom.$('rewardLuckDetails').textContent=game.api.luckExplanation();
   game.api.renderTool('rewardTool');game.dom.$('effectReplacement').hidden=true;
@@ -291,6 +305,11 @@ function rollCards(forceRare=false){
   if(picks.length<count){
     for(const u of game.catalog.upgrades.filter(u=>game.api.upgradeAvailable(u)))if(!picks.some(p=>p.name===u.name)&&picks.length<count)picks.push({...u,rarity:forceRare?'rare':game.api.rarityRoll()});
   }
+  renderUpgradeCards(picks,count);
+}
+
+function renderUpgradeCards(picks,count=picks.length){
+  game.dom.cardsEl.innerHTML='';game.dom.cardsEl.className='cards '+(count===4?'four':count===1?'dev-preview':'');
   picks.forEach(u=>{
     const c=document.createElement('div');c.className='ucard '+u.rarity;
     const stack=game.state.stacks[u.name]||0;
@@ -320,6 +339,20 @@ function rollCards(forceRare=false){
   });
 }
 
+function renderDevReward(){
+  const available=game.catalog.upgrades.filter(u=>game.api.upgradeAvailable(u)),select=game.dom.$('devUpgrade');
+  const previous=select.value;
+  select.innerHTML=available.map(u=>`<option value="${u.name}">${u.name}${effectKeys[u.name]?' · effect':' · utility'}</option>`).join('');
+  select.value=available.some(u=>u.name===previous)?previous:available[0]?.name||'';
+  const rarity=Object.hasOwn(rarityLevels,game.dom.$('devRarity').value)?game.dom.$('devRarity').value:'common';
+  game.dom.$('devRarity').value=rarity;
+  game.dom.rewardText.textContent='DEV MODE · Choose one upgrade and its rarity for the next wave.';
+  game.api.renderTool('rewardTool');game.dom.$('effectReplacement').hidden=true;
+  game.dom.synergyNote.innerHTML='';
+  const base=available.find(u=>u.name===select.value);
+  renderUpgradeCards(base?[{...base,rarity}]:[]);
+}
+
 function chooseUpgrade(u,replaceName){
   const base=game.catalog.upgrades.find(candidate=>candidate.name===u?.name);
   if(!base||!game.api.upgradeAvailable(base)||!upgradeLevels(u))return;
@@ -331,12 +364,12 @@ function chooseUpgrade(u,replaceName){
   for(let i=0;i<levels;i++){game.state.stacks[u.name]=(game.state.stacks[u.name]||0)+1;base.apply();}
   game.api.checkSynergies();
   game.state.wave++;
-  if(game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
+  if(!game.api.devRunActive()&&game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
   game.state.inUpgrade=false;game.dom.upgradeOverlay.style.display='none';game.api.startWave();game.api.updateUI();
   game.api.setMsg(u.name+' ×'+game.state.stacks[u.name]+' — '+game.api.upgradeEffect(u.name,game.state.stacks[u.name]))
 }
 
-function reroll(){if(game.state.rerolls<=0)return;game.state.rerolls--;game.api.rollCards(game.state.wave%5===0);game.api.updateUI()}
+function reroll(){if(game.api.devModeEnabled())return;if(game.state.rerolls<=0)return;game.state.rerolls--;game.api.rollCards(game.state.wave%5===0);game.api.updateUI()}
 
 function chooseSpecialization(spec){
   game.state.specialization=spec;
@@ -345,7 +378,8 @@ function chooseSpecialization(spec){
   game.api.openUpgrade();
   game.api.setMsg('Specialization: '+({defense:'Fortress',ink:'Ink Alchemist',chaos:'Chaos'}[spec]))
 }
-const api = { upgradeLevels, upgradePreview, equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
+const api = { toolIllustration, renderDevReward, upgradeLevels, upgradePreview, equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
 Object.assign(game.api, api);
+game.dom.$('devUpgrade').onchange=renderDevReward;game.dom.$('devRarity').onchange=renderDevReward;
 return api;
 };
