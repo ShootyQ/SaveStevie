@@ -4,7 +4,7 @@ const settings=game.catalog.balance={
   hpAnchors:[[1,1],[5,1.2],[10,1.9],[15,2.8],[20,4]],
   openingDelay:1.5,openingGap:2.7,copyDurability:.6,
   healRate:6,refundRate:8,repairRate:12,
-  quickRegen:2,fountainBonus:.35,bottomlessRegen:4,
+  quickRegen:2,fountainBonus:.35,bottomlessRegen:2,
   chapterScraps:[6,8,10,12],killsPerScrap:25,killScrapCap:8,victoryScraps:5
 };
 let budgets={heal:settings.healRate,refund:settings.refundRate,repair:settings.repairRate};

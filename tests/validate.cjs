@@ -16,6 +16,16 @@ b.sandbox.testGame.api.rarityRoll=force=>{
  const bonus=luck+(g.state.specialization==='chaos'?12:0),leg=.8+bonus*.06,epic=6+bonus*.12,rare=18+bonus*.18,unc=33+bonus*.16;
  return r<leg?'legendary':r<leg+epic?'epic':r<leg+epic+rare?'rare':g.state.stats.uncommonFloor||r<leg+epic+rare+unc?'uncommon':'common';
 };
+// Recreate fixed-rarity offers only in the original-combat fixture.
+const legacyRarities=Object.fromEntries([...fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').matchAll(/name:'([^']+)',rarity:'([^']+)'/g)].map(m=>[m[1],m[2]]));
+b.sandbox.testGame.api.getUpgrade=force=>{
+ const g=b.sandbox.testGame;
+ for(let tries=0;tries<40;tries++){
+  const rarity=g.api.rarityRoll(force),pool=g.catalog.upgrades.filter(u=>legacyRarities[u.name]===rarity);
+  if(pool.length)return g.api.weightedPick(pool);
+ }
+ return g.catalog.upgrades[0];
+};
 Object.assign(b.sandbox.testGame.catalog.balance,{openingDelay:.5,openingGap:2.35,copyDurability:.82,healRate:Infinity,refundRate:Infinity,repairRate:Infinity,quickRegen:3,fountainBonus:.5,bottomlessRegen:8});
 b.sandbox.testGame.api.enemyHpScale=(wave=b.sandbox.testGame.state.wave)=>1+(wave-1)*.024;
 legacyStartingKit();b.sandbox.testGame.api.updateUI();
@@ -570,13 +580,13 @@ for(const u of g.catalog.upgrades){
   const file=path.join(root,g.api.upgradeArtwork(u));assert.ok(fs.existsSync(file),'art exists for '+u.name);
   if(file.endsWith('.svg')){const svg=fs.readFileSync(file,'utf8');assert.match(svg,/viewBox="0 0 64 64"/);assert.ok(!/<script|<foreignObject|href=/i.test(svg),'self-contained doodles');}
 }
-let cursor=0;g.api.getUpgrade=()=>g.catalog.upgrades[cursor++%g.catalog.upgrades.length];
+let cursor=0;g.api.getUpgrade=()=>({...g.catalog.upgrades[cursor++%g.catalog.upgrades.length],rarity:'common'});
 for(let i=0;i<g.catalog.upgrades.length;i+=3){g.api.rollCards();for(const card of env.node('cards').children.slice(-3))assert.match(card.innerHTML,/<img class="upgrade-art"/,'every rendered reward includes a picture');}
-g.state.stats.luck=8;g.api.rollCards();assert.match(env.node('rewardLuck').textContent,/Luck 8/);assert.match(env.node('rewardLuckDetails').textContent,/rerolls and boss rewards/);assert.match(env.node('rewardLuckDetails').textContent,/does not change damage/);
+g.state.stats.luck=8;g.api.rollCards();assert.match(env.node('rewardLuck').textContent,/Luck 8/);assert.match(env.node('rewardLuckDetails').textContent,/rerolls\. Boss rewards grant Rare/);assert.match(env.node('rewardLuckDetails').textContent,/does not change damage/);
 g.api.renderBuild();assert.match(env.node('buildLuck').textContent,/Your Luck: 8/);assert.match(g.catalog.upgrades.find(u=>u.name==='Lucky Scribble').desc,/rarity odds/);
 const roll=(random,luck,boss=false)=>{env.sandbox.Math.random=()=>random;g.state.stats.luck=luck;return g.api.rarityRoll(boss)};
-assert.equal(roll(.009,0),'epic');assert.equal(roll(.009,8),'epic');assert.equal(roll(.075,0),'rare');assert.equal(roll(.065,8),'epic');assert.equal(roll(.26,0),'uncommon');assert.equal(roll(.25,8),'rare');assert.equal(roll(.085,0,true),'epic');assert.equal(roll(.085,8,true),'epic');assert.equal(roll(.385,0,true),'rare');assert.equal(roll(.385,8,true),'epic');
-g.state.specialization='chaos';assert.equal(roll(.014,0),'epic');assert.equal(roll(.085,0,true),'epic','Chaos bonus affects normal rewards only');assert.match(g.api.luckExplanation(),/separate \+12/);g.state.stats.uncommonFloor=true;assert.match(g.api.luckExplanation(),/Loaded Deck/);
+assert.equal(roll(.009,0),'rare');assert.equal(roll(.239,0),'rare');assert.equal(roll(.25,0),'uncommon');assert.equal(roll(.25,8),'rare');assert.equal(roll(.58,0),'common');assert.equal(roll(.58,8),'uncommon');assert.equal(roll(.99,100,true),'rare');
+g.state.specialization='chaos';assert.equal(roll(.26,0),'rare');assert.equal(roll(.99,0,true),'rare','boss rewards stay Rare, without extra Legendary chances');assert.match(g.api.luckExplanation(),/separate \+12/);g.state.stats.uncommonFloor=true;assert.equal(roll(.99,0),'uncommon');assert.match(g.api.luckExplanation(),/Loaded Deck/);
 console.log('PASS: artwork for every upgrade, rendered reward pictures, current Luck/help text, and accurate normal/boss/Chaos rarity explanations.');
 }
 
@@ -719,7 +729,7 @@ g.api.resetRun();g.state.player.hp=20;g.state.synergies.add('Stevie the Unreason
 g.api.resetRun();const choose=name=>g.api.chooseUpgrade(g.catalog.upgrades.find(u=>u.name===name));
 choose('Quick Refill');assert.equal(g.state.stats.inkRegen,7);choose('Quick Refill');assert.ok(Math.abs(g.state.stats.inkRegen-(7+2/1.4))<1e-10);assert.match(g.api.upgradeEffect('Quick Refill'),/3.43/);
 const before=g.state.stats.inkRegen;choose('Living Fountain Pen');choose('Living Fountain Pen');assert.ok(Math.abs(g.state.stats.inkRegen-before*1.35*(1+.35/1.5))<1e-10);
-const preBottomless=g.state.stats.inkRegen;choose('Bottomless Pen');choose('Bottomless Pen');assert.ok(Math.abs(g.state.stats.inkRegen-preBottomless-4-4/1.4)<1e-10);
+const preBottomless=g.state.stats.inkRegen;choose('Bottomless Pen');choose('Bottomless Pen');assert.ok(Math.abs(g.state.stats.inkRegen-preBottomless-2-2/1.4)<1e-10);
 g.api.resetRun();g.state.stats.tripleLine=true;g.api.createWall([{x:100,y:100},{x:280,y:100}]);assert.equal(g.state.walls.length,3);assert.equal(g.state.walls[1].maxHp,g.state.walls[0].maxHp*.6);
 g.api.resetRun();for(let i=1;i<=12;i++){g.state.kills=i*25;g.api.awardKillScraps()}assert.equal(g.api.notebookSnapshot().runScraps,8,'kill scraps capped across a run');g.api.resumeScrapRun();g.state.kills=325;g.api.awardKillScraps();assert.equal(g.api.notebookSnapshot().runScraps,8,'endless cannot reset kill cap');
 g.api.resetRun();for(let wave=1;wave<=20;wave++){g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;if(wave%5===0)g.api.killEnemy(g.api.spawnEnemy(true,0,0));g.api.waveComplete();g.state.betweenWaves=false}assert.equal(g.api.notebookSnapshot().runScraps,61,'20 clears + chapter milestones + victory');
@@ -767,7 +777,7 @@ console.log('PASS: five soundtrack loops, explicit splash unlock, chapter transi
  take('Frost Ink','Fire Ink');assert.equal(g.state.inks.fire,0);assert.equal(g.state.inks.frost,1);assert.equal(g.state.inks.poison,8);
  assert.equal(g.state.stacks['Fire Ink'],undefined);assert.equal(g.state.synergies.has('Plaguefire'),false);assert.ok(g.state.synergies.has('Venom Ice'));
  take('Bigger Ink Tank');assert.equal(g.api.equippedEffects().length,2,'utility does not need a slot');
- take('Shock Ink','Frost Ink');assert.equal(g.state.stats.wallStun,.16);take('Death Ink','Shock Ink');assert.equal(g.state.stats.wallStun,0);assert.equal(g.state.stats.wallDamage,28);
+ take('Shock Ink','Frost Ink');assert.equal(g.state.stats.wallStun,.16);take('Death Ink','Shock Ink');assert.equal(g.state.stats.wallStun,0);assert.equal(g.state.stats.wallDamage,13);
  take('Blast Ink','Death Ink');assert.equal(g.state.stats.wallDamage,8,'replacing Death removes only its damage');
  const counts={owned:0,new:0};for(let i=0;i<1000;i++){const u=g.api.getUpgrade();if(g.state.stacks[u.name])counts.owned++;else counts.new++;}
  assert.ok(counts.owned>counts.new,'equipped effects are favored');
@@ -893,3 +903,47 @@ console.log('PASS: safe persisted audio/live volume, unavailable storage, exact 
  g.api.startWave();g.state.timeLeft=0;g.api.killEnemy(g.api.spawnEnemy(true,100,100));g.api.waveComplete();assert.match(env.node('victoryNoteHeading').textContent,/SAVED/);
 }
 console.log('PASS: personal end-of-run notes, strongest equipped ink, replacement cleanup, victory/death integration and no RNG/state mutation.');
+
+// Reward tiers apply full levels, using exactly the same per-level math as commons.
+{
+ for(const rarity of ['common','uncommon','rare','legendary']){
+  const levels={common:1,uncommon:2,rare:3,legendary:4}[rarity];
+  for(const template of load(true).sandbox.testGame.catalog.upgrades){
+   const g=load(true).sandbox.testGame,reference=load(true).sandbox.testGame;
+   g.api.resetRun();reference.api.resetRun();
+   const base=g.catalog.upgrades.find(u=>u.name===template.name),offer={...base,rarity};
+   const expected=g.api.upgradeLevels(offer),snapshot=JSON.stringify(g.state);
+   const preview=g.api.upgradePreview(offer);assert.equal(JSON.stringify(g.state),snapshot,'preview is read-only: '+base.name);
+   g.api.chooseUpgrade(offer);
+   for(let i=0;i<expected;i++)reference.api.chooseUpgrade(reference.catalog.upgrades.find(u=>u.name===base.name));
+   assert.equal(g.state.stacks[base.name],expected,rarity+' '+base.name+' levels');
+   assert.deepEqual(JSON.parse(JSON.stringify(g.state.stats)),JSON.parse(JSON.stringify(reference.state.stats)),rarity+' '+base.name+' matches common-level effects');
+   assert.deepEqual(JSON.parse(JSON.stringify(g.state.inks)),JSON.parse(JSON.stringify(reference.state.inks)));
+   if(base.cat==='ink')assert.equal(preview.after,'Level '+levels);
+   assert.equal(g.state.wave,2,'one reward advances exactly one wave');
+  }
+ }
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
+ const offer=(name,rarity)=>({...g.catalog.upgrades.find(u=>u.name===name),rarity});
+ g.api.chooseUpgrade(offer('Poison Ink','rare'));g.api.chooseUpgrade(offer('Poison Ink','legendary'));
+ assert.equal(g.state.inks.poison,7,'existing effect gains all four Legendary levels');
+ g.api.chooseUpgrade(offer('Fire Ink','common'));
+ g.api.selectReward(offer('Blast Ink','rare'));
+ assert.match(env.node('effectReplacement').children[0].textContent,/level 3/);
+ env.node('effectReplacement').children.at(-1).onclick();assert.equal(g.state.inks.poison,7,'cancelling preserves levels');
+ g.api.chooseUpgrade(offer('Blast Ink','rare'),'Fire Ink');assert.equal(g.state.inks.blast,3);assert.equal(g.state.inks.fire,0);assert.equal(g.state.synergies.has('Plaguefire'),false);
+ g.api.chooseUpgrade(offer('Death Ink','legendary'),'Blast Ink');assert.equal(g.state.stats.wallDamage,28);
+ g.api.chooseUpgrade(offer('Shock Ink','rare'),'Death Ink');assert.equal(g.state.stats.wallDamage,8);
+ assert.equal(g.api.upgradeLevels(offer('Shock Ink','legendary')),1);g.api.chooseUpgrade(offer('Shock Ink','legendary'));assert.equal(g.state.stats.wallStun,.55);assert.equal(g.state.stacks['Shock Ink'],4);
+ g.api.chooseUpgrade(offer('Helmet','legendary'));assert.equal(g.api.upgradeLevels(offer('Helmet','legendary')),2);g.api.chooseUpgrade(offer('Helmet','legendary'));assert.equal(g.state.stats.playerArmor,.55);assert.equal(g.state.stacks.Helmet,6);
+ g.state.stats.rockRate=.28;for(const name of ['Better Rocks','Really Good Rocks','Stevie Has Had Enough'])g.api.chooseUpgrade(offer(name,'legendary'));assert.equal(g.state.stats.rockRate,.28,'lower rock upgrades never slow faster throws');
+ for(const rarity of ['common','uncommon','rare']){
+  g.api.rarityRoll=()=>rarity;
+  for(let i=0;i<500;i++)assert.equal(g.api.getUpgrade().rarity,rarity,'rarity independent of equipped effect and definition');
+ }
+ g.state.legendaryWave=g.state.wave;g.state.legendaryOffered=false;env.node('cards').children=[];g.api.rollCards();
+ const cards=env.node('cards').children;assert.equal(cards.filter(c=>c.className.includes('legendary')).length,1);
+ assert.equal(new Set(cards.map(c=>c.innerHTML.match(/<h3>(.*?)<\/h3>/)[1])).size,cards.length,'offers have distinct names');
+ assert.ok(cards.every(c=>!c.className.includes('epic')));
+ console.log('PASS: all four tiers for every upgrade, multi-level/common equivalence, read-only full previews, one-wave advancement, replacement/cancellation, capped gains and distinct offers.');
+}

@@ -553,3 +553,27 @@ fallbacks for utility-only builds and encouragement based on the reached wave.
 Notes are presentation only: no random draws, progression changes, or new save
 keys. Their entrance animation follows the device's reduced-motion preference.
 Run `node tests/browser-stevie-notes.cjs` for desktop/phone end-screen checks.
+
+
+## Reward rarity and levels
+
+Rarity belongs to the offered card, rather than the upgrade itself: Common adds
+1 level, Uncommon 2, Rare 3, and Legendary 4. Every effect, including Blast,
+can be offered in any tier. Rare Blast starts at level 3; Legendary Poison
+adds four levels to your existing Poison. Utilities do not consume effect slots.
+Double Stroke, Triple Stroke, Quick Sketch, Loaded Deck, Collector and Greedy
+Goblin remain one-time unlocks. Armor, stun and reroll inventory caps still apply;
+cards show the actual usable level gain near a cap.
+
+Normal rewards start at 43% Common, 33% Uncommon and 24% Rare; Luck and Chaos
+shift rolls upward. Boss cards are Rare, except for a reserved Legendary card.
+One Legendary offer remains reserved in 10% of campaigns, independent of Luck.
+Rerolls cannot recreate it. Offers never repeat an upgrade on the same screen.
+Regeneration applies diminishing returns separately for every granted level.
+Bottomless Pen grants 40 capacity and initially 2 regeneration per level,
+Fortress Geometry 50% closed-wall durability, Death Ink 5 wall damage/s, and
+Stevie Has Had Enough 15 rock damage plus faster throws (0.28s floor). These
+are initial tuning values; campaign difficulty still needs human playtesting.
+
+Stevie’s notes use locally bundled Patrick Hand, licensed under the SIL Open
+Font License in `assets/fonts/OFL-PatrickHand.txt`; no remote font service is used.

@@ -76,7 +76,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
   const f=v=>Number(v.toFixed(2)),s=game.state.stats;
   const effects={
     'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${f(game.api.regenStackEffect('Quick Refill',n))} ink/s; diminishing returns`,
-    'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 on each pick`,
+    'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 per level`,
     'Fine Tip':()=>`${f((1-Math.pow(.88,n))*100)}% cheaper strokes (multiplicative)`,
     'Fat Marker':()=>`+${2*n}px width; +${15*n} base wall HP`, 'Lucky Scribble':()=>`+${8*n} Luck — better rarity odds on rewards and rerolls`,
     'Recycling':()=>`+${5*n} ink per kill; shared 8 ink/s budget`, 'Closed Loop':()=>`+${40*n}% closed-wall durability`,
@@ -88,14 +88,14 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Patch Job':()=>`Up to ${3*n} HP per wall per kill; shared 12 HP/s budget`, 'Freehand':()=>`${40+(n-1)*20} free-ink bank; charge with ${s.freehandThreshold} spent ink`,
     'Living Fountain Pen':()=>`×${f(game.api.regenStackEffect('Living Fountain Pen',n))} ink regeneration; diminishing returns`,
     'Triple Stroke':()=>`One-time unlock: 3 walls per stroke; extra walls have 60% HP`,
-    'Bottomless Pen':()=>`+${120*n} max ink; +${f(game.api.regenStackEffect('Bottomless Pen',n))} ink/s; diminishing returns`, 'Fortress Geometry':()=>`+${150*n}% closed-wall durability`,
+    'Bottomless Pen':()=>`+${40*n} max ink; +${f(game.api.regenStackEffect('Bottomless Pen',n))} ink/s; diminishing returns`, 'Fortress Geometry':()=>`+${50*n}% closed-wall durability`,
     'Bandages':()=>`+${8*n} HP healed between waves`, 'Helmet':()=>`${f(Math.min(.55,.1*n)*100)}% damage reduction (cap 55%)`,
     'Pocket Rocks':()=>`+${9*n} rock damage; unlocks throwing without slowing improved throws`,
-    'Better Rocks':()=>`+${12*n} rock damage; each pick reduces throw interval by 0.12s, floor 0.45s`,
-    'Emergency Medicine':()=>`Up to ${2*n} HP per kill; shared 6 HP/s combat budget`, 'Really Good Rocks':()=>`+${24*n} rock damage; each pick reduces throw interval by 0.1s, floor 0.35s`,
-    'Stevie Has Had Enough':()=>`+${45*n} rock damage; sets throw interval to 0.28s`,
+    'Better Rocks':()=>`+${12*n} rock damage; each level reduces throw interval by 0.12s, floor 0.45s`,
+    'Emergency Medicine':()=>`Up to ${2*n} HP per kill; shared 6 HP/s combat budget`, 'Really Good Rocks':()=>`+${24*n} rock damage; each level reduces throw interval by 0.1s, floor 0.35s`,
+    'Stevie Has Had Enough':()=>`+${15*n} rock damage; each level reduces throw interval by 0.24s, floor 0.28s`,
     'Loaded Deck':()=>`One-time unlock: normal rewards are Uncommon or better`,
-    'Reroll Coupon':()=>`+2 rerolls on each pick (inventory cap 5)`,
+    'Reroll Coupon':()=>`+2 rerolls per level (inventory cap 5)`,
     'Collector':()=>`One-time unlock: ×1.8 selection weight for unowned upgrades`,
     'Greedy Goblin':()=>`One-time unlock: 4 normal reward choices`,
     'Fire Ink':()=>`${3+3*n} burn damage/s for ${f(1.5+.6*n)}s; synergies can boost this`,
@@ -108,7 +108,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Gravity Ink':()=>`${8+5*n}px/s pull toward wall points within ${120+20*n}px`,
     'Void Ink':()=>`Contact erase chance scales with level ${n}; bosses take ${40+25*n} damage per proc instead`,
     'Chaos Ink':()=>`${f(.3*n)}% random ink proc chance per contact update`,
-    'Death Ink':()=>`+${20*n} base wall damage/s`
+    'Death Ink':()=>`+${5*n} base wall damage/s`
   };
   return effects[name]?effects[name]():game.catalog.upgrades.find(u=>u.name===name)?.desc||'Active';
 }
