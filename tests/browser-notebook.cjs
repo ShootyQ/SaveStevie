@@ -27,7 +27,14 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.reload();await page.click('#splashNotebookBtn');assert.match(await page.textContent('#notebookLoadout'),/200 ink/);await page.click('#closeNotebookBtn');await page.click('#startBtn');
   assert.equal(await page.evaluate(()=>testGame.state.stats.maxInk),200);
   await page.click('#buildBtn');await page.click('#buildNotebookBtn');assert.equal(await page.evaluate(()=>testGame.state.paused),true);await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>testGame.state.paused),false);assert.equal(await page.evaluate(()=>document.activeElement.id),'buildBtn','closing a nested dialog restores visible focus');
-  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' notebook images/layout, pause/locking, purchases, saved reload and next-run loadout');await page.close();
+  await page.evaluate(()=>testGame.api.openNotebook());
+  page.once('dialog',dialog=>dialog.dismiss());await page.click('#resetNotebookBtn');
+  assert.equal(await page.evaluate(()=>testGame.state.stats.maxInk),200,'cancel preserves current kit');
+  page.once('dialog',dialog=>dialog.accept());await page.click('#resetNotebookBtn');
+  assert.equal(await page.evaluate(()=>testGame.state.running),false);assert.equal(await page.locator('#startOverlay').isVisible(),true);
+  assert.equal(await page.evaluate(()=>testGame.state.stats.maxInk),160);assert.equal(await page.textContent('#splashScraps'),'0');
+  await page.reload();await page.click('#splashNotebookBtn');assert.match(await page.textContent('#notebookLoadout'),/160 ink/);
+  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' notebook images/layout, pause/locking, purchases, saved reload, next-run loadout and confirmed/cancelled reset');await page.close();
  }
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});
