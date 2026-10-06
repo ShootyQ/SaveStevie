@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 250">
+<defs><pattern id="rules" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M0 24H24" stroke="#a6bdd0" stroke-opacity=".3"/></pattern></defs>
+<rect width="440" height="250" rx="16" fill="#fff8e6"/><rect width="440" height="250" rx="16" fill="url(#rules)"/><path d="M40 0v250" stroke="#d47b78" stroke-opacity=".3"/>
+<g fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="2">
+<path d="m374 13 4 8 9 1-7 6 2 9-8-4-8 4 2-9-7-6 9-1Z" fill="#edca60" stroke="#d1a648"/>
+<path d="m408 52 5 4m-8 1 1 7m-12-8 7-1" stroke="#df9991"/>
+<path d="m18 217 4 4 6-7m2 15 5 4 6-6" stroke="#7aaa90"/>
+<path d="M12 16q11-8 22 0t22-1" stroke="#668bb4" stroke-opacity=".6"/>
+<path d="m384 218 4 7 9 1-7 5 2 9-8-4-7 4 1-9-6-5 8-1Z" stroke="#668bb4" stroke-opacity=".4"/>
+</g></svg>

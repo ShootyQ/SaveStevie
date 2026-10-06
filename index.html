@@ -66,9 +66,9 @@
         <h1 class="splash-title">Save <span>Stevie.</span></h1>
         <p class="splash-tagline">Your ink. His life. One very chaotic notebook.</p>
         <div class="splash-howto">
-          <div><b>01 / DRAW</b><span>Drag to build walls.</span></div>
-          <div><b>02 / DEFEND</b><span>Keep Stevie safe for 60s.</span></div>
-          <div><b>03 / UPGRADE</b><span>Stack inks. Build weird.</span></div>
+          <div><img class="howto-icon" src="assets/art/ui/draw.svg" alt="" width="24" height="24"><b>01 / DRAW</b><span>Drag to build walls.</span></div>
+          <div><img class="howto-icon" src="assets/art/ui/defend.svg" alt="" width="24" height="24"><b>02 / DEFEND</b><span>Keep Stevie safe for 60s.</span></div>
+          <div><img class="howto-icon" src="assets/art/ui/upgrade.svg" alt="" width="24" height="24"><b>03 / UPGRADE</b><span>Stack inks. Build weird.</span></div>
         </div>
         <button id="startBtn">Let's save Stevie <span aria-hidden="true">→</span></button>
         <button class="secondary notebook-entry" id="splashNotebookBtn">Back of the Notebook · <span id="splashScraps">0</span> scraps</button>
@@ -191,7 +191,7 @@
 <div class="overlay build-overlay" id="notebookOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="notebookTitle">
   <div class="cardbox build-box notebook-book">
     <div class="build-heading"><h2 id="notebookTitle">Back of the Notebook</h2><button id="closeNotebookBtn">Close</button></div>
-    <div class="notebook-wallet"><span class="notebook-scrap" aria-hidden="true">✂</span><div><strong id="notebookBank">0</strong> <b>Notebook Scraps</b><small>Saved on this browser · Kept after defeat</small></div></div>
+    <div class="notebook-wallet"><img class="notebook-scrap" src="assets/art/ui/scraps.png" alt="" width="84" height="84"><div><strong id="notebookBank">0</strong> <b>Notebook Scraps</b><small>Saved on this browser · Kept after defeat</small></div></div>
     <p id="notebookNotice" role="status"></p>
     <div class="notebook-earn"><b>How to collect scraps</b><span>1 per 25 kills (up to 8 per run) · 1 per cleared wave · Chapter-clear bonuses: 6 / 8 / 10 / 12 · 5 extra for winning wave 20. A defeat with no earnings keeps 1 consolation scrap.</span></div>
     <h3>Your next starting kit</h3><p id="notebookLoadout"></p>
@@ -226,6 +226,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>A little more notebook magic</h3><p>Scraps have their own collectible paper artwork. Illustrated buttons, taped-paper details, and new splash doodles give the notebook a warmer handmade feel, while keeping the controls readable on phones.</p></article>
       <article class="build-entry"><h3>The doodles have attitude</h3><p>Grunts and Gnawers chomp at walls, little runners skitter, Sprinters crouch and lunge, and Bouncers squash through ricochets. Staple Snack winds up and clacks, Count Crayon dances through its summon, and the Eraser swipes when it rubs out a wall. Motion pauses with the game and respects reduced-motion settings.</p></article>
       <article class="build-entry"><h3>A pencil with a plan</h3><p>Paid strokes need at least 6 ink, fixing empty-ink wall spam. Spend Notebook scraps to grow your pencil into a mechanical pencil, pen, and scented Sharpie with 2–4 effect slots. Rewards favor equipped effects; replace one deliberately to change your build. Legendary offers are reserved for roughly one in ten full campaigns.</p></article>
       <article class="build-entry"><h3>A pencil that stays on the line</h3><p>The splash pencil now follows the actual ink path, with its tip pinned to the drawing edge. It stays lined up on desktop and phone screens.</p></article>
