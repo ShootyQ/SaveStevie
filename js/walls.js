@@ -186,6 +186,7 @@ function applyInkContact(e,dt,wall=null){
     const roll=Math.random();
     if(roll<.003*game.state.inks.chaos){
       const randomInk=game.api.pick(['fire','frost','electric','poison','blast','vampire','gravity','repulsion','void']);
+      game.api.animateInkAccent(e,'chaos',0,0,randomInk);
       game.api.applyOneInk(randomInk,e,dt,true);
     }
   }
@@ -206,6 +207,7 @@ function applyInkContact(e,dt,wall=null){
   game.api.applyVampireContact(e,dt);
   if(game.state.inks.repulsion>0){
     const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;
+    game.api.animateInkAccent(e,'repulsion',dx,dy);
     e.x+=dx/m*(15+game.state.inks.repulsion*7)*dt;
     e.y+=dy/m*(15+game.state.inks.repulsion*7)*dt;
     if(game.state.synergies.has('Rail Ink'))e.charged=Math.max(e.charged,1.1);
@@ -227,7 +229,7 @@ function applyOneInk(kind,e,dt,chaos=false){
   if(kind==='electric')game.api.chainLightning(e,1);
   if(kind==='poison'){e.poison=Math.min(6,e.poison+.7);e.poisonDps=Math.max(e.poisonDps,5)}
   if(kind==='repulsion'){
-    const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;e.x+=dx/m*6;e.y+=dy/m*6
+    const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;game.api.animateInkAccent(e,'repulsion',dx,dy);e.x+=dx/m*6;e.y+=dy/m*6
   }
   if(kind==='void'&&!chaos)game.api.dealDamage(e,18,'void');
 }

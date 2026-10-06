@@ -11,3 +11,6 @@ maintenance does not need a player-facing entry.
 Run `node tests/validate.cjs` for gameplay/UI changes. For layout or interaction
 changes, check relevant screens at desktop and phone-sized browser viewports.
 Keep the static site dependency-free and preserve existing best-wave records.
+
+Use the `dev` branch for ongoing development and pushes unless the user specifies
+another branch. Do not merge or deploy automatically.

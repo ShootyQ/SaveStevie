@@ -1095,3 +1095,16 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  assert.match(g.api.upgradeEffect('Electric Ink',2),/146px reach per hop/);assert.match(g.api.upgradeEffect('Electric Ink',2),/2 additional enemies/);
  console.log('PASS: sequential lightning reach, live distinct targets, shock immunity and boss duration, twelve-hop combat/visual cap, accurate previews and pure drawing.');
 }
+
+{
+ const active=load(true),control=load(true),g=active.sandbox.testGame,c=control.sandbox.testGame;c.api.animateInkAccent=()=>{};
+ for(const game of [g,c]){game.api.resetRun();game.state.spawnTimer=9999;game.state.inks.repulsion=2;game.state.stacks['Death Ink']=1;const e=game.api.spawnEnemy(false,240,260,'tank');game.api.applyInkContact(e,.1,{});game.api.dealDamage(e,3);}
+ assert.equal(JSON.stringify(g.state),JSON.stringify(c.state),'new contact visuals preserve combat and RNG');
+ const enemy=g.state.enemies[0];g.api.animateInkAccent(enemy,'chaos',0,0,'fire');let fx=g.api.abilityEffectsSnapshot();assert.equal(fx.accents.length,3);assert.equal(fx.accents.find(e=>e.kind==='chaos').result,'fire');
+ for(let i=0;i<50;i++)g.api.animateInkAccent(enemy,'repulsion',1,0);assert.equal(g.api.abilityEffectsSnapshot().accents.length,3,'contact throttle prevents per-frame duplicates');
+ for(let i=0;i<40;i++)g.api.animateInkAccent({x:100,y:100,r:10},'chaos',0,0,'frost');assert.equal(g.api.abilityEffectsSnapshot().accents.length,16);
+ const before=JSON.stringify(g.api.abilityEffectsSnapshot()),state=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),state);assert.equal(JSON.stringify(g.api.abilityEffectsSnapshot()),before);
+ g.state.paused=true;g.api.update(.2);assert.equal(JSON.stringify(g.api.abilityEffectsSnapshot()),before);g.state.paused=false;
+ g.api.moveAbilityEffects(12,8);assert.equal(g.api.abilityEffectsSnapshot().accents[0].x,112);g.api.updateAbilityEffects(1);assert.equal(g.api.abilityEffectsSnapshot().accents.length,0);g.api.animateInkAccent(enemy,'death');g.api.resetAbilityEffects();assert.equal(g.api.abilityEffectsSnapshot().accents.length,0);
+ console.log('PASS: remaining ink accents preserve combat/RNG, show Chaos results, throttle/cap, pause, draw purity, move, expire and reset.');
+}
