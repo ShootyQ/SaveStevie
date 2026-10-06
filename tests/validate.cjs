@@ -200,7 +200,7 @@ bounce.x=100;bounce.y=200;bounce.bounceTime=.7;
 assert.equal(pg.api.steerBounce(bounce,.016),false,'trapped bouncer falls back to attacking');
 assert.equal(bounce.bounceTime,0);
 pg.state.enemies=[];for(let i=0;i<200;i++)pg.api.spawnEnemy(false,100,200,'grunt');assert.equal(pg.state.enemies.length,180);
-pg.api.spawnEnemy(true);assert.ok(pg.state.enemies.some(e=>e.type==='boss'),'budget never prevents a required boss');
+pg.api.spawnEnemy(true);assert.ok(pg.state.enemies.some(e=>e.type===pg.api.bossTypeForWave()),'budget never prevents a required boss');
 pg.state.enemies=[];pg.state.walls=[];
 for(const type of ['wardling','sprinter','brood','bulwark','medic','sapper'])pg.api.spawnEnemy(false,100,200,type);
 pg.api.draw();for(const call of pressureEnv.calls)for(const v of call.slice(1))if(typeof v==='number')assert.ok(Number.isFinite(v),'new enemies render finite geometry');
@@ -209,7 +209,7 @@ console.log('PASS: six unlocks, immunity, armor, two-generation splitting, teleg
 const contact=load(true).sandbox.testGame;contact.api.resetRun();contact.state.spawnTimer=100;
 contact.state.stats.refund=20;contact.state.stats.killHeal=20;contact.state.stats.playerArmor=.2;
 contact.state.stats.ink=10;contact.state.player.hp=80;
-for(const type of ['grunt','splitter','brood','bouncer','bulwark','medic','sapper','boss']){
+for(const type of ['grunt','splitter','brood','bouncer','bulwark','medic','sapper','boss','stapler','crayon']){
   const beforeHP=contact.state.player.hp,beforeKills=contact.state.kills,beforeScore=contact.state.score;
   const e=contact.api.spawnEnemy(false,contact.state.player.x,contact.state.player.y,type);
   assert.equal(contact.api.contactStevie(e),true);assert.ok(Math.abs(contact.state.player.hp-(beforeHP-e.dmg*.8))<1e-10);
@@ -479,9 +479,9 @@ const storage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>{saved.set
 const env=load(true,{intros:true,storage}),g=env.sandbox.testGame;
 assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
-assert.equal(g.catalog.monsters.length,19);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,19);
+assert.equal(g.catalog.monsters.length,21);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,21);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],3:['fast'],5:['bouncer','tank','boss'],7:['flanker','splitter','mini'],8:['wardling'],9:['sniper','sprinter'],10:['brood'],11:['bulwark'],12:['gnawer'],13:['medic'],14:['brute'],15:['sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],3:['fast'],5:['bouncer','tank','boss'],7:['flanker','splitter','mini'],8:['wardling'],9:['sniper','sprinter'],10:['stapler','brood'],11:['bulwark'],12:['gnawer'],13:['medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -501,14 +501,14 @@ g.api.resetRun();env.node('hideMonsterIntros').checked=true;g.api.continueMonste
 assert.equal(saved.get('saveStevieMonsterIntros'),'off');assert.equal(g.api.monsterIntrosEnabled(),false);assert.equal(saved.get('doodleDefenderBestV4'),'14');
 g.api.resetRun();assert.equal(g.api.infoOpen(),false,'disabled setting survives new runs');g.state.wave=20;g.api.startWave();assert.equal(g.api.infoOpen(),false);
 const reloaded=load(true,{intros:true,storage});assert.equal(reloaded.sandbox.testGame.api.monsterIntrosEnabled(),false,'disabled setting survives page reload');
-g.state.paused=false;g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,19);
+g.state.paused=false;g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,21);
 const before=JSON.stringify(g.state);g.api.update(.2);assert.equal(JSON.stringify(g.state),before);
 g.api.closeCompendium();assert.equal(g.state.paused,false);g.state.paused=true;g.api.openCompendium();g.api.closeCompendium();assert.equal(g.state.paused,true);
 g.api.setMonsterIntrosEnabled(true);assert.equal(saved.get('saveStevieMonsterIntros'),'on');g.api.resetRun();assert.equal(g.api.infoOpen(),true,'setting can be re-enabled');
 g.api.resetRun();assert.equal(g.state.paused,true,'reset replaces an open introduction safely');g.api.handleInfoKey({key:'Escape',preventDefault(){}});assert.equal(g.state.paused,false,'Escape explicitly continues the introduction');
 const blocked={getItem(){throw Error('blocked')},setItem(){throw Error('blocked')}};const fallback=load(true,{intros:true,storage:{getItem:key=>key==='doodleDefenderBestV4'?null:blocked.getItem(),setItem:blocked.setItem}}).sandbox.testGame;
 fallback.api.setMonsterIntrosEnabled(false);fallback.api.resetRun();assert.equal(fallback.state.paused,false,'blocked preference storage does not prevent gameplay');
-console.log('PASS: all 19 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
+console.log('PASS: all 21 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
 }
 
 
@@ -625,4 +625,27 @@ assert.equal(dirty.api.notebookSnapshot().scraps,0);dirty.api.resetRun();assert.
 const blocked=load(true,{storage:{getItem:()=>null,setItem(){throw Error('blocked')}}}),sg=blocked.sandbox.testGame;
 sg.api.resetRun();sg.api.awardScraps(5);sg.api.gameOver();assert.equal(sg.api.buyNotebookPerk('health'),true);assert.match(blocked.node('notebookNotice').textContent,/not saving/);assert.equal(sg.api.notebookSnapshot().storageIssue,true);sg.api.resetRun();assert.equal(sg.state.player.maxHp,83,'session-only save failure still playable');
 console.log('PASS: Notebook earnings, immediate banking, duplicate/contact protections, consolation, costs/caps, purchase locking, next-run stacking/reset, saved reload, victory/endless, malformed saves, blocked storage, and lower-power starting kit.');
+}
+
+{
+const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
+for(const [wave,type] of [[5,'boss'],[10,'stapler'],[15,'crayon'],[20,'eraser']]){g.state.wave=wave;g.api.startWave();const e=g.api.spawnEnemy(true,100,200);assert.equal(e.type,type);}
+g.state.endless=true;assert.equal(g.api.bossTypeForWave(20),'boss');g.state.endless=false;
+g.state.wave=10;g.api.startWave();const s=g.api.spawnEnemy(true,100,200),wall={pts:[{x:150,y:50},{x:150,y:350}],hp:100,maxHp:100,thick:8};g.state.walls=[wall];s.bossCd=0;
+assert.deepEqual(g.api.nearestPointOnWall(s,wall),{x:150,y:200},'target actual segment, not distant endpoints');
+const hp=g.state.player.hp;g.api.updateBossAbility(s,.1);assert.equal(s.bossWindup,1.2);assert.equal(wall.hp,100,'wind-up causes no immediate hit');
+const snapshot=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),snapshot,'warning rendering stays pure');
+g.api.updateBossAbility(s,1.2);assert.equal(wall.hp,35);assert.equal(g.state.player.hp,hp,'slam cannot hurt Stevie remotely');
+s.bossCd=0;g.api.updateBossAbility(s,.1);s.freeze=1;g.api.updateBossAbility(s,.1);assert.equal(s.bossWindup,0);assert.equal(wall.hp,35,'freeze cancels a queued slam');
+s.freeze=0;s.bossCd=0;g.api.updateBossAbility(s,.1);g.state.walls=[];g.api.updateBossAbility(s,1.2);assert.equal(wall.hp,35,'removed target cancels hit');
+g.state.walls=[wall];s.bossCd=0;g.api.updateBossAbility(s,.1);s.x=500;g.api.updateBossAbility(s,1.2);assert.equal(wall.hp,35,'target must remain in reach');
+g.api.killEnemy(s);assert.equal(g.api.notebookSnapshot().scraps,5,'new boss gives boss scraps');
+g.state.wave=15;g.api.startWave();const c=g.api.spawnEnemy(true,100,200);c.bossCd=0;g.api.updateBossAbility(c,.1);assert.equal(g.state.enemies.length,1);assert.equal(c.bossWindup,1.2);
+g.api.updateBossAbility(c,1.2);assert.equal(g.state.enemies.filter(e=>e.type==='mini').length,3);assert.equal(c.bossCd,8);
+c.bossCd=0;g.api.updateBossAbility(c,.1);c.stun=1;g.api.updateBossAbility(c,.1);assert.equal(c.bossWindup,0);assert.equal(g.state.enemies.length,4,'stun interrupts summons');
+c.stun=0;while(g.state.enemies.length<180)g.api.spawnEnemy(false,100,200,'grunt');c.bossCd=0;g.api.updateBossAbility(c,.1);g.api.updateBossAbility(c,1.2);assert.equal(g.state.enemies.length,180,'summons obey global cap');
+g.state.paused=true;c.bossCd=3;g.api.update(.3);assert.equal(c.bossCd,3,'pause stops boss timer');g.state.paused=false;
+g.api.killEnemy(c);assert.equal(g.api.notebookSnapshot().scraps,10);
+for(const type of ['stapler','crayon']){g.state.enemies=[];const e=g.api.spawnEnemy(false,100,200,type);g.state.inks.void=1;env.sandbox.Math.random=()=>0;const before=e.hp;g.api.applyInkContact(e,.1);assert.ok(e.hp>0&&e.hp<before,'Void damages new bosses instead of instantly erasing them');}
+console.log('PASS: distinct campaign bosses, actual-segment telegraphs, slam safety/range/stale targets, freeze/stun cancellation, capped summons, pause, boss scraps, and Void boss protection.');
 }

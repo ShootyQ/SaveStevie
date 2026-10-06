@@ -19,6 +19,8 @@ const defs=game.catalog.enemyDefs={
     sapper:{r:12,hp:44,speed:38,dmg:13,color:'#bd6b37'},
     mini:{r:7,hp:12,speed:49,dmg:5,color:'#a56cc1'},
     boss:{r:28,hp:270,speed:18,dmg:27,color:'#962f3d'},
+    stapler:{r:30,hp:410,speed:19,dmg:27,color:'#c98a32',boss:true},
+    crayon:{r:30,hp:540,speed:17,dmg:29,color:'#9354b9',boss:true},
     eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'}
   };
 
@@ -43,6 +45,49 @@ function enemyType(){
   return game.api.pick(pool);
 }
 
+function bossTypeForWave(wave=game.state.wave){
+  if(wave===20&&!game.state.endless)return 'eraser';
+  if(wave===10)return 'stapler';
+  if(wave===15)return 'crayon';
+  return 'boss';
+}
+// Specials never damage Stevie directly. Telegraphs track the actual target wall.
+function updateBossAbility(e,dt){
+  if(e.type!=='stapler'&&e.type!=='crayon')return;
+  if(e.hp<=0||e.freeze>0||e.stun>0){e.bossWindup=0;e.bossTarget=null;e.bossCd=Math.max(e.bossCd,2);return}
+  if(e.bossWindup>0){
+    e.bossWindup=Math.max(0,e.bossWindup-dt);
+    if(e.bossWindup>0)return;
+    if(e.type==='stapler'){
+      const w=e.bossTarget;
+      if(game.state.walls.includes(w)){
+        const point=game.api.nearestPointOnWall(e,w);
+        if(point&&game.api.withinRadius(e.x,e.y,point.x,point.y,125)){
+          game.api.damageWall(w,65,point.x,point.y);
+          game.api.burst(point.x,point.y,'#c98a32',16);game.api.floatText(point.x,point.y,'CLACK!','#986216');
+        }
+      }
+    }else{
+      for(let i=0;i<3;i++){
+        const a=i*Math.PI*2/3;
+        game.api.spawnEnemy(false,e.x+Math.cos(a)*40,e.y+Math.sin(a)*40,'mini');
+      }
+      game.api.burst(e.x,e.y,'#9354b9',16);game.api.floatText(e.x,e.y-45,'DOODLE DOODLE!','#9354b9');
+    }
+    e.bossTarget=null;e.bossCd=e.type==='stapler'?5:8;return;
+  }
+  e.bossCd=Math.max(0,e.bossCd-dt);if(e.bossCd>0)return;
+  if(e.type==='stapler'){
+    let best=null,distance=110;
+    for(const wall of game.state.walls){
+      const p=game.api.nearestPointOnWall(e,wall);if(!p)continue;
+      const d=game.api.dist(e.x,e.y,p.x,p.y);if(d<distance){distance=d;best=wall}
+    }
+    if(!best)return;e.bossTarget=best;
+  }
+  e.bossWindup=1.2;
+}
+
 function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(!forceBoss&&game.state.enemies.length>=pressure.maxEnemies)return null;
   let side=Math.floor(Math.random()*4),px,py;
@@ -53,7 +98,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
     if(side===3){px=-26;py=game.api.rand(20,game.state.H-20)}
   }
   let type=typeOverride||game.api.enemyType();
-  if(forceBoss)type=(game.state.wave===20&&!game.state.endless)?'eraser':'boss';
+  if(forceBoss)type=game.api.bossTypeForWave();
   const scale=(1+(game.state.wave-1)*.024)*game.state.stats.enemyScale;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
   const enemy={
@@ -63,6 +108,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
     bounces:type==='bouncer'?3:0,bounceTime:0,bounceVX:0,bounceVY:0,
     flankAngle:Math.random()*Math.PI*2,flankCd:game.api.rand(1.0,2.0)
   };
+  if(type==='stapler'||type==='crayon'){enemy.bossCd=type==='stapler'?4:6;enemy.bossWindup=0;enemy.bossTarget=null}
   if(type==='wardling'){enemy.immunity=game.api.pick(['fire','poison','electric','blast','frost']);enemy.immuneCd=0}
   if(type==='sprinter')enemy.dashTime=0;
   if(type==='medic')enemy.healPulse=0;
@@ -226,6 +272,7 @@ function spawnWaveEnemies(dt){
   }
 }
 function updateEnemyBehavior(e,dt){
+  game.api.updateBossAbility(e,dt);
   if(e.immunity)e.immuneCd=Math.max(0,e.immuneCd-dt);
   if(e.type==='sprinter'&&e.freeze<=0&&e.stun<=0)e.dashTime=(e.dashTime+dt)%3.2;
   if(e.type==='medic'){
@@ -322,7 +369,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

@@ -37,7 +37,7 @@ function beginScrapRun(){runScraps=0;runActive=true;updateScrapCounters()}
 function resumeScrapRun(){runActive=true}
 function awardKillScraps(enemy){
   if(game.state.kills%10===0)awardScraps(1);
-  if(enemy.type==='boss'||enemy.type==='eraser')awardScraps(5);
+  if(enemy.type==='boss'||enemy.type==='eraser'||game.catalog.enemyDefs[enemy.type]?.boss)awardScraps(5);
 }
 function finishScrapRun(victory=false){
   if(!runActive)return;

@@ -317,3 +317,24 @@ will guide subsequent balance adjustments.
 To repeat the optional screen checks with Playwright and Chromium installed:
 `node tests/browser-notebook.cjs`. Pass a packaged site directory as the first
 argument to check deployment output. No HTTP server is required for this test.
+
+## Distinct midgame bosses
+
+Wave 5 keeps King Doodle-Doom. Wave 10 now spawns **Staple Snack** (stapler):
+when a wall is within 110px it shows an orange target line for 1.2 seconds,
+then deals 65 damage to that wall if it is still present and within 125px.
+It waits 5 seconds after each slam. Slams never damage Stevie directly.
+
+Wave 15 spawns **Count Crayon** (crayon): after a 1.2-second purple-ring
+warning, it summons up to three Niblets and waits 8 seconds before its next
+wind-up. Summons obey the existing enemy cap. Freeze/stun cancels either
+boss's wind-up and delays its retry. Both retain ordinary movement, wall bites,
+contact damage, status tinting, and the normal 5-scrap boss kill bonus; Void
+Ink and Event Horizon damage them rather than instantly erasing them.
+
+Both have original transparent doodle sprites, compendium entries, and grouped
+wave-start introductions. Wave 20 keeps The Big Rub-Out; other endless boss
+waves use King Doodle-Doom. Midgame waves keep the existing timer completion
+rule. Run `node tests/validate.cjs` for combat checks and the optional
+`node tests/browser-bosses.cjs [packaged-site-directory]` for desktop/phone
+artwork, introductions, live warning rendering, and compendium checks.

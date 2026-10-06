@@ -20,6 +20,16 @@ function wallGeometry(points){
   geometry={count:points.length,minX,minY,maxX,maxY,cx:cx/points.length,cy:cy/points.length,segments};
   wallGeometryCache.set(points,geometry);return geometry;
 }
+function nearestPointOnWall(e,wall){
+  let best=null,distance=Infinity;
+  for(const {a,b} of game.api.wallGeometry(wall.pts).segments){
+    const dx=b.x-a.x,dy=b.y-a.y,length=dx*dx+dy*dy;
+    const t=length?game.api.clamp(((e.x-a.x)*dx+(e.y-a.y)*dy)/length,0,1):0;
+    const p={x:a.x+dx*t,y:a.y+dy*t},d=(p.x-e.x)**2+(p.y-e.y)**2;
+    if(d<distance){distance=d;best=p}
+  }
+  return best;
+}
 function nearestWallPoint(x,y,r){
   let best=null,bestSquared=r*r;
   for(const w of game.state.walls){
@@ -58,7 +68,7 @@ function countIntersections(points){
   }
   return n;
 }
-const api = { withinRadius, wallGeometry, nearestWallPoint, clamp, rand, dist, pick, pointSegDist, segmentIntersection, countIntersections };
+const api = { nearestPointOnWall, withinRadius, wallGeometry, nearestWallPoint, clamp, rand, dist, pick, pointSegDist, segmentIntersection, countIntersections };
 Object.assign(game.api, api);
 return api;
 };
