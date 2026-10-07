@@ -823,3 +823,35 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
  .upgrade-details{padding:12px}.upgrade-detail-heading h3{font-size:24px}
 }
 @media(prefers-reduced-motion:reduce){.reward-workbench #cards .ucard{transition:none}}
+
+/* Menu actions look like marked notebook tabs, rather than loose notes. */
+#startOverlay #startBtn{justify-content:center;gap:14px}
+#startOverlay #startBtn > span{flex:0 0 30px;height:30px;background:transparent;color:inherit;border:2px solid currentColor;border-radius:47% 53% 45% 55%;box-shadow:1px 1px 0 #305e3940;font-family:'Stevie Pencil',cursive}
+.pause-actions button.paper-slip{padding-inline:18px 32px}
+.pause-actions button.paper-slip::after{content:'↗';position:absolute;inset:7px 9px;border:1.5px solid #72674f;border-radius:3px 7px 4px 6px;text-align:right;padding:3px 5px;font-size:16px;color:#72674f;pointer-events:none}
+.pause-actions button.paper-slip:hover::after,.pause-actions button.paper-slip:focus-visible::after{border-color:#3562be;color:#3562be;background:#3562be0b}
+.pause-book .section-kicker,.pause-book .pause-summary,.pause-actions .option-help{color:#625e54}
+.pause-book .section-kicker::before,.pause-book .pause-summary::before,.pause-actions .option-help::before{filter:grayscale(.65) brightness(.88);opacity:.8}
+
+/* Settings: taped scraps on a quiet notebook page. */
+.options-book{position:relative;background:repeating-linear-gradient(0deg,#f4eedc 0 27px,#ccd8db 27px 28px);padding:24px;isolation:isolate}
+.options-book .build-heading{position:relative;background:none;border:0;padding:6px 0 16px;align-items:center;gap:12px}
+.options-book .section-kicker{font-family:'Stevie Pencil',cursive;font-size:16px;letter-spacing:0;text-transform:none;color:#72674f}
+.options-book .build-heading h2{font-size:44px;margin:4px 0}
+.options-book .dialog-intro{font-family:'Stevie Pencil',cursive;font-size:20px;color:#625e54}
+.options-book .option-section{position:relative;background:repeating-linear-gradient(0deg,#fffaf0 0 27px,#dce4e8 27px 28px);border:0;border-radius:2px 9px 4px 6px;padding:24px 20px 18px;margin:24px 0;box-shadow:2px 4px 0 #8d806730;transform:rotate(-.35deg)}
+.options-book .option-section:nth-of-type(2){transform:rotate(.45deg)}
+.options-book .option-section::before{content:'';position:absolute;top:-10px;left:calc(50% - 35px);width:70px;height:22px;background:url('assets/art/ui/tape.svg') center/contain no-repeat;transform:rotate(-5deg);pointer-events:none}
+.options-book .option-section h3{font-family:'Stevie Pencil',cursive;font-size:29px;font-weight:400;color:#315d8c;margin:0 0 16px}
+.options-book button:not(.test-presets button):not(.test-loadout-row button){background:#fff5d9;color:#315d8c;border:1.5px solid #72674f;border-radius:3px 8px 4px 6px;box-shadow:1px 3px 0 #8d80674a;font-family:'Stevie Pencil',cursive;font-size:22px;font-weight:400;min-height:44px;padding:8px 14px}
+.options-book button:hover{filter:brightness(.97)}
+.options-book button:focus-visible{outline:3px dashed #3562be;outline-offset:3px}
+.options-book .volume-label{font-family:'Stevie Pencil',cursive;font-size:23px;font-weight:400}
+.options-book input[type=range]{accent-color:#3562be;min-height:32px}
+.options-book .monster-setting{align-items:center;line-height:1.4}
+.options-book .option-help{color:#535b5e;line-height:1.6}
+.options-book .options-links{gap:12px}
+@media(max-width:480px){.options-book{padding:18px 14px}.options-book .option-section{padding:22px 14px 16px}.options-book .build-heading h2{font-size:38px}.pause-actions button.paper-slip{padding-inline:12px 28px}.pause-actions button.paper-slip::after{inset:6px;font-size:14px;padding:3px}}
+/* Override the old cover-music shortcut styling inside Settings. */
+.options-book #splashMusicBtn{display:inline-block;background:#fff5d9;border:1.5px solid #72674f;box-shadow:1px 3px 0 #8d80674a;font-family:'Stevie Pencil',cursive;font-size:22px;color:#315d8c;min-height:44px;padding:8px 14px;margin:0 0 12px}
+.options-book .build-heading .section-kicker{font-size:16px;font-weight:400;letter-spacing:0;text-transform:none}
