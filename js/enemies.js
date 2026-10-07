@@ -9,6 +9,7 @@ const defs=game.catalog.enemyDefs={
     splitter:{r:13,hp:40,speed:31,dmg:10,color:'#8456c9'},
     sniper:{r:12,hp:36,speed:78,dmg:7,color:'#4b79d8'},
     gnawer:{r:12,hp:42,speed:30,dmg:18,color:'#86563d'},
+    basil:{r:13,hp:38,speed:34,dmg:9,color:'#ba753c'},
     brute:{r:19,hp:105,speed:20,dmg:22,color:'#51634a'},
     elite:{r:13,hp:68,speed:42,dmg:13,color:'#b34e82'},
     wardling:{r:12,hp:38,speed:36,dmg:8,color:'#9e71b5'},
@@ -36,6 +37,7 @@ function enemyType(){
   if(game.state.wave>=7)pool.push('flanker');
   if(game.state.wave>=7)pool.push('splitter');
   if(game.state.wave>=9)pool.push('sniper');
+  if(game.state.wave>=8)pool.push('basil');
   if(game.state.wave>=12)pool.push('gnawer');
   if(game.state.wave>=14)pool.push('brute');
   if(game.state.wave>=16)pool.push('elite');

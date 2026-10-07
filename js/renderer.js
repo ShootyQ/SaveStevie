@@ -7,7 +7,7 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
+const doodleNames=['basil','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{
@@ -87,7 +87,7 @@ function motionFor(e){
   let m=enemyMotion.get(e);
   if(!m){
     const heavy=['tank','brute','bulwark','boss','stapler','crayon','eraser'].includes(e.type);
-    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,walkAge:0,gruntFrame:0,runDistance:0,fastFrame:0,action:null,readyUntil:-1,sprite:null,facing:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
+    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='basil'?3.2:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,walkAge:0,gruntFrame:0,runDistance:0,fastFrame:0,action:null,readyUntil:-1,sprite:null,facing:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
   }
   return m;
 }
@@ -163,7 +163,10 @@ function updateEnemyAnimations(dt){
       if(brain.recovery>0){p.angle-=.24;p.sx+=.1;p.sy-=.14;p.y+=4;p.x+=Math.sin(brain.recovery*9)*1.5}
       else if(brain.cast){const ready=1-brain.cast.left/(brain.cast.duration||1.2);p.sx+=ready*.08;p.sy-=ready*.08;p.angle+=Math.sin(ready*Math.PI)*.07}
     }
-    if(e.type==='bouncer'){
+    if(e.type==='basil'){
+      if(moving){p.angle+=step*.07;p.sx+=step*.06;p.sy-=step*.06}
+      if(m.action==='bite'&&m.actionAge<.3){const feast=Math.sin(m.actionAge/.3*Math.PI);m.cue='bite';m.cueProgress=feast;p.x=m.actionFacing*feast*4;p.angle-=m.actionFacing*feast*.15;p.sx+=feast*.14;p.sy-=feast*.12}
+    }else if(e.type==='bouncer'){
       if(moving){p.y-=Math.abs(step)*2;p.sx+=step*.08;p.sy-=step*.08;}
       if(m.action==='bounce'&&m.actionAge<.16){
         const impact=Math.sin(m.actionAge/.16*Math.PI);m.cue='bounce';p.sx+=impact*.25;p.sy-=impact*.2;

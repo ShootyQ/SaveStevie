@@ -186,7 +186,7 @@ function update(dt){
       if(e.attackCd<=0){
         game.api.damageWall(hit.wall,e.dmg*(e.type==='sapper'?2:1),e.x,e.y);
         if(e.type==='sapper')game.api.animateEnemyAction(e,'strike');
-        else if(e.type==='gnawer'||e.type==='grunt')game.api.animateEnemyAction(e,'bite',game.api.nearestPointOnWall(e,hit.wall));
+        else if(e.type==='gnawer'||e.type==='grunt'||e.type==='basil')game.api.animateEnemyAction(e,'bite',game.api.nearestPointOnWall(e,hit.wall));
         e.attackCd=e.type==='gnawer'?.24:.42
       }
       continue;

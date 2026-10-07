@@ -522,9 +522,9 @@ const storage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>{saved.set
 const env=load(true,{intros:true,storage}),g=env.sandbox.testGame;
 assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
-assert.equal(g.catalog.monsters.length,21);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,21);
+assert.equal(g.catalog.monsters.length,22);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,22);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],3:['fast'],5:['bouncer','tank','boss'],7:['flanker','splitter','mini'],8:['wardling'],9:['sniper','sprinter'],10:['stapler','brood'],11:['bulwark'],12:['gnawer'],13:['medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],3:['fast'],5:['bouncer','tank','boss'],7:['flanker','splitter','mini'],8:['wardling','basil'],9:['sniper','sprinter'],10:['stapler','brood'],11:['bulwark'],12:['gnawer'],13:['medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -544,14 +544,14 @@ g.api.resetRun();env.node('hideMonsterIntros').checked=true;g.api.continueMonste
 assert.equal(saved.get('saveStevieMonsterIntros'),'off');assert.equal(g.api.monsterIntrosEnabled(),false);assert.equal(saved.get('doodleDefenderBestV4'),'14');
 g.api.resetRun();assert.equal(g.api.infoOpen(),false,'disabled setting survives new runs');g.state.wave=20;g.api.startWave();assert.equal(g.api.infoOpen(),false);
 const reloaded=load(true,{intros:true,storage});assert.equal(reloaded.sandbox.testGame.api.monsterIntrosEnabled(),false,'disabled setting survives page reload');
-g.state.paused=false;g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,21);
+g.state.paused=false;g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,22);
 const before=JSON.stringify(g.state);g.api.update(.2);assert.equal(JSON.stringify(g.state),before);
 g.api.closeCompendium();assert.equal(g.state.paused,false);g.state.paused=true;g.api.openCompendium();g.api.closeCompendium();assert.equal(g.state.paused,true);
 g.api.setMonsterIntrosEnabled(true);assert.equal(saved.get('saveStevieMonsterIntros'),'on');g.api.resetRun();assert.equal(g.api.infoOpen(),true,'setting can be re-enabled');
 g.api.resetRun();assert.equal(g.state.paused,true,'reset replaces an open introduction safely');g.api.handleInfoKey({key:'Escape',preventDefault(){}});assert.equal(g.state.paused,false,'Escape explicitly continues the introduction');
 const blocked={getItem(k){if(k==='saveStevieAudioV1')throw Error('blocked');return null},setItem(k){if(k==='saveStevieAudioV1')throw Error('blocked')}};const fallback=load(true,{intros:true,storage:{getItem:key=>key==='doodleDefenderBestV4'?null:blocked.getItem(),setItem:blocked.setItem}}).sandbox.testGame;
 fallback.api.setMonsterIntrosEnabled(false);fallback.api.resetRun();assert.equal(fallback.state.paused,false,'blocked preference storage does not prevent gameplay');
-console.log('PASS: all 21 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
+console.log('PASS: all 22 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
 }
 
 
@@ -618,7 +618,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
 const types=g.catalog.monsters.map(m=>m.type);
 for(let i=0;i<76;i++){
- const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][i%4];
+ const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][Math.floor(i/types.length)%4];
  e.burn=mask&1?2:0;e.poison=mask&2?2:0;e.freeze=mask&4?2:0;e.charged=mask&8?2:0;e.gravitySlow=mask&16?.4:0;
 }
 const state=JSON.stringify(g.state);g.api.draw();const warm=g.api.rendererCacheStats();assert.equal(warm.tintEntries,76,'cache holds more than the old 32-image limit');
@@ -1645,4 +1645,15 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  effects()[0].onclick();env.node('takeUpgradeBtn').onclick();assert.equal(g.state.wave,2);assert.equal(g.api.equippedEffects().length,1);
  env.node('cards').children=[];g.api.openUpgrade();assert.equal(effects().length,0,'later rewards keep their ordinary random pool');
  console.log('PASS: first-wave ink guarantee survives utility-only draws and rerolls, preserves rarity and Legendary offers, equips normally and leaves later rewards unchanged.');
+}
+
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.api.pick=pool=>pool.includes('basil')?'basil':pool[0];
+ g.state.wave=7;assert.notEqual(g.api.enemyType(),'basil');g.state.wave=8;assert.equal(g.api.enemyType(),'basil');
+ assert.equal(g.api.monsterName('basil'),'Basil');g.api.spawnEnemy(false,200,200,'basil');const e=g.state.enemies.at(-1);assert.equal(e.type,'basil');assert.ok(e.hp>0);
+ g.api.updateEnemyAnimations(.05);e.x+=5;g.api.updateEnemyAnimations(.05);assert.ok(g.api.enemyAnimationPose(e).y<0,'Basil hops while moving');
+ g.api.animateEnemyAction(e,'bite',{x:e.x+10,y:e.y});g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyActionCue(e),'bite');
+ const pose=JSON.stringify(g.api.enemyAnimationPose(e));e.freeze=1;e.x+=2;g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyActionCue(e),null,'freeze stops dining');
+ assert.notEqual(pose,JSON.stringify(g.api.enemyAnimationPose(e)));assert.ok(fs.existsSync(path.join(root,'assets/art/basil.png')));
+ console.log('PASS: Basil unlocks at wave 8, spawns, appears in the guide, hops, bites and stops dining when frozen.');
 }
