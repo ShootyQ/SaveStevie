@@ -72,13 +72,17 @@ function roman(n){return ['','I','II','III','IV','V'][n]||n}
 let synergyQueue=[],synergySeen=new Set(),synergyCurrent=null,synergyRevealsEnabled=true;
 function showSynergySplash(name,desc,major=false){
   if(synergySeen.has(name)){game.api.setMsg('Synergy active again: '+name);return}
-  synergySeen.add(name);synergyQueue.push({name,desc,major});
+  if(synergyCurrent?.name===name||synergyQueue.some(d=>d.name===name))return;
+  synergyQueue.push({name,desc,major});
 }
 function synergyRevealActive(){return !!synergyCurrent}
 function resetSynergyReveals(){synergyQueue=[];synergySeen.clear();synergyCurrent=null;game.dom.$('synergySplash').style.display='none'}
 function setSynergyRevealsEnabled(enabled){synergyRevealsEnabled=!!enabled;if(!enabled){synergyQueue=[];synergyCurrent=null;game.dom.$('synergySplash').style.display='none'}}
 function beginSynergyReveal(){
-  if(game.state.paused||!synergyRevealsEnabled||synergyCurrent||!synergyQueue.length||game.api.firstBossIntroActive())return false;
+  if(game.state.paused||!synergyRevealsEnabled||synergyCurrent||game.api.firstBossIntroActive())return false;
+  // Active effects are the source of truth. Recover an unacknowledged reveal
+  // even if its transient notification was cleared before combat resumed.
+  for(const d of game.catalog.synergyDefs)if(game.state.synergies.has(d.name)&&!synergySeen.has(d.name)&&!synergyQueue.some(q=>q.name===d.name))synergyQueue.push({name:d.name,desc:d.desc,major:!!d.major});
   // A replaced effect may have removed a synergy before the next wave begins.
   synergyQueue=synergyQueue.filter(d=>game.state.synergies.has(d.name));
   if(!synergyQueue.length)return false;
@@ -93,7 +97,7 @@ function beginSynergyReveal(){
   game.dom.$('continueSynergyBtn').focus?.();return true;
 }
 function continueSynergyReveal(){
-  if(!synergyCurrent)return;synergyCurrent=null;game.dom.$('synergySplash').style.display='none';
+  if(!synergyCurrent)return;synergySeen.add(synergyCurrent.name);synergyCurrent=null;game.dom.$('synergySplash').style.display='none';
   if(!beginSynergyReveal())game.dom.$('pauseBtn').focus?.();
 }
 
