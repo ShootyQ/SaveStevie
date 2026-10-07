@@ -68,7 +68,9 @@ game.dom.canvas.addEventListener('pointermove',e=>{
 game.dom.canvas.addEventListener('pointerup',game.api.endDraw);
 game.dom.canvas.addEventListener('pointercancel',game.api.endDraw);
 game.dom.$('startBtn').onclick=startRun;
-game.dom.$('againBtn').onclick=startRun;
+game.dom.$('againBtn').onclick=game.api.returnToMenu;
+game.dom.$('scrapGuideShow').onclick=()=>game.api.openInfo('hub');
+for(const id of ['scrapGuideSkip','scrapGuideHubSkip','scrapGuideDone'])game.dom.$(id).onclick=game.api.finishScrapTutorial;
 game.dom.$('newRunBtn').onclick=startRun;
 game.dom.$('continueBtn').onclick=game.api.proceedAfterWave;
 game.dom.$('rerollBtn').onclick=game.api.reroll;

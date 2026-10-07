@@ -60,7 +60,7 @@ a.sandbox.Math.random();
 // Compare the unchanged first utility card; the last slot now guarantees ink.
 both(e=>{const cards=e.node('cards').children;if(cards.length){cards[0].onclick();if(e.sandbox.testGame)e.node('takeUpgradeBtn').onclick();}});compare('upgrade');assert.match(b.node('message').textContent,/×1 — /,'upgrade confirmation includes the new stack and effect');
 both(e=>e.node('clearBtn').onclick());compare('clear walls');
-both(e=>e.node('againBtn').onclick());compare('reset');
+both(e=>e.node('startBtn').onclick());compare('reset');
 
 function state(e){return e.sandbox.testGame ? e.sandbox.testGame.state : e.sandbox.snapshot();}
 function api(e){return e.sandbox.testGame ? e.sandbox.testGame.api : e.sandbox.testAPI;}
@@ -1777,4 +1777,17 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.state.inks.fire=0;g.api.checkSynergies();g.state.inks.fire=1;g.api.checkSynergies();assert.equal(g.api.beginSynergyReveal(),false,'reactivation does not repeat the full reveal');
  g.api.resetRun();g.state.inks.fire=g.state.inks.poison=1;g.api.checkSynergies();assert.equal(g.api.beginSynergyReveal(),true,'new run gets a new reveal');g.api.returnToMenu();assert.equal(g.api.synergyRevealActive(),false);
  console.log('PASS: queued synergy ingredients, acknowledgement, frozen combat/input, repeat suppression and fresh-run/menu cleanup.');
+}
+
+{
+ const saved=new Map(),storage={getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v))};
+ const env=load(true,{storage}),g=env.sandbox.testGame;
+ assert.equal(env.node('scrapGuideCover').hidden,true,'no guide before earnings');g.api.resetRun();g.api.awardScraps(1);g.api.updateUI();assert.equal(env.node('scrapGuideCover').hidden,true,'earning does not interrupt play');
+ g.api.gameOver();assert.equal(env.node('scrapGuideCover').hidden,true);env.node('againBtn').onclick();assert.equal(g.state.running,false);assert.equal(env.node('startOverlay').style.display,'grid');assert.equal(env.node('gameOverOverlay').style.display,'none');assert.equal(env.node('scrapGuideCover').hidden,false);assert.equal(g.api.notebookSnapshot().scraps,1);
+ env.node('scrapGuideShow').onclick();assert.equal(env.node('scrapGuideHub').hidden,false);env.node('hubNotebookBtn').onclick();assert.equal(env.node('scrapGuideShop').hidden,false);assert.equal(g.api.buyNotebookPerk('inkTank'),false,'tutorial does not grant money or permit unaffordable purchases');
+ env.node('scrapGuideDone').onclick();assert.equal(g.api.notebookSnapshot().scrapTutorialDone,true);assert.equal(env.node('scrapGuideShop').hidden,true);
+ const again=load(true,{storage});assert.equal(again.node('scrapGuideCover').hidden,true,'acknowledgement persists across visits');assert.equal(again.sandbox.testGame.api.notebookSnapshot().scraps,1);
+ const pending=new Map([['saveStevieNotebookV1',JSON.stringify({version:1,scraps:1,lifetimeScraps:1,levels:{}})]]);
+ const next=load(true,{storage:{getItem:k=>pending.get(k)||null,setItem:(k,v)=>pending.set(k,v)}});assert.equal(next.node('scrapGuideCover').hidden,false,'next session teaches players with earnings');next.node('scrapGuideSkip').onclick();assert.equal(next.node('scrapGuideCover').hidden,true);
+ console.log('PASS: defeat returns to menu; scrap guide waits for earnings/menu, follows Notebook/shop, preserves currency, accepts dismissal and persists completion.');
 }

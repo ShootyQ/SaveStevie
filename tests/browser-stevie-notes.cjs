@@ -28,14 +28,14 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   assert.equal((await page.locator('.note-signature').first().textContent()).trim(),'— StEvie');
   assert.equal(await page.locator('.note-signature .signature-pencil').count(),2);
   await page.screenshot({path:'/tmp/stevie-note-death-'+viewport.width+'.png'});
-  await page.click('#againBtn');
+  await page.click('#againBtn');await page.click('#startBtn');
   await page.evaluate(()=>testGame.api.gameOver());
   assert.match(await page.textContent('#deathNoteMessage'),/brave face/,'a fresh run gets a different note');
   await page.reload();await page.click('#startBtn');await page.evaluate(()=>testGame.api.gameOver());
   assert.match(await page.textContent('#deathNoteMessage'),/practice/,'deck position survives reopening');
-  await page.click('#againBtn');assert.equal(await page.locator('#gameOverOverlay').isVisible(),false);
+  await page.click('#againBtn');await page.click('#startBtn');assert.equal(await page.locator('#gameOverOverlay').isVisible(),false);
   await page.evaluate(()=>{
-   const g=testGame;g.state.wave=20;g.state.timeLeft=0;g.state.finalBossDefeated=true;g.state.enemies=[];g.api.startWave();g.state.timeLeft=0;g.api.killEnemy(g.api.spawnEnemy(true,100,100));g.api.waveComplete();
+   const g=testGame;g.state.wave=20;g.state.timeLeft=0;g.state.finalBossDefeated=true;g.state.enemies=[];g.api.startWave();g.state.timeLeft=0;g.api.killEnemy(g.api.spawnEnemy(true,100,100));if(g.api.waveFinaleActive())g.api.update(2);g.api.waveComplete();
   });
   assert.match(await page.textContent('#victoryNoteHeading'),/SAVED/);
   assert.match(await page.textContent('#victoryNoteMessage'),/WE DID IT/);
