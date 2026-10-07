@@ -16,7 +16,7 @@ function applyMusicVolume(){audio.volume=game.api.audioSettings().musicVolume;}
 applyMusicVolume();
 function updateMusicButton(){
   button.disabled=introButton.disabled=!supported;
-  button.textContent=muted?'♫̸':'♫';
+  button.textContent=muted?'Play music':'Mute music';
   const label=!supported?'Music unavailable':muted?'Turn music on':blocked||!started?'Play music':'Mute music';
   button.title=label+' · '+tracks[track].name;button.setAttribute?.('aria-label',button.title);button.setAttribute?.('aria-pressed',String(!muted&&!blocked&&started));
   button.classList?.toggle('music-muted',muted||blocked);

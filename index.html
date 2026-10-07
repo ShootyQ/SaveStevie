@@ -50,7 +50,7 @@
 
     <div class="overlay" id="startOverlay">
       <div class="cardbox splash-box">
-        <div class="splash-eyebrow">A NOTEBOOK SURVIVAL GAME <span>IN DEVELOPMENT</span></div>
+        <div class="splash-eyebrow paper-slip">Stevie’s very important notebook <span>still making it!</span></div>
         <div class="splash-art" aria-hidden="true">
           <svg viewBox="0 0 440 250" xmlns="http://www.w3.org/2000/svg">
             <defs><pattern id="menuGraphite" patternUnits="userSpaceOnUse" width="4" height="4"><rect width="4" height="4" fill="#514e49"/><path d="M0 1h1m1 2h2" stroke="#a7a093" stroke-width=".6"/></pattern></defs>
@@ -72,17 +72,18 @@
           <img class="splash-fire" src="assets/art/fire.png" alt="" width="136" height="119">
           <span class="splash-scribble">keep him safe!</span>
         </div>
-        <h1 class="splash-title">Save <span>Stevie.</span></h1>
-        <p class="splash-tagline">Your ink. His life. One very chaotic notebook.</p>
+        <h1 class="splash-title paper-slip">Save <span>Stevie.</span></h1>
+        <p class="splash-tagline paper-slip">i drew monsters. now they’re real.</p>
         <div class="splash-howto">
-          <div><img class="howto-icon" src="assets/art/ui/draw.svg" alt="" width="24" height="24"><b>01 / DRAW</b><span>Drag to build walls.</span></div>
-          <div><img class="howto-icon" src="assets/art/ui/defend.svg" alt="" width="24" height="24"><b>02 / DEFEND</b><span>Clear waves. Beat bosses.</span></div>
-          <div><img class="howto-icon" src="assets/art/ui/upgrade.svg" alt="" width="24" height="24"><b>03 / UPGRADE</b><span>Stack inks. Build weird.</span></div>
+          <div class="paper-slip"><img class="howto-icon" src="assets/art/ui/draw.svg" alt="" width="24" height="24"><b>draw walls</b><span>Drag to build walls.</span></div>
+          <div class="paper-slip"><img class="howto-icon" src="assets/art/ui/defend.svg" alt="" width="24" height="24"><b>keep me safe</b><span>Clear waves. Beat bosses.</span></div>
+          <div class="paper-slip"><img class="howto-icon" src="assets/art/ui/upgrade.svg" alt="" width="24" height="24"><b>get weird inks</b><span>Stack inks. Build weird.</span></div>
         </div>
-        <button id="startBtn">Let's save Stevie <span aria-hidden="true">→</span></button>
-        <button class="secondary notebook-entry" id="splashNotebookBtn">Back of the Notebook · <span id="splashScraps">0</span> scraps</button>
-        <div class="splash-links"><button class="secondary" id="splashMusicBtn">♫ Play intro music</button><button class="secondary" id="splashOptionsBtn">Settings</button><button class="secondary" id="splashStatsBtn">Stats</button></div>
-        <div class="splash-footer">Bosses every 5 waves · A fresh page every wave<small class="copyright-notice">© 2026 ShootyQ. Save Stevie. All rights reserved.</small></div>
+        <button class="paper-slip" id="startBtn">Let's save Stevie <span aria-hidden="true">→</span></button>
+        <button class="secondary notebook-entry paper-slip" id="splashNotebookBtn">My saved scraps · <span id="splashScraps">0</span> scraps</button>
+        <button class="paper-slip" id="splashHubBtn">My notebook <span class="scrap-caption">monsters, pencil stuff &amp; more ↗</span></button>
+        <div class="splash-links"><button class="secondary paper-slip" id="splashMusicBtn">♫ Play intro music</button><button class="secondary paper-slip" id="splashOptionsBtn">Settings</button><button class="secondary paper-slip" id="splashStatsBtn">Stats</button></div>
+        <div class="splash-footer paper-slip">Bosses every 5 waves · A fresh page every wave<small class="copyright-notice">© 2026 ShootyQ. Save Stevie. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -184,15 +185,9 @@
     </div>
   </div>
 
-  <nav class="bottom" aria-label="Drawing tools and game controls">
-    <button class="secondary" id="clearBtn" title="Erase all walls">Erase</button>
-
-    <button class="secondary" id="buildBtn">Tool</button>
-    <button class="secondary" id="compendiumBtn">Monsters</button>
-    <button class="secondary" id="optionsBtn">Settings</button>
+  <nav class="bottom" aria-label="Game controls">
     <button class="secondary" id="fullscreenBtn" title="Toggle fullscreen">Screen</button>
     <button id="pauseBtn">Pause</button>
-    <button class="secondary" id="musicBtn" aria-label="Mute music" title="Mute music">♫</button>
   </nav>
 </div>
 <div id="message" hidden></div>
@@ -208,19 +203,34 @@
     <h3>Luck &amp; rewards</h3><p id="buildLuck" class="build-luck"></p>
     <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
     <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
-    <h3>Monster notes</h3><p>Open Monsters in the toolbar for the full illustrated compendium.</p>
+    <h3>Monster notes</h3><p>Open Monster notes from Pause or My notebook for the full illustrated compendium.</p>
+  </div>
+</div>
+<div class="overlay build-overlay" id="hubOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="hubTitle">
+  <div class="cardbox build-box notebook-hub">
+    <div class="build-heading"><h2 class="paper-slip" id="hubTitle">My notebook</h2><button class="paper-slip" id="closeHubBtn">Back</button></div>
+    <p class="hub-note paper-slip">the important stuff. don’t lose these!</p>
+    <nav class="hub-pages" aria-label="Notebook pages">
+      <button class="paper-slip" id="hubMonstersBtn">Monster notes<span class="scrap-caption">who’s trying to eat my homework?</span></button>
+      <button class="paper-slip" id="hubToolBtn">My pencil<span class="scrap-caption">inks, upgrades &amp; combos</span></button>
+      <button class="paper-slip" id="hubNotebookBtn">Saved scraps<span class="scrap-caption">make the next page a little better</span></button>
+      <button class="paper-slip" id="hubSettingsBtn">Settings<span class="scrap-caption">sound, controls &amp; test a wave</span></button>
+      <button class="paper-slip" id="hubStatsBtn">My scores<span class="scrap-caption">how far did we get?</span></button>
+      <button class="paper-slip" id="hubChangelogBtn">New stuff<span class="scrap-caption">what changed in the notebook?</span></button>
+    </nav>
   </div>
 </div>
 <div class="overlay build-overlay" id="pauseOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
   <div class="cardbox pause-book">
-    <span class="section-kicker">PENCIL DOWN · TAKE A BREATHER</span><h2 id="pauseTitle">Recess.</h2>
-    <p id="pauseSummary" class="pause-summary"></p>
+    <span class="section-kicker paper-slip">pencil down. snack break.</span><h2 class="paper-slip" id="pauseTitle">Recess.</h2>
+    <p id="pauseSummary" class="pause-summary paper-slip"></p>
     <div id="pauseActions" class="pause-actions">
-      <button id="resumeBtn">Back to the doodles →</button>
-      <button class="secondary" id="pauseSettingsBtn">Settings</button>
-      <div class="pause-reference"><button class="secondary" id="pauseToolBtn">Your tool</button><button class="secondary" id="pauseMonstersBtn">Monster notes</button></div>
-      <button class="secondary" id="returnMenuBtn">Return to main menu</button>
-      <p class="option-help">Your page stays right here until you resume.</p>
+      <button class="paper-slip" id="resumeBtn">Back to the doodles →</button>
+      <button class="secondary paper-slip" id="pauseSettingsBtn">Settings</button>
+      <div class="pause-reference"><button class="secondary paper-slip" id="pauseToolBtn">Your tool</button><button class="secondary paper-slip" id="pauseMonstersBtn">Monster notes</button></div>
+      <div class="pause-utilities"><button class="secondary paper-slip" id="clearBtn" title="Erase all walls and reclaim a little ink">Erase walls</button><button class="secondary paper-slip" id="musicBtn" aria-label="Mute music">Mute music</button></div>
+      <button class="secondary paper-slip" id="returnMenuBtn">Return to main menu</button>
+      <p class="option-help paper-slip">Your page stays right here until you resume.</p>
     </div>
     <section id="quitConfirmation" hidden aria-labelledby="quitTitle">
       <h3 id="quitTitle">Close this notebook?</h3><p>Your current run and its upgrades will be lost. Scraps you’ve already earned stay saved, along with your permanent Notebook upgrades.</p>
@@ -235,7 +245,7 @@
     <section class="option-section"><h3>Sound &amp; music</h3>
       <label class="volume-label" for="musicVolume"><span>Music volume</span><output id="musicVolumeValue" for="musicVolume">35%</output></label>
       <input id="musicVolume" type="range" min="0" max="100" step="1" value="35">
-      <p class="option-help">Adjust the chapter soundtrack while it plays. The music-note button still mutes it.</p>
+      <p class="option-help">Adjust the chapter soundtrack while it plays. The music button in Pause also mutes it.</p>
       <label class="volume-label" for="effectsVolume"><span>Sound effects volume</span><output id="effectsVolumeValue" for="effectsVolume">70%</output></label>
       <input id="effectsVolume" type="range" min="0" max="100" step="1" value="70">
       <p class="option-help">Adjust pencil scribbles, impacts and electric zaps. Set this to zero to mute effects without muting music.</p>
@@ -303,6 +313,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>A pocketful of paper menus</h3><p>The title and Pause menus use custom torn-paper scraps and Stevie’s handwriting. My notebook on the title screen opens Monster notes, your pencil, saved scraps, Settings, scores and new updates. During a run, the bottom controls are just Pause/Resume and Screen on the web. Tool, Monsters, Settings, music and erasing walls live inside Pause.</p></article>
       <article class="build-entry"><h3>A harder crown, a smarter bow</h3><p>King Doodle-Doom is tougher and faster, with shorter attack warnings and openings. Returning a projectile breaks that wall; old cover cannot win the fight forever. Below 40% HP his attacks speed up and paper bombs arrive in threes. Sir Pew-Pew moves around open wall ends to find clear shooting lanes, with an aim warning before firing. Closed cages still work.</p></article>
       <article class="build-entry"><h3>Flying monsters &amp; burning scribbles</h3><p>Cannon Ink and INFERNO toss monsters through the air with ground shadows, safe landings, fall damage and stuns. Napalm Scribbles now leaves animated four-second fire trails. Removed monsters lose their status flames immediately. Reroll counts refresh when rewards open, empty rerolls are disabled, and saved coupons stay saved.</p></article>
       <article class="build-entry"><h3>Full-page Android, instant test fights</h3><p>Android uses immersive edge-to-edge paper with a compact pencil tray and safe controls around camera cutouts. Settings → Test a wave / boss lets you choose a wave, jump directly to a boss, pick your drawing tool, and assemble upgrades with rarities and copies. Repeat a test without rebuilding its loadout; test runs do not save scraps or records.</p></article>

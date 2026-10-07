@@ -19,13 +19,22 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.screenshot({path:'/tmp/main-menu-'+viewport.width+'.png'});
   assert.equal(await page.locator('#startOverlay').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
   assert.equal(await page.locator('.bottom').isVisible(),false);
+  await page.click('#splashHubBtn');assert.equal(await page.locator('#hubOverlay').isVisible(),true);
+  for(const [button,overlay,close] of [['hubMonstersBtn','compendiumOverlay','closeCompendiumBtn'],['hubToolBtn','buildOverlay','closeBuildBtn'],['hubNotebookBtn','notebookOverlay','closeNotebookBtn'],['hubSettingsBtn','optionsOverlay','closeOptionsBtn'],['hubStatsBtn','statisticsOverlay','closeStatisticsBtn'],['hubChangelogBtn','changelogOverlay','closeChangelogBtn']]){
+   await page.click('#'+button);assert.equal(await page.locator('#'+overlay).isVisible(),true);assert.equal(await page.locator('#hubOverlay').isVisible(),false);await page.click('#'+close);assert.equal(await page.locator('#hubOverlay').isVisible(),true);
+  }
+  await page.screenshot({path:'/tmp/notebook-hub-'+viewport.width+'.png'});
+  await page.click('#closeHubBtn');assert.equal(await page.locator('#startOverlay').isVisible(),true);assert.equal(await page.evaluate(()=>testGame.state.paused),false);assert.equal(await page.evaluate(()=>document.activeElement.id),'splashHubBtn');
   await page.click('#startBtn');assert.equal(await page.locator('.bottom').isVisible(),true);
+  assert.deepEqual(await page.locator('.bottom button').evaluateAll(buttons=>buttons.filter(b=>getComputedStyle(b).display!=='none').map(b=>b.id)),['fullscreenBtn','pauseBtn']);
+
   await page.evaluate(()=>window.dispatchEvent(new Event('savestevie:background')));
   assert.equal(await page.locator('#pauseOverlay').isVisible(),true,'backgrounding pauses combat');
   await page.click('#resumeBtn');assert.equal(await page.evaluate(()=>testGame.state.paused),false);
   await page.keyboard.press('Escape');assert.equal(await page.locator('#pauseOverlay').isVisible(),true);
   const snapshot=await page.evaluate(()=>JSON.stringify(testGame.state));await page.evaluate(()=>testGame.api.update(2));assert.equal(await page.evaluate(()=>JSON.stringify(testGame.state)),snapshot);
   await page.keyboard.press('Shift+Tab');assert.equal(await page.locator('#returnMenuBtn').evaluate(el=>el===document.activeElement),true);await page.keyboard.press('Tab');assert.equal(await page.locator('#resumeBtn').evaluate(el=>el===document.activeElement),true);
+  assert.equal(await page.textContent('#pauseBtn'),'Resume');
   await page.click('#pauseSettingsBtn');assert.equal(await page.locator('#optionsOverlay').isVisible(),true);await page.locator('#musicVolume').fill('22');
   await page.evaluate(()=>window.dispatchEvent(new Event('savestevie:background')));
   assert.equal(await page.locator('#optionsOverlay').isVisible(),true,'backgrounding preserves settings');
@@ -33,7 +42,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.click('#pauseToolBtn');await page.keyboard.press('Escape');assert.equal(await page.locator('#pauseOverlay').isVisible(),true);
   await page.click('#returnMenuBtn');assert.match(await page.textContent('#quitConfirmation'),/Scraps.*stay saved/);await page.keyboard.press('Escape');assert.equal(await page.locator('#quitConfirmation').isVisible(),false);
   await page.screenshot({path:'/tmp/pause-menu-'+viewport.width+'.png'});
-  await page.click('#resumeBtn');assert.equal(await page.evaluate(()=>testGame.state.paused),false);
+  await page.click('#resumeBtn');assert.equal(await page.evaluate(()=>testGame.state.paused),false);assert.equal(await page.textContent('#pauseBtn'),'Pause');
   await page.evaluate(()=>testGame.api.awardScraps(3));const scraps=await page.evaluate(()=>testGame.api.notebookSnapshot().scraps);
   await page.click('#pauseBtn');await page.click('#returnMenuBtn');await page.click('#confirmQuitBtn');
   assert.equal(await page.locator('#startOverlay').isVisible(),true);assert.equal(await page.evaluate(()=>testGame.state.running),false);assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),scraps);

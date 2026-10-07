@@ -1509,3 +1509,14 @@ console.log('PASS: single-use returns, harder furious phase and uncancelled cast
  assert.equal(g.state.running,false,'unattended first boss now defeats the starting kit');assert.equal(g.state.player.hp,0);
 }
 console.log('PASS: unattended starting-kit fight loses; perfect active paid-wall play still wins at desktop, portrait and landscape sizes.');
+
+{
+ const env=load(true),g=env.sandbox.testGame;
+ env.node('splashHubBtn').onclick();assert.equal(env.node('hubOverlay').style.display,'grid');assert.equal(g.state.paused,true);
+ env.node('hubMonstersBtn').onclick();assert.equal(env.node('hubOverlay').style.display,'none');assert.equal(env.node('compendiumOverlay').style.display,'grid');
+ env.node('closeCompendiumBtn').onclick();assert.equal(env.node('hubOverlay').style.display,'grid');env.node('closeHubBtn').onclick();assert.equal(g.state.paused,false);
+ g.api.resetRun();env.node('pauseBtn').onclick();assert.equal(env.node('pauseBtn').textContent,'Resume');env.node('pauseSettingsBtn').onclick();env.node('pauseBtn').onclick();assert.equal(env.node('optionsOverlay').style.display,'none');assert.equal(g.state.paused,false);assert.equal(env.node('pauseBtn').textContent,'Pause');
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),bar=html.match(/<nav class="bottom"[\s\S]*?<\/nav>/)[0];
+ assert.deepEqual([...bar.matchAll(/<button[^>]+id="([^"]+)"/g)].map(m=>m[1]),['fullscreenBtn','pauseBtn']);assert.match(html,/id="pauseOverlay"[\s\S]*?id="clearBtn"/);assert.match(html,/id="pauseOverlay"[\s\S]*?id="musicBtn"/);
+}
+console.log('PASS: notebook hub opens monster pages and returns correctly; pause/resume closes submenus; live toolbar contains only Screen and Pause, with erasing/music in Pause.');

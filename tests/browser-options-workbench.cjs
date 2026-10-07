@@ -28,8 +28,8 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   assert.match(await page.textContent('#statisticsProgress'),/Scraps earned, all time/);
   await page.screenshot({path:'/tmp/workbench-stats-'+viewport.width+'.png'});
   await page.keyboard.press('Escape');await page.click('#startBtn');
-  await page.click('#optionsBtn');assert.equal(await page.evaluate(()=>testGame.state.paused),true);
-  await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>testGame.state.paused),false);
+  await page.click('#pauseBtn');await page.click('#pauseSettingsBtn');assert.equal(await page.evaluate(()=>testGame.state.paused),true);
+  await page.keyboard.press('Escape');assert.equal(await page.locator('#pauseOverlay').isVisible(),true);await page.click('#resumeBtn');assert.equal(await page.evaluate(()=>testGame.state.paused),false);
   await page.evaluate(()=>{
    const g=testGame,u=name=>g.catalog.upgrades.find(u=>u.name===name);
    const original=JSON.stringify(g.state),p=g.api.upgradePreview(u('Bigger Ink Tank'));

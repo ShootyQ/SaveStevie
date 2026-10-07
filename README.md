@@ -963,3 +963,20 @@ protected records at desktop and phone sizes. `tests/validate.cjs` also checks
 atomic rejection, genuine upgrade application, optional perks and normal reset.
 Native system-bar behavior should be playtested with a newly built Android app;
 updating GitHub Pages does not update an installed Android bundle.
+
+
+The title and Pause menus use `assets/art/ui/menu-scrap.png`, custom transparent
+hand-torn notebook-paper artwork, with actual readable labels in the
+same Stevie Pencil font as his notes. Individual slips use small fixed rotations;
+hover motion respects reduced-motion preferences. Phone portrait/landscape and
+native Android layouts keep controls reachable by scrolling within the menus.
+The title's **My notebook** opens Monsters, the drawing tool, permanent scraps,
+Settings, Stats and What's new. Closing these pages returns to My notebook;
+closing the notebook returns focus to its title-screen button.
+
+The live toolbar now contains only **Pause/Resume** and web **Screen**. Native
+Android keeps its existing immersive display and only shows Pause. Tool,
+Monster notes and Settings are in Pause; Erase walls and the music mute toggle
+also live there. Resume restores the run. Quit still warns that run upgrades are
+lost and earned scraps remain saved. Updated browser menu, notebook, tool,
+options and Android test-lab checks exercise these actual navigation routes.
