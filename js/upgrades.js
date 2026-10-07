@@ -118,11 +118,11 @@ function upgradePreview(u){
     'Fortress Geometry':()=>loopPreview(.5),
     'Bandages':()=>pair('Between-wave healing',5+s.playerRegen,5+s.playerRegen+8*levels,' HP'),
     'Helmet':()=>pair('Contact damage reduction',s.playerArmor*100,Math.min(.55,s.playerArmor+.1*levels)*100,'%'),
-    'Pocket Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+9*levels),
-    'Better Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+12*levels),
+    'Pocket Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+game.api.rockTotal('Pocket Rocks',n+levels)-game.api.rockTotal('Pocket Rocks',n)),
+    'Better Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+game.api.rockTotal('Better Rocks',n+levels)-game.api.rockTotal('Better Rocks',n)),
     'Emergency Medicine':()=>pair('Healing per kill',s.killHeal,s.killHeal+2*levels,' HP'),
-    'Really Good Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+24*levels),
-    'Stevie Has Had Enough':()=>pair('Rock damage',s.rockDamage,s.rockDamage+15*levels),
+    'Really Good Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+game.api.rockTotal('Really Good Rocks',n+levels)-game.api.rockTotal('Really Good Rocks',n)),
+    'Stevie Has Had Enough':()=>pair('Rock damage',s.rockDamage,s.rockDamage+game.api.rockTotal('Stevie Has Had Enough',n+levels)-game.api.rockTotal('Stevie Has Had Enough',n)),
     'Reroll Coupon':()=>pair('Rerolls available',game.state.rerolls,Math.min(5,game.state.rerolls+2*levels))
   };
   const result=previews[u.name]?.()||{label:'Unlock',before:'Not unlocked',after:'Unlocked'};
@@ -212,11 +212,11 @@ game.catalog.upgrades = [
   // Stevie
   {name:'Bandages',cat:'stevie',desc:'Heal 8 extra HP between waves.',apply:()=>game.state.stats.playerRegen+=8},
   {name:'Helmet',cat:'stevie',desc:'Stevie takes 10% less contact damage.',apply:()=>game.state.stats.playerArmor=Math.min(.55,game.state.stats.playerArmor+.1)},
-  {name:'Pocket Rocks',cat:'stevie',desc:'Stevie starts throwing rocks at nearby enemies.',apply:()=>{game.state.stats.rockDamage+=9;game.state.stats.rockRate=Math.min(game.state.stats.rockRate||1.25,1.25)}},
-  {name:'Better Rocks',cat:'stevie',desc:'+12 rock damage and faster throws.',apply:()=>{game.state.stats.rockDamage+=12;game.state.stats.rockRate=Math.min(game.state.stats.rockRate||1.2,Math.max(.45,(game.state.stats.rockRate||1.2)-.12))}},
+  {name:'Pocket Rocks',cat:'stevie',desc:'Unlock rock throwing: +4 first-level damage, later gains grow to +9. Throws every 1.6s; preserves faster throws.',apply:()=>game.api.applyRockUpgrade('Pocket Rocks')},
+  {name:'Better Rocks',cat:'stevie',desc:'+6 first-level rock damage, later gains grow to +12. Each level shortens throws by 0.08s, down to 0.65s.',apply:()=>game.api.applyRockUpgrade('Better Rocks')},
   {name:'Emergency Medicine',cat:'stevie',desc:'Heal 2 HP per kill, sharing the 6 HP/s combat healing budget.',apply:()=>game.state.stats.killHeal+=2},
-  {name:'Really Good Rocks',cat:'stevie',desc:'+24 rock damage.',apply:()=>{game.state.stats.rockDamage+=24;game.state.stats.rockRate=Math.min(game.state.stats.rockRate||1,Math.max(.35,(game.state.stats.rockRate||1)-.1))}},
-  {name:'Stevie Has Had Enough',cat:'stevie',desc:'Per level: +15 rock damage and faster throws, down to a 0.28s interval.',apply:()=>{game.state.stats.rockDamage+=15;game.state.stats.rockRate=Math.min(game.state.stats.rockRate||1.25,Math.max(.28,(game.state.stats.rockRate||1.25)-.24))}},
+  {name:'Really Good Rocks',cat:'stevie',desc:'+12 first-level rock damage, later gains grow to +24. Each level shortens throws by 0.08s, down to 0.55s.',apply:()=>game.api.applyRockUpgrade('Really Good Rocks')},
+  {name:'Stevie Has Had Enough',cat:'stevie',desc:'+8 first-level rock damage, later gains grow to +15. Each level shortens throws by 0.14s, down to 0.45s.',apply:()=>game.api.applyRockUpgrade('Stevie Has Had Enough')},
 
   // Economy / luck
   {name:'Loaded Deck',cat:'economy',desc:'Future normal rewards cannot roll below Uncommon.',apply:()=>game.state.stats.uncommonFloor=true},
@@ -229,7 +229,7 @@ game.catalog.upgrades = [
   {name:'Frost Ink',cat:'ink',desc:'Slows on contact from level one. Sustained contact builds a guaranteed freeze; bosses freeze for half as long.',apply:()=>game.state.inks.frost++},
   {name:'Poison Ink',cat:'ink',desc:'Enemies build stacking poison while touching walls.',apply:()=>game.state.inks.poison++},
   {name:'Repulsion Ink',cat:'ink',desc:'Timed contact pulses deal impact damage, shove enemies safely away from Stevie and briefly stagger them.',apply:()=>game.state.inks.repulsion++},
-  {name:'Electric Ink',cat:'ink',desc:'Wall contact shocks enemies and sparks a jumping chain. Each level adds reach; every two levels add another jump.',apply:()=>game.state.inks.electric++},
+  {name:'Electric Ink',cat:'ink',desc:'Wall contact sparks a fading chain with brief shock. Shared recovery prevents overlapping zaps; every three levels add a jump, with capped reach and targets.',apply:()=>game.state.inks.electric++},
   {name:'Blast Ink',cat:'ink',desc:'Destroyed walls explode and damage nearby enemies.',apply:()=>game.state.inks.blast++},
   {name:'Vampire Ink',cat:'ink',desc:'Deals life-drain damage on contact and heals for 25% of damage dealt, sharing the 6 HP/s healing budget.',apply:()=>game.state.inks.vampire++},
   {name:'Gravity Ink',cat:'ink',desc:'Pulls enemies to wall segments and holds them there. Held enemies take more damage and bite walls 30% slower.',apply:()=>game.state.inks.gravity++},

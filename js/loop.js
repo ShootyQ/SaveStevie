@@ -11,15 +11,16 @@ function update(dt){
   game.api.updateRefuge(dt);
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
   game.state.waveElapsed+=dt;
-  if(game.state.wave%5!==0){
+  if(game.state.wave%5!==0||game.api.bossWavePhase()==='timed'){
     const previous=game.state.timeLeft;
     game.state.timeLeft=Math.max(0,previous-dt);
     if(previous>0&&game.state.timeLeft===0)game.api.setMsg('No more arrivals. Defeat the remaining monsters!');
-    if(game.state.timeLeft===0&&!game.state.enemies.some(e=>e.hp>0)){
+    if(game.state.wave%5!==0&&game.state.timeLeft===0&&!game.state.enemies.some(e=>e.hp>0)){
       game.api.waveComplete();return;
     }
   }
 
+  game.api.updateBossDamageBudgets(dt);
   game.api.updateSustain(dt);
   game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.inkRegen*dt);
 
@@ -35,6 +36,7 @@ function update(dt){
 
   game.api.spawnWaveEnemies(dt);
 
+  const teslaHits=new Set(),railHits=new Set();
   // Geometry-based synergies pulse continuously.
   for(const w of game.state.walls){
     if(!w.closed)continue;
@@ -62,8 +64,9 @@ function update(dt){
 
     if(game.state.synergies.has('TESLA CAGE')&&w.intersections>0){
       for(const e of game.state.enemies){
-        if(game.api.withinRadius(e.x,e.y,cx,cy,145)){
-          game.api.dealDamage(e,Math.max(3,game.state.inks.electric*5)*dt,'electric');
+        if(!teslaHits.has(e)&&game.api.withinRadius(e.x,e.y,cx,cy,145)){
+          teslaHits.add(e);
+          game.api.dealDamage(e,game.api.electricTuning(game.state.inks.electric).fieldDps*dt,'electric');
           if(Math.random()<.8*dt)game.api.burst(e.x,e.y,'#90b3ff',2);
         }
       }
@@ -78,7 +81,7 @@ function update(dt){
           e.gravitySlow=Math.max(e.gravitySlow,.42);
           if(game.state.synergies.has('ABSOLUTE ZERO')&&Math.random()<.04*dt*60)e.freeze=Math.max(e.freeze,.4);
         }
-        if(game.state.synergies.has('Power Lines'))game.api.dealDamage(e,Math.max(4,game.state.inks.electric*4)*dt,'electric');
+        if(game.state.synergies.has('Power Lines'))game.api.dealDamage(e,game.api.electricTuning(game.state.inks.electric).fieldDps*dt,'electric');
       }
     }
   }
@@ -90,7 +93,7 @@ function update(dt){
   for(const e of [...game.state.enemies]){
     if(game.state.player.hp<=0)break;
     if(e.hp<=0){game.api.killEnemy(e);continue}
-    e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
+    if(e.shockRest>0)e.shockRest=Math.max(0,e.shockRest-dt);e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
     game.api.updateSupportInkEnemy(e,dt);
 
@@ -102,8 +105,9 @@ function update(dt){
     }
     if(e.charged>0&&game.state.synergies.has('Rail Ink')){
       for(const n of game.state.enemies){
-        if(n!==e&&game.api.withinRadius(n.x,n.y,e.x,e.y,38)){
-          game.api.dealDamage(n,12*dt,'electric');game.api.dealDamage(e,6*dt,'electric');
+        if(n!==e&&!railHits.has(n)&&game.api.withinRadius(n.x,n.y,e.x,e.y,38)){
+          railHits.add(n);const damage=game.api.electricTuning(game.state.inks.electric).fieldDps*dt;game.api.dealDamage(n,damage,'electric');
+          if(!railHits.has(e)){railHits.add(e);game.api.dealDamage(e,damage*.5,'electric')}
           if(Math.random()<1.5*dt)game.api.burst(n.x,n.y,'#91b6ff',2)
         }
       }
@@ -123,6 +127,7 @@ function update(dt){
       if(game.api.steerBounce(e,dt)){game.api.contactStevie(e);continue}
     }
 
+    if(e.waveBoss&&!immobilized)game.api.pushThroughBossStrokes(e,dt);
     const target=game.api.enemyTarget(e);
     let targetX=target.x,targetY=target.y;
     if(!immobilized&&e.type==='flanker'){

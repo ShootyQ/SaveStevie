@@ -14,6 +14,16 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
   });
   await page.goto('http://127.0.0.1:8001/');await page.click('#startBtn');
+  await page.evaluate(()=>{document.documentElement.classList.add('native-app');testGame.api.resize()});
+  assert.equal(await page.locator('#app').evaluate(el=>Math.round(el.getBoundingClientRect().width)),viewport.width,'native uses full display width');
+  assert.equal(await page.locator('#app').evaluate(el=>Math.round(el.getBoundingClientRect().height)),viewport.height,'native uses full display height');
+  await page.evaluate(()=>{const g=testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.spawnTimer=9999;g.state.timeLeft=.1;g.api.updateUI()});
+  assert.equal(await page.locator('#waveCountdown').isVisible(),true,'boss lead-in has a timer');
+  await page.evaluate(()=>testGame.api.update(.2));assert.match(await page.textContent('#bossOvertime'),/arriving/);
+  const arrival=await page.evaluate(()=>testGame.api.bossArrivalSnapshot());if(viewport.width<viewport.height)assert.ok(['top','bottom'].includes(arrival.side));
+  await page.evaluate(()=>testGame.api.draw());await page.screenshot({path:'/tmp/boss-arrival-'+viewport.width+'.png'});
+  await page.evaluate(()=>{testGame.state.paused=true;testGame.api.update(3)});assert.equal(await page.evaluate(()=>testGame.api.bossArrivalSnapshot().left),arrival.left);
+  await page.evaluate(()=>{testGame.state.paused=false;testGame.api.update(2.4)});assert.equal(await page.locator('#waveCountdown').isVisible(),false);
   const height=await page.locator('#game').evaluate(c=>c.getBoundingClientRect().height);
   for(const wave of [5,10,15,20]){
    const name=await page.evaluate(wave=>{const g=testGame;g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,g.state.player.x-110,g.state.player.y);boss.freeze=100;g.state.timeLeft=.01;g.api.update(.02);g.api.draw();return g.api.monsterName(boss.type)},wave);
@@ -34,7 +44,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.click('#buildNotebookBtn');assert.match(await page.locator('.notebook-earn').first().textContent(),/25 kills/);assert.match(await page.locator('.notebook-earn').first().textContent(),/Chapter-clear bonuses/);await page.click('#closeNotebookBtn');
   await page.evaluate(()=>{const g=testGame;g.state.wave=1;const names=['Quick Refill','Recycling','Patch Job'];let i=0;g.api.getUpgrade=()=>g.catalog.upgrades.find(u=>u.name===names[i++%3]);g.api.openUpgrade()});
   assert.match(await page.textContent('#cards'),/smaller bonuses/);assert.equal(await page.locator('#cards .ucard').evaluateAll(cards=>cards.every(c=>c.scrollWidth<=c.clientWidth+1)),true);
-  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' untimed bosses and regular-wave cleanup, stable playfield, accurate Build/regeneration/budget/Notebook text and reward-card fit');await page.close();
+  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' timed boss lead-ins, paused arrivals, native fullscreen, untimed encounters and cleanup, stable playfield, accurate Build/regeneration/budget/Notebook text and reward-card fit');await page.close();
  }
  await browser.close();
 })().catch(e=>{console.error(e);process.exit(1)});

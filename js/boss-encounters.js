@@ -5,10 +5,21 @@ const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-mot
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
 const colors={boss:'#9b3549',stapler:'#ad741f',crayon:'#8751ac',eraser:'#b95176'};
-function bossBrain(e){let b=brains.get(e);if(!b){b={cd:3,cast:null,turn:0,moveCd:0,target:null,enclosed:false,contactCd:0,recovery:0,charge:0,action:null,repeat:0};brains.set(e,b)}return b}
+function bossBrain(e){let b=brains.get(e);if(!b){b={cd:3,cast:null,turn:0,moveCd:0,target:null,enclosed:false,enclosedAge:0,damageBudget:Math.max(30,e.maxHp*.045)*.5,contactCd:0,recovery:0,charge:0,action:null,repeat:0};brains.set(e,b)}return b}
 function resetBossEncounters(){brains=new WeakMap();marks=[];clock=0}
 function inside(e,w){let yes=false;const pts=w.pts;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a.y>e.y)!==(b.y>e.y)&&e.x<(b.x-a.x)*(e.y-a.y)/(b.y-a.y)+a.x)yes=!yes}return yes}
 function nearestBossWall(e,range=150){let best=null;for(const w of game.state.walls){const p=game.api.nearestPointOnWall(e,w);if(!p)continue;const d=Math.hypot(p.x-e.x,p.y-e.y);if(d<range){range=d;best={wall:w,...p}}}return best}
+function updateBossDamageBudgets(dt){for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e),rate=Math.max(30,e.maxHp*.045);b.damageBudget=Math.min(rate*.5,b.damageBudget+rate*dt)}}
+function limitBossDamage(e,amount){if(!e.waveBoss)return amount;const b=bossBrain(e),actual=Math.min(amount,b.damageBudget);b.damageBudget-=actual;return actual}
+function pushThroughBossStrokes(e,dt){
+ for(const w of [...game.state.walls]){if(w.hp<=0)continue;const p=game.api.nearestPointOnWall(e,w);
+  if(p&&Math.hypot(p.x-e.x,p.y-e.y)<e.r*.8+w.thick/2){
+   // No explosion chain from discarded body scribbles: the boss tears them away.
+   w.hp-=Math.max(300,w.maxHp*2)*dt;
+   if(w.hp<=0){game.state.walls=game.state.walls.filter(other=>other!==w);game.api.burst(p.x,p.y,'#bca88a',6)}
+  }
+ }
+}
 function bossDamageMultiplier(e){return e.waveBoss&&(bossBrain(e).enclosed||bossBrain(e).recovery>0)?1.35:1}
 function bossWallHit(e){if(!e.waveBoss)return null;const hit=nearestBossWall(e,e.r+20);return hit&&Math.hypot(hit.x-e.x,hit.y-e.y)<=e.r+hit.wall.thick/2+3?{wall:hit.wall,seg:1}:null}
 function bossContact(e){
@@ -21,7 +32,10 @@ function summon(e,type,count,x=e.x,y=e.y){const existing=game.state.enemies.filt
 function volley(e,cast,count,kind){const angle=Math.atan2(cast.y-e.y,cast.x-e.x);for(let i=0;i<count&&game.state.enemyShots.length<32;i++){const a=angle+(i-(count-1)/2)*.18;game.state.enemyShots.push({x:e.x,y:e.y,vx:Math.cos(a)*125,vy:Math.sin(a)*125,life:3,r:4,damage:6,bossKind:kind})}game.api.animateEnemyAction(e,'fire')}
 function execute(e,b,c){
  const furious=e.hp<e.maxHp*.4;b.action={kind:c.kind,age:0};
- if(c.kind==='charge'){
+ if(c.kind==='breakout'){
+  for(const w of [...game.state.walls]){const p=game.api.nearestPointOnWall(e,w);if(p&&(Math.hypot(p.x-e.x,p.y-e.y)<e.r+100||(w.closed&&inside(e,w)))){game.state.walls=game.state.walls.filter(other=>other!==w);game.api.burst(p.x,p.y,'#bca88a',8)}}
+  b.enclosed=false;b.enclosedAge=0;b.recovery=.35;b.moveCd=0;game.api.animateEnemyAction(e,'slam');game.api.floatText(e.x,e.y-e.r-12,'BREAKOUT!','#9b3549');
+ }else if(c.kind==='charge'){
   b.charge=.5;b.repeat=furious&&!c.repeat?1:0;b.chargeX=c.x;b.chargeY=c.y;game.api.animateEnemyAction(e,'slam');
   if(c.wall&&game.state.walls.includes(c.wall)&&Math.hypot(c.x-e.x,c.y-e.y)<145)game.api.damageWall(c.wall,earlyBoss(e)?(furious?150:110):(furious?80:60),c.x,c.y);
  }else if(c.kind==='swipe'){
@@ -37,8 +51,10 @@ function execute(e,b,c){
 }
 function updateBossEncounter(e,dt){
  const b=bossBrain(e);if(b.action){b.action.age+=dt;if(b.action.age>.65)b.action=null}b.contactCd=Math.max(0,b.contactCd-dt);b.recovery=Math.max(0,b.recovery-dt);
- b.enclosed=game.state.walls.some(w=>w.closed&&w.hp>0&&inside(e,w));
+ b.enclosed=game.state.walls.some(w=>{if(!w.closed||w.hp<=0||w.life<=0||!inside(e,w))return false;const p=game.api.nearestPointOnWall(e,w);return p&&Math.hypot(p.x-e.x,p.y-e.y)>e.r+w.thick/2+8});
+ b.enclosedAge=b.enclosed?b.enclosedAge+dt:0;
  if(e.hp<=0||e.freeze>0||e.stun>0){b.cast=null;b.charge=0;b.repeat=0;e.bossWindup=0;b.cd=Math.max(b.cd,1);return}
+ if(b.enclosedAge>=1.8&&!b.cast&&b.charge<=0){b.cast={kind:'breakout',x:e.x,y:e.y,left:1.2};e.bossWindup=1.2;return}
  if(b.cast){b.cast.left-=dt;e.bossWindup=Math.max(0,b.cast.left);if(b.cast.left<=0)execute(e,b,b.cast);return}
  if(b.charge>0){b.charge=Math.max(0,b.charge-dt);const dx=b.chargeX-e.x,dy=b.chargeY-e.y,m=Math.hypot(dx,dy)||1;if(!game.api.moveEnemySafely(e,dx/m*160*dt,dy/m*160*dt)){b.charge=0;b.recovery=1.2;b.repeat=0}
   if(b.charge<=0&&b.repeat){b.repeat=0;b.cast={kind:'charge',x:game.state.player.x,y:game.state.player.y,left:1.2,repeat:true};e.bossWindup=1.2}return}
@@ -51,10 +67,13 @@ function updateBossEncounter(e,dt){
  const target=(kind==='swipe'||kind==='charge')&&wall?wall:player;
  b.cast={kind,x:kind==='swipe'?e.x:target.x,y:kind==='swipe'?e.y:target.y,wall:target.wall,left:1.2};e.bossWindup=1.2;
 }
-function bossPathClear(e,x,y){return !game.api.shotBlocked(e.x,e.y,x,y,e.r+1)}
+function bossIgnoredWalls(e){return new Set(game.state.walls.filter(w=>{const p=game.api.nearestPointOnWall(e,w);return p&&Math.hypot(p.x-e.x,p.y-e.y)<e.r*.8+w.thick/2}))}
+function bossPathClear(e,x,y){return !game.api.shotBlocked(e.x,e.y,x,y,e.r+1,bossIgnoredWalls(e))}
+function bossMoveClear(e,x,y){return game.api.bouncePathClear(e,x,y,0,bossIgnoredWalls(e))}
+
 function bossTarget(e){
  const b=bossBrain(e);if(b.cast||b.recovery>0||b.charge>0)return {x:e.x,y:e.y};
- if(b.enclosed){b.detour=false;const wall=nearestBossWall(e,Infinity);return wall||game.state.player}
+ if(b.enclosed){b.detour=false;return {x:e.x,y:e.y}}
  if(b.detour&&b.target&&Math.hypot(b.target.x-e.x,b.target.y-e.y)>4&&bossPathClear(e,b.target.x,b.target.y))return b.target;
  b.detour=false;
  if(b.moveCd<=0||!b.target){
@@ -98,12 +117,19 @@ function updateBossFields(dt){clock+=dt;for(const e of game.state.enemies)if(e.w
 function moveBossFields(dx,dy){for(const m of marks){m.x+=dx;m.y+=dy}for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e);for(const p of [b.cast,b.target])if(p&&p!==game.state.player){p.x+=dx;p.y+=dy}if(b.chargeX!==undefined){b.chargeX+=dx;b.chargeY+=dy}}}
 function bossEncounterSnapshot(){return {marks:marks.map(m=>({x:m.x,y:m.y,age:m.age,kind:m.kind})),bosses:game.state.enemies.filter(e=>e.waveBoss).map(e=>{const b=bossBrain(e);return {type:e.type,enclosed:b.enclosed,cast:b.cast?{kind:b.cast.kind,x:b.cast.x,y:b.cast.y,left:b.cast.left}:null,recovery:b.recovery,charge:b.charge,action:b.action?{...b.action}:null}})}}
 function drawBossEncounters(){const ctx=game.dom.ctx;
+ const arrival=game.api.bossArrivalSnapshot();
+ if(arrival){
+  const x=game.api.clamp(arrival.x,35,game.state.W-35),y=arrival.side==='top'?Math.min(125,game.state.H*.4):game.api.clamp(arrival.y,35,game.state.H-35),pulse=reduced?0:Math.sin(clock*18)*3;
+  ctx.save();ctx.translate(x+pulse,y);ctx.fillStyle='rgba(70,42,35,.22)';ctx.beginPath();ctx.ellipse(0,0,30+(2.4-arrival.left)*7,14,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#9b3549';ctx.lineWidth=2;
+  for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(i*11-4,-12);ctx.lineTo(i*11+4,0);ctx.lineTo(i*11-3,12);ctx.stroke()}ctx.restore();
+ }
+
  for(const m of marks){const color=m.kind==='red'?'#c34937':m.kind==='blue'?'#3887ba':'#57913b';ctx.save();ctx.translate(m.x,m.y);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.globalAlpha=m.age<1.2?.45:.2;ctx.beginPath();ctx.arc(0,0,m.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.8;ctx.lineWidth=2;ctx.setLineDash(m.age<1.2?[5,5]:[]);ctx.stroke();ctx.font='bold 18px sans-serif';ctx.textAlign='center';ctx.fillText(m.kind==='green'?'✦':m.kind==='blue'?'~':'!',0,6);ctx.restore()}
  for(const e of game.state.enemies){if(!e.waveBoss||e.hp<=0)continue;const b=bossBrain(e);ctx.save();ctx.strokeStyle=colors[e.type];ctx.fillStyle=colors[e.type];ctx.lineWidth=2;
   if(b.enclosed||b.recovery>0){ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+8+(reduced?0:Math.sin(clock*5)*2),0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
-  if(b.cast){const c=b.cast;ctx.setLineDash([6,5]);ctx.beginPath();if(c.kind==='charge'||c.kind==='volley'){ctx.moveTo(e.x,e.y);ctx.lineTo(c.x,c.y)}else ctx.arc(c.x,c.y,c.kind==='swipe'?130:42,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+7,-Math.PI/2,-Math.PI/2+Math.PI*2*(1-c.left/1.2));ctx.stroke()}
+  if(b.cast){const c=b.cast;ctx.setLineDash([6,5]);ctx.beginPath();if(c.kind==='charge'||c.kind==='volley'){ctx.moveTo(e.x,e.y);ctx.lineTo(c.x,c.y)}else ctx.arc(c.x,c.y,c.kind==='breakout'?e.r+100:c.kind==='swipe'?130:42,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+7,-Math.PI/2,-Math.PI/2+Math.PI*2*(1-c.left/1.2));ctx.stroke()}
   if(b.action&&!reduced){const t=b.action.age/.65;ctx.save();ctx.translate(e.x,e.y);ctx.globalAlpha=(1-t)*.7;
-   if(b.action.kind==='swipe'||b.action.kind==='clean'){
+   if(b.action.kind==='breakout'||b.action.kind==='swipe'||b.action.kind==='clean'){
     ctx.beginPath();ctx.arc(0,0,e.r+10+t*65,-.8+t,1.8+t);ctx.stroke();
     for(let i=0;i<6;i++){const a=i*.7,d=e.r+8+t*35;ctx.beginPath();ctx.arc(Math.cos(a)*d,Math.sin(a)*d,2+i%2,0,Math.PI*2);ctx.fill()}
    }else if(b.action.kind==='paint'||b.action.kind==='summon'){
@@ -114,5 +140,5 @@ function drawBossEncounters(){const ctx=game.dom.ctx;
   ctx.restore();
  }
 }
-const api={bossPathClear,bossWallHit,bossBrain,resetBossEncounters,bossDamageMultiplier,bossContact,updateBossEncounter,bossTarget,updateBossFields,moveBossFields,bossEncounterSnapshot,drawBossEncounters};Object.assign(game.api,api);return api;
+const api={bossMoveClear,updateBossDamageBudgets,limitBossDamage,pushThroughBossStrokes,bossPathClear,bossWallHit,bossBrain,resetBossEncounters,bossDamageMultiplier,bossContact,updateBossEncounter,bossTarget,updateBossFields,moveBossFields,bossEncounterSnapshot,drawBossEncounters};Object.assign(game.api,api);return api;
 };

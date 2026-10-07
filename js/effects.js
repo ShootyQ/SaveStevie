@@ -77,6 +77,7 @@ function dealDamage(enemy,amount,kind='physical'){
   if(enemy.type==='bulwark'&&kind==='physical'&&amount>0)amount*=.35;
   const death=game.state.stacks['Death Ink']||0;
   if(kind==='physical'&&death>0&&enemy.hp<=enemy.maxHp*.5)amount*=1+Math.min(.4,.16+.04*death);
+  amount=game.api.limitBossDamage(enemy,Math.max(0,amount));
   const before=enemy.hp,actual=Math.min(Math.max(0,before),amount);
   enemy.hp-=amount;
   if(actual>0){if(kind==='physical'&&game.state.stacks['Death Ink']>0)game.api.animateInkAccent(enemy,'death');game.api.reactEnemyHit(enemy);if(kind==='void')game.api.animateVoidHit(enemy)}

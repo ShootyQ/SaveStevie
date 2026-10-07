@@ -679,15 +679,15 @@ solo roles in that encounter, rather than proving full-campaign balance.
 Run `node tests/browser-support-inks.cjs [packaged-site-directory]` for real
 combat, animation, pause, reduced-motion, preview and resize checks.
 
-Electric now includes Shock instead of requiring a separate socket. A contact cast
-repeats every max(0.22, 0.8 − 0.12 × level) seconds, deals 3 + 2 × level
-source damage, and jumps to the nearest living unvisited enemy within
-110 + 18 × level pixels **of the previous enemy**. It hits up to
-1 + floor(level/2) additional enemies (maximum 12 including synergy bonuses),
-each for 4 + 3 × level damage. Each hit stuns for min(0.45, 0.12 +
-0.025 × level) seconds; bosses halve that duration and Electric immunity
-blocks damage and shock. Existing Cryoshock, Tesla Well, and THE STORM bonuses
-still add range, jumps, and damage. Shock never occupies its own reward slot.
+Electric includes brief Shock in the same slot. Every source and chained target
+shares a hit cooldown (1.15s, diminishing to a floor of 0.8s), including rock
+and Chaos triggers. Damage starts at 3 + 1.2 × effective level; levels above
+six contribute 35% of a full damage level. Each jump keeps 72% of the previous
+hit's damage. Base chains gain a jump every three levels, up to six; synergies
+cap at eight jumps. Base hop reach caps at 190px, synergy reach at 220px, and
+all targets stay within 360px of the original source. Shock caps at 0.18s,
+with a separate 1.25s recovery; bosses halve its duration. Electric fields use
+smaller diminishing level gains, and overlapping Tesla cages do not stack.
 Lightning uses bounded staggered hand-drawn bolts and orbiting status sparks;
 Plaguefire scars expose honey-colored scratched school-desk grain beneath
 charred paper edges. These visuals do not consume combat RNG.
@@ -792,8 +792,10 @@ it. DEV MODE locks its rarity to Legendary, and application rejects lower-tier
 Triple Stroke cards. Other special unlocks keep their existing rarity behavior.
 
 Regular waves stop scheduled arrivals at zero seconds and continue combat until
-no living enemies remain. Boss waves hide the countdown and time bar and end
-when their boss dies, clearing its summoned minions. Effect animation uses a
+no living enemies remain. Boss waves begin with the same timed combat and
+cleanup. A 2.4s paper-edge warning precedes the boss, then the countdown hides
+for the untimed encounter. Portrait bosses use top/bottom entrances and start
+at least 220px from Stevie. Defeating the boss clears its summoned minions. Effect animation uses a
 separate elapsed clock so it continues throughout untimed fights and cleanup.
 
 Drawing tools have distinct presentation-only wall strokes: broad scratchy graphite
@@ -838,3 +840,18 @@ shares a cap of half the ink actually paid; free/banked ink and copied strokes
 produce no extra rewards. Damage overlaps apply once and use the stronger of
 loop utility and boss enclosure/recovery exposure. A short deterministic pulse
 and ink popup mark paid closure; reduced motion shows a static fading outline.
+
+Bosses tear through strokes crossing their body without triggering wall-break
+explosions. A closed perimeter must clear the boss body by eight pixels to earn
+35% exposure damage. After 1.8s enclosed, a 1.2s warned breakout tears the
+perimeter open; its brief recovery remains vulnerable. Shared boss damage is
+limited to max(30, 4.5% of maximum HP) per second with half a second of burst
+capacity, so overlapping sources cannot instantly kill an encounter boss.
+
+Rock upgrades start at +4/+6/+12/+8 damage for Pocket Rocks/Better Rocks/Really
+Good Rocks/Stevie Has Had Enough. Later levels grow to the previous +9/+12/+24/
++15 gains. Faster throwing has gentler gains and floors of 0.65/0.55/0.45s.
+Pocket Rocks starts at a 1.6s interval and preserves already faster throws.
+
+The native Android layout fills portrait and landscape displays without the
+web page's side gutters or desktop size caps, retaining device safe-area insets.

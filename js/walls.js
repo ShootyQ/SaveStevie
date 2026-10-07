@@ -222,7 +222,6 @@ function applyInkContact(e,dt,wall=null){
   game.api.applyFrostContact(e,dt);
   if(game.state.inks.electric>0&&e.chainCd<=0){
     game.api.chainLightning(e,game.state.inks.electric);
-    e.chainCd=Math.max(.22,.8-game.state.inks.electric*.12);
   }
   game.api.applyVampireContact(e,dt);
   if(game.state.inks.repulsion>0)applyRepulsionContact(e,dt);
@@ -284,39 +283,44 @@ function applyOneInk(kind,e,dt,chaos=false){
   if(kind==='gravity'){e.gravitySlow=Math.max(e.gravitySlow,.55);e.stun=Math.max(e.stun,isInkBoss(e)?.1:.2)}
 }
 
+function electricTuning(level){
+  const power=Math.min(level,6)+Math.max(0,level-6)*.35;
+  return {damage:3+1.2*power,count:Math.min(6,1+Math.floor(level/3)),range:Math.min(190,110+level*12),radius:360,cooldown:Math.max(.8,1.15-level*.025),stun:Math.min(.18,.09+level*.01),fieldDps:2+power*.9};
+}
 function chainLightning(source,level){
-  if(source.hp<=0)return;
-  game.api.playSound('electric');
-  let count=1+Math.floor(level/2),range=110+level*18,mult=1;
-  if(game.state.synergies.has('Cryoshock')&&source.freeze>0){range+=70;count+=2;mult+=.55}
-  if(game.state.synergies.has('Tesla Well')&&source.gravitySlow>.15){range+=45;count+=1;mult+=.35}
-  if(game.state.synergies.has('THE STORM')){range+=65;count+=2;mult+=.45}
-  count=Math.min(12,count);
+  if(source.hp<=0||(source.chainCd||0)>0)return;
+  const t=electricTuning(level);let {count,range}=t,mult=1;
+  if(game.state.synergies.has('Cryoshock')&&source.freeze>0){range+=25;count++;mult+=.15}
+  if(game.state.synergies.has('Tesla Well')&&source.gravitySlow>.15){range+=20;count++;mult+=.1}
+  if(game.state.synergies.has('THE STORM')){range+=30;count++;mult+=.15}
+  count=Math.min(8,count);range=Math.min(220,range);
   const nearby=[],visited=new Set([source]);let from=source;
   for(let hop=0;hop<count;hop++){
     let next=null,best=range*range;
     for(const e of game.state.enemies){
-      if(e.hp<=0||visited.has(e))continue;
+      if(e.hp<=0||visited.has(e)||(e.chainCd||0)>0||e.immunity==='electric'||Math.hypot(e.x-source.x,e.y-source.y)>t.radius)continue;
       const d=(e.x-from.x)**2+(e.y-from.y)**2;
       if(d<=best&&(!next||d<best)){next=e;best=d}
     }
-    if(!next)break;
-    nearby.push(next);visited.add(next);from=next;
+    if(!next)break;nearby.push(next);visited.add(next);from=next;
   }
-  game.api.animateChainLightning(source,nearby);
-  const shock=e=>{
+  game.api.playSound('electric');game.api.animateChainLightning(source,nearby);
+  [source,...nearby].forEach((e,hop)=>{
+    // All hits share the same recovery, including Thunderstones and Chaos.
+    e.chainCd=t.cooldown;
     if(e.immunity==='electric')return;
-    const boss=e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss;
-    const duration=Math.min(.45,.12+level*.025)*(boss?.5:1);
-    e.stun=Math.max(e.stun||0,duration);game.api.animateElectricShock(e,duration);
-  };
-  shock(source);game.api.dealDamage(source,(3+level*2)*mult,'electric');
-  nearby.forEach(e=>{shock(e);game.api.dealDamage(e,(4+level*3)*mult,'electric');game.api.burst(e.x,e.y,'#7ea7ff',4)});
-  game.api.burst(source.x,source.y,'#7ea7ff',5);
+    if(!(e.shockRest>0)){
+      const duration=t.stun*(isInkBoss(e)?.5:1);
+      e.stun=Math.max(e.stun||0,duration);e.shockRest=1.25;
+      game.api.animateElectricShock(e,duration);
+    }
+    game.api.dealDamage(e,t.damage*mult*Math.pow(.72,hop),'electric');
+    game.api.burst(e.x,e.y,'#7ea7ff',hop?4:5);
+  });
 }
 
 function applySynergies(e,dt){
-  if(game.state.synergies.has('Cryoshock')&&e.freeze>0)game.api.dealDamage(e,Math.max(4,game.state.inks.electric*7)*dt,'electric');
+  if(game.state.synergies.has('Cryoshock')&&e.freeze>0)game.api.dealDamage(e,electricTuning(game.state.inks.electric).fieldDps*dt,'electric');
   if(game.state.synergies.has('Black Ice')&&e.freeze>0)e.gravitySlow=Math.max(e.gravitySlow,.62);
   if(game.state.synergies.has('Leech Ink')&&e.poison>0){
     const before=game.state.player.hp;game.api.healStevie(e.poisonDps*dt*.018);
@@ -334,7 +338,7 @@ function applySynergies(e,dt){
   }
 
   if(game.state.synergies.has('Tesla Well')&&e.gravitySlow>.15){
-    game.api.dealDamage(e,Math.max(2,game.state.inks.electric*4)*dt,'electric');
+    game.api.dealDamage(e,electricTuning(game.state.inks.electric).fieldDps*.7*dt,'electric');
   }
 
   if(game.state.synergies.has('Venom Ice')&&e.freeze>0){
@@ -347,11 +351,11 @@ function applySynergies(e,dt){
   }
 
   if(game.state.synergies.has('THE STORM')&&e.freeze>0&&e.gravitySlow>.1){
-    game.api.dealDamage(e,Math.max(4,game.state.inks.electric*5)*dt,'electric');
+    game.api.dealDamage(e,electricTuning(game.state.inks.electric).fieldDps*dt,'electric');
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
-const api = { loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
+const api = { electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
 Object.assign(game.api, api);
 return api;
 };
