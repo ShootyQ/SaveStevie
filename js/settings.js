@@ -15,7 +15,7 @@ function setAudioVolume(name,value){
 let devEnabled=false,testRun=false;
 function devModeEnabled(){return devEnabled}
 function devRunActive(){return testRun}
-function beginDevRun(){testRun=devEnabled;renderDevMode()}
+function beginDevRun(){game.api.resetTestLabRun?.();testRun=devEnabled;renderDevMode()}
 function setDevMode(enabled){
   devEnabled=!!enabled;
   if(devEnabled&&game.state.running)testRun=true;

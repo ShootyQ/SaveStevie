@@ -85,7 +85,7 @@ function waveDuration(){
   return 60;
 }
 
-function resetRun(){
+function resetRun(options={}){
   noteChosen={death:null,victory:null};
   game.api.closeInfo(false);
   game.dom.$('lastHitText').textContent='';
@@ -104,14 +104,14 @@ function resetRun(){
   game.state.player.maxHp=75;game.state.player.hp=75;game.state.player.rockCd=0;
   game.state.drawing=false;game.state.currentWall=null;
   game.api.beginDevRun();
-  game.api.applyNotebookLoadout();game.api.beginScrapRun();game.api.resetRewardPlan();
+  if(options.skipNotebook)game.state.tool={name:"Pencil",rank:0,slots:2};else game.api.applyNotebookLoadout();game.api.beginScrapRun();game.api.resetRewardPlan();
   game.state.running=true;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
   game.dom.startOverlay.style.display='none';game.dom.gameOverOverlay.style.display='none';game.dom.upgradeOverlay.style.display='none';
   game.dom.waveOverlay.style.display='none';game.dom.victoryOverlay.style.display='none';game.dom.specializeOverlay.style.display='none';
-  game.api.startWave();
+  game.api.startWave({skipIntro:options.skipIntro});
 }
 
-function startWave(){
+function startWave(options={}){
   game.api.selectMusicTrack(game.api.chapterForWave().id);
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
@@ -127,7 +127,7 @@ function startWave(){
   game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+game.state.stats.playerRegen+5);
   game.api.setMsg(game.state.wave%5===0?'Wave '+game.state.wave+'. Clear the timed fight; the boss follows.':'Wave '+game.state.wave+'. Fresh page, full ink.');
   game.api.updateUI();
-  game.api.introduceWave();
+  if(!options.skipIntro&&!game.api.testLabActive?.())game.api.introduceWave();
 }
 
 function waveComplete(){

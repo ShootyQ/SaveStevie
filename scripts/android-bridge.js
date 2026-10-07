@@ -1,8 +1,10 @@
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, SystemBars } from '@capacitor/core';
 import { App } from '@capacitor/app';
 if (Capacitor.isNativePlatform()) {
   document.documentElement.classList.add('native-app');
   window.dispatchEvent(new Event('resize'));
+  const immerse = () => SystemBars.hide().catch(() => {});
+  immerse();
   App.addListener('backButton', () => {
     const menu = document.getElementById('startOverlay');
     const dialog = Array.from(document.querySelectorAll('.build-overlay')).find(el => getComputedStyle(el).display !== 'none');
@@ -10,6 +12,7 @@ if (Capacitor.isNativePlatform()) {
     else window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
   });
   App.addListener('appStateChange', ({ isActive }) => {
-    if (!isActive) window.dispatchEvent(new Event('savestevie:background'));
+    if (isActive) immerse();
+    else window.dispatchEvent(new Event('savestevie:background'));
   });
 }
