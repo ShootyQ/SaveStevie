@@ -300,7 +300,7 @@ function spawnGap(){
   return Math.max(.12,base/(game.api.wavePressure()*surge));
 }
 function spawnWaveEnemies(dt){
-  if(game.state.wave%5===0&&(bossPhase!=='timed'||game.state.timeLeft<=0)){if(bossPhase!=='fight')updateBossArrival(dt);return}
+  if(game.state.wave%5===0&&(bossPhase!=='timed'||game.state.timeLeft<=0)){if(bossPhase!=='fight')updateBossArrival(dt);else if(game.state.wave===5)game.api.updateFirstBossHelpers(dt);return}
   if(game.state.timeLeft<=0)return;
   const elapsed=game.state.waveTime-game.state.timeLeft;
   if([4,6,9,11,14,16,19,21].includes(game.state.wave)&&relocatedSpawned<3&&elapsed>=[12,28,44][relocatedSpawned]){

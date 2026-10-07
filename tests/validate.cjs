@@ -1171,7 +1171,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
 {
  const env=load(true),g=env.sandbox.testGame;
  const setup=wave=>{g.api.resetRun();g.state.wave=wave;g.api.startWave();g.state.spawnTimer=9999;g.api.spawnEnemy(true,200,200);return g.state.enemies[0]};
- for(const wave of [5,10,15,20]){const e=setup(wave);assert.equal(g.state.enemies.length,1);assert.equal(e.waveBoss,true);for(let i=0;i<60;i++)g.api.spawnWaveEnemies(.1);assert.equal(g.state.enemies.length,1,'boss-only wave does not add regular monsters');}
+ for(const wave of [5,10,15,20]){const e=setup(wave);assert.equal(g.state.enemies.length,1);assert.equal(e.waveBoss,true);for(let i=0;i<60;i++)g.api.spawnWaveEnemies(.1);assert.equal(g.state.enemies.length,wave===5?2:1,'only King Doodle gets a slow helper stream');}
  const king=setup(5);king.x=250;king.y=250;const wall={pts:[{x:160,y:160},{x:340,y:160},{x:340,y:340},{x:160,y:340},{x:160,y:160}],closed:true,thick:8,hp:1000,maxHp:1000,life:300};g.state.walls=[wall];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),1.35);const hp=king.hp;g.api.dealDamage(king,10);assert.ok(Math.abs(king.hp-(hp-13.5))<1e-8);g.state.walls=[];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),.25);
  const b=g.api.bossBrain(king);b.cd=0;g.api.updateBossEncounter(king,.01);assert.equal(g.state.enemyShots.length,0);assert.equal(b.cast.kind,'mirror-orb');g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemyShots.length,1);assert.equal(g.state.enemyShots[0].bossKind,'mirror-orb');
  b.turn=2;b.cd=0;g.api.updateBossEncounter(king,.01);g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemies.filter(e=>e.bossOwner===king).length,0,'first boss has no summons');
@@ -1380,11 +1380,12 @@ console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss l
 }
 console.log('PASS: three first-boss attacks, sideways curved flight, swept wall returns/player ordering, exact return damage, exposure/guard, safe locked lobs, freeze/pause/death, bounded shots/trails and pure art.');
 
-// Full fights with the starting kit: paid defensive strokes, no damage upgrades.
+// Full fights with four common wave-1–4 rewards: paid returns and helper defenses.
 {
  const results=[];
  for(const [width,height] of [[800,700],[360,640],[851,300]]){
   const env=load(true),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.timeLeft=0;g.state.spawnTimer=9999;
+  for(const name of ['Fire Ink','Fire Ink','Thick Ink','Thick Ink'])g.api.applyUpgrade({...g.catalog.upgrades.find(u=>u.name===name),rarity:'common'});
   const boss=g.api.spawnEnemy(true),handled=new WeakSet();let spent=0,seconds=0,closest=Infinity;
   for(let i=0;i<6000&&g.state.running&&!g.state.betweenWaves;i++){
    for(const s of g.state.enemyShots){
@@ -1392,13 +1393,18 @@ console.log('PASS: three first-boss attacks, sideways curved flight, swept wall 
     const speed=Math.hypot(s.vx,s.vy)||1,nx=-s.vy/speed,ny=s.vx/speed,before=g.state.stats.ink;
     g.api.createWall([{x:s.x-nx*28,y:s.y-ny*28},{x:s.x+nx*28,y:s.y+ny*28}]);spent+=before-g.state.stats.ink;handled.add(s);
    }
+   for(const n of g.state.enemies){
+    if(n.waveBoss||n.hp<=0||n.flight||Math.hypot(n.x-g.state.player.x,n.y-g.state.player.y)>190||g.api.nearestWallHit(n))continue;
+    const dx=g.state.player.x-n.x,dy=g.state.player.y-n.y,d=Math.hypot(dx,dy)||1,nx=-dy/d,ny=dx/d,before=g.state.stats.ink;
+    g.api.createWall([{x:n.x-nx*28,y:n.y-ny*28},{x:n.x+nx*28,y:n.y+ny*28}]);spent+=before-g.state.stats.ink;
+   }
    g.api.update(.03);seconds+=.03;if(boss.x>0&&boss.x<width&&boss.y>0&&boss.y<height)closest=Math.min(closest,Math.hypot(boss.x-g.state.player.x,boss.y-g.state.player.y));
   }
-  assert.ok(g.state.betweenWaves&&boss.hp<=0,'starting kit can win a real fight '+JSON.stringify({width,height,hp:boss.hp,stevie:g.state.player.hp,seconds,brain:g.api.bossEncounterSnapshot()}));
+  assert.ok(g.state.betweenWaves&&boss.hp<=0,'four common rewards can win a real fight '+JSON.stringify({width,height,hp:boss.hp,stevie:g.state.player.hp,seconds,brain:g.api.bossEncounterSnapshot()}));
   assert.ok(g.state.player.hp>0);assert.ok(spent>0);assert.ok(closest>g.state.player.r+boss.r,'perimeter movement keeps the boss off Stevie');
   results.push({width,height,seconds:Math.round(seconds),inkSpent:Math.round(spent),hp:g.state.player.hp});
  }
- console.log('PASS: full first-boss fights with paid wall returns and no damage upgrades '+JSON.stringify(results));
+ console.log('PASS: full first-boss fights with paid returns, helper defenses and four common rewards '+JSON.stringify(results));
 }
 
 // Scratch-page setup applies genuine upgrade levels without advancing waves or saves.
@@ -1508,7 +1514,7 @@ console.log('PASS: single-use returns, harder furious phase and uncancelled cast
  g.api.spawnEnemy(true,400,100);for(let i=0;i<6000&&g.state.running;i++)g.api.update(.03);
  assert.equal(g.state.running,false,'unattended first boss now defeats the starting kit');assert.equal(g.state.player.hp,0);
 }
-console.log('PASS: unattended starting-kit fight loses; perfect active paid-wall play still wins at desktop, portrait and landscape sizes.');
+console.log('PASS: unattended starting-kit fight loses; active paid-wall play with four common rewards still wins at desktop, portrait and landscape sizes.');
 
 {
  const env=load(true),g=env.sandbox.testGame;
@@ -1520,3 +1526,47 @@ console.log('PASS: unattended starting-kit fight loses; perfect active paid-wall
  assert.deepEqual([...bar.matchAll(/<button[^>]+id="([^"]+)"/g)].map(m=>m[1]),['fullscreenBtn','pauseBtn']);assert.match(html,/id="pauseOverlay"[\s\S]*?id="clearBtn"/);assert.match(html,/id="pauseOverlay"[\s\S]*?id="musicBtn"/);
 }
 console.log('PASS: notebook hub opens monster pages and returns correctly; pause/resume closes submenus; live toolbar contains only Screen and Pause, with erasing/music in Pause.');
+
+// King Doodle's full orbit, paced helpers and safe wall-clearing Friend Fling.
+{
+ for(const [width,height] of [[800,700],[360,640],[851,300]]){
+  const env=load(true),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun();g.state.wave=5;g.api.startWave();
+  const e=g.api.spawnEnemy(true,width/2,Math.max(effectiveTop(height),height*.18)),b=g.api.bossBrain(e),quadrants=new Set();let winding=0,previous=null;
+  // Use real path-safe movement and attack-turn changes, isolated from damage.
+  for(let i=0;i<2000;i++){
+   b.turn=Math.floor(i/35);g.api.updateBossFields(.03);const target=g.api.bossTarget(e),dx=target.x-e.x,dy=target.y-e.y,d=Math.hypot(dx,dy)||1;
+   g.api.moveEnemySafely(e,dx/d*Math.min(d,e.speed*.03),dy/d*Math.min(d,e.speed*.03));
+   const a=Math.atan2(e.y-g.state.player.y,e.x-g.state.player.x);quadrants.add(Math.floor((a+Math.PI)/(Math.PI/2))%4);
+   if(previous!==null)winding+=Math.atan2(Math.sin(a-previous),Math.cos(a-previous));previous=a;
+  }
+  assert.equal(quadrants.size,4,'visits every side '+width+'x'+height);assert.ok(winding>Math.PI*2,'completes a continuous orbit '+width+'x'+height+' '+winding);
+ }
+ function effectiveTop(height){return height<400?65:110}
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();const boss=g.api.spawnEnemy(true,180,160),b=g.api.bossBrain(boss);
+ g.api.spawnWaveEnemies(2.4);assert.equal(g.state.enemies.length,1);g.api.spawnWaveEnemies(.11);assert.equal(g.state.enemies.length,2);
+ for(let i=0;i<30;i++)g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,4,'helper stream is capped');
+ const friend=g.state.enemies.find(n=>n.bossOwner===boss);g.api.killEnemy(friend);g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,4,'stream replaces defeated helpers');
+ const n=g.state.enemies.find(n=>n.bossOwner===boss);n.x=210;n.y=165;b.turn=3;b.cd=0;g.api.updateBossEncounter(boss,.01);assert.equal(b.pickup.friend,n,'seeks nearest available helper');
+ g.api.updateBossEncounter(boss,.01);assert.equal(b.cast.kind,'friend-fling');assert.ok(!n.flight,'warning precedes flight');const target={...b.cast.landing},distance=Math.hypot(n.x-g.state.player.x,n.y-g.state.player.y),hp=n.hp;
+ assert.ok(Math.hypot(target.x-g.state.player.x,target.y-g.state.player.y)<distance-20);
+ const snapshot=JSON.stringify(g.api.bossEncounterSnapshot()),state=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),state);assert.equal(JSON.stringify(g.api.bossEncounterSnapshot()),snapshot);
+ g.state.paused=true;g.api.update(.5);assert.equal(JSON.stringify(g.api.bossEncounterSnapshot()),snapshot);g.state.paused=false;
+ g.api.updateBossEncounter(boss,1);assert.ok(n.flight?.bossThrown);
+ g.state.walls=[{pts:[{x:250,y:0},{x:250,y:700}],hp:1000,maxHp:1000,thick:8,life:100}];g.api.updateEnemyFlight(n,.5);assert.ok(g.api.enemyFlightHeight(n)>0,'visible airborne arc');g.api.updateEnemyFlight(n,.5);
+ assert.equal(n.hp,hp,'friends take no fall damage');assert.equal(n.stun,0,'friends land without added stun');assert.ok(n.x>250,'passes over cover');assert.ok(Math.hypot(n.x-g.state.player.x,n.y-g.state.player.y)>=g.state.player.r+n.r+75,'safe distance from Stevie');
+ g.state.walls=[];n.x=210;n.y=165;n.stun=.2;g.api.flingBossFriend(n,target);g.api.updateEnemyFlight(n,1);assert.equal(n.stun,.2,'does not erase a player stun');
+ n.x=210;n.y=165;n.stun=0;b.turn=3;b.cd=0;b.recovery=0;g.api.updateBossEncounter(boss,.01);g.api.updateBossEncounter(boss,.01);assert.ok(b.cast);g.api.killEnemy(n);g.api.updateBossEncounter(boss,1);assert.ok(!n.flight,'dead helper is never launched');
+ b.turn=3;b.cd=0;g.state.enemies=g.state.enemies.filter(e=>e.waveBoss);g.api.updateBossEncounter(boss,.01);assert.equal(b.cast.kind,'paper-lob','no available friend falls back to a useful attack');
+ g.api.killEnemy(boss);const count=g.state.enemies.length;g.api.spawnWaveEnemies(30);assert.equal(g.state.enemies.length,count,'no reinforcements after boss death');
+ g.api.resetRun();assert.equal(g.api.bossEncounterSnapshot().bosses.length,0);
+ console.log('PASS: continuous full-page orbits at three aspect ratios, slow capped replacement stream, warned pickup/throw, airborne wall crossing, safe closer landing without fall damage/stun, preserved player stun, pause/pure art, invalid friend fallback and death/reset cleanup.');
+}
+
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.spawnTimer=9999;
+ const boss=g.api.spawnEnemy(true,80,150),friend=g.api.spawnEnemy(false,210,160,'grunt');friend.bossOwner=boss;const b=g.api.bossBrain(boss);b.turn=3;b.cd=0;b.helperCd=999;
+ for(let i=0;i<180&&!friend.flight;i++)g.api.update(.03);
+ assert.ok(friend.flight?.bossThrown,'real combat loop runs to and throws a walking helper');assert.ok(Math.hypot(boss.x-80,boss.y-150)>50,'boss visibly approaches his helper');
+ const hp=g.state.player.hp;for(let i=0;i<35;i++)g.api.update(.03);assert.ok(!friend.flight);assert.equal(friend.stun,0);assert.equal(g.state.player.hp,hp,'throw and landing do not hit Stevie');
+ console.log('PASS: actual boss AI approaches a moving helper, warns, throws, and resumes safely after landing.');
+}
