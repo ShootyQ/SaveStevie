@@ -74,6 +74,12 @@ function launchEnemy(e,x,y,inferno=false){
   damage:(inferno?26:16)+game.state.inks.repulsion*3,stun:inferno?1.6:1.2};
  game.api.floatText(e.x,e.y,'WHOOSH!','#36786b');return true;
 }
+function flingBossFriend(e,target){
+ if(e.hp<=0||e.flight||isInkBoss(e))return false;
+ e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:1,
+  height:Math.min(90,Math.max(16,Math.min(e.y,target.y)-e.r*2-50)),spin:target.x<e.x?-1:1,damage:0,stun:0,bossThrown:true};
+ game.api.floatText(e.x,e.y,'WHEEEE!','#a55b39');return true;
+}
 function enemyFlightHeight(e){const f=e.flight;return f?Math.sin(Math.min(1,f.age/f.duration)*Math.PI)*f.height:0}
 function updateEnemyFlight(e,dt){
  const f=e.flight;if(!f)return false;
@@ -84,9 +90,9 @@ function updateEnemyFlight(e,dt){
   const target=landingPoint(e,e.x,e.y,false);
   const margin=e.r+24;e.x=game.api.clamp(e.x,margin,Math.max(margin,game.state.W-margin));e.y=game.api.clamp(e.y,e.r+76,Math.max(e.r+76,game.state.H-e.r-64));
   if(Math.hypot(e.x-game.state.player.x,e.y-game.state.player.y)<game.state.player.r+e.r+75&&target){e.x=target.x;e.y=target.y}
-  delete e.flight;e.stun=Math.max(e.stun,f.stun);game.api.dealDamage(e,f.damage,'physical');
+  delete e.flight;if(f.stun>0)e.stun=Math.max(e.stun,f.stun);if(f.damage>0)game.api.dealDamage(e,f.damage,'physical');
   landingPuffs.push({x:e.x,y:e.y,r:e.r,age:0});if(landingPuffs.length>16)landingPuffs.shift();
-  game.api.animateEnemyAction(e,'slam');game.api.burst(e.x,e.y,'#9b8866',6);game.api.floatText(e.x,e.y,'THUD!','#766245');
+  if(!f.bossThrown)game.api.animateEnemyAction(e,'slam');game.api.burst(e.x,e.y,'#9b8866',6);game.api.floatText(e.x,e.y,f.bossThrown?'GO GET HIM!':'THUD!','#766245');
   if(e.hp<=0)game.api.killEnemy(e);
  }
  return true;
@@ -126,6 +132,7 @@ function drawLaunchGround(){
   });ctx.restore();
  }
  for(const e of game.state.enemies)if(e.flight){
+  if(e.flight.bossThrown){ctx.save();ctx.strokeStyle='#b76b42';ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(e.flight.targetX,e.flight.targetY,e.r+9,0,Math.PI*2);ctx.stroke();ctx.restore()}
   const h=enemyFlightHeight(e),scale=1-h/180;ctx.save();ctx.globalAlpha=.18+h/600;ctx.fillStyle='#514531';ctx.beginPath();ctx.ellipse(e.x,e.y+e.r*.7,e.r*scale,e.r*.35*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
  }
  for(const p of landingPuffs){const t=p.age/.45;ctx.save();ctx.globalAlpha=(1-t)*.7;ctx.strokeStyle='#948363';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,p.r+24*t,5+10*t,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
@@ -439,7 +446,7 @@ function applySynergies(e,dt){
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
-const api = { launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
+const api = { flingBossFriend, launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
 Object.assign(game.api, api);
 return api;
 };

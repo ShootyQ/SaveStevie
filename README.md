@@ -828,7 +828,7 @@ values. Grain is cached, capped and deterministic without consuming combat RNG.
 
 Wave 5 receives 3× HP and wave 10 retains 1.8× HP. The first King moves at
 144.612 px/s (1242 HP); Staple Snack keeps 40.28 px/s (1402.2 HP), before
-existing movement modifiers. The King's three attacks use 0.95/0.75s normal/furious warnings and
+existing movement modifiers. The King's four attacks use 0.95/0.75s normal/furious warnings and
 1.65/1.05s cooldowns (furious below 40% HP);
 Staple Snack retains 3.5/2.5s normal/furious cooldowns and 110/150 wall-damage
 charges. Enclosure caps waiting at 1.8s and triggers a 1.2s warned breakout.
@@ -997,3 +997,13 @@ extracted once at load and share the existing bounded status-tint cache. Stride
 advances with distance travelled, holds during freeze/stun/pause, and uses a
 fixed pose for airborne/reduced-motion display. Missing sheets retain the
 existing sprite. Combat speed, damage, health and colliders are unchanged.
+
+King Doodle now keeps one orbit direction across attack turns, covering the whole
+perimeter. Only his wave-5 fight adds a slow stream of Gribbles: first arrival
+after 2.5s, then every 7s (6s below 40% boss HP), rotating page edges and capped
+at four living helpers. The fourth attack seeks an available helper for up to
+3.5s, warns for the usual 0.95/0.75s, then throws it over walls to a marked spot
+closer to Stevie, at least Stevie radius + helper radius + 75px away. The reused
+airborne arc, spin, shadow and landing dust apply without fall damage or added
+stun. Player-applied statuses and Cannon Ink fall damage/stuns still work.
+Unavailable helpers fall back to Paper Pop; reinforcements stop at boss death.
