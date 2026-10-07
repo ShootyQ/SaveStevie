@@ -101,7 +101,7 @@ function updateFirstBossShot(s,dt){
    const p=game.state.player,impact=shotCircleTime(s.x,s.y,nx,ny,p.x,p.y,p.r+s.r),wall=returnWallHit(s,nx,ny);
    if(wall&&(impact===null||wall.t<=impact)){
     nx=s.x+(nx-s.x)*wall.t;ny=s.y+(ny-s.y)*wall.t;s.reflected=true;s.age=0;s.life=6;s.trail=[];
-    game.api.damageWall(wall.wall,wall.wall.hp+1,nx,ny);game.api.burst(nx,ny,'#61aca0',6);game.api.floatText(nx,ny-10,'RETURN!','#287a78');game.api.playSound('rock');
+    game.api.damageWall(wall.wall,wall.wall.hp+1,nx,ny);game.api.burst(nx,ny,'#61aca0',6);game.api.floatText(nx,ny-10,'RETURN · WALL SPENT!','#287a78');game.api.playSound('rock');
    }else if(impact!==null){game.api.damageStevie(s.damage*(1-game.state.stats.playerArmor),'King Doodle '+s.bossKind,s);game.api.burst(p.x,p.y,'#9b3549',6);return false}
   }
   s.x=nx;s.y=ny;
@@ -236,9 +236,9 @@ function drawBossEncounters(){const ctx=game.dom.ctx;
  for(const m of marks){const color=m.kind==='red'?'#c34937':m.kind==='blue'?'#3887ba':'#57913b';ctx.save();ctx.translate(m.x,m.y);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.globalAlpha=m.age<1.2?.45:.2;ctx.beginPath();ctx.arc(0,0,m.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.8;ctx.lineWidth=2;ctx.setLineDash(m.age<1.2?[5,5]:[]);ctx.stroke();ctx.font='bold 18px sans-serif';ctx.textAlign='center';ctx.fillText(m.kind==='green'?'✦':m.kind==='blue'?'~':'!',0,6);ctx.restore()}
  for(const e of game.state.enemies){if(!e.waveBoss||e.hp<=0)continue;const b=bossBrain(e);ctx.save();ctx.strokeStyle=colors[e.type];ctx.fillStyle=colors[e.type];ctx.lineWidth=2;
   if(isFirstBoss(e)){
-   ctx.strokeStyle=b.recovery>0?'#278f82':'#6e586d';ctx.fillStyle=ctx.strokeStyle;ctx.setLineDash(b.recovery>0?[]:[3,5]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+12,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+   ctx.strokeStyle=b.recovery>0?'#278f82':firstBossTuning(e).furious?'#b3483b':'#6e586d';ctx.fillStyle=ctx.strokeStyle;ctx.setLineDash(b.recovery>0?[]:[3,5]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+12,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
    if(b.recovery>0){ctx.strokeStyle='#d09b34';for(let i=0;i<3;i++){const angle=i*Math.PI*2/3+(reduced?0:clock*3),x=e.x+Math.cos(angle)*20,y=e.y-e.r-12+Math.sin(angle)*5;ctx.beginPath();ctx.moveTo(x-3,y);ctx.lineTo(x+3,y);ctx.moveTo(x,y-3);ctx.lineTo(x,y+3);ctx.stroke()}}
-   ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(b.recovery>0?'EXPOSED · '+Math.ceil(b.recovery)+'s':'GUARDED',game.api.clamp(e.x,60,game.state.W-60),Math.min(game.state.H-10,e.y+e.r+23));ctx.strokeStyle=colors[e.type];ctx.fillStyle=colors[e.type];
+   ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(b.recovery>0?'EXPOSED · '+b.recovery.toFixed(1)+'s':firstBossTuning(e).furious?'FURIOUS · GUARDED':'GUARDED',game.api.clamp(e.x,60,game.state.W-60),Math.min(game.state.H-10,e.y+e.r+23));ctx.strokeStyle=colors[e.type];ctx.fillStyle=colors[e.type];
   }
   if(b.enclosed||b.recovery>0){ctx.setLineDash([4,4]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+8+(reduced?0:Math.sin(clock*5)*2),0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
   if(b.cast&&isFirstBoss(e)&&['mirror-orb','arc-fan','paper-lob'].includes(b.cast.kind)){
