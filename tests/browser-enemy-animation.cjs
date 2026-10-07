@@ -14,6 +14,40 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
   });
   await page.goto('http://127.0.0.1:8001/');await page.waitForFunction(()=>testGame.api.artworkReady(),null,{polling:50});await page.click('#startBtn');
+  const frames=await page.evaluate(()=>{
+   const g=testGame;g.state.spawnTimer=999;
+   const grunt=g.api.spawnEnemy(false,70,90,'grunt');grunt.speed=0;g.state.enemies=[grunt];g.api.updateEnemyAnimations(0);
+   const walk=[],walkPixels=[],tantrum=[],tantrumPixels=[];
+   const random=Math.random;Math.random=()=>{throw Error('Sprite animation must not consume combat RNG')};
+   try{
+    for(let i=0;i<8;i++){
+     grunt.x+=2;g.api.updateEnemyAnimations(1/12+.000001);walk.push(g.api.enemySpriteFrame(grunt));
+     const before=JSON.stringify(g.state);g.api.draw();if(before!==JSON.stringify(g.state))throw Error('Sprite drawing changed combat state');
+     walkPixels.push(g.dom.canvas.toDataURL());
+    }
+    g.api.updateEnemyAnimations(.1);const resting=g.api.enemySpriteFrame(grunt);
+    g.api.animateEnemyAction(grunt,'bite',{x:grunt.x+20,y:grunt.y});
+    for(let i=0;i<8;i++){
+     g.api.updateEnemyAnimations(i===0?.025:.05);tantrum.push(g.api.enemySpriteFrame(grunt));g.api.draw();tantrumPixels.push(g.dom.canvas.toDataURL());
+    }
+    grunt.freeze=1;const frozen=g.api.enemySpriteFrame(grunt);grunt.x+=2;g.api.updateEnemyAnimations(.1);
+    const freezeHeld=frozen===g.api.enemySpriteFrame(grunt);grunt.freeze=0;grunt.stun=1;g.api.updateEnemyAnimations(.1);
+    const stunHeld=frozen===g.api.enemySpriteFrame(grunt);grunt.stun=0;
+    g.state.paused=true;g.api.update(.2);const pauseHeld=frozen===g.api.enemySpriteFrame(grunt);g.state.paused=false;
+    return {walk,walkDistinct:new Set(walkPixels).size,tantrum,tantrumDistinct:new Set(tantrumPixels).size,resting,freezeHeld,stunHeld,pauseHeld};
+   }finally{Math.random=random;}
+  });
+  assert.equal(new Set(frames.walk).size,8);assert.equal(frames.walkDistinct,8,'eight visibly different walking frames');
+  assert.deepEqual(frames.tantrum,Array.from({length:8},(_,i)=>'grunt-frame-'+(i+8)));
+  assert.equal(frames.tantrumDistinct,8,'eight visibly different wall-bashing frames');
+  assert.equal(frames.resting,'grunt-frame-0');assert.ok(frames.freezeHeld&&frames.stunHeld&&frames.pauseHeld);
+  await page.evaluate(()=>{
+   const g=testGame;g.api.resetRun();g.state.spawnTimer=999;
+   const grunt=g.api.spawnEnemy(false,70,90,'grunt');grunt.speed=0;
+   g.state.walls=[{pts:[{x:80,y:40},{x:80,y:150}],hp:500,maxHp:500,thick:8,life:72,maxLife:72}];g.api.update(.03);
+   if(!/^grunt-frame-(8|9|1[0-5])$/.test(g.api.enemySpriteFrame(grunt)))throw Error('Real wall contact did not start tantrum');
+   g.api.resetRun();
+  });
   const actual=await page.evaluate(()=>{
    const g=testGame;g.state.spawnTimer=999;g.state.player.hp=g.state.player.maxHp=10000;
    const wall=()=>({pts:[{x:80,y:40},{x:80,y:150}],hp:500,maxHp:500,thick:8,life:72,maxLife:72});
@@ -49,14 +83,15 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.screenshot({path:'/tmp/enemy-actions-'+viewport.width+'.png'});
   const beforePause=await page.evaluate(()=>JSON.stringify(gallery.map(e=>testGame.api.enemyAnimationPose(e))));
   await page.click('#pauseBtn');await page.evaluate(()=>{testGame.api.update(.2);testGame.api.draw();});
-  assert.equal(await page.evaluate(()=>JSON.stringify(gallery.map(e=>testGame.api.enemyAnimationPose(e)))),beforePause,'pause freezes poses');await page.click('#pauseBtn');
+  assert.equal(await page.evaluate(()=>JSON.stringify(gallery.map(e=>testGame.api.enemyAnimationPose(e)))),beforePause,'pause freezes poses');await page.click('#resumeBtn');
   await page.evaluate(()=>{gallery.forEach((e,i)=>i%2?e.stun=1:e.freeze=1);testGame.api.updateEnemyAnimations(.016);testGame.api.draw();});
   assert.deepEqual(await page.evaluate(()=>gallery.map(e=>testGame.api.enemyActionCue(e))),Array(6).fill(null));
   await page.evaluate(()=>{window.reducedMotionChanged=false;matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',()=>window.reducedMotionChanged=true,{once:true});});
   await page.emulateMedia({reducedMotion:'reduce'});await page.waitForFunction(()=>window.reducedMotionChanged,null,{polling:50});
   await page.evaluate(()=>{gallery.forEach(e=>{e.freeze=0;e.stun=0;testGame.api.animateEnemyAction(e,'erase');});testGame.api.updateEnemyAnimations(.1);testGame.api.draw();});
   assert.deepEqual(await page.evaluate(()=>gallery.map(e=>testGame.api.enemyAnimationPose(e))),Array.from({length:6},()=>({x:0,y:0,angle:0,sx:1,sy:1})));
-  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' real attacks, six animated/tinted sprites, changing pixels, render purity, pause, freeze/stun and dynamic reduced motion');await page.close();
+  assert.equal(await page.evaluate(()=>testGame.api.enemySpriteFrame(testGame.api.spawnEnemy(false,90,90,'grunt'))),'grunt-frame-0','reduced motion uses a static Gribble frame');
+  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' 16 custom Gribble frames, real attacks, six animated/tinted sprites, changing pixels, render purity, pause, freeze/stun and dynamic reduced motion');await page.close();
  }
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});

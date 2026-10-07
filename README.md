@@ -855,3 +855,24 @@ Pocket Rocks starts at a 1.6s interval and preserves already faster throws.
 
 The native Android layout fills portrait and landscape displays without the
 web page's side gutters or desktop size caps, retaining device safe-area insets.
+
+Stevie has 50 end-of-run notes: 30 for defeat and 20 for victory. The two decks
+rotate independently, save their next position under `saveStevieNoteDecks`, and
+keep the same message if an ending is rendered again. Previewing notes never
+changes state or consumes combat RNG. Without storage they rotate for the current
+session. His handwritten signature now includes a little pencil doodle.
+
+Scribble Gribble uses `assets/art/grunt-animations.png`, a custom 640×640
+transparent sprite sheet assembled from sixteen illustrated poses. Its first
+eight 160×160 cells form a walking cycle; the last eight form a crouch, fist-raise,
+yell, slam, squash and stomp tantrum triggered by actual wall bites. Feet share
+a baseline and all frames retain the same art scale. Frames are cropped once on
+load and status tints use the existing bounded cache. Walking stops at rest,
+freeze/stun holds the sprite, pause stops animation, and reduced motion uses a
+static frame. Missing artwork falls back to the original monster drawing.
+Combat colliders, attack cadence, damage and rewards are unchanged.
+
+Validation: `node tests/validate.cjs`, `tests/browser-stevie-notes.cjs` and
+`tests/browser-enemy-animation.cjs` cover note variety/persistence, real wall
+contact, distinct rendered sprite frames, desktop/phone layouts, pause,
+freeze/stun, reduced motion and cosmetic RNG isolation.

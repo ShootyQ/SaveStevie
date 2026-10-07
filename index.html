@@ -158,7 +158,7 @@
         <p class="scrap-summary">Earned <b id="victoryRunScraps">0</b> scraps this run · Bank: <b id="victoryBankScraps">0</b></p>
         <aside class="stevie-note" aria-label="A note from Stevie">
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
-          <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="victoryNoteHeading"></h3><p id="victoryNoteMessage"></p><small id="victoryNoteKeepsake"></small><span class="note-signature">— StEvie ♡</span></div>
+          <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="victoryNoteHeading"></h3><p id="victoryNoteMessage"></p><small id="victoryNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
         </aside>
         <button class="gold notebook-entry" id="victoryNotebookBtn">Spend Notebook Scraps</button>
         <div class="cardactions">
@@ -177,7 +177,7 @@
         <p class="scrap-summary">Kept <b id="deathRunScraps">0</b> scraps from this run · Bank: <b id="deathBankScraps">0</b></p>
         <aside class="stevie-note" aria-label="A note from Stevie">
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
-          <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="deathNoteHeading"></h3><p id="deathNoteMessage"></p><small id="deathNoteKeepsake"></small><span class="note-signature">— StEvie ♡</span></div>
+          <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="deathNoteHeading"></h3><p id="deathNoteMessage"></p><small id="deathNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
         </aside>
         <div class="cardactions"><button class="gold" id="deathNotebookBtn">Spend Scraps</button><button id="againBtn">Try Again</button></div>
       </div>
@@ -293,6 +293,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Gribble has a temper</h3><p>The first red scribble monster now has custom frame-by-frame walking and wall-bashing tantrum animations. Stevie leaves 50 different win or defeat notes, rotating through each set before repeating, and signs them with a little pencil.</p></article>
       <article class="build-entry"><h3>Bosses arrive after the bell</h3><p>Boss waves start with a timed fight and cleanup, then a paper-edge warning announces the untimed boss encounter. Portrait bosses enter from the top or bottom with room to approach. Real enclosures earn a damage window before a warned breakout; body scribbles get torn away and boss damage has a shared budget.</p></article>
       <article class="build-entry"><h3>Sparks and pebbles need a little help</h3><p>Electric chains share hit recovery, lose damage each jump and stay within bounded reach. Shock is brief with a recovery window. Electric field overlaps no longer stack, and rock upgrades start smaller before growing with investment. The Android game now fills the display while respecting screen safe areas.</p></article>
       <article class="build-entry"><h3>A notebook for Android testing</h3><p>The game can now be packaged as an offline Android test app. Android Back opens or closes game menus, and switching away from the app pauses combat until you resume.</p></article>

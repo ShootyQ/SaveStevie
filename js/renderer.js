@@ -7,10 +7,22 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['paper-fort','stevie','stevie-animations','grunt','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
+const doodleNames=['paper-fort','stevie','stevie-animations','grunt','grunt-animations','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
-  image.onload=()=>{doodles[name]=image;inkSprites.clear()};
+  image.onload=()=>{
+    doodles[name]=image;
+    if(name==='grunt-animations'){
+      // Stitch/crop once at load, never allocate frame canvases in the draw loop.
+      for(let i=0;i<16;i++){
+        const frame=document.createElement('canvas');frame.width=frame.height=160;
+        frame.naturalWidth=frame.naturalHeight=160;
+        frame.getContext('2d').drawImage(image,(i%4)*image.naturalWidth/4,Math.floor(i/4)*image.naturalHeight/4,image.naturalWidth/4,image.naturalHeight/4,0,0,160,160);
+        doodles['grunt-frame-'+i]=frame;
+      }
+    }
+    inkSprites.clear();
+  };
   image.src='assets/art/'+name+'.png'+(artworkVersion?'?v='+artworkVersion:'');
 }
 // One SVG coordinate system drives both the visible stroke and its physical nib.
@@ -74,7 +86,7 @@ function motionFor(e){
   let m=enemyMotion.get(e);
   if(!m){
     const heavy=['tank','brute','bulwark','boss','stapler','crayon','eraser'].includes(e.type);
-    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,action:null,readyUntil:-1,sprite:null,facing:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
+    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,walkAge:0,gruntFrame:0,action:null,readyUntil:-1,sprite:null,facing:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
   }
   return m;
 }
@@ -100,6 +112,10 @@ function animateEnemyAction(e,action,target=null){
 function prepareSapperStrike(e){if(!motionReduced)motionFor(e).readyUntil=motionTime+.05}
 function enemyActionCue(e){return motionReduced?null:(enemyMotion.get(e)?.cue||null)}
 function enemyActionFrame(e){return motionReduced?null:(enemyMotion.get(e)?.sprite||null)}
+function enemySpriteFrame(e){
+  if(e.type!=='grunt'||!doodles['grunt-frame-0'])return null;
+  return 'grunt-frame-'+(motionReduced?0:(enemyMotion.get(e)?.gruntFrame||0));
+}
 function updateEnemyAnimations(dt){
   motionTime+=dt;
   if(motionReduced){splitEchoes=[];return}
@@ -108,6 +124,10 @@ function updateEnemyAnimations(dt){
     if(Math.abs(e.x-m.x)>.001)m.facing=e.x<m.x?-1:1;
     m.x=e.x;m.y=e.y;m.hitAge+=dt;m.birthAge+=dt;m.actionAge+=dt;
     const moving=distance>.001&&e.freeze<=0&&e.stun<=0;
+    if(e.type==='grunt'&&e.freeze<=0&&e.stun<=0){
+      if(moving)m.walkAge+=dt;
+      m.gruntFrame=m.action==='bite'&&m.actionAge<.42?8+Math.min(7,Math.floor(m.actionAge/.42*8)):moving?Math.floor(m.walkAge*12)%8:0;
+    }
     if(moving)m.phase=(m.phase+Math.min(distance,e.r)* (heavy?.16:.27))%(Math.PI*2);
     const step=moving?Math.sin(m.phase):0,hop=moving?Math.abs(step)*m.hop:0;
     const hit=m.hitAge<.14?Math.sin(m.hitAge/.14*Math.PI)*.12:0;
@@ -129,7 +149,7 @@ function updateEnemyAnimations(dt){
     // Distinct silhouettes reuse the existing art. These offsets never touch
     // enemy coordinates, attack timers, damage, or the combat random stream.
     if(moving&&(e.type==='fast'||e.type==='mini')){p.angle+=m.facing*.09;p.sx+=step*.05;p.sy-=step*.05;}
-    if(moving&&e.type==='grunt'){p.sx+=step*.035;p.sy-=step*.035;}
+    if(moving&&e.type==='grunt'&&!doodles['grunt-frame-0']){p.sx+=step*.035;p.sy-=step*.035;}
     if(e.type==='bouncer'){
       if(moving){p.y-=Math.abs(step)*2;p.sx+=step*.08;p.sy-=step*.08;}
       if(m.action==='bounce'&&m.actionAge<.16){
@@ -229,9 +249,9 @@ function tintedDoodle(name,colors){
   return canvas;
 }
 function drawDoodleEnemy(e,hpRatio){
-  const action=enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
-  const base=doodles[e.type]||image;
-  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(e.type==='sniper'?3.4:2.7),height=width*base.naturalHeight/base.naturalWidth;
+  const action=enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
+  const framed=name.startsWith('grunt-frame-'),base=framed?image:doodles[e.type]||image;
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(framed?3.25:e.type==='sniper'?3.4:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
@@ -680,7 +700,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 updateMenuPencil(0);
 return api;

@@ -1,38 +1,92 @@
 /* waves: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.waves = function createWavesSystem(game) {
-// Stevie leaves a personal doodled note after each run. Pure presentation:
-// stable build-based selection, no random draws and no changes to progression.
+// Two rotating decks: every note appears before its deck repeats. Presentation
+// storage is independent of scraps, progression, and the combat random stream.
+const stevieNotes={
+ death:[
+  "Okay. New plan. Fewer monsters. More walls. Maybe a sandwich.",
+  "I was doing my brave face. Apparently the monsters did not notice.",
+  "That was practice. Very loud, slightly bitey practice.",
+  "Please do not show this page to my maths teacher. She already worries.",
+  "I think my left shoe is still in there. We should probably go back.",
+  "The good news: your drawing is getting better. The bad news has teeth.",
+  "I wrote a plan on the back of this note. It just says RUN twice.",
+  "Next time I am bringing a helmet. A cereal bowl counts, right?",
+  "That monster was definitely cheating. I saw it use both feet.",
+  "Can we erase that bit and pretend I did something really cool?",
+  "I am not scared. My knees are just doing a little dance.",
+  "We need a bigger fort. And a secret snack room. Mostly the fort.",
+  "I almost had them! Unless you were watching. Then you know I did not.",
+  "My rock missed. I was aiming at the other notebook. Obviously.",
+  "If Mum asks, this is a drawing of me taking a nap.",
+  "I put DO NOT BITE on the wall. Nobody reads signs anymore.",
+  "Please keep drawing me. Being a blank page would be really boring.",
+  "I vote we start again before the monsters finish celebrating.",
+  "I tried saying please. Next time I am trying a rock.",
+  "That fort needed a roof. And a floor. And about six more forts.",
+  "You stayed with me till the end. That was pretty awesome of you.",
+  "I have a new strategy. It involves not standing exactly there.",
+  "Someone owes me a new school shirt. There are teeth holes in this one.",
+  "I would give that adventure a D. D for DO IT AGAIN.",
+  "Small problem: monsters. Bigger problem: I dropped my lunch.",
+  "I am saving this page anyway. The cool bits still count.",
+  "Maybe they just wanted to borrow a pencil? No. Probably not.",
+  "Next page, I am drawing myself slightly faster legs.",
+  "We got knocked over. We can get drawn back up. That is our thing.",
+  "You bring the pencil. I will bring the rocks. And a spare shoe."
+ ],
+ victory:[
+  "WE DID IT! I am telling everyone. Even people who did not ask.",
+  "That is going straight on the fridge. Move over, spelling test.",
+  "You saved me AND my notebook. My homework is still doomed though.",
+  "I did a victory dance. Please imagine it was really cool.",
+  "I am making you a medal. It is cardboard. Do not get it wet.",
+  "The monsters picked the wrong kid with the right pencil friend.",
+  "I knew we could do it! Except for the bits where I definitely did not.",
+  "Can you sign this page? You are basically famous in my notebook now.",
+  "No more monsters! For now. I do not trust the next page.",
+  "I am keeping the fort. It is my room now. Knock before entering.",
+  "That eraser thought it was so tough. Look who is still drawn!",
+  "I think we earned extra recess. I will write a note to the teacher.",
+  "My hands are shaking. From being AWESOME. And a little bit scared.",
+  "Best. Pencil. Friend. Ever. I underlined it three times.",
+  "We should form a club. Rule one: no monsters. Rule two: snacks.",
+  "I am calling this masterpiece Stevie Does Not Get Eaten.",
+  "I saved you a rock as a souvenir. Sorry it is just a drawing.",
+  "A plus! Actually, A plus plus. I am allowed to grade this one.",
+  "I drew a trophy on the back. The handles look like ears. Still counts.",
+  "You made a little scribble kid feel ten feet tall. Thanks for that."
+ ]
+};
+let noteNext={death:0,victory:0},noteChosen={death:null,victory:null};
+try{
+ const saved=JSON.parse(localStorage.getItem('saveStevieNoteDecks')||'null');
+ for(const kind of ['death','victory'])if(Number.isSafeInteger(saved?.[kind])&&saved[kind]>=0)noteNext[kind]=saved[kind]%stevieNotes[kind].length;
+}catch{} // Notes still rotate for this session when storage is unavailable.
 function stevieNote(victory=false){
-  const s=game.state,effects=game.api.equippedEffects().slice().sort((a,b)=>(s.stacks[b.name]||0)-(s.stacks[a.name]||0));
-  const favorite=effects[0];
-  const remarks={
-    'Fire Ink':'The walls were on fire. I have several questions. Mostly: can we do that again?',
-    'Frost Ink':'Cold walls. Warm friendship. Very slippery monsters.',
-    'Poison Ink':'That green ink smells suspicious. I am choosing to trust you.',
-    'Electric Ink':'My hair is still standing up. Worth it.',
-    'Blast Ink':'You drew a wall and it EXPLODED. Best art class ever.',
-    'Vampire Ink':'The walls had teeth. Somehow, this was reassuring.',
-    'Gravity Ink':'The monsters came to us. Very polite of the universe.',
-    'Repulsion Ink':'Watching them bounce off your walls? Ten out of ten.',
-    'Void Ink':'You drew a hole in reality. Please do not lose the pencil.',
-    'Chaos Ink':'I do not know what that ink did. I think the ink agrees.',
-    'Death Ink':'That pencil has a very serious attitude.'
-  };
-  return {
-    heading:victory?'YOU SAVED MY LITTLE DOODLED LIFE.':s.wave>=15?'WE ALMOST HAD THAT ERASER.':s.wave>=5?'THAT WAS A PROPER ADVENTURE.':'SAME NOTEBOOK. FRESH PAGE.',
-    message:favorite?remarks[favorite.name]:s.stats.tripleLine?'Three walls from one scribble. You are definitely the teacher’s favorite.':s.stats.rockDamage?'You gave me rocks. I gave it my best shot. Literally.':'Thanks for drawing me a little breathing room. Next page, we try again.',
-    keepsake:favorite?'Favorite scribble: '+favorite.name+' · level '+s.stacks[favorite.name]:'Drawn with love · '+s.tool.name
-  };
+ const s=game.state,kind=victory?'victory':'death';
+ const favorite=game.api.equippedEffects().slice().sort((a,b)=>(s.stacks[b.name]||0)-(s.stacks[a.name]||0))[0];
+ return {
+  heading:victory?'YOU SAVED MY LITTLE DOODLED LIFE.':s.wave>=15?'WE ALMOST HAD THAT ERASER.':s.wave>=5?'THAT WAS A PROPER ADVENTURE.':'SAME NOTEBOOK. FRESH PAGE.',
+  message:stevieNotes[kind][noteChosen[kind]??noteNext[kind]],
+  keepsake:favorite?'Favorite scribble: '+favorite.name+' · level '+s.stacks[favorite.name]:'Drawn with graphite · '+s.tool.name
+ };
 }
 function renderStevieNote(victory=false){
-  const note=stevieNote(victory),prefix=victory?'victory':'death';
-  for(const [key,suffix] of [['heading','Heading'],['message','Message'],['keepsake','Keepsake']])game.dom.$(prefix+'Note'+suffix).textContent=note[key];
+ const prefix=victory?'victory':'death';
+ if(noteChosen[prefix]===null){
+  noteChosen[prefix]=noteNext[prefix];noteNext[prefix]=(noteNext[prefix]+1)%stevieNotes[prefix].length;
+  try{localStorage.setItem('saveStevieNoteDecks',JSON.stringify(noteNext))}catch{}
+ }
+ const note=stevieNote(victory);
+ for(const [key,suffix] of [['heading','Heading'],['message','Message'],['keepsake','Keepsake']])game.dom.$(prefix+'Note'+suffix).textContent=note[key];
 }
 function waveDuration(){
   return 60;
 }
 
 function resetRun(){
+  noteChosen={death:null,victory:null};
   game.api.closeInfo(false);
   game.dom.$('lastHitText').textContent='';
   game.state.wave=1;game.state.kills=0;game.state.score=0;game.state.waveKills=0;game.state.rerolls=0;game.state.endless=false;game.state.specialization='none';game.state.finalOvertime=false;game.state.finalBossDefeated=false;
