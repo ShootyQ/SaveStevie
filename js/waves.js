@@ -86,6 +86,7 @@ function waveDuration(){
 }
 
 function resetRun(options={}){
+  game.api.resetWaveFinale();
   noteChosen={death:null,victory:null};
   game.api.closeInfo(false);
   game.dom.$('lastHitText').textContent='';
@@ -112,6 +113,7 @@ function resetRun(options={}){
 }
 
 function startWave(options={}){
+  game.api.resetWaveFinale();
   game.api.selectMusicTrack(game.api.chapterForWave().id);
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
@@ -132,7 +134,8 @@ function startWave(options={}){
 }
 
 function waveComplete(){
-  if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending()||(game.state.wave%5!==0&&game.state.enemies.some(e=>e.hp>0||e.flight))||(game.state.wave%5===0&&!game.api.bossFightResolved()))return;
+  if(game.api.waveFinaleActive())return;
+  if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending()||(game.state.wave%5!==0&&game.state.enemies.length>0)||(game.state.wave%5===0&&!game.api.bossFightResolved()))return;
   game.api.stopSoundEffects();
   game.state.betweenWaves=true;
   game.api.awardWaveScraps();
@@ -173,6 +176,7 @@ function proceedAfterWave(){
 }
 
 function returnToMenu(){
+  game.api.resetWaveFinale();
   game.api.closeInfo(false);game.api.finishScrapRun(false,false);game.api.stopSoundEffects();
   game.state.running=false;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
   game.state.drawing=false;game.state.currentWall=null;
@@ -183,6 +187,7 @@ function returnToMenu(){
   game.dom.startOverlay.style.display='grid';game.api.selectMusicTrack('splash');game.api.updateUI();game.dom.$('startBtn').focus?.();
 }
 function gameOver(){
+  game.api.resetWaveFinale();
   game.api.stopSoundEffects();
   game.api.finishScrapRun();renderStevieNote();
   game.state.running=false;

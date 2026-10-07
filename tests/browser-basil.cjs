@@ -15,7 +15,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   });
   await page.goto('http://127.0.0.1:8001/');await page.waitForFunction(()=>testGame.api.artworkReady(),null,{polling:50});await page.click('#startBtn');
   const result=await page.evaluate(()=>{
-   const g=testGame;g.state.wave=8;g.state.spawnTimer=999;
+   const g=testGame;g.state.wave=13;g.state.spawnTimer=999;
    const e=g.api.spawnEnemy(false,g.state.player.x-75,g.state.player.y-60,'basil');g.state.enemies=[e];g.api.updateEnemyAnimations(0);g.api.draw();
    const pixels=()=>g.dom.ctx.getImageData(0,0,g.state.W,g.state.H).data.reduce((sum,v,i)=>(sum+v*(i%17+1))>>>0,0);
    const before=pixels();e.x+=5;g.api.updateEnemyAnimations(.08);g.api.draw();const after=pixels();

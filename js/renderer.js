@@ -264,7 +264,7 @@ function tintedDoodle(name,colors){
   tintedDoodles.set(key,{canvas,bytes});tintedBytes+=bytes
   return canvas;
 }
-function drawDoodleEnemy(e,hpRatio){
+function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const action=enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
   const framed=/^(grunt|fast)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
   const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(name.startsWith('fast-frame-')?4:framed?3.25:e.type==='sniper'?3.4:2.7),height=width*base.naturalHeight/base.naturalWidth;
@@ -277,7 +277,7 @@ function drawDoodleEnemy(e,hpRatio){
   // Damage never fades the body: health belongs in the separate bar.
   ctx.drawImage(tintedDoodle(name,colors),left,top,width,height);
   ctx.restore();
-  drawEnemyHealthBar(e,hpRatio,colors);
+  if(showHealth)drawEnemyHealthBar(e,hpRatio,colors);
   return true;
 }
 function drawEnemyHealthBar(e,hpRatio,colors=enemyStatusColors(e)){
@@ -322,7 +322,7 @@ function resize(){
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
-    game.api.movePlaguefire(dx,dy);
+    game.api.movePlaguefire(dx,dy);game.api.moveWaveFinale(dx,dy,r.width,r.height);
     game.api.moveRefuge(dx,dy);game.api.moveSupportInkVisuals(dx,dy);game.api.moveBossFields(dx,dy);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
@@ -503,6 +503,7 @@ function drawToolStroke(points,thick,opacity,color){
 function draw(){
   drawWaveStevie();
   game.dom.ctx.clearRect(0,0,game.state.W,game.state.H);game.dom.ctx.save();
+  const camera=game.api.waveFinaleCamera();game.dom.ctx.translate(game.state.W/2,game.state.H/2);game.dom.ctx.scale(camera.zoom,camera.zoom);game.dom.ctx.translate(-camera.x,-camera.y);
   game.dom.ctx.strokeStyle='rgba(212,76,76,.35)';game.dom.ctx.lineWidth=2;
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
 
@@ -580,7 +581,7 @@ function draw(){
 
   game.api.drawRefuge(doodles['paper-fort'],motionReduced);
   // Stevie
-  game.dom.ctx.translate(game.state.player.x,game.state.player.y);
+  game.dom.ctx.save();game.dom.ctx.translate(game.state.player.x,game.state.player.y);
   const reaction=stevieReactionPose();
   if(doodles[reaction.sprite]){
     game.dom.ctx.translate(0,reaction.y);game.dom.ctx.rotate(reaction.angle);
@@ -612,6 +613,10 @@ function draw(){
       }else game.dom.ctx.arc(e.x,e.y,e.r+10+8*(1-e.bossWindup/1.2),0,Math.PI*2);
       game.dom.ctx.stroke();game.dom.ctx.restore();
     }
+    if(e.type==='basil'&&e.feastPhase!=='idle'){
+      const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle=e.feastPhase==='warning'?'#ce7932':'#6b944c';ctx.lineWidth=2;ctx.setLineDash([4,5]);ctx.beginPath();ctx.arc(e.x,e.y,85+(motionReduced?0:Math.sin(motionTime*4)*3),0,Math.PI*2);ctx.stroke();ctx.fillStyle='#fff8df';ctx.beginPath();ctx.ellipse(e.x,e.y+e.r+10,18,7,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#e29236';ctx.fillRect(e.x-7,e.y+e.r+7,13,4);ctx.restore();
+    }
+    if(e.feastRush>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#cf8738';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();}
     const hpRatio=game.api.clamp(e.hp/e.maxHp,0,1);
     game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y-game.api.enemyFlightHeight(e));
     if(e.flight&&!motionReduced){const t=e.flight.age/e.flight.duration;game.dom.ctx.rotate(e.flight.spin*Math.sin(t*Math.PI)*.8);const scale=1+Math.sin(t*Math.PI)*.16;game.dom.ctx.scale(scale,scale);}
@@ -714,6 +719,7 @@ function draw(){
     game.dom.ctx.textAlign='center';game.dom.ctx.fillText(f.text,f.x,f.y);game.dom.ctx.globalAlpha=1
   }
   game.api.drawDamageNumbers();
+  game.api.drawWaveFinale(drawDoodleEnemy);game.dom.ctx.restore();
   if(game.state.paused){
     game.dom.ctx.fillStyle='rgba(20,25,28,.38)';game.dom.ctx.fillRect(0,0,game.state.W,game.state.H);
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)

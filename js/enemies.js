@@ -9,7 +9,7 @@ const defs=game.catalog.enemyDefs={
     splitter:{r:13,hp:40,speed:31,dmg:10,color:'#8456c9'},
     sniper:{r:12,hp:36,speed:78,dmg:7,color:'#4b79d8'},
     gnawer:{r:12,hp:42,speed:30,dmg:18,color:'#86563d'},
-    basil:{r:13,hp:38,speed:34,dmg:9,color:'#ba753c'},
+    basil:{r:15,hp:58,speed:29,dmg:9,color:'#aa733b'},
     brute:{r:19,hp:105,speed:20,dmg:22,color:'#51634a'},
     elite:{r:13,hp:68,speed:42,dmg:13,color:'#b34e82'},
     wardling:{r:12,hp:38,speed:36,dmg:8,color:'#9e71b5'},
@@ -37,14 +37,14 @@ function enemyType(){
   if(game.state.wave>=7)pool.push('flanker');
   if(game.state.wave>=7)pool.push('splitter');
   if(game.state.wave>=9)pool.push('sniper');
-  if(game.state.wave>=8)pool.push('basil');
+  if(game.state.wave>=13)pool.push('basil');
   if(game.state.wave>=12)pool.push('gnawer');
   if(game.state.wave>=14)pool.push('brute');
   if(game.state.wave>=16)pool.push('elite');
   for(const {wave,type} of game.catalog.enemyGuide){
     if(game.state.wave>=wave)pool.push(type);
   }
-  return game.api.pick(pool);
+  return game.api.pick(pool.filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
 }
 
 function bossTypeForWave(wave=game.state.wave){
@@ -107,6 +107,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   let type=typeOverride||game.api.enemyType();
   if(forceBoss)type=game.api.bossTypeForWave();
   const scale=game.api.enemyHpScale()*game.state.stats.enemyScale;
+  if(type==='basil'&&game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length>=2)return null;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
   const earlyBoss=forceBoss&&(game.state.wave===5||game.state.wave===10),bossHp=forceBoss&&game.state.wave===5?3:earlyBoss?1.8:1,bossSpeed=forceBoss&&game.state.wave===5?7.8:earlyBoss?2:1;
   const enemy={
@@ -120,7 +121,8 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='wardling'){enemy.immunity=game.api.pick(['fire','poison','electric','blast','frost']);enemy.immuneCd=0}
   if(type==='sprinter')enemy.dashTime=0;
   if(type==='medic')enemy.healPulse=0;
-  game.state.enemies.push(enemy);
+  if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
+  game.state.enemies.push(enemy);game.api.discoverMonster(type);
   if(forceBoss){bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null}
   return enemy;
 }
@@ -145,6 +147,7 @@ function killEnemy(e){
   }
   game.api.dropPlaguefire(e);
   game.state.enemies=game.state.enemies.filter(x=>x!==e);
+  game.api.beginWaveFinale(e);
 }
 
 function nearestEnemy(x,y,maxD){
@@ -287,6 +290,7 @@ function spawnChapterGroup(){
   const wave=game.state.wave;if(wave<6)return;
   const types=wave<=10?(wave>=9?['sniper','fast']:wave>=7?['flanker','fast']:['tank','fast']):wave<=15?(wave>=13?['medic','bulwark','brood']:['bulwark','brood']):['sapper','elite','sprinter'];
   const fromLeft=groupsSpawned%2===0;
+  if(wave===13)types.push('basil');
   for(let i=0;i<types.length;i++)game.api.spawnEnemy(false,fromLeft?-26:game.state.W+26,game.state.H*(.35+.12*i),types[i]);
 }
 
@@ -315,7 +319,36 @@ function spawnWaveEnemies(dt){
     game.state.spawnTimer=game.state.wave<=5?game.api.spawnGap():game.state.spawnTimer+game.api.spawnGap();
   }
 }
+function feastHost(e){
+ const host=e.feastHost;
+ return host&&host.hp>0&&host.freeze<=0&&host.stun<=0&&!host.flight&&game.state.enemies.includes(host)&&['gather','warning'].includes(host.feastPhase)?host:null;
+}
+function finishFeast(host,rush=false){
+ for(const ally of game.state.enemies)if(ally.feastHost===host){
+  if(rush&&ally.hp>0&&!ally.flight&&game.api.dist(ally.x,ally.y,host.x,host.y)<=85){ally.feastRush=4;game.api.floatText(ally.x,ally.y-20,'DINNER DASH!','#bd6a29');}
+  delete ally.feastHost;
+ }
+ host.feastPhase='idle';host.feastLeft=0;host.feastCd=8;
+}
+function updateFeast(e,dt){
+ if(e.hp<=0||e.freeze>0||e.stun>0||e.flight){if(e.feastPhase!=='idle')finishFeast(e);return;}
+ if(e.feastPhase==='idle'){
+  e.feastCd=Math.max(0,e.feastCd-dt);
+  if(e.feastCd>0||e.x<e.r+12||e.x>game.state.W-e.r-12||e.y<e.r+12||e.y>game.state.H-e.r-12||game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y)<130)return;
+  const guests=game.state.enemies.filter(a=>a!==e&&a.hp>0&&!a.waveBoss&&!game.catalog.enemyDefs[a.type]?.boss&&!['boss','eraser','basil'].includes(a.type)&&!a.flight&&!a.feastHost&&!(a.feastRush>0)&&game.api.dist(e.x,e.y,a.x,a.y)<=170).sort((a,b)=>game.api.dist(e.x,e.y,a.x,a.y)-game.api.dist(e.x,e.y,b.x,b.y)).slice(0,6);
+  if(!guests.length){e.feastCd=1;return;}
+  for(const a of guests)a.feastHost=e;
+  e.feastPhase='gather';e.feastLeft=3;game.api.floatText(e.x,e.y-25,'FANCY FEAST!','#60904c');return;
+ }
+ e.feastLeft=Math.max(0,e.feastLeft-dt);
+ if(e.feastLeft>0)return;
+ if(e.feastPhase==='gather'){e.feastPhase='warning';e.feastLeft=.8;game.api.floatText(e.x,e.y-25,'LAST BITE…','#b66a2d');}
+ else finishFeast(e,true);
+}
 function updateEnemyBehavior(e,dt){
+ if(e.feastRush>0)e.feastRush=Math.max(0,e.feastRush-dt);
+ if(e.feastHost&&!feastHost(e))delete e.feastHost;
+ if(e.type==='basil')updateFeast(e,dt);
   game.api.updateBossAbility(e,dt);
   if(e.immunity)e.immuneCd=Math.max(0,e.immuneCd-dt);
   if(e.type==='sprinter'&&e.freeze<=0&&e.stun<=0)e.dashTime=(e.dashTime+dt)%3.2;
@@ -382,9 +415,10 @@ function updateSniper(e,dt){
  return moveEnemySafely(e,dx/d*travel,dy/d*travel);
 }
 
-function enemyMoveScale(e){return game.api.enemySpeedScale()*(e.type==='sprinter'&&e.dashTime>=2.6?2.6:1)}
+function enemyMoveScale(e){return game.api.enemySpeedScale()*(e.type==='basil'&&e.feastPhase!=='idle'?0:e.feastRush>0?2:feastHost(e)?1.6:e.type==='sprinter'&&e.dashTime>=2.6?2.6:1)}
 function enemyTarget(e){
   if(e.waveBoss)return game.api.bossTarget(e);
+  const host=feastHost(e);if(host)return game.api.dist(e.x,e.y,host.x,host.y)<host.r+e.r+14?e:host;
   let target=game.state.player;
   if(e.type==='sapper'){
     let distance=Infinity;
@@ -466,7 +500,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { sniperCanAim, updateSniper, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

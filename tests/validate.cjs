@@ -1,7 +1,7 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
 const root=path.resolve(__dirname,'..');
 function environment(){const nodes=new Map(),calls=[];let seed=123456;const math=Object.create(Math);math.random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const ctx=new Proxy({measureText:t=>({width:String(t).length*6})},{get(o,k){if(k in o)return o[k];return (...a)=>{calls.push([k,...a]);if(k==='createLinearGradient'||k==='createRadialGradient')return {addColorStop(){}};};}});function node(id){if(!nodes.has(id))nodes.set(id,{style:{},dataset:{},textContent:'',innerHTML:'',children:[],listeners:{},appendChild(n){this.children.push(n);},addEventListener(k,f){this.listeners[k]=f;},getBoundingClientRect(){return {left:0,top:0,width:800,height:700};},getContext(){return ctx;},setPointerCapture(){}});return nodes.get(id);}const sandbox={console,performance:{now:()=>1234},Math:math,Set,document:{getElementById:node,createElement:()=>node('created'+nodes.size),querySelectorAll:()=>[]},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:f=>{sandbox.frame=f;},setTimeout:()=>1,clearTimeout(){}};sandbox.window=sandbox;sandbox.addEventListener=()=>{};vm.createContext(sandbox);return {sandbox,node,calls};}
-function load(refactored,options={}){const env=environment();if(options.storage)env.sandbox.localStorage=options.storage;if(options.audio)Object.assign(env.node('gameMusic'),options.audio);if(options.documentEvents)env.sandbox.document.addEventListener=(key,fn)=>options.documentEvents[key]=fn;const pendingImages=[];if(options.images)env.sandbox.Image=class{constructor(){this.naturalWidth=200;this.naturalHeight=180}set src(value){this.url=value;pendingImages.push(()=>this.onload?.())}get src(){return this.url}};if(options.reduced)env.sandbox.matchMedia=()=>({matches:true,addEventListener(){}});if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}for(const ready of pendingImages)ready();if(!options.intros)env.sandbox.testGame.api.setMonsterIntrosEnabled(false);env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
+function load(refactored,options={}){const env=environment();if(options.storage)env.sandbox.localStorage=options.storage;if(options.audio)Object.assign(env.node('gameMusic'),options.audio);if(options.documentEvents)env.sandbox.document.addEventListener=(key,fn)=>options.documentEvents[key]=fn;const pendingImages=[];if(options.images)env.sandbox.Image=class{constructor(){this.naturalWidth=200;this.naturalHeight=180}set src(value){this.url=value;pendingImages.push(()=>this.onload?.())}get src(){return this.url}};if(options.reduced)env.sandbox.matchMedia=()=>({matches:true,addEventListener(){}});if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}for(const ready of pendingImages)ready();if(!options.finale)env.sandbox.testGame.api.setWaveFinaleEnabled(false);if(!options.intros)env.sandbox.testGame.api.setMonsterIntrosEnabled(false);env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
 const a=load(false),b=load(true);let checks=0;
 // Keep the old starting kit only in the legacy parity fixture. New-run balance
 // and permanent perks are checked separately below.
@@ -524,7 +524,7 @@ assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
 assert.equal(g.catalog.monsters.length,22);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,22);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],3:['fast'],5:['bouncer','tank','boss'],7:['flanker','splitter','mini'],8:['wardling','basil'],9:['sniper','sprinter'],10:['stapler','brood'],11:['bulwark'],12:['gnawer'],13:['medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],3:['fast'],5:['bouncer','tank','boss'],7:['flanker','splitter','mini'],8:['wardling'],9:['sniper','sprinter'],10:['stapler','brood'],11:['bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -544,7 +544,7 @@ g.api.resetRun();env.node('hideMonsterIntros').checked=true;g.api.continueMonste
 assert.equal(saved.get('saveStevieMonsterIntros'),'off');assert.equal(g.api.monsterIntrosEnabled(),false);assert.equal(saved.get('doodleDefenderBestV4'),'14');
 g.api.resetRun();assert.equal(g.api.infoOpen(),false,'disabled setting survives new runs');g.state.wave=20;g.api.startWave();assert.equal(g.api.infoOpen(),false);
 const reloaded=load(true,{intros:true,storage});assert.equal(reloaded.sandbox.testGame.api.monsterIntrosEnabled(),false,'disabled setting survives page reload');
-g.state.paused=false;g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,22);
+g.state.paused=false;for(const m of g.catalog.monsters)g.api.discoverMonster(m.type);g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,22);
 const before=JSON.stringify(g.state);g.api.update(.2);assert.equal(JSON.stringify(g.state),before);
 g.api.closeCompendium();assert.equal(g.state.paused,false);g.state.paused=true;g.api.openCompendium();g.api.closeCompendium();assert.equal(g.state.paused,true);
 g.api.setMonsterIntrosEnabled(true);assert.equal(saved.get('saveStevieMonsterIntros'),'on');g.api.resetRun();assert.equal(g.api.infoOpen(),true,'setting can be re-enabled');
@@ -616,7 +616,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 // A mixed-status crowd must reuse its tinted sprites instead of allocating each frame.
 {
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
-const types=g.catalog.monsters.map(m=>m.type);
+const types=g.catalog.monsters.map(m=>m.type).filter(type=>type!=='basil');
 for(let i=0;i<76;i++){
  const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][Math.floor(i/types.length)%4];
  e.burn=mask&1?2:0;e.poison=mask&2?2:0;e.freeze=mask&4?2:0;e.charged=mask&8?2:0;e.gravitySlow=mask&16?.4:0;
@@ -726,7 +726,7 @@ console.log('PASS: chapter boundaries, asset coverage, new-run reset, stable bac
 const env=load(true),g=env.sandbox.testGame;
 for(const [wave,scale] of [[1,1],[5,1.2],[10,1.9],[15,2.8],[20,4],[25,4.9]])assert.ok(Math.abs(g.api.enemyHpScale(wave)-scale)<1e-10);
 g.api.resetRun();assert.equal(g.state.spawnTimer,1.5);assert.equal(g.api.spawnGap(),2.7);
-for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['bulwark','brood']],[13,['medic','bulwark','brood']],[16,['sapper','elite','sprinter']]]){
+for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['bulwark','brood']],[13,['medic','bulwark','brood','basil']],[16,['sapper','elite','sprinter']]]){
  g.state.wave=wave;g.api.startWave();g.state.spawnTimer=999;g.state.timeLeft=40;g.api.spawnChapterGroup();
  assert.deepEqual(Array.from(g.state.enemies,e=>e.type),members);
  g.state.timeLeft=20;g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,members.length*2);
@@ -1649,11 +1649,62 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.api.pick=pool=>pool.includes('basil')?'basil':pool[0];
- g.state.wave=7;assert.notEqual(g.api.enemyType(),'basil');g.state.wave=8;assert.equal(g.api.enemyType(),'basil');
+ g.state.wave=12;assert.notEqual(g.api.enemyType(),'basil');g.state.wave=13;assert.equal(g.api.enemyType(),'basil');
  assert.equal(g.api.monsterName('basil'),'Basil');g.api.spawnEnemy(false,200,200,'basil');const e=g.state.enemies.at(-1);assert.equal(e.type,'basil');assert.ok(e.hp>0);
  g.api.updateEnemyAnimations(.05);e.x+=5;g.api.updateEnemyAnimations(.05);assert.ok(g.api.enemyAnimationPose(e).y<0,'Basil hops while moving');
  g.api.animateEnemyAction(e,'bite',{x:e.x+10,y:e.y});g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyActionCue(e),'bite');
  const pose=JSON.stringify(g.api.enemyAnimationPose(e));e.freeze=1;e.x+=2;g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyActionCue(e),null,'freeze stops dining');
  assert.notEqual(pose,JSON.stringify(g.api.enemyAnimationPose(e)));assert.ok(fs.existsSync(path.join(root,'assets/art/basil.png')));
- console.log('PASS: Basil unlocks at wave 8, spawns, appears in the guide, hops, bites and stops dining when frozen.');
+ console.log('PASS: Basil unlocks at wave 13, spawns, appears in the guide, hops, bites and stops dining when frozen.');
+}
+
+// Last-defeat close-up delays clear/rewards and cannot override loss or split children.
+{
+ const env=load(true,{finale:true}),g=env.sandbox.testGame;g.api.resetRun();g.state.timeLeft=0;
+ const e=g.api.spawnEnemy(false,160,180,'grunt');e.hp=0;g.api.killEnemy(e);
+ assert.ok(g.api.waveFinaleActive());assert.equal(env.node('waveOverlay').style.display,'none');assert.equal(g.state.betweenWaves,false);assert.equal(g.state.kills,1);
+ const frozen=JSON.stringify(g.state),camera0=g.api.waveFinaleCamera(),random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('Finale must not consume combat RNG')};
+ g.api.draw();g.api.draw();assert.equal(JSON.stringify(g.state),frozen,'drawing is read-only');
+ g.state.paused=true;g.api.update(.5);assert.equal(g.api.waveFinaleSnapshot().age,0);g.state.paused=false;
+ g.api.update(.35);assert.ok(g.api.waveFinaleCamera().zoom>camera0.zoom);assert.equal(g.state.timeLeft,0);assert.equal(g.state.kills,1);assert.equal(g.api.notebookSnapshot().runScraps,0,'wave award waits for the pop');g.api.waveComplete();assert.equal(g.state.betweenWaves,false);
+ g.api.update(.75);assert.equal(g.api.waveFinaleSnapshot().popped,true);g.api.draw();env.sandbox.Math.random=random;
+ g.api.update(.6);assert.equal(g.api.waveFinaleActive(),false);assert.equal(g.state.betweenWaves,true);assert.equal(env.node('waveOverlay').style.display,'grid');const score=g.state.score,scraps=g.api.notebookSnapshot().scraps;g.api.waveComplete();assert.equal(g.state.score,score);assert.equal(g.api.notebookSnapshot().scraps,scraps);
+ g.api.resetRun();g.state.timeLeft=0;const splitter=g.api.spawnEnemy(false,180,180,'splitter');splitter.hp=0;g.api.killEnemy(splitter);assert.equal(g.api.waveFinaleActive(),false);assert.equal(g.state.enemies.length,2);
+ for(const child of g.state.enemies)child.hp=0;g.api.update(.02);assert.equal(g.state.kills,3,'all simultaneous deaths count before the close-up');assert.ok(g.api.waveFinaleActive());g.state.player.hp=0;g.api.update(.02);assert.equal(g.api.waveFinaleActive(),false);assert.equal(env.node('gameOverOverlay').style.display,'grid');assert.equal(env.node('waveOverlay').style.display,'none');
+ g.api.resetRun();g.state.timeLeft=0;const flyer=g.api.spawnEnemy(false,160,180,'grunt');assert.ok(g.api.launchEnemy(flyer,150,180,true));flyer.hp=0;const flightDuration=flyer.flight.duration;g.api.updateEnemyFlight(flyer,flightDuration/2);assert.equal(g.api.waveFinaleActive(),false,'airborne fatality lands before the close-up');g.api.updateEnemyFlight(flyer,flightDuration);assert.equal(g.api.waveFinaleActive(),true);assert.equal(g.state.kills,1);
+ g.api.resetRun();g.state.wave=20;g.api.startWave();const boss=g.api.spawnEnemy(true,180,180);g.api.killEnemy(boss);assert.ok(g.api.waveFinaleActive());assert.equal(env.node('victoryOverlay').style.display,'none');g.api.update(1.7);assert.equal(env.node('victoryOverlay').style.display,'grid');assert.equal(g.state.running,false);
+ g.api.resetRun();g.state.timeLeft=0;g.api.killEnemy(g.api.spawnEnemy(false,160,180,'grunt'));g.api.startWave();assert.equal(g.api.waveFinaleActive(),false,'new waves clear presentation state');
+ const reduced=load(true,{finale:true,reduced:true}).sandbox.testGame;reduced.api.resetRun();reduced.state.timeLeft=0;reduced.api.killEnemy(reduced.api.spawnEnemy(false,160,180,'grunt'));assert.equal(reduced.api.waveFinaleCamera().zoom,1);reduced.api.update(.61);assert.equal(reduced.state.betweenWaves,true);
+ console.log('PASS: last-death close-up/pop, delayed single awards, frozen combat/pause, pure art/no RNG, split children/simultaneous kills, loss priority, final victory, reset and reduced motion.');
+}
+
+// Notes reveal encountered monsters only, persist safely, and stay wave-sorted.
+{
+ const saved=new Map([['doodleDefenderBestV4','14']]),storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,String(v))};
+ const env=load(true,{storage}),g=env.sandbox.testGame;g.api.resetRun();g.api.renderCompendium();assert.equal(env.node('monsterCards').innerHTML,'');assert.match(env.node('monsterDiscoveryNote').textContent,/Meet monsters/);
+ g.api.spawnEnemy(false,100,100,'grunt');g.api.renderCompendium();assert.match(env.node('monsterCards').innerHTML,/Scribble Gribble/);assert.doesNotMatch(env.node('monsterCards').innerHTML,/Basil|The Big Rub-Out/);
+ g.api.spawnEnemy(false,100,100,'medic');g.api.spawnEnemy(false,120,120,'basil');g.api.spawnEnemy(false,130,130,'gnawer');g.api.renderCompendium();const cards=env.node('monsterCards').innerHTML;assert.ok(cards.indexOf('Chompzilla')<cards.indexOf('Basil')&&cards.indexOf('Basil')<cards.indexOf('Dr. Oopsie'));
+ const reload=load(true,{storage}).sandbox.testGame;assert.equal(reload.api.discoveredMonsterTypes().length,4);assert.equal(saved.get('doodleDefenderBestV4'),'14');reload.api.setDevMode(true);reload.api.spawnEnemy(false,140,140,'eraser');assert.equal(reload.api.discoveredMonsterTypes().includes('eraser'),false,'dev encounters cannot reveal future campaign notes');
+ const bad=load(true,{storage:{getItem:()=>'{bad',setItem(){throw Error('blocked')}}}).sandbox.testGame;assert.equal(bad.api.discoverMonster('grunt'),true);assert.equal(bad.api.discoverMonster('not-a-monster'),false);
+ console.log('PASS: undiscovered names/art hidden, real encounter reveals, saved reload/order, protected records, dev exclusion and malformed/blocked storage.');
+}
+
+// Basil gathers a bounded party, warns, then grants a temporary rush.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=13;g.state.player.x=650;g.state.player.y=500;
+ const basil=g.api.spawnEnemy(false,170,170,'basil');basil.feastCd=0;
+ const guests=Array.from({length:8},(_,i)=>g.api.spawnEnemy(false,190+i,170,'grunt'));
+ const boss=g.api.spawnEnemy(true,190,175);g.api.updateFeast(basil,.1);
+ assert.equal(basil.feastPhase,'gather');assert.equal(guests.filter(e=>g.api.feastHost(e)===basil).length,6);assert.equal(g.api.feastHost(boss),null);assert.equal(g.api.enemyMoveScale(basil),0);assert.equal(g.api.enemyTarget(guests[0]),guests[0],'seated guests stay at the plate');
+ assert.ok(Math.abs(g.api.enemyMoveScale(guests[0])/g.api.enemySpeedScale()-1.6)<1e-9);
+ g.api.updateFeast(basil,3);assert.equal(basil.feastPhase,'warning');assert.equal(guests[0].feastRush,undefined);
+ g.api.updateFeast(basil,.8);assert.equal(basil.feastPhase,'idle');assert.equal(guests[0].feastRush,4);assert.equal(g.api.enemyTarget(guests[0]),g.state.player);assert.equal(g.api.enemyMoveScale(guests[0])/g.api.enemySpeedScale(),2);
+ g.state.paused=true;const snapshot=JSON.stringify(g.state);g.api.update(.5);assert.equal(JSON.stringify(g.state),snapshot);g.state.paused=false;
+ g.api.updateEnemyBehavior(guests[0],4);assert.equal(guests[0].feastRush,0);assert.equal(g.api.enemyMoveScale(guests[0]),g.api.enemySpeedScale());
+ for(const e of guests)e.feastRush=0;basil.feastCd=0;g.api.updateFeast(basil,.1);basil.freeze=1;g.api.updateFeast(basil,.1);assert.equal(basil.feastPhase,'idle');assert.ok(guests.every(e=>!g.api.feastHost(e)&&!e.feastRush));
+ basil.freeze=0;basil.feastCd=0;g.api.updateFeast(basil,.1);basil.hp=0;assert.equal(g.api.feastHost(guests[0]),null,'defeated host cannot lure');
+ basil.hp=10;const second=g.api.spawnEnemy(false,70,70,'basil');assert.ok(second);assert.equal(g.api.spawnEnemy(false,75,75,'basil'),null,'two-host cap');
+ const before=JSON.stringify(g.state),random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('art consumes RNG')};g.api.draw();assert.equal(JSON.stringify(g.state),before);env.sandbox.Math.random=random;
+ g.state.enemies=[];g.state.wave=12;g.api.pick=pool=>{assert.ok(!pool.includes('basil'));return pool[0]};g.api.enemyType();g.state.wave=13;g.api.pick=pool=>{assert.ok(pool.includes('basil'));return 'basil'};assert.equal(g.api.enemyType(),'basil');
+ console.log('PASS: Basil wave-13 pool, bounded guests/hosts, real lure/seating, warned 2× rush and expiry, pause, freeze/death cancellation, boss exclusions and pure artwork.');
 }

@@ -122,11 +122,12 @@
       </div>
     </div>
 
-    <div class="overlay" id="waveOverlay" style="display:none">
-      <div class="cardbox startbox">
+    <div class="overlay" id="waveOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="waveClearTitle">
+      <div class="cardbox wave-clear-book">
+        <span class="section-kicker">ANOTHER PAGE SAVED</span>
         <p id="waveChapter" class="scrap-summary"></p>
         <div class="wave-heading"><canvas id="waveStevie" width="128" height="136" role="img" aria-label="Stevie celebrating the cleared wave"></canvas><h2 id="waveClearTitle">Wave Cleared!</h2></div>
-        <div class="stats wave-stats">
+        <details class="wave-run-details"><summary>Your run so far</summary><div class="stats wave-stats">
           <div class="pill">Wave <span id="wave">1</span></div>
           <div class="pill">Score <span id="score">0</span></div>
           <div class="pill">Kills <span id="kills">0</span></div>
@@ -134,7 +135,7 @@
           <div class="pill">Best <span id="best">1</span></div>
           <div class="pill">Pressure <span id="pressure">1×</span></div>
         </div>
-        <div class="bigscore">+<span id="waveScore">0</span></div>
+        </details><div class="bigscore wave-grade">+<span id="waveScore">0</span></div>
         <div class="summary">
           <div>Survival <span id="survivalBonus">+100</span></div>
           <div>Kills <span id="killBonus">+0</span></div>
@@ -142,12 +143,12 @@
           <div>HP Bonus <span id="hpBonus">+0</span></div>
         </div>
         <p class="scrap-summary">Notebook scraps earned this run: <b id="waveRunScraps">0</b> · Saved, even if Stevie falls.</p>
-        <button id="continueBtn">Continue</button>
+        <button class="paper-slip" id="continueBtn">Next page →</button>
       </div>
     </div>
 
     <div class="overlay" id="victoryOverlay" style="display:none">
-      <div class="cardbox startbox">
+      <div class="cardbox startbox wave-clear-book">
         <h2>STEVIE SURVIVED THE NOTEBOOK</h2>
         <p>You defeated The Eraser. This is, somehow, Stevie's greatest accomplishment.</p>
         <div class="bigscore"><span id="victoryScore">0</span></div>
@@ -289,6 +290,7 @@
     <p class="monster-subtitle">Know your notebook nuisances. All 19 monsters, from first scribble to final boss. Your run pauses while you browse.</p>
     <label class="monster-setting"><input id="monsterIntrosEnabled" type="checkbox" checked> Show new-monster introductions before each wave</label>
     <p class="monster-setting-note">Saved on this device. Switch off for uninterrupted runs. Stats show base values before wave scaling, upgrades, or armor.</p>
+    <p id="monsterDiscoveryNote" class="option-help"></p>
     <div id="monsterCards" class="monster-grid"></div>
   </div>
 </div>
@@ -309,6 +311,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>One last doodle… POP!</h3><p>The final defeated monster gets a quick close-up, freak-out and pop before the notebook clear screen. Monster notes unlock as you encounter them. Basil now serves his gathering-and-rush Fancy Feast from wave 13, in the right place in the manual.</p></article>
       <article class="build-entry"><h3>Basil comes to dinner</h3><p>Basil, a wonky rabbit with a taste for fine foods, joins the monsters from wave 8. Watch his hopping feet and dramatic wall-biting dinner routine, and meet him in Monster notes.</p></article>
       <article class="build-entry"><h3>Notebook menu touch-ups</h3><p>Play is centered with a pencilled arrow badge. Settings uses taped notebook paper, and outlined pause-menu buttons stand apart from the quieter notes.</p></article>
       <article class="build-entry"><h3>First-wave ink choice</h3><p>The reward after wave 1 always includes at least one ink ability, even after rerolling. You can still choose a utility upgrade instead.</p></article>
@@ -497,6 +500,7 @@
 <script src="js/boss-encounters.js"></script>
 <script src="js/upgrades.js"></script>
 <script src="js/test-lab.js"></script>
+<script src="js/wave-finale.js"></script>
 <script src="js/renderer.js"></script>
 <script src="js/loop.js"></script>
 <script src="js/input.js"></script>

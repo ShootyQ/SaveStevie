@@ -855,3 +855,19 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 /* Override the old cover-music shortcut styling inside Settings. */
 .options-book #splashMusicBtn{display:inline-block;background:#fff5d9;border:1.5px solid #72674f;box-shadow:1px 3px 0 #8d80674a;font-family:'Stevie Pencil',cursive;font-size:22px;color:#315d8c;min-height:44px;padding:8px 14px;margin:0 0 12px}
 .options-book .build-heading .section-kicker{font-size:16px;font-weight:400;letter-spacing:0;text-transform:none}
+
+/* A finished page, scored in pencil and pasted into Stevie's notebook. */
+.wave-clear-book{width:min(100%,610px);background:linear-gradient(#fffaf0ed,#fffaf0ed),repeating-linear-gradient(0deg,#abc5d8 0 1px,transparent 1px 28px);border:2px solid #625b4c;border-radius:12px 20px 14px 18px;box-shadow:7px 8px 0 #51483822;padding:24px}
+.wave-clear-book h2{font-family:'Stevie Pencil',cursive;font-size:36px;line-height:1.1;color:#303b41}
+.wave-clear-book .wave-heading{gap:8px;margin:10px 0}
+.wave-clear-book #waveStevie{width:88px;height:94px;flex-shrink:0}
+.wave-clear-book .wave-grade{text-align:center;font-family:'Stevie Pencil',cursive;font-size:54px;color:#416739;background:#fffdf6;border:2px dashed #ad9d75;transform:rotate(-2deg);padding:8px;margin:16px auto;width:70%;box-shadow:3px 3px 0 #62543d17}
+.wave-clear-book .summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.wave-clear-book .summary > div{font-size:13px;background:#fffcf5;padding:10px;border:1px solid #cdbf9c;border-radius:4px 9px 5px 7px;display:flex;justify-content:space-between;gap:8px}
+.wave-clear-book .summary span{font-weight:bold;color:#4b713f}
+.wave-run-details{text-align:left;margin:8px 0;font-size:12px;color:#687267}
+.wave-run-details summary{cursor:pointer;padding:8px 0;min-height:30px}
+.wave-clear-book .wave-stats{margin:8px 0}
+.wave-clear-book .scrap-summary{font-size:12px;line-height:1.5}
+.wave-clear-book #continueBtn{width:100%;min-height:52px;font-family:'Stevie Pencil',cursive;font-size:25px;margin:12px 0 0}
+@media(max-width:600px){.wave-clear-book{padding:16px}.wave-clear-book h2{font-size:29px}.wave-clear-book #waveStevie{width:70px;height:75px}.wave-clear-book .wave-grade{font-size:44px}.wave-clear-book .summary > div{padding:8px;font-size:12px}}
