@@ -16,19 +16,20 @@ const root=path.resolve(__dirname,'..');
    await page.goto('http://127.0.0.1:8001/');await page.click('#startBtn');
    const warning=await page.evaluate(()=>{
     const g=testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.spawnTimer=9999;
-    const portrait=g.state.H>g.state.W,x=portrait?g.state.W/2:65,y=portrait?110:g.state.H*.5;
+    const portrait=g.state.H>g.state.W,x=portrait?g.state.W/2:65,y=portrait?95:g.state.H*.5;
     const boss=g.api.spawnEnemy(true,x,y),friend=g.api.spawnEnemy(false,x+25,y+3,'grunt');friend.bossOwner=boss;
     const b=g.api.bossBrain(boss);b.turn=3;b.cd=0;g.api.updateBossEncounter(boss,.01);g.api.updateBossEncounter(boss,.01);g.api.draw();
-    window.flingFixture={boss,friend,hp:friend.hp};return g.api.bossEncounterSnapshot().bosses[0];
+    window.flingFixture={boss,friend,hp:friend.hp,startDistance:Math.hypot(friend.x-g.state.player.x,friend.y-g.state.player.y)};return g.api.bossEncounterSnapshot().bosses[0];
    });assert.equal(warning.cast.kind,'friend-fling');
    await page.screenshot({path:'/tmp/friend-fling-warning-'+viewport.width+'.png'});
    const paused=await page.evaluate(()=>{const g=testGame,a=JSON.stringify(g.state),b=JSON.stringify(g.api.bossEncounterSnapshot());g.api.draw();g.state.paused=true;g.api.update(.4);g.state.paused=false;return a===JSON.stringify(g.state)&&b===JSON.stringify(g.api.bossEncounterSnapshot())});assert.ok(paused);
-   const flight=await page.evaluate(()=>{const g=testGame,{boss,friend}=flingFixture;g.api.updateBossEncounter(boss,1);g.api.updateEnemyFlight(friend,.5);g.api.draw();return {height:g.api.enemyFlightHeight(friend),friendly:friend.flight?.bossThrown}});assert.ok(flight.friendly&&flight.height>0);
+   const held=await page.evaluate(()=>{const g=testGame,{friend}=flingFixture,position={x:friend.x,y:friend.y};g.api.update(.1);return g.api.bossFriendHeld(friend)&&friend.x===position.x&&friend.y===position.y});assert.ok(held,'helper stays put during warning');
+   const flight=await page.evaluate(()=>{const g=testGame,{boss,friend}=flingFixture;g.api.updateBossEncounter(boss,1);g.api.updateEnemyFlight(friend,.325);g.api.draw();return {height:g.api.enemyFlightHeight(friend),friendly:friend.flight?.bossThrown}});assert.ok(flight.friendly&&flight.height>0);
    await page.screenshot({path:'/tmp/friend-fling-airborne-'+viewport.width+'.png'});
    await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>testGame.api.draw());
    await page.setViewportSize({width:viewport.width+20,height:viewport.height+40});await page.evaluate(()=>testGame.api.resize());
-   const landing=await page.evaluate(()=>{const g=testGame,{friend,hp}=flingFixture;g.api.updateEnemyFlight(friend,.5);g.api.draw();return {hp:friend.hp,originalHp:hp,stun:friend.stun,airborne:!!friend.flight,safe:Math.hypot(friend.x-g.state.player.x,friend.y-g.state.player.y)>=g.state.player.r+friend.r+75,onPage:friend.x>=friend.r+24&&friend.x<=g.state.W-friend.r-24&&friend.y>=friend.r+76&&friend.y<=g.state.H-friend.r-64}});
-   assert.equal(landing.hp,landing.originalHp);assert.equal(landing.stun,0);assert.ok(!landing.airborne&&landing.safe&&landing.onPage);assert.deepEqual(errors,[]);
+   const landing=await page.evaluate(()=>{const g=testGame,{friend,hp,startDistance}=flingFixture;g.api.updateEnemyFlight(friend,.325);g.api.draw();return {hp:friend.hp,originalHp:hp,stun:friend.stun,airborne:!!friend.flight,safe:Math.hypot(friend.x-g.state.player.x,friend.y-g.state.player.y)>=g.state.player.r+friend.r+75,gain:startDistance-Math.hypot(friend.x-g.state.player.x,friend.y-g.state.player.y),onPage:friend.x>=friend.r+24&&friend.x<=g.state.W-friend.r-24&&friend.y>=friend.r+76&&friend.y<=g.state.H-friend.r-64}});
+   assert.equal(landing.hp,landing.originalHp);assert.equal(landing.stun,0);assert.ok(!landing.airborne&&landing.safe&&landing.onPage);assert.ok(landing.gain>=70-1e-6,'throw gains meaningful ground');assert.deepEqual(errors,[]);
    console.log('PASS: '+viewport.width+'x'+viewport.height+' warned throw, pure/paused art, spin/arc/shadow, reduced motion and safe damage-free resized landing.');await page.close();
   }
  }finally{await browser.close()}
