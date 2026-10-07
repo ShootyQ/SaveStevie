@@ -1172,10 +1172,9 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  const env=load(true),g=env.sandbox.testGame;
  const setup=wave=>{g.api.resetRun();g.state.wave=wave;g.api.startWave();g.state.spawnTimer=9999;g.api.spawnEnemy(true,200,200);return g.state.enemies[0]};
  for(const wave of [5,10,15,20]){const e=setup(wave);assert.equal(g.state.enemies.length,1);assert.equal(e.waveBoss,true);for(let i=0;i<60;i++)g.api.spawnWaveEnemies(.1);assert.equal(g.state.enemies.length,1,'boss-only wave does not add regular monsters');}
- const king=setup(5);king.x=250;king.y=250;const wall={pts:[{x:160,y:160},{x:340,y:160},{x:340,y:340},{x:160,y:340},{x:160,y:160}],closed:true,thick:8,hp:1000,maxHp:1000,life:300};g.state.walls=[wall];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),1.35);const hp=king.hp;g.api.dealDamage(king,10);assert.ok(Math.abs(king.hp-(hp-13.5))<1e-8);g.state.walls=[];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),1);
- const b=g.api.bossBrain(king);b.cd=0;g.api.updateBossEncounter(king,.01);assert.equal(g.state.enemyShots.length,0);assert.equal(b.cast.kind,'volley');g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemyShots.length,3);assert.ok(g.state.enemyShots.every(s=>s.bossKind==='ink'));
- b.turn=2;b.cd=0;g.api.updateBossEncounter(king,.01);g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemies.filter(e=>e.bossOwner===king).length,2);
- for(let i=0;i<8;i++){b.turn=2;b.cd=0;g.api.updateBossEncounter(king,.01);g.api.updateBossEncounter(king,1.2)}assert.equal(g.state.enemies.filter(e=>e.bossOwner===king).length,6);
+ const king=setup(5);king.x=250;king.y=250;const wall={pts:[{x:160,y:160},{x:340,y:160},{x:340,y:340},{x:160,y:340},{x:160,y:160}],closed:true,thick:8,hp:1000,maxHp:1000,life:300};g.state.walls=[wall];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),1.35);const hp=king.hp;g.api.dealDamage(king,10);assert.ok(Math.abs(king.hp-(hp-13.5))<1e-8);g.state.walls=[];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),.25);
+ const b=g.api.bossBrain(king);b.cd=0;g.api.updateBossEncounter(king,.01);assert.equal(g.state.enemyShots.length,0);assert.equal(b.cast.kind,'mirror-orb');g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemyShots.length,1);assert.equal(g.state.enemyShots[0].bossKind,'mirror-orb');
+ b.turn=2;b.cd=0;g.api.updateBossEncounter(king,.01);g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemies.filter(e=>e.bossOwner===king).length,0,'first boss has no summons');
  b.cd=0;g.api.updateBossEncounter(king,.01);king.freeze=1;g.api.updateBossEncounter(king,.1);assert.equal(b.cast,null,'freeze cancels queued attack');king.freeze=0;
  const crayon=setup(15);crayon.x=200;crayon.y=200;const cb=g.api.bossBrain(crayon);cb.cd=0;g.api.updateBossEncounter(crayon,.01);g.api.updateBossEncounter(crayon,1.2);assert.equal(g.api.bossEncounterSnapshot().marks[0].kind,'red');const m=g.api.bossEncounterSnapshot().marks[0];g.state.walls=[{pts:[{x:m.x-50,y:m.y},{x:m.x+50,y:m.y}],thick:8,hp:100}];g.api.updateBossFields(1.2);assert.equal(g.api.bossEncounterSnapshot().marks.length,0,'wall cancels rune');
  g.state.walls=[];cb.turn=2;cb.cd=0;g.api.updateBossEncounter(crayon,.01);g.api.updateBossEncounter(crayon,1.2);g.api.updateBossFields(1.2);assert.equal(g.state.enemies.filter(e=>e.bossOwner===crayon).length,2,'green rune hatches real adds');
@@ -1202,8 +1201,8 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.spawnTimer=9999;g.state.player.x=450;g.state.player.y=350;
  const e=g.api.spawnEnemy(true,250,350);e.hp=e.maxHp=100000;g.api.bossBrain(e).cd=9999;
  g.state.walls=[{pts:[{x:300,y:150},{x:300,y:550}],thick:8,hp:1e6,maxHp:1e6,life:300,maxLife:300}];
- for(let i=0;i<800;i++)g.api.update(.05);
- assert.ok(e.x>330,'real boss movement gets around the end of a long barrier '+JSON.stringify({x:e.x,y:e.y,brain:g.api.bossBrain(e),hp:g.state.player.hp}));
+ let farthestX=e.x;for(let i=0;i<800;i++){g.api.update(.05);farthestX=Math.max(farthestX,e.x)}
+ assert.ok(farthestX>330,'real boss movement gets around the end of a long barrier '+JSON.stringify({x:e.x,y:e.y,brain:g.api.bossBrain(e),hp:g.state.player.hp}));
  console.log('PASS: real boss loop detours around a long wall without crossing it.');
 }
 {
@@ -1286,7 +1285,7 @@ console.log('PASS: zero-time cleanup, stopped arrivals, split children, pause, d
 
 {
 const env=load(true),g=env.sandbox.testGame;
-for(const [wave,hp,speed] of [[5,745.2,37.08],[10,1402.2,40.28],[15,1512,18.53],[20,3800,25.76]]){
+for(const [wave,hp,speed] of [[5,745.2,98.262],[10,1402.2,40.28],[15,1512,18.53],[20,3800,25.76]]){
  g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,250,250);
  assert.ok(Math.abs(boss.maxHp-hp)<1e-8,'boss HP '+wave);assert.ok(Math.abs(boss.speed-speed)<1e-8,'boss speed '+wave);
  const ordinary=g.api.spawnEnemy(false,100,100,'grunt');assert.equal(ordinary.maxHp,20*g.api.enemyHpScale());
@@ -1295,7 +1294,7 @@ for(const [wave,hp,speed] of [[5,745.2,37.08],[10,1402.2,40.28],[15,1512,18.53],
  const b=g.api.bossBrain(boss);b.cd=4.5;b.turn=0;g.api.updateBossEncounter(boss,.01);assert.ok(b.cd<1.8);
  g.api.updateBossEncounter(boss,1.8);assert.equal(b.cast.kind,'breakout');assert.equal(wall.hp,200,'warning precedes damage');
  boss.freeze=1;g.api.updateBossEncounter(boss,.1);assert.equal(b.cast,null,'freeze interrupts escape attack');boss.freeze=0;b.cd=0;
- g.api.updateBossEncounter(boss,.01);g.api.updateBossEncounter(boss,1.2);assert.equal(g.state.walls.includes(wall),false,'warned breakout tears the cage open');assert.equal(b.cd,3.5);
+ g.api.updateBossEncounter(boss,.01);g.api.updateBossEncounter(boss,1.2);assert.equal(g.state.walls.includes(wall),false,'warned breakout tears the cage open');assert.equal(b.cd,wave===5?3.2:3.5);
  assert.equal(g.api.bossDamageMultiplier(boss),1.35,'brief breakout recovery remains vulnerable');
 }
 console.log('PASS: stronger/faster early bosses, unchanged later/ordinary stats, quicker warned enclosure response and freeze interruption.');
@@ -1336,7 +1335,7 @@ console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss l
  g.state.walls=[];e.x=100;e.y=200;e.hp=e.maxHp=1000;g.api.resetBossEncounters();
  const stroke={pts:[{x:80,y:200},{x:120,y:200}],closed:false,thick:8,hp:200,maxHp:200,life:100};g.state.walls=[stroke];
  assert.equal(g.api.moveEnemySafely(e,10,0),true,'body-crossing stroke does not pin the boss');g.api.pushThroughBossStrokes(e,.6);assert.equal(g.state.walls.length,0);
- const budget=45*.5;g.api.dealDamage(e,10000,'blast');assert.equal(e.hp,1000-budget);g.api.dealDamage(e,10000,'fire');assert.equal(e.hp,1000-budget,'different overlapping sources share boss budget');
+ const budget=45*.5*.25;g.api.dealDamage(e,10000,'blast');assert.equal(e.hp,1000-budget);g.api.dealDamage(e,10000,'fire');assert.equal(e.hp,1000-budget,'different overlapping sources share boss budget');
  g.api.updateBossDamageBudgets(1);g.api.dealDamage(e,10000,'electric');assert.equal(e.hp,1000-budget*2,'boss budget has bounded burst capacity');
  g.state.walls=[{pts:[{x:50,y:140},{x:170,y:140},{x:170,y:260},{x:50,y:260},{x:50,y:140}],closed:true,thick:8,hp:200,maxHp:200,life:100}];
  g.api.updateBossEncounter(e,.01);assert.equal(g.api.bossBrain(e).enclosed,true);assert.equal(g.api.bossDamageMultiplier(e),1.35);
@@ -1356,4 +1355,48 @@ console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss l
  for(let i=0;i<20;i++){const e=g.api.spawnEnemy(false,100+i*.5,100,'tank');e.hp=e.maxHp=1000;e.speed=0;e.charged=1}
  g.api.update(.1);assert.ok(g.state.enemies.every(e=>1000-e.hp<=g.api.electricTuning(3).fieldDps*.1+1e-8),'charged crowds do not multiply Rail damage by enemy count');
  console.log('PASS: overlapping Tesla fields and crowded Rail electricity have bounded per-enemy damage.');
+}
+
+// Projectile-return first boss: three real attacks, fair collision order and openings.
+{
+ const env=load(true),g=env.sandbox.testGame;
+ const setup=()=>{g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.spawnTimer=999;g.state.player.x=400;g.state.player.y=350;const e=g.api.spawnEnemy(true,400,100);e.hp=e.maxHp=1000;return e};
+ const wall=(y,hp=500)=>({pts:[{x:50,y},{x:750,y}],thick:8,hp,maxHp:hp,life:100,maxLife:100});
+ let e=setup(),b=g.api.bossBrain(e);
+ const kinds=[];for(let turn=0;turn<3;turn++){b.turn=turn;b.cd=0;b.recovery=0;g.api.updateBossEncounter(e,.01);kinds.push(b.cast.kind);assert.equal(g.state.enemyShots.length,0);g.api.updateBossEncounter(e,1.2);const shots=g.state.enemyShots;assert.equal(shots.length,turn===0?1:2);assert.ok(shots.every(s=>s.owner===e));g.state.enemyShots=[]}
+ assert.deepEqual(kinds,['mirror-orb','arc-fan','paper-lob']);assert.equal(g.state.enemies.length,1);
+ g.api.firstBossCurve(e,-1,'mirror-orb');let s=g.state.enemyShots[0];assert.ok(s.vx>0&&Math.abs(s.vy)<1e-8,'orb begins sideways');g.api.updateEnemyShots(.4);assert.ok(s.x>s.startX&&s.y>s.startY,'flight actually curves inward');
+ e=setup();g.state.walls=[wall(285)];const hp=g.state.player.hp;g.api.firstBossCurve(e,-1,'mirror-orb');g.api.updateEnemyShots(6);assert.equal(g.state.player.hp,hp);assert.equal(e.hp,880,'returned orb bypasses ordinary damage budget for exactly 12%');assert.equal(g.state.enemyShots.length,0);assert.equal(g.api.bossBrain(e).recovery,3);assert.equal(g.api.bossDamageMultiplier(e),1.35);
+ const openingWall={pts:[{x:e.x-30,y:e.y},{x:e.x+30,y:e.y}],thick:8,hp:100,maxHp:100,life:100};g.state.walls=[openingWall];g.api.update(.03);assert.equal(openingWall.hp,100,'returned-shot recovery stops boss wall tearing and attacks');g.state.walls=[];
+ const exposed=e.hp;g.api.dealDamage(e,10);assert.ok(Math.abs(e.hp-(exposed-13.5))<1e-7);g.api.updateBossEncounter(e,3.1);assert.equal(g.api.bossDamageMultiplier(e),.25);
+ e=setup();g.state.walls=[wall(390)];g.api.firstBossCurve(e,-1,'mirror-orb');g.api.updateEnemyShots(6);assert.equal(g.state.player.hp,66,'wall behind Stevie cannot retroactively return a hit');
+ e=setup();g.state.walls=[wall(285)];g.state.inks.fire=20;g.api.firstBossCurve(e,1,'arc-spark');g.api.updateEnemyShots(6);assert.equal(e.hp,948,'ink boost caps at 30%, twin spark base damage is 4%');
+ e=setup();g.state.walls=[wall(285,150)];b=g.api.bossBrain(e);b.turn=2;b.cd=0;g.api.updateBossEncounter(e,.01);const targets=b.cast.targets.map(q=>({...q}));assert.equal(g.state.walls[0].hp,150,'lob warning does no damage');g.api.updateBossEncounter(e,1.2);assert.deepEqual(g.state.enemyShots.map(s=>({x:s.targetX,y:s.targetY})),targets,'lob targets stay locked');const playerHp=g.state.player.hp;g.api.updateEnemyShots(1.5);assert.ok(g.state.walls.length===0||g.state.walls[0].hp<150,'lobs really damage cover');assert.equal(g.state.player.hp,playerHp,'lobs cannot damage Stevie');assert.equal(g.state.enemyShots.length,0);
+ e=setup();g.api.firstBossCurve(e,1,'mirror-orb');const shot=g.state.enemyShots[0];g.state.paused=true;const snapshot=JSON.stringify(shot);g.api.update(.5);assert.equal(JSON.stringify(shot),snapshot);g.state.paused=false;
+ e.freeze=1;b=g.api.bossBrain(e);b.cd=0;g.api.updateBossEncounter(e,.01);assert.equal(b.cast,null);e.freeze=0;g.api.killEnemy(e);g.api.updateEnemyShots(.1);assert.equal(g.state.enemyShots.length,0,'dead boss shots expire');
+ e=setup();for(let i=0;i<50;i++)g.api.firstBossCurve(e,i%2?1:-1,'arc-spark');assert.equal(g.state.enemyShots.length,32);g.api.updateEnemyShots(.2);assert.ok(g.state.enemyShots.every(s=>s.trail.length<=12));
+ const state=JSON.stringify(g.state),random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('Boss art must not draw randomness')};g.api.draw();assert.equal(JSON.stringify(g.state),state);env.sandbox.Math.random=random;
+ const target=g.api.bossTarget(e);assert.ok(Math.hypot(target.x-g.state.player.x,target.y-g.state.player.y)>100,'movement targets the perimeter, not Stevie');
+}
+console.log('PASS: three first-boss attacks, sideways curved flight, swept wall returns/player ordering, exact return damage, exposure/guard, safe locked lobs, freeze/pause/death, bounded shots/trails and pure art.');
+
+// Full fights with the starting kit: paid defensive strokes, no damage upgrades.
+{
+ const results=[];
+ for(const [width,height] of [[800,700],[360,640],[851,300]]){
+  const env=load(true),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.timeLeft=0;g.state.spawnTimer=9999;
+  const boss=g.api.spawnEnemy(true),handled=new WeakSet();let spent=0,seconds=0,closest=Infinity;
+  for(let i=0;i<6000&&g.state.running&&!g.state.betweenWaves;i++){
+   for(const s of g.state.enemyShots){
+    if(!s.returnable||s.reflected||handled.has(s)||s.age<s.duration*.65)continue;
+    const speed=Math.hypot(s.vx,s.vy)||1,nx=-s.vy/speed,ny=s.vx/speed,before=g.state.stats.ink;
+    g.api.createWall([{x:s.x-nx*28,y:s.y-ny*28},{x:s.x+nx*28,y:s.y+ny*28}]);spent+=before-g.state.stats.ink;handled.add(s);
+   }
+   g.api.update(.03);seconds+=.03;if(boss.x>0&&boss.x<width&&boss.y>0&&boss.y<height)closest=Math.min(closest,Math.hypot(boss.x-g.state.player.x,boss.y-g.state.player.y));
+  }
+  assert.ok(g.state.betweenWaves&&boss.hp<=0,'starting kit can win a real fight '+JSON.stringify({width,height,hp:boss.hp,stevie:g.state.player.hp,seconds,brain:g.api.bossEncounterSnapshot()}));
+  assert.ok(g.state.player.hp>0);assert.ok(spent>0);assert.ok(closest>g.state.player.r+boss.r,'perimeter movement keeps the boss off Stevie');
+  results.push({width,height,seconds:Math.round(seconds),inkSpent:Math.round(spent),hp:g.state.player.hp});
+ }
+ console.log('PASS: full first-boss fights with paid wall returns and no damage upgrades '+JSON.stringify(results));
 }

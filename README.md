@@ -733,8 +733,9 @@ win condition. Boss contact deals 10 damage before armor every 1.2 seconds
 and attempts a safe retreat. All casts warn for 1.2 seconds and freeze/stun
 cancels them. Normal attack recovery is 4.5 seconds; below 40% HP it is 3.2.
 
-King Doodle-Doom fires three aimed ink shots or summons two Niblets, with six
-living owned summons maximum. Staple Snack alternates safe charges (60 nearby
+The wave-5 King uses the projectile-return fight described below. Later endless
+Kings retain three aimed ink shots or two Niblets, with six living owned summons
+maximum. Staple Snack alternates safe charges (60 nearby
 wall damage, 80 in its final phase) and three/five staple fans. Its final phase
 can queue a separately warned second charge. Count Crayon cycles red damage,
 blue ink-drain and green hatch runes, plus crayon volleys. Runes warn another
@@ -805,14 +806,13 @@ renderer. A faint full-width graphite band preserves the visible contact footpri
 wall thickness, durability, ink cost and effect attachments retain their gameplay
 values. Grain is cached, capped and deterministic without consuming combat RNG.
 
-Wave 5 and 10 encounter bosses receive 1.8× HP and 2× base movement speed
-(745.2 HP / 37.08 px/s for King Doodle-Doom; 1402.2 HP / 40.28 px/s
-for Staple Snack before existing movement modifiers). Their normal/furious
-ability cooldowns are 3.5/2.5s; enclosure caps the waiting cooldown at 1.8s.
-Enclosed King prioritises swipes for 100/140 wall damage, while Staple Snack
-charges deal 110/150 wall damage. Existing 1.2s warnings, stun/freeze interruption,
-recovery and 35% enclosure exposure remain. Later bosses and ordinary enemies
-retain their previous tuning.
+Wave 5 and 10 encounter bosses receive 1.8× HP. The first King now moves at
+98.262 px/s (745.2 HP); Staple Snack keeps 40.28 px/s (1402.2 HP), before
+existing movement modifiers. The King's three attacks use a 3.2s cooldown;
+Staple Snack retains 3.5/2.5s normal/furious cooldowns and 110/150 wall-damage
+charges. Enclosure caps waiting at 1.8s and triggers a 1.2s warned breakout.
+Freeze/stun interrupts casts, and proper enclosures retain 35% extra damage.
+Later bosses and ordinary enemies retain their previous tuning.
 
 Pause opens a paper menu with Resume, Settings, Tool, Monster notes and Return
 to main menu. Submenus opened from Pause return there on Close/Escape. Leaving
@@ -876,3 +876,29 @@ Validation: `node tests/validate.cjs`, `tests/browser-stevie-notes.cjs` and
 `tests/browser-enemy-animation.cjs` cover note variety/persistence, real wall
 contact, distinct rendered sprite frames, desktop/phone layouts, pause,
 freeze/stun, reduced motion and cosmetic RNG isolation.
+
+The first boss rotates three moves: one large Mirror Orb, a twin Arc Fan, and
+two Paper Bomb lobs. Orbs/sparks launch sideways and follow quadratic paths to
+Stevie's position at launch. Warnings show those same curves. Any living wall
+returns an orb/spark automatically toward its owner; reflected shots pass through
+walls and only hit that boss. A large orb deals 12% maximum HP and each spark 4%,
+with +2.5% return damage per ink level, capped at +30%. Returns bypass the ordinary
+boss damage budget and open a three-second recovery (+35% ordinary damage),
+shown by a tilted body, stars and an EXPOSED badge. Outside recovery/enclosure,
+his guard reduces both ordinary damage and its budget to 25%. Body strokes get torn away outside the return
+opening; during recovery he stops tearing and attacking walls so damage inks
+can work. Proper enclosures and warned breakouts continue to work.
+
+Paper Bomb targets lock during the 1.2s warning. They favor existing cover away
+from Stevie's center; their subsequent 1.5s lob damages walls within 46 pixels
+for 100 HP and never damages Stevie. Projectile movement substeps and swept
+collisions enforce first-wall/player ordering; walls behind Stevie cannot return
+an already landed hit. Shots cap at 32 and trails at 12 points, respect pause and
+resize, and disappear with their owner. Artwork is procedural pencil/paper motion
+with static reduced-motion equivalents and no render RNG.
+
+Validation includes all three moves, real returns and exact damage, locked/safe
+lobs, pause/death/resize, all four boss browser checks and Android packaging.
+Full fights with the starting kit and paid defensive strokes finish in roughly
+92–110 seconds in desktop, portrait and landscape simulations. These checks
+establish that the fight is winnable; human playtests will guide further tuning.

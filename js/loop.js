@@ -127,7 +127,7 @@ function update(dt){
       if(game.api.steerBounce(e,dt)){game.api.contactStevie(e);continue}
     }
 
-    if(e.waveBoss&&!immobilized)game.api.pushThroughBossStrokes(e,dt);
+    if(e.waveBoss&&!immobilized&&!(game.api.isFirstBoss(e)&&game.api.bossBrain(e).recovery>0))game.api.pushThroughBossStrokes(e,dt);
     const target=game.api.enemyTarget(e);
     let targetX=target.x,targetY=target.y;
     if(!immobilized&&e.type==='flanker'){
@@ -168,6 +168,7 @@ function update(dt){
       const dps=game.api.applyInkContact(e,dt,hit.wall);
       game.api.dealDamage(e,dps*dt,'physical');
       if(e.stun>0||e.freeze>0||e.hp<=0)continue;
+      if(game.api.isFirstBoss(e)&&game.api.bossBrain(e).recovery>0)continue; // A returned shot creates a real wall-damage opening.
       if(e.waveBoss){
         const brain=game.api.bossBrain(e);
         if(!brain.enclosed&&!brain.cast&&brain.recovery<=0&&brain.charge<=0&&game.api.bossPathClear(e,targetX,targetY)){
