@@ -28,6 +28,39 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.evaluate(()=>{testGame.api.resetRun();testGame.state.tool.slots=4;testGame.state.inks.electric=1;testGame.state.inks.frost=1;testGame.state.inks.gravity=1;testGame.api.checkSynergies();testGame.api.update(.016)});
   let names=[];while(await page.locator('#synergySplash').isVisible()){names.push(await page.textContent('#synergySplashName'));assert.equal(await page.locator('.synergy-reveal-paper').evaluate(e=>getComputedStyle(e).animationName),'none');await page.click('#continueSynergyBtn')}
   assert.ok(names.includes('THE STORM'));assert.equal(new Set(names).size,names.length);
+  await page.evaluate(()=>{
+   const g=testGame;g.api.resetRun();g.api.setDevMode(true);
+   g.api.applyUpgrade({...g.catalog.upgrades.find(u=>u.name==='Fire Ink'),rarity:'common'});
+   g.api.openUpgrade();g.api.chooseUpgrade({...g.catalog.upgrades.find(u=>u.name==='Poison Ink'),rarity:'common'});
+   g.api.update(.016);
+  });
+  assert.equal(await page.locator('#synergySplash').isVisible(),true,'real reward-taking path shows reveal');
+  assert.equal(await page.textContent('#synergySplashName'),'Plaguefire');await page.click('#continueSynergyBtn');
+  await page.evaluate(()=>{
+   const g=testGame;g.api.startTestRun({wave:14,phase:'wave',toolRank:6,notebook:false,upgrades:[{name:'Fire Ink',rarity:'common',copies:1},{name:'Poison Ink',rarity:'common',copies:1}]});g.api.update(.016);
+  });
+  assert.equal(await page.locator('#synergySplash').isVisible(),true,'Scratch Page reveals loadout synergy');
+  assert.equal(await page.textContent('#synergySplashName'),'Plaguefire');await page.click('#continueSynergyBtn');
+  await page.evaluate(()=>{
+   const g=testGame;g.api.setMonsterIntrosEnabled(true);g.api.setDevMode(false);g.api.resetRun();
+  });
+  await page.click('#continueMonsterIntroBtn');
+  await page.evaluate(()=>{
+   const g=testGame;g.api.applyUpgrade({...g.catalog.upgrades.find(u=>u.name==='Fire Ink'),rarity:'common'});
+   g.state.wave=2;g.api.openUpgrade();g.api.chooseUpgrade({...g.catalog.upgrades.find(u=>u.name==='Poison Ink'),rarity:'common'});g.api.update(.016);
+  });
+  assert.equal(await page.locator('#monsterIntroOverlay').isVisible(),true);assert.equal(await page.locator('#synergySplash').isVisible(),false);
+  await page.click('#continueMonsterIntroBtn');await page.evaluate(()=>testGame.api.update(.016));
+  assert.equal(await page.locator('#synergySplash').isVisible(),true,'normal run shows reveal after monster intro');
+  await page.click('#continueSynergyBtn');
+  await page.evaluate(()=>{
+   const g=testGame;g.api.setMonsterIntrosEnabled(false);g.api.resetRun();g.state.inks.fire=g.state.inks.poison=1;g.api.checkSynergies();
+   g.api.setSynergyRevealsEnabled(false);g.api.setSynergyRevealsEnabled(true);g.api.update(.016);
+  });
+  assert.equal(await page.locator('#synergySplash').isVisible(),true,'active synergy recovers its missing notification');
+  assert.equal(await page.textContent('#synergySplashName'),'Plaguefire');
+  const recoveredTime=await page.evaluate(()=>testGame.state.timeLeft);await page.evaluate(()=>testGame.api.update(2));assert.equal(await page.evaluate(()=>testGame.state.timeLeft),recoveredTime);
+  await page.click('#continueSynergyBtn');await page.evaluate(()=>testGame.api.update(.016));assert.equal(await page.locator('#synergySplash').isVisible(),false);
   assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' synergy artwork/layout, frozen combat, keyboard/touch continue, once-per-run queue, major reveals and reduced motion');await page.close();
  }
  await browser.close();

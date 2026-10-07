@@ -1822,3 +1822,19 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  }
  console.log('PASS: directional profiles, vertical/freeze/stun holds, crowd/proximity/cover hysteresis, dead exclusions, pause, reduced motion, pure combat state and RNG.');
 }
+
+// Unacknowledged synergies survive a discarded notification or effect swap.
+{
+ const env=load(true,{synergyReveal:true}),g=env.sandbox.testGame;g.api.resetRun();
+ g.api.applyUpgrade({...g.catalog.upgrades.find(u=>u.name==='Fire Ink'),rarity:'common'});
+ g.api.applyUpgrade({...g.catalog.upgrades.find(u=>u.name==='Poison Ink'),rarity:'common'});
+ g.state.inks.fire=0;g.api.checkSynergies();assert.equal(g.api.beginSynergyReveal(),false,'removed pending synergy stays hidden');
+ g.state.inks.fire=1;g.api.checkSynergies();assert.equal(g.api.beginSynergyReveal(),true,'unseen reactivation still gets full reveal');
+ g.api.continueSynergyReveal();g.state.inks.fire=0;g.api.checkSynergies();g.state.inks.fire=1;g.api.checkSynergies();assert.equal(g.api.beginSynergyReveal(),false,'acknowledged reveal remains once per run');
+ g.api.resetRun();g.state.inks.fire=g.state.inks.poison=1;g.api.checkSynergies();
+ g.api.setSynergyRevealsEnabled(false);g.api.setSynergyRevealsEnabled(true);
+ g.state.inUpgrade=true;g.api.update(.1);assert.equal(g.api.synergyRevealActive(),false);
+ g.state.inUpgrade=false;g.api.update(.1);assert.equal(g.api.synergyRevealActive(),true,'active unseen synergy repairs missing notification');
+ assert.equal(env.node('synergySplashName').textContent,'Plaguefire');g.api.checkSynergies();g.api.continueSynergyReveal();assert.equal(g.api.beginSynergyReveal(),false,'recovered reveal is not duplicated');
+ console.log('PASS: unseen effect reactivation, active-synergy notification recovery, upgrade deferral and acknowledgement-based repeat suppression.');
+}
