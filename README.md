@@ -826,13 +826,18 @@ renderer. A faint full-width graphite band preserves the visible contact footpri
 wall thickness, durability, ink cost and effect attachments retain their gameplay
 values. Grain is cached, capped and deterministic without consuming combat RNG.
 
-Wave 5 and 10 encounter bosses receive 1.8× HP. The first King now moves at
-98.262 px/s (745.2 HP); Staple Snack keeps 40.28 px/s (1402.2 HP), before
-existing movement modifiers. The King's three attacks use a 3.2s cooldown;
+Wave 5 receives 3× HP and wave 10 retains 1.8× HP. The first King moves at
+144.612 px/s (1242 HP); Staple Snack keeps 40.28 px/s (1402.2 HP), before
+existing movement modifiers. The King's three attacks use 0.95/0.75s normal/furious warnings and
+1.65/1.05s cooldowns (furious below 40% HP);
 Staple Snack retains 3.5/2.5s normal/furious cooldowns and 110/150 wall-damage
 charges. Enclosure caps waiting at 1.8s and triggers a 1.2s warned breakout.
 Freeze/stun interrupts casts, and proper enclosures retain 35% extra damage.
-Later bosses and ordinary enemies retain their previous tuning.
+Later bosses retain their previous tuning. Sir Pew-Pew now moves at 78 base
+px/s, searches clear firing positions 90–260px from Stevie, and detours around
+open wall ends without crossing walls or Stevie’s fort. Closed cages still trap
+him. Losing sight or being frozen/stunned resets at least 0.65s of aim warning;
+clear shots retain their 1.7s interval. Route searches are cached between steps.
 
 Pause opens a paper menu with Resume, Settings, Tool, Monster notes and Return
 to main menu. Submenus opened from Pause return there on Close/Escape. Leaving
@@ -898,20 +903,22 @@ contact, distinct rendered sprite frames, desktop/phone layouts, pause,
 freeze/stun, reduced motion and cosmetic RNG isolation.
 
 The first boss rotates three moves: one large Mirror Orb, a twin Arc Fan, and
-two Paper Bomb lobs. Orbs/sparks launch sideways and follow quadratic paths to
+two Paper Bomb lobs (three below 40% HP). Orbs/sparks launch sideways and follow quadratic paths to
 Stevie's position at launch. Warnings show those same curves. Any living wall
-returns an orb/spark automatically toward its owner; reflected shots pass through
-walls and only hit that boss. A large orb deals 12% maximum HP and each spark 4%,
+returns one orb/spark automatically toward its owner and breaks that wall; reflected shots pass through
+walls and only hit that boss. A large orb deals 6.5% maximum HP and each spark 2.5%,
 with +2.5% return damage per ink level, capped at +30%. Returns bypass the ordinary
-boss damage budget and open a three-second recovery (+35% ordinary damage),
+boss damage budget and open a 1.25-second recovery (+35% ordinary damage),
 shown by a tilted body, stars and an EXPOSED badge. Outside recovery/enclosure,
 his guard reduces both ordinary damage and its budget to 25%. Body strokes get torn away outside the return
 opening; during recovery he stops tearing and attacking walls so damage inks
 can work. Proper enclosures and warned breakouts continue to work.
 
-Paper Bomb targets lock during the 1.2s warning. They favor existing cover away
+Returns do not cancel an already-warned attack. Large orbs hit Stevie for
+14/18 HP and sparks for 9/11 HP (normal/furious), before armor.
+Paper Bomb targets lock during the 0.95/0.75s warning. They favor existing cover away
 from Stevie's center; their subsequent 1.5s lob damages walls within 46 pixels
-for 100 HP and never damages Stevie. Projectile movement substeps and swept
+for 160/220 HP and never damages Stevie. Projectile movement substeps and swept
 collisions enforce first-wall/player ordering; walls behind Stevie cannot return
 an already landed hit. Shots cap at 32 and trails at 12 points, respect pause and
 resize, and disappear with their owner. Artwork is procedural pencil/paper motion

@@ -138,7 +138,7 @@ function updateEnemyAnimations(dt){
     if(e.freeze<=0&&e.stun<=0){
       if(e.type==='sniper'){
         if(m.action==='fire'&&m.actionAge<.2)m.sprite='sniper-fire';
-        else if(e.shootCd<=.6&&game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y)<190&&!game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y))m.sprite='sniper-ready';
+        else if(e.shootCd<=.6&&game.api.sniperCanAim(e))m.sprite='sniper-ready';
       }else if(e.type==='sapper'){
         if(m.action==='strike'&&m.actionAge<.22)m.sprite='sapper-strike';
         else if(m.readyUntil>motionTime)m.sprite='sapper-ready';
@@ -153,7 +153,7 @@ function updateEnemyAnimations(dt){
     if(e.type==='boss'&&game.api.isFirstBoss(e)){
       const brain=game.api.bossBrain(e);
       if(brain.recovery>0){p.angle-=.24;p.sx+=.1;p.sy-=.14;p.y+=4;p.x+=Math.sin(brain.recovery*9)*1.5}
-      else if(brain.cast){const ready=1-brain.cast.left/1.2;p.sx+=ready*.08;p.sy-=ready*.08;p.angle+=Math.sin(ready*Math.PI)*.07}
+      else if(brain.cast){const ready=1-brain.cast.left/(brain.cast.duration||1.2);p.sx+=ready*.08;p.sy-=ready*.08;p.angle+=Math.sin(ready*Math.PI)*.07}
     }
     if(e.type==='bouncer'){
       if(moving){p.y-=Math.abs(step)*2;p.sx+=step*.08;p.sy-=step*.08;}
@@ -535,8 +535,7 @@ function draw(){
   drawSplitAnimations();
   for(const e of game.state.enemies){
     if(e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0||e.shootCd>.6||
-      game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y)>=190||
-      game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y))continue;
+      !game.api.sniperCanAim(e))continue;
     const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#3562be';ctx.lineWidth=2;ctx.globalAlpha=.65;
     ctx.setLineDash([5,7]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();
     ctx.setLineDash([]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();

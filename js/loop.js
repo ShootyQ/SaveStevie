@@ -123,6 +123,8 @@ function update(dt){
     if(game.api.contactStevie(e))continue;
     const immobilized=e.stun>0||e.freeze>0;
     game.api.pullGravity(e,dt,immobilized);
+    if(e.type==='sniper'&&immobilized)e.shootCd=Math.max(.65,e.shootCd);
+    if(e.type==='sniper'&&!immobilized&&game.api.updateSniper(e,dt))continue;
 
     // Bouncers ricochet off a wall a few times and try another angle before
     // eventually giving up and attacking the barrier normally.
@@ -190,16 +192,9 @@ function update(dt){
 
     if(immobilized)continue;
     let speed=e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7));
-    if(e.type==='sniper'&&playerDist<190){
-      e.shootCd-=dt;
-      if(e.shootCd<=0){
-        if(!game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y))game.api.fireSniper(e);
-        e.shootCd=1.7
-      }
-    }else{
-      if(e.waveBoss)game.api.moveEnemySafely(e,dx/d*speed*dt,dy/d*speed*dt);
-      else {e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt}
-    }
+    if(e.waveBoss)game.api.moveEnemySafely(e,dx/d*speed*dt,dy/d*speed*dt);
+    else if(e.type==='sniper')game.api.moveEnemySafely(e,dx/d*speed*dt,dy/d*speed*dt);
+    else {e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt}
     game.api.contactStevie(e);
   }
 
