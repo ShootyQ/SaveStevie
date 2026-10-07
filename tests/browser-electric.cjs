@@ -27,7 +27,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    assert.equal(await page.evaluate(()=>testGame.api.plaguefireSnapshot().scars.length),1);await page.screenshot({path:'/tmp/desk-hole-'+viewport.width+'.png'});
    const pure=await page.evaluate(()=>{const g=testGame,a=JSON.stringify(g.state);g.api.draw();return a===JSON.stringify(g.state)});assert.equal(pure,true);
    await page.evaluate(()=>{testGame.api.setDevMode(true);testGame.api.openUpgrade()});await page.selectOption('#devUpgrade','Electric Ink');await page.selectOption('#devRarity','rare');
-   assert.match(await page.textContent('#cards'),/per hop/);assert.equal(await page.locator('#devUpgrade option').evaluateAll(nodes=>nodes.some(n=>n.value==='Shock Ink')),false);
+   await page.locator('#cards .ucard').first().click();assert.match(await page.textContent('#upgradeDetailsBody'),/per hop/);assert.equal(await page.locator('#devUpgrade option').evaluateAll(nodes=>nodes.some(n=>n.value==='Shock Ink')),false);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&Array.from(document.querySelectorAll('.ucard')).every(c=>c.scrollWidth<=c.clientWidth+1)),true);
    await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>testGame.api.draw());
    assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' Electric jumping chains, shock, desk holes, pure drawing, reduced motion and fitting reward previews');await page.close();

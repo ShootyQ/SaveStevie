@@ -54,7 +54,7 @@ both(e=>{const c=e.node('game');c.listeners.pointerdown({clientX:180,clientY:180
 both(e=>e.node('pauseBtn').onclick());compare('pause');both(e=>e.node('pauseBtn').onclick());compare('resume');
 for(let i=1;i<=2000;i++){both(e=>e.sandbox.frame(i*16));if(i%100===0)compare('frame '+i);}
 both(e=>e.node('continueBtn').onclick());compare('wave reward');
-both(e=>{const cards=e.node('cards').children;if(cards.length)cards.at(-1).onclick();});compare('upgrade');assert.match(b.node('message').textContent,/×1 — /,'upgrade confirmation includes the new stack and effect');
+both(e=>{const cards=e.node('cards').children;if(cards.length){cards.at(-1).onclick();if(e.sandbox.testGame)e.node('takeUpgradeBtn').onclick();}});compare('upgrade');assert.match(b.node('message').textContent,/×1 — /,'upgrade confirmation includes the new stack and effect');
 both(e=>e.node('clearBtn').onclick());compare('clear walls');
 both(e=>e.node('againBtn').onclick());compare('reset');
 
@@ -1033,9 +1033,9 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  assert.equal(env.node('devRewardPicker').hidden,false);assert.equal(env.node('rerollBtn').hidden,true);assert.equal(env.node('cards').children.length,1);assert.equal(g.state.legendaryOffered,false);
  assert.match(env.node('cards').children[0].innerHTML,/Blast Ink/);assert.match(env.node('cards').children[0].innerHTML,/Level 3/);
  const rerolls=g.state.rerolls;g.api.reroll();assert.equal(g.state.rerolls,rerolls);
- env.node('cards').children[0].onclick();assert.equal(g.state.inks.blast,3);assert.equal(g.state.wave,2);assert.equal(g.state.best,1);
- env.node('devUpgrade').value='Poison Ink';env.node('devRarity').value='legendary';env.node('cards').children=[];g.api.openUpgrade();env.node('cards').children[0].onclick();assert.equal(g.state.inks.poison,4);
- env.node('devUpgrade').value='Fire Ink';env.node('devRarity').value='uncommon';env.node('cards').children=[];g.api.openUpgrade();env.node('cards').children[0].onclick();assert.equal(env.node('effectReplacement').hidden,false);assert.equal(g.state.inks.fire,0);
+ env.node('cards').children[0].onclick();env.node('takeUpgradeBtn').onclick();assert.equal(g.state.inks.blast,3);assert.equal(g.state.wave,2);assert.equal(g.state.best,1);
+ env.node('devUpgrade').value='Poison Ink';env.node('devRarity').value='legendary';env.node('cards').children=[];g.api.openUpgrade();env.node('cards').children[0].onclick();env.node('takeUpgradeBtn').onclick();assert.equal(g.state.inks.poison,4);
+ env.node('devUpgrade').value='Fire Ink';env.node('devRarity').value='uncommon';env.node('cards').children=[];g.api.openUpgrade();env.node('cards').children[0].onclick();env.node('takeUpgradeBtn').onclick();assert.equal(env.node('effectReplacement').hidden,false);assert.equal(g.state.inks.fire,0);
  env.node('effectReplacement').children.at(-1).onclick();assert.equal(g.state.inks.blast,3);g.api.chooseUpgrade({...g.catalog.upgrades.find(u=>u.name==='Fire Ink'),rarity:'uncommon'},'Blast Ink');assert.equal(g.state.inks.fire,2);assert.equal(g.state.inks.blast,0);assert.ok(g.state.synergies.has('Plaguefire'));
  g.api.awardScraps(100);g.state.kills=25;g.api.awardKillScraps();g.api.awardWaveScraps();g.api.finishScrapRun(true);assert.equal(g.api.notebookSnapshot().scraps,42);
  g.api.setDevMode(false);assert.equal(g.api.devRunActive(),true,'turning off cannot rank a modified run');g.state.wave=50;g.api.gameOver();assert.equal(g.state.best,1);assert.deepEqual([...saved].filter(([key])=>key!=='saveStevieNoteDecks'),[...original].filter(([key])=>key!=='saveStevieNoteDecks'),'no dev-run progress writes');
@@ -1608,4 +1608,20 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.api.updateBossEncounter(e,.44);assert.equal(g.state.enemyShots.length,0,'short warning is still respected');g.api.updateBossEncounter(e,.02);assert.equal(g.state.enemyShots[0].duration,.55);assert.equal(brain.cd,.9);
  const playerHp=g.state.player.hp;g.api.updateEnemyShots(.54);assert.equal(wall.hp,1000,'no pop before flight ends');g.api.updateEnemyShots(.02);assert.equal(wall.hp,840);assert.equal(g.state.player.hp,playerHp);assert.equal(g.state.enemyShots.length,0);
  console.log('PASS: useful-gain buddy priority, reachable routes, accelerated pickup, held walking/attacks with continuing damage, clean freeze release, close-helper fallback and accurately warned one-second Paper Pop.');
+}
+
+// Inspecting a reward is read-only and stale previews cannot commit it.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.setDevMode(true);g.api.resetRun();
+ env.node('devUpgrade').value='Fire Ink';env.node('devRarity').value='rare';env.node('cards').children=[];g.api.openUpgrade();
+ const card=env.node('cards').children[0],before=JSON.stringify(g.state),random=env.sandbox.Math.random;
+ env.sandbox.Math.random=()=>{throw Error('inspection must not consume combat randomness')};
+ card.onclick();assert.equal(JSON.stringify(g.state),before);assert.equal(env.node('upgradeDetails').hidden,false);assert.match(env.node('upgradeDetailsBody').innerHTML,/Level 3/);
+ env.node('closeUpgradeDetails').onclick();assert.equal(env.node('upgradeDetails').hidden,true);assert.equal(env.node('takeUpgradeBtn').disabled,true);g.api.takeInspectedReward();assert.equal(JSON.stringify(g.state),before);
+ card.onclick();env.node('devUpgrade').value='Frost Ink';env.node('cards').children=[];env.node('devUpgrade').onchange();
+ assert.equal(env.node('upgradeDetails').hidden,true);card.onclick();assert.equal(env.node('upgradeDetails').hidden,true,'removed offers cannot reopen inspection');g.api.takeInspectedReward();assert.equal(JSON.stringify(g.state),before,'changed dev choice invalidates old confirmation');
+ env.sandbox.Math.random=random;
+ env.node('cards').children[0].onclick();env.node('takeUpgradeBtn').onclick();assert.equal(g.state.inks.frost,3);assert.equal(g.state.inks.fire,0);const wave=g.state.wave;g.api.takeInspectedReward();assert.equal(g.state.wave,wave,'confirmation cannot advance twice');
+ const cells=g.catalog.upgrades.map(u=>{const a=g.api.upgradeArtworkInfo(u);assert.ok(a&&a.x<a.grid&&a.y<a.grid);return a.file+':'+a.x+':'+a.y;});assert.equal(new Set(cells).size,41);
+ console.log('PASS: reward inspection/close are read-only without RNG; stale dev choices cannot reopen/commit; explicit confirmation applies once and every upgrade has distinct artwork.');
 }
