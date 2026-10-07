@@ -138,6 +138,13 @@ function updateFirstBossShot(s,dt){
    const t=Math.min(1,s.age/s.duration),u=1-t;
    if(s.age<=s.duration){nx=u*u*s.startX+2*u*t*s.controlX+t*t*s.targetX;ny=u*u*s.startY+2*u*t*s.controlY+t*t*s.targetY;s.vx=(nx-s.x)/step;s.vy=(ny-s.y)/step}
    else{nx=s.x+s.vx*step;ny=s.y+s.vy*step}
+   if(game.state.inks.gravity&&game.api.isFirstBoss(s.owner)){
+    let closest=null,distance=28;
+    for(const w of game.state.walls){if(w.hp<=0)continue;const q=game.api.nearestPointOnWall({x:nx,y:ny},w);if(!q)continue;const d=Math.hypot(q.x-nx,q.y-ny);if(d<distance){distance=d;closest=q}}
+    if(closest&&distance>1e-6){const shift=Math.min(distance,22*step,Math.max(0,8-(s.gravityTravel||0)));s.gravityTravel=(s.gravityTravel||0)+shift;s.gravityX=(s.gravityX||0)+(closest.x-nx)/distance*shift;s.gravityY=(s.gravityY||0)+(closest.y-ny)/distance*shift}
+    if(s.age<=s.duration){nx+=s.gravityX||0;ny+=s.gravityY||0}
+   }
+   if(s.age<=s.duration){s.vx=(nx-s.x)/step;s.vy=(ny-s.y)/step}
    const p=game.state.player,impact=shotCircleTime(s.x,s.y,nx,ny,p.x,p.y,p.r+s.r),wall=returnWallHit(s,nx,ny);
    if(wall&&(impact===null||wall.t<=impact)){
     nx=s.x+(nx-s.x)*wall.t;ny=s.y+(ny-s.y)*wall.t;s.reflected=true;s.age=0;s.life=6;s.trail=[];

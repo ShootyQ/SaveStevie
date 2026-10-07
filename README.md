@@ -666,12 +666,14 @@ These effects now provide a useful role from level one. Their tuning and
 per-enemy timers live in `js/support-inks.js`; the same tuning supplies reward
 previews and Tool descriptions.
 
-- **Gravity:** pulls to the nearest actual wall segment at `60 + 10 × level`
-  px/s, within `min(240, 140 + 15 × level)` px. Boss pull strength is 60%.
-  Collision checks keep monsters outside intact walls. Caught monsters count
-  as contacting the wall, bite it 30% slower, and take extra damage of
-  `min(40%, 12% + 4% × level)`. Breaking/removing the wall or replacing Gravity
-  releases the vulnerability. Inward arrows and a purple hold ring show it.
+- **Gravity:** pulls to the nearest actual wall segment at `min(95, 35 + 6 × level)`
+  px/s, within `min(64, 34 + 4 × level)` px (46px at level three). Other bosses
+  receive 60% pull; King Doodle is immune, including loop, Chaos and Singularity pulls.
+  Collision checks keep monsters outside intact walls. Gravity adds no movement
+  slow, damage vulnerability or slower bites. Leaving range, losing Gravity or
+  breaking/removing the wall immediately releases contact and pull visuals.
+  His unreflected returnable shots receive a gentle 22px/s nudge toward intact
+  walls within 28px, capped at 8px total per shot; reflected shots and lobs are unchanged.
 - **Vampire:** deals `5 + 3 × level` life-drain damage/s during wall contact,
   and heals Stevie for 25% of damage actually dealt. Full health still gets
   damage and fang-pulse feedback. Overkill and dead enemies grant no extra
@@ -688,14 +690,10 @@ previews and Tool descriptions.
 Animations consume no combat randomness, pause with combat, translate on resize,
 reset on fresh waves and respect reduced motion. At most 24 monsters receive
 support ornaments and eight drain pulses can coexist. Existing synergies remain
-active; early predictable freezes help Cryoshock/Thermal Shock, Gravity exposure
-boosts damage against held targets, and healing synergies share the sustain cap.
-
-`node tests/validate.cjs` includes a seeded 15-second single-barrier encounter:
-no effect deals 98.6 damage and takes 435 wall damage; level-one Gravity deals
-131.54 damage and takes 360 wall damage; Vampire deals 197.2 and heals 24.65 HP;
-Frost retains 98.6 damage while taking 360 wall damage. These demonstrate the
-solo roles in that encounter, rather than proving full-campaign balance.
+active; early predictable freezes help Cryoshock/Thermal Shock. Gravity synergies
+check current gravity wall contact rather than lingering Frost or rock slows.
+Healing synergies share the sustain cap. The regression suite includes a seeded
+15-second single-barrier comparison of these solo roles.
 Run `node tests/browser-support-inks.cjs [packaged-site-directory]` for real
 combat, animation, pause, reduced-motion, preview and resize checks.
 
@@ -1067,3 +1065,7 @@ checks the retained animation.
 ### Notebook refills and reward variety
 
 Refill Practice grants +1 starting ink/second per rank (three ranks costing 5, 12, and 24 scraps). Extra Credit is a single 25-scrap purchase granting four normal reward choices from wave one. Boss rewards remain four; Greedy Goblin is excluded once four choices are already unlocked. Existing Notebook saves gain the new ranks at zero. Equipped effects retain double offer weight and a 15% owned-only draw chance, reduced from sixfold weight and 45%, leaving more room for other upgrades.
+
+### Synergy reveals
+
+Newly activated synergies queue an animated notebook-paper reveal with their ingredient artwork and description. At the next combat start, gameplay waits until **Cool—let’s go!** is pressed. Multiple unlocks show individually; reactivations during the same run use a short message. Removed combinations are dropped from the pending queue; fresh runs reset discovery presentation. Keyboard focus stays on Continue, Escape acknowledges, and reduced motion disables the reveal animations. Check desktop and phone layouts with `node tests/browser-synergy-reveal.cjs`.

@@ -1,7 +1,7 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
 const root=path.resolve(__dirname,'..');
 function environment(){const nodes=new Map(),calls=[];let seed=123456;const math=Object.create(Math);math.random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const ctx=new Proxy({measureText:t=>({width:String(t).length*6})},{get(o,k){if(k in o)return o[k];return (...a)=>{calls.push([k,...a]);if(k==='createLinearGradient'||k==='createRadialGradient')return {addColorStop(){}};};}});function node(id){if(!nodes.has(id))nodes.set(id,{style:{},dataset:{},textContent:'',innerHTML:'',children:[],listeners:{},appendChild(n){this.children.push(n);},addEventListener(k,f){this.listeners[k]=f;},getBoundingClientRect(){return {left:0,top:0,width:800,height:700};},getContext(){return ctx;},setPointerCapture(){}});return nodes.get(id);}const sandbox={console,performance:{now:()=>1234},Math:math,Set,document:{getElementById:node,createElement:()=>node('created'+nodes.size),querySelectorAll:()=>[]},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:f=>{sandbox.frame=f;},setTimeout:()=>1,clearTimeout(){}};sandbox.window=sandbox;sandbox.addEventListener=()=>{};vm.createContext(sandbox);return {sandbox,node,calls};}
-function load(refactored,options={}){const env=environment();if(options.storage)env.sandbox.localStorage=options.storage;if(options.audio)Object.assign(env.node('gameMusic'),options.audio);if(options.documentEvents)env.sandbox.document.addEventListener=(key,fn)=>options.documentEvents[key]=fn;const pendingImages=[];if(options.images)env.sandbox.Image=class{constructor(){this.naturalWidth=200;this.naturalHeight=180}set src(value){this.url=value;pendingImages.push(()=>this.onload?.())}get src(){return this.url}};if(options.reduced)env.sandbox.matchMedia=()=>({matches:true,addEventListener(){}});if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}for(const ready of pendingImages)ready();if(!options.finale)env.sandbox.testGame.api.setWaveFinaleEnabled(false);if(!options.intros)env.sandbox.testGame.api.setMonsterIntrosEnabled(false);env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
+function load(refactored,options={}){const env=environment();if(options.storage)env.sandbox.localStorage=options.storage;if(options.audio)Object.assign(env.node('gameMusic'),options.audio);if(options.documentEvents)env.sandbox.document.addEventListener=(key,fn)=>options.documentEvents[key]=fn;const pendingImages=[];if(options.images)env.sandbox.Image=class{constructor(){this.naturalWidth=200;this.naturalHeight=180}set src(value){this.url=value;pendingImages.push(()=>this.onload?.())}get src(){return this.url}};if(options.reduced)env.sandbox.matchMedia=()=>({matches:true,addEventListener(){}});if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}for(const ready of pendingImages)ready();if(!options.finale)env.sandbox.testGame.api.setWaveFinaleEnabled(false);if(!options.synergyReveal)env.sandbox.testGame.api.setSynergyRevealsEnabled(false);if(!options.intros)env.sandbox.testGame.api.setMonsterIntrosEnabled(false);env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
 const a=load(false),b=load(true);let checks=0;
 // Keep the old starting kit only in the legacy parity fixture. New-run balance
 // and permanent perks are checked separately below.
@@ -44,7 +44,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed'].includes(key)?undefined:value),JSON.parse(a.snapshot()),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>key==='synergySplashTimer'?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
 for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -1054,12 +1054,12 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=9999;g.state.timeLeft=300;
  const wall={pts:[{x:100,y:200},{x:700,y:200}],thick:8,hp:10000,maxHp:10000,life:300,maxLife:300,closed:false,intersections:0};g.state.walls=[wall];
- g.state.inks.gravity=1;const e=g.api.spawnEnemy(false,400,100,'tank');e.hp=e.maxHp=10000;e.speed=0;
- assert.equal(g.api.nearestWallPoint(e.x,e.y,155),null,'sparse endpoints are out of old pull range');g.api.pullGravity(e,.5);assert.equal(e.x,400);assert.equal(e.y,135,'pulls toward segment midpoint, at 70px/s');assert.equal(g.api.gravityDamageMultiplier(e),1,'not vulnerable until held');
- g.api.pullGravity(e,2);assert.ok(Math.abs(e.y-(200-e.r-4-1.05))<1e-9);assert.ok(g.api.gravityWallHit(e));assert.equal(g.api.gravityDamageMultiplier(e),1.16);
- const exposedHp=e.hp;g.api.dealDamage(e,10,'fire');assert.ok(Math.abs(e.hp-exposedHp+11.6)<1e-9,'held target takes more damage from other effects');e.immunity='fire';const immune=e.hp;g.api.dealDamage(e,10,'fire');assert.equal(e.hp,immune);e.immunity=null;
- g.state.inks.gravity=100;assert.equal(g.api.gravityDamageMultiplier(e),1.4,'vulnerability is capped');g.state.walls=[];assert.equal(g.api.gravityDamageMultiplier(e),1,'destroyed walls immediately release vulnerability');g.state.inks.gravity=0;g.state.walls=[wall];
- const speed=load(true).sandbox.testGame;speed.api.resetRun();speed.state.walls=[{...wall,pts:wall.pts.map(p=>({...p}))}];speed.state.inks.gravity=1;const boss=speed.api.spawnEnemy(false,400,100,'stapler');speed.api.pullGravity(boss,.5);assert.equal(boss.y,121,'boss pull strength is 60%');
+ g.state.inks.gravity=1;const e=g.api.spawnEnemy(false,400,170,'tank');e.hp=e.maxHp=10000;e.speed=0;
+ assert.equal(g.api.nearestWallPoint(e.x,e.y,155),null,'sparse endpoints are out of old pull range');g.api.pullGravity(e,.5);assert.equal(e.x,400);assert.equal(e.y,200-e.r-4-1.05,'pulls nearby targets safely up to wall contact');assert.equal(g.api.gravityDamageMultiplier(e),1,'not vulnerable until held');
+ g.api.pullGravity(e,2);assert.ok(Math.abs(e.y-(200-e.r-4-1.05))<1e-9);assert.ok(g.api.gravityWallHit(e));assert.equal(g.api.gravityDamageMultiplier(e),1);
+ const exposedHp=e.hp;g.api.dealDamage(e,10,'fire');assert.ok(Math.abs(e.hp-exposedHp+10)<1e-9,'held target takes normal damage from other effects');e.immunity='fire';const immune=e.hp;g.api.dealDamage(e,10,'fire');assert.equal(e.hp,immune);e.immunity=null;
+ g.state.inks.gravity=100;assert.equal(g.api.gravityDamageMultiplier(e),1,'no vulnerability even at very high levels');g.state.walls=[];assert.equal(g.api.gravityDamageMultiplier(e),1,'destroyed walls immediately release vulnerability');g.state.inks.gravity=0;g.state.walls=[wall];
+ const speed=load(true).sandbox.testGame;speed.api.resetRun();speed.state.walls=[{...wall,pts:wall.pts.map(p=>({...p}))}];speed.state.inks.gravity=1;const boss=speed.api.spawnEnemy(false,400,170,'stapler');speed.api.pullGravity(boss,.5);assert.equal(boss.y,Math.max(170,Math.min(182.3,200-boss.r-4-1.05)),'other boss pull is weaker and respects wall contact');
  // Level-one Frost guarantees a freeze, with no random roll or free permanent stun.
  g.state.inks.frost=1;e.x=400;e.y=180;e.freeze=0;e.gravitySlow=0;g.api.resetSupportInks();
  const rng=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('support contact must be deterministic')};
@@ -1083,7 +1083,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  const stateBefore=JSON.stringify(g.state),visualBefore=JSON.stringify(g.api.supportInkSnapshot());env.calls.length=0;g.api.drawSupportInks();assert.equal(JSON.stringify(g.state),stateBefore);assert.equal(JSON.stringify(g.api.supportInkSnapshot()),visualBefore);for(const call of env.calls)for(const v of call.slice(1))if(typeof v==='number')assert.ok(Number.isFinite(v));
  g.state.paused=true;const paused=JSON.stringify(g.api.supportInkSnapshot());g.api.update(.2);assert.equal(JSON.stringify(g.api.supportInkSnapshot()),paused);g.state.paused=false;
  g.api.startWave();assert.equal(g.api.supportInkSnapshot().enemies.length+g.api.supportInkSnapshot().bites.length,0);
- console.log('PASS: segment-based safe Gravity pull/hold/vulnerability/cap, weaker boss pull, deterministic level-one Frost/cooldown/immunity, frozen wall damage, Vampire DPS/full-health visuals/actual-damage healing/no revival/shared budget, pure drawing and reset.');
+ console.log('PASS: segment-based tight-range Gravity pull/contact without vulnerability, weaker other-boss pull, deterministic level-one Frost/cooldown/immunity, frozen wall damage, Vampire DPS/full-health visuals/actual-damage healing/no revival/shared budget, pure drawing and reset.');
 }
 
 // A repeatable single-barrier encounter demonstrates the three solo roles.
@@ -1097,7 +1097,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
   for(let i=0;i<600;i++)g.api.update(.025);
   results[effect]={damage:Number((10000-e.hp).toFixed(2)),wallDamage:1e6-wall.hp,healing:Number((g.state.player.hp-20).toFixed(2))};
  }
- assert.ok(results.gravity.damage>results.none.damage*1.2,'Gravity improves solo damage through earlier wall contact and exposure');assert.ok(results.gravity.wallDamage<results.none.wallDamage,'Gravity holds reduce wall pressure despite earlier contact');
+ assert.ok(results.gravity.damage>results.none.damage,'Gravity improves solo damage through earlier wall contact');assert.ok(results.gravity.wallDamage>=results.none.wallDamage,'Gravity does not reduce wall pressure');
  assert.ok(results.vampire.damage>results.none.damage*1.8&&results.vampire.healing>15,'Vampire contributes damage and meaningful sustain');
  assert.ok(results.frost.wallDamage<results.none.wallDamage*.85,'Frost reduces incoming wall damage without losing baseline DPS');assert.ok(Math.abs(results.frost.damage-results.none.damage)<1);
  assert.ok(results.repulsion.wallDamage<results.none.wallDamage*.5,'Repulsion buys substantial wall protection');assert.ok(results.void.damage>results.none.damage*1.5,'Void provides reliable solo damage');
@@ -1108,10 +1108,10 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
 {
  const g=load(true).sandbox.testGame;g.api.resetRun();g.state.inks.gravity=1;
  const wall={pts:[{x:100,y:200},{x:300,y:200},{x:300,y:400}],thick:8,hp:1000};g.state.walls=[wall];
- const e=g.api.spawnEnemy(false,250,179,'tank');g.api.pullGravity(e,0);assert.equal(g.api.gravityDamageMultiplier(e),1.16);
- e.x=321;e.y=300;assert.equal(g.api.gravityDamageMultiplier(e),1.16,'another segment still holds after knockback');
+ const e=g.api.spawnEnemy(false,250,179,'tank');g.api.pullGravity(e,0);assert.equal(g.api.gravityDamageMultiplier(e),1);
+ e.x=321;e.y=300;assert.equal(g.api.gravityDamageMultiplier(e),1,'another segment still holds after knockback');
  e.x=360;assert.equal(g.api.gravityDamageMultiplier(e),1,'moving clear of the wall releases exposure');
- wall.pts=wall.pts.map(p=>({x:p.x+60,y:p.y}));assert.equal(g.api.gravityDamageMultiplier(e),1.16,'changed wall geometry invalidates the cached miss');
+ wall.pts=wall.pts.map(p=>({x:p.x+60,y:p.y}));assert.equal(g.api.gravityDamageMultiplier(e),1,'changed wall geometry invalidates the cached miss');
  console.log('PASS: cached Gravity contacts preserve corner, knockback and changed-wall behavior.');
 }
 
@@ -1157,7 +1157,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
   const {g,e}=setup();g.state.inks.chaos=1;g.state.player.hp=30;g.api.pick=()=>kind;
   g.api.applyChaosContact(e,1.39);assert.equal(e.hp,10000);g.api.applyChaosContact(e,.01);
   results[kind]=10000-e.hp;assert.ok(results[kind]>=3,kind+' gives guaranteed impact damage');
-  if(kind==='fire')assert.ok(e.burn>0);if(kind==='frost')assert.ok(e.freeze>0);if(kind==='poison')assert.ok(e.poison>0);if(kind==='vampire')assert.ok(g.state.player.hp>30);if(kind==='gravity')assert.ok(e.gravitySlow>0);if(kind==='repulsion')assert.ok(e.x!==250);
+  if(kind==='fire')assert.ok(e.burn>0);if(kind==='frost')assert.ok(e.freeze>0);if(kind==='poison')assert.ok(e.poison>0);if(kind==='vampire')assert.ok(g.state.player.hp>30);if(kind==='gravity')assert.equal(e.gravitySlow,0,'Chaos gravity has no lingering slow');if(kind==='repulsion')assert.ok(e.x!==250);
  }
  const c=setup(),d=setup();for(const {g} of [c,d]){g.state.inks.chaos=1;g.api.pick=()=> 'void'}
  for(let i=0;i<280;i++)c.g.api.applyChaosContact(c.e,.01);d.g.api.applyChaosContact(d.e,2.8);assert.equal(c.e.hp,d.e.hp);assert.equal(10000-c.e.hp,36);
@@ -1746,4 +1746,35 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.api.update(2.65);assert.equal(g.state.walls.length,0);assert.equal(g.api.firstBossIntroPose().stage,'smash');g.api.update(.5);assert.equal(g.api.firstBossIntroActive(),false);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1);assert.equal(g.api.musicStatus().track,'first-boss');
  g.api.resetRun();assert.equal(g.api.firstBossIntroActive(),false);assert.equal(g.api.musicStatus().track,'margin-mischief');
  console.log('PASS: wave-5 entrance freezes gameplay, respects pause, renders purely, wipes walls and starts one boss with its music.');
+}
+
+// Gravity releases immediately, preserves unrelated Frost, and assists only returnable shots.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=5;g.state.inks.gravity=3;
+ const wall={pts:[{x:100,y:200},{x:700,y:200}],thick:4,hp:1000};g.state.walls=[wall];
+ const e=g.api.spawnEnemy(false,400,140,'grunt');const y=e.y;g.api.pullGravity(e,.5);assert.equal(e.y,y,'level-three reach does not grab distant enemies');
+ e.y=170;e.gravitySlow=.25;g.api.pullGravity(e,.1);assert.ok(e.y>170);assert.equal(e.gravitySlow,.25,'Gravity never changes a Frost slow');
+ e.y=100;assert.equal(g.api.gravityPullActive(e),false,'leaving range releases immediately');assert.equal(g.api.gravityWallHit(e),null);
+ e.y=170;g.api.pullGravity(e,.1);wall.hp=0;assert.equal(g.api.gravityPullActive(e),false,'broken wall releases immediately');wall.hp=1000;
+ const boss=g.api.spawnEnemy(true,400,170,'boss'),by=boss.y;g.api.pullGravity(boss,1);assert.equal(boss.y,by);assert.equal(g.api.gravityWallHit(boss),null);
+ g.state.walls=[{pts:[{x:100,y:125},{x:700,y:125}],thick:2,hp:1000}];
+ function shot(){return {owner:boss,bossKind:'mirror-orb',x:200,y:100,startX:200,startY:100,controlX:300,controlY:100,targetX:400,targetY:100,duration:1,age:0,life:3,r:3,damage:10,reflected:false,trail:[]}}
+ const s=shot();assert.equal(g.api.updateFirstBossShot(s,.8),true);assert.ok(s.y>100&&s.y<=108+1e-9);assert.ok(s.gravityTravel<=8,'entire shot has a bounded assistance budget');
+ g.state.inks.gravity=0;const plain=shot();g.api.updateFirstBossShot(plain,.8);assert.equal(plain.y,100);
+ g.state.inks.gravity=100;g.state.walls[0].pts.forEach(p=>p.y=140);const far=shot();g.api.updateFirstBossShot(far,.8);assert.equal(far.y,100,'level does not expand shot assistance reach');
+ g.state.walls=[{pts:[{x:100,y:111},{x:700,y:111}],thick:2,hp:1000,life:300}];g.state.inks.gravity=0;
+ const miss=shot();g.api.updateFirstBossShot(miss,.8);assert.equal(miss.reflected,false,'slightly misplaced parallel wall misses without Gravity');
+ g.state.inks.gravity=3;const bounce=shot();g.api.updateFirstBossShot(bounce,.8);assert.equal(bounce.reflected,true,'small nudge makes a near-miss wall return the shot');assert.equal(g.state.walls.length,0,'assisted return still spends the wall');
+ console.log('PASS: tight Gravity reach, immediate release, normal unrelated slow, first-boss immunity and capped nearby projectile assistance.');
+}
+// Every new synergy queues once, pauses combat at wave start, and needs acknowledgement.
+{
+ const env=load(true,{synergyReveal:true}),g=env.sandbox.testGame;g.api.resetRun();g.state.inks.fire=1;g.state.inks.poison=1;g.api.checkSynergies();
+ assert.equal(env.node('synergySplash').style.display,'none','unlock waits for combat start');g.state.inUpgrade=true;const time=g.state.timeLeft;g.api.update(.2);assert.equal(g.api.synergyRevealActive(),false);
+ g.state.inUpgrade=false;g.api.update(.2);assert.equal(g.api.synergyRevealActive(),true);assert.equal(g.state.timeLeft,time);assert.equal(env.node('synergySplashName').textContent,'Plaguefire');assert.match(env.node('synergyRevealArt').innerHTML,/Fire Ink/);
+ g.api.update(5);assert.equal(g.state.timeLeft,time,'no timer runs behind the reveal');env.node('game').listeners.pointerdown({clientX:100,clientY:100,pointerId:1});assert.equal(g.state.drawing,false);
+ g.api.continueSynergyReveal();assert.equal(g.api.synergyRevealActive(),false);g.api.update(.1);assert.ok(g.state.timeLeft<time);
+ g.state.inks.fire=0;g.api.checkSynergies();g.state.inks.fire=1;g.api.checkSynergies();assert.equal(g.api.beginSynergyReveal(),false,'reactivation does not repeat the full reveal');
+ g.api.resetRun();g.state.inks.fire=g.state.inks.poison=1;g.api.checkSynergies();assert.equal(g.api.beginSynergyReveal(),true,'new run gets a new reveal');g.api.returnToMenu();assert.equal(g.api.synergyRevealActive(),false);
+ console.log('PASS: queued synergy ingredients, acknowledgement, frozen combat/input, repeat suppression and fresh-run/menu cleanup.');
 }
