@@ -907,20 +907,40 @@ console.log('PASS: real Gnawer bites, Sprinter anticipation/dashes, Bouncer rico
 }
 console.log('PASS: safe persisted audio/live volume, unavailable storage, exact next-pick previews including diminishing returns, read-only stats and pause restoration.');
 
-// End-of-run notes reflect the equipped build and never consume combat RNG.
+// End-of-run notes rotate separately, remain stable per ending, and use no RNG.
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();const originalRandom=env.sandbox.Math.random;
  env.sandbox.Math.random=()=>{throw Error('Stevie notes must not draw randomness')};
- const before=JSON.stringify(g.state);assert.match(g.api.stevieNote().message,/breathing room/);assert.equal(JSON.stringify(g.state),before);
+ const before=JSON.stringify(g.state),first=g.api.stevieNote();assert.ok(first.message.length>20);assert.equal(JSON.stringify(g.state),before);
  g.state.stacks['Fire Ink']=2;g.state.inks.fire=2;g.state.stacks['Poison Ink']=8;g.state.inks.poison=8;
- assert.match(g.api.stevieNote().message,/green ink/);assert.equal(g.api.stevieNote().keepsake,'Favorite scribble: Poison Ink · level 8');
- delete g.state.stacks['Poison Ink'];g.state.inks.poison=0;assert.match(g.api.stevieNote().message,/on fire/);
+ assert.equal(g.api.stevieNote().keepsake,'Favorite scribble: Poison Ink · level 8');
+ delete g.state.stacks['Poison Ink'];g.state.inks.poison=0;assert.equal(g.api.stevieNote().keepsake,'Favorite scribble: Fire Ink · level 2');
  g.state.wave=18;assert.match(g.api.stevieNote().heading,/ALMOST/);assert.match(g.api.stevieNote(true).heading,/SAVED/);
- env.sandbox.Math.random=originalRandom;g.api.gameOver();assert.match(env.node('deathNoteMessage').textContent,/on fire/);
+ g.api.renderStevieNote();g.api.renderStevieNote();assert.equal(g.api.stevieNote().message,first.message,'re-render keeps the same note');
+ env.sandbox.Math.random=originalRandom;
+ const death=[],victory=[];
+ for(let i=0;i<31;i++){
+  if(i)g.api.resetRun();
+  const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('Note rotation must not draw randomness')};
+  const snapshot=JSON.stringify(g.state);g.api.renderStevieNote();g.api.renderStevieNote(true);
+  death.push(g.api.stevieNote().message);victory.push(g.api.stevieNote(true).message);assert.equal(JSON.stringify(g.state),snapshot);
+  env.sandbox.Math.random=random;
+ }
+ assert.equal(new Set(death.slice(0,30)).size,30);assert.equal(death[30],death[0]);
+ assert.equal(new Set(victory.slice(0,20)).size,20);assert.equal(victory[20],victory[0]);
+ assert.equal(new Set([...death,...victory]).size,50,'50 different notes across both outcomes');
+ const blocked=load(true,{storage:{getItem(key){if(key==='saveStevieNoteDecks')throw Error('blocked');return null},setItem(key){if(key==='saveStevieNoteDecks')throw Error('blocked')}}}).sandbox.testGame;
+ blocked.api.resetRun();blocked.api.renderStevieNote();const blockedFirst=blocked.api.stevieNote().message;
+ blocked.api.resetRun();blocked.api.renderStevieNote();assert.notEqual(blocked.api.stevieNote().message,blockedFirst,'rotation works without storage');
+ const malformed=load(true,{storage:{getItem(key){return key==='saveStevieNoteDecks'?'{"death":-1,"victory":"bad"}':null},setItem(){}}}).sandbox.testGame;
+ assert.equal(malformed.api.stevieNote().message,first.message,'invalid saved indexes start a fresh deck');
+
+ g.api.resetRun();g.api.gameOver();assert.equal(env.node('deathNoteMessage').textContent,g.api.stevieNote().message);
  g.state.wave=20;g.state.running=true;g.state.betweenWaves=false;g.state.finalBossDefeated=true;g.state.timeLeft=0;g.state.enemies=[];
  g.api.startWave();g.state.timeLeft=0;g.api.killEnemy(g.api.spawnEnemy(true,100,100));g.api.waveComplete();assert.match(env.node('victoryNoteHeading').textContent,/SAVED/);
 }
-console.log('PASS: personal end-of-run notes, strongest equipped ink, replacement cleanup, victory/death integration and no RNG/state mutation.');
+console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, victory/death integration and no RNG/state mutation.');
+
 
 // Reward tiers apply full levels, using exactly the same per-level math as commons.
 {
@@ -1018,7 +1038,7 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
  env.node('devUpgrade').value='Fire Ink';env.node('devRarity').value='uncommon';env.node('cards').children=[];g.api.openUpgrade();env.node('cards').children[0].onclick();assert.equal(env.node('effectReplacement').hidden,false);assert.equal(g.state.inks.fire,0);
  env.node('effectReplacement').children.at(-1).onclick();assert.equal(g.state.inks.blast,3);g.api.chooseUpgrade({...g.catalog.upgrades.find(u=>u.name==='Fire Ink'),rarity:'uncommon'},'Blast Ink');assert.equal(g.state.inks.fire,2);assert.equal(g.state.inks.blast,0);assert.ok(g.state.synergies.has('Plaguefire'));
  g.api.awardScraps(100);g.state.kills=25;g.api.awardKillScraps();g.api.awardWaveScraps();g.api.finishScrapRun(true);assert.equal(g.api.notebookSnapshot().scraps,42);
- g.api.setDevMode(false);assert.equal(g.api.devRunActive(),true,'turning off cannot rank a modified run');g.state.wave=50;g.api.gameOver();assert.equal(g.state.best,1);assert.deepEqual([...saved],[...original],'no dev-run progress writes');
+ g.api.setDevMode(false);assert.equal(g.api.devRunActive(),true,'turning off cannot rank a modified run');g.state.wave=50;g.api.gameOver();assert.equal(g.state.best,1);assert.deepEqual([...saved].filter(([key])=>key!=='saveStevieNoteDecks'),[...original].filter(([key])=>key!=='saveStevieNoteDecks'),'no dev-run progress writes');
  g.api.getUpgrade=get;g.api.resetRun();assert.equal(g.api.devRunActive(),false);g.api.awardScraps(1);assert.equal(g.api.notebookSnapshot().scraps,43,'new normal run earns progress');
  g.api.setDevMode(true);assert.equal(g.api.devRunActive(),true,'enabling mid-run marks the whole remaining run');g.api.setDevMode(false);g.api.awardScraps(10);assert.equal(g.api.notebookSnapshot().scraps,43);g.state.wave=60;g.api.gameOver();assert.equal(g.state.best,1);
  const reload=load(true,{storage}).sandbox.testGame;assert.equal(reload.api.devModeEnabled(),false,'reload defaults to normal rewards');

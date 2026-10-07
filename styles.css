@@ -640,3 +640,5 @@ button:disabled { transform:none; }
 html.native-app body{padding:0;background:#26333c}
 html.native-app #app{width:100%;max-width:none;height:100dvh;max-height:none;gap:0;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
 html.native-app .panel{border-radius:0;border:0;box-shadow:none}
+
+.signature-pencil{display:inline-block;width:40px;height:20px;vertical-align:middle;transform:rotate(-9deg);margin-left:3px}
