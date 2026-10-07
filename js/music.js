@@ -4,12 +4,13 @@ const audio=game.dom.$('gameMusic'),button=game.dom.$('musicBtn'),introButton=ga
 const tracks=game.catalog.musicTracks={
   splash:{name:'Save Stevie Splash',file:'save-stevie-splash.mp3'},
   victory:{name:'Stevie Victory',file:'stevie-victory.wav'},
+  'first-boss':{name:'King Doodle-Doom',file:'first-boss.mp3'},
   'margin-mischief':{name:'Save Stevie',file:'save-stevie.mp3'},
   'pop-quiz-panic':{name:'Pop Quiz Panic',file:'pop-quiz-panic.mp3'},
   'crayon-catastrophe':{name:'Crayon Catastrophe',file:'crayon-catastrophe.mp3'},
   'final-draft':{name:'Detention: The Final Draft',file:'final-draft.mp3'}
 };
-let muted=false,started=false,blocked=false,track='splash',playAttempt=0;
+let muted=false,started=false,blocked=false,track='splash',playAttempt=0,suspended=false;
 try{muted=localStorage.getItem(key)==='yes'}catch{}
 const supported=typeof audio.play==='function';
 audio.loop=true;
@@ -24,7 +25,7 @@ function updateMusicButton(){
   introButton.textContent=label;introButton.setAttribute?.('aria-pressed',String(!muted&&!blocked&&started));
 }
 function playMusic(){
-  if(!supported||muted||!started||document.hidden)return;
+  if(!supported||muted||!started||suspended||document.hidden)return;
   const attempt=++playAttempt;
   // Old play promises cannot overwrite a newer track or mute/visibility action.
   try{
@@ -52,6 +53,7 @@ function toggleMusic(){
   updateMusicButton();
 }
 function musicStatus(){return {muted,started,blocked,track}}
+function suspendMusic(value){suspended=!!value;if(suspended){playAttempt++;audio.pause?.()}else playMusic()}
 button.onclick=toggleMusic;introButton.onclick=toggleMusic;
 document.addEventListener?.('visibilitychange',()=>{if(document.hidden){playAttempt++;audio.pause?.()}else playMusic()});
 audio.addEventListener?.('error',()=>{blocked=true;updateMusicButton()});
@@ -64,5 +66,5 @@ function retryMusicOnGesture(event){
 document.addEventListener?.('pointerdown',retryMusicOnGesture,{capture:true});
 document.addEventListener?.('keydown',retryMusicOnGesture,{capture:true});
 startMusic('splash');
-const api={applyMusicVolume,selectMusicTrack,startSplashMusic,startMusic,toggleMusic,musicStatus};Object.assign(game.api,api);return api;
+const api={suspendMusic,applyMusicVolume,selectMusicTrack,startSplashMusic,startMusic,toggleMusic,musicStatus};Object.assign(game.api,api);return api;
 };

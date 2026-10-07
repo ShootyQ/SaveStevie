@@ -20,10 +20,10 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.evaluate(()=>{const g=testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.spawnTimer=9999;g.state.timeLeft=.1;g.api.updateUI()});
   assert.equal(await page.locator('#waveCountdown').isVisible(),true,'boss lead-in has a timer');
   await page.evaluate(()=>testGame.api.update(.2));assert.match(await page.textContent('#bossOvertime'),/arriving/);
-  const arrival=await page.evaluate(()=>testGame.api.bossArrivalSnapshot());if(viewport.width<viewport.height)assert.ok(['top','bottom'].includes(arrival.side));
+  const arrival=await page.evaluate(()=>testGame.api.bossArrivalSnapshot());if(viewport.width<viewport.height)assert.ok(['left','right'].includes(arrival.side));
   await page.evaluate(()=>testGame.api.draw());await page.screenshot({path:'/tmp/boss-arrival-'+viewport.width+'.png'});
   await page.evaluate(()=>{testGame.state.paused=true;testGame.api.update(3)});assert.equal(await page.evaluate(()=>testGame.api.bossArrivalSnapshot().left),arrival.left);
-  await page.evaluate(()=>{testGame.state.paused=false;testGame.api.update(2.4)});assert.equal(await page.locator('#waveCountdown').isVisible(),false);
+  await page.evaluate(()=>{testGame.state.paused=false;testGame.api.update(6.582)});assert.equal(await page.locator('#waveCountdown').isVisible(),false);
   const height=await page.locator('#game').evaluate(c=>c.getBoundingClientRect().height);
   for(const wave of [5,10,15,20]){
    const name=await page.evaluate(wave=>{const g=testGame;g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,g.state.player.x-110,g.state.player.y);boss.freeze=100;g.state.timeLeft=.01;g.api.update(.02);g.api.draw();return g.api.monsterName(boss.type)},wave);
@@ -32,13 +32,13 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    assert.equal(await page.locator('#game').evaluate(c=>c.getBoundingClientRect().height),height,'overtime never shrinks playfield');
    assert.equal(await page.locator('#bossOvertime').evaluate(c=>c.scrollWidth<=c.clientWidth+1),true,'objective fits phone');
    await page.screenshot({path:'/tmp/difficulty-overtime-'+wave+'-'+viewport.width+'.png'});
-   await page.evaluate(()=>{const g=testGame;g.api.killEnemy(g.state.enemies.find(e=>e.waveBoss));g.api.update(.016)});
+   await page.evaluate(()=>{const g=testGame;g.api.killEnemy(g.state.enemies.find(e=>e.waveBoss));g.api.update(.016);if(g.api.waveFinaleActive())g.api.update(2)});
    assert.equal(await page.locator(wave===20?'#victoryOverlay':'#waveOverlay').isVisible(),true);assert.equal(await page.locator('#bossOvertime').isVisible(),false);
   }
   await page.evaluate(()=>{const g=testGame;g.api.resetRun();const e=g.api.spawnEnemy(false,100,100,'grunt');e.freeze=999;g.state.timeLeft=.01;g.state.spawnTimer=0;g.api.update(.02);g.api.draw()});
   assert.equal(await page.locator('#waveCountdown').isVisible(),true);assert.match(await page.textContent('#bossOvertime'),/1 left/);assert.equal(await page.locator('#waveOverlay').isVisible(),false);
   await page.screenshot({path:'/tmp/wave-cleanup-'+viewport.width+'.png'});
-  await page.evaluate(()=>{const g=testGame;g.api.killEnemy(g.state.enemies[0]);g.api.update(.02)});assert.equal(await page.locator('#waveOverlay').isVisible(),true);
+  await page.evaluate(()=>{const g=testGame;g.api.killEnemy(g.state.enemies[0]);g.api.update(.02);if(g.api.waveFinaleActive())g.api.update(2)});assert.equal(await page.locator('#waveOverlay').isVisible(),true);
   await page.evaluate(()=>{const g=testGame;g.api.resetRun();for(const name of ['Quick Refill','Quick Refill','Living Fountain Pen','Recycling','Patch Job','Emergency Medicine','Triple Stroke'])g.api.chooseUpgrade(g.catalog.upgrades.find(u=>u.name===name));g.api.openBuild()});
   assert.match(await page.textContent('#buildStats'),/Combat healing budget/);assert.match(await page.textContent('#buildStats'),/12 HP/);assert.match(await page.textContent('#buildUpgrades'),/diminishing returns/);assert.match(await page.textContent('#buildUpgrades'),/60%/);
   await page.click('#buildNotebookBtn');assert.match(await page.locator('.notebook-earn').first().textContent(),/25 kills/);assert.match(await page.locator('.notebook-earn').first().textContent(),/Chapter-clear bonuses/);await page.click('#closeNotebookBtn');

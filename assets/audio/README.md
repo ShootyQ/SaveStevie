@@ -10,7 +10,7 @@ runtime library is needed.
 | save-stevie.mp3 | Margin Mischief, 1–5 | 359.880s | 8,542,904 |
 | pop-quiz-panic.mp3 | Pop Quiz Panic, 6–10 | 360.432s | 8,737,536 |
 | crayon-catastrophe.mp3 | Crayon Catastrophe, 11–15 | 360.432s | 8,524,472 |
-| final-draft.mp3 | Detention: The Final Draft, 16–20 / Endless | 86.424s | 2,014,829 |
+| final-draft.mp3 | Detention: The Final Draft, 16–20 / Endless | 359.832s | 7,929,239 |
 
 One audio element loops the selected track at 35% volume. Chapter transitions
 switch its source and start at zero; waves and menus within a chapter retain
@@ -43,3 +43,19 @@ Bubble source filenames: 539823/539822/539820/539819,
 no source license metadata was provided with these uploads.
 The bubble grains start at 2.9/5.7/1.7/0.5 seconds respectively, around audible
 bursts rather than the quiet lead-ins. Original WAV files remain unchanged.
+
+## First boss entrance
+
+`first-boss.mp3` is the supplied First Boss (1) song (178.800 seconds), looping
+only during King Doodle-Doom's wave-5 battle. `final-draft.mp3` is replaced by
+Detention: The Final Draft (1), 359.832 seconds, for waves 16–20/Endless.
+Both uploads are copied unchanged.
+
+After wave 5's timed fight and survivor cleanup, gameplay freezes for the
+King's side entrance. Music is suspended without changing saved mute. The
+supplied `effects/first-boss-stomp.wav` plays during the 3.375-second walk-in,
+then `effects/first-boss-roar.wav` during the 2.757-second roar. A 0.45-second
+shockwave clears drawn walls without explosions or rewards, and the boss
+battle starts with the new music. Pause freezes the sequence; interrupted
+entrance sounds resume at their current position. Reduced motion removes
+zooming and hopping. Returning to the menu or restarting cancels the entrance.
