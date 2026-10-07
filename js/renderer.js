@@ -150,6 +150,11 @@ function updateEnemyAnimations(dt){
     // enemy coordinates, attack timers, damage, or the combat random stream.
     if(moving&&(e.type==='fast'||e.type==='mini')){p.angle+=m.facing*.09;p.sx+=step*.05;p.sy-=step*.05;}
     if(moving&&e.type==='grunt'&&!doodles['grunt-frame-0']){p.sx+=step*.035;p.sy-=step*.035;}
+    if(e.type==='boss'&&game.api.isFirstBoss(e)){
+      const brain=game.api.bossBrain(e);
+      if(brain.recovery>0){p.angle-=.24;p.sx+=.1;p.sy-=.14;p.y+=4;p.x+=Math.sin(brain.recovery*9)*1.5}
+      else if(brain.cast){const ready=1-brain.cast.left/1.2;p.sx+=ready*.08;p.sy-=ready*.08;p.angle+=Math.sin(ready*Math.PI)*.07}
+    }
     if(e.type==='bouncer'){
       if(moving){p.y-=Math.abs(step)*2;p.sx+=step*.08;p.sy-=step*.08;}
       if(m.action==='bounce'&&m.actionAge<.16){
@@ -536,6 +541,7 @@ function draw(){
   }
   game.api.drawBossEncounters();
   for(const shot of game.state.enemyShots){
+    if(shot.owner){game.api.drawFirstBossShot(shot);continue}
     const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));
     const image=doodles.arrow;
     // The front tip stays on the projectile collision point; the visible shaft

@@ -73,11 +73,11 @@ function dealDamage(enemy,amount,kind='physical'){
     if(enemy.immuneCd<=0){game.api.floatText(enemy.x,enemy.y-enemy.r-8,'IMMUNE '+kind.toUpperCase(),damageStyles[kind]?.color||'#7740a0');enemy.immuneCd=1.1}
     return;
   }
-  amount*=game.api.gravityDamageMultiplier(enemy)*Math.max(game.api.bossDamageMultiplier(enemy),game.api.loopDamageMultiplier(enemy));
+  if(kind!=='reflected')amount*=game.api.gravityDamageMultiplier(enemy)*Math.max(game.api.bossDamageMultiplier(enemy),game.api.loopDamageMultiplier(enemy));
   if(enemy.type==='bulwark'&&kind==='physical'&&amount>0)amount*=.35;
   const death=game.state.stacks['Death Ink']||0;
   if(kind==='physical'&&death>0&&enemy.hp<=enemy.maxHp*.5)amount*=1+Math.min(.4,.16+.04*death);
-  amount=game.api.limitBossDamage(enemy,Math.max(0,amount));
+  amount=game.api.limitBossDamage(enemy,Math.max(0,amount),kind);
   const before=enemy.hp,actual=Math.min(Math.max(0,before),amount);
   enemy.hp-=amount;
   if(actual>0){if(kind==='physical'&&game.state.stacks['Death Ink']>0)game.api.animateInkAccent(enemy,'death');game.api.reactEnemyHit(enemy);if(kind==='void')game.api.animateVoidHit(enemy)}

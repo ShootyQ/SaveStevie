@@ -106,7 +106,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(forceBoss)type=game.api.bossTypeForWave();
   const scale=game.api.enemyHpScale()*game.state.stats.enemyScale;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
-  const earlyBoss=forceBoss&&(game.state.wave===5||game.state.wave===10),bossHp=earlyBoss?1.8:1,bossSpeed=earlyBoss?2:1;
+  const earlyBoss=forceBoss&&(game.state.wave===5||game.state.wave===10),bossHp=earlyBoss?1.8:1,bossSpeed=forceBoss&&game.state.wave===5?5.3:earlyBoss?2:1;
   const enemy={
     x:px,y:py,type,r:d.r,hp:baseHp*scale*bossHp,maxHp:baseHp*scale*bossHp,speed:d.speed*(1+game.state.wave*.006)*bossSpeed,
     dmg:d.dmg,color:d.color,attackCd:0,shootCd:game.api.rand(1.3,2.1),stun:0,burn:0,burnDps:0,
@@ -220,6 +220,7 @@ function fireSniper(e){
 function updateEnemyShots(dt){
   const remaining=[];
   for(const shot of game.state.enemyShots){
+    if(shot.owner){if(game.api.updateFirstBossShot(shot,dt))remaining.push(shot);continue}
     const step=Math.min(dt,Math.max(0,shot.life)),dx=shot.vx*step,dy=shot.vy*step;
     const nx=shot.x+dx,ny=shot.y+dy,player=game.state.player;
     const px=shot.x-player.x,py=shot.y-player.y,a=dx*dx+dy*dy,b=2*(px*dx+py*dy),c=px*px+py*py-(player.r+shot.r)**2;
@@ -275,7 +276,7 @@ function bossArrivalSnapshot(){return arrival?{...arrival}:null}
 function refreshBossArrival(){if(arrival)arrival={...bossSpawnPoint(),left:arrival.left}}
 function updateBossArrival(dt){
  if(bossSpawned||game.state.enemies.some(e=>e.hp>0))return;
- if(!arrival){arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+' is coming. Build your enclosure!');return}
+ if(!arrival){arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
  arrival.left=Math.max(0,arrival.left-dt);
  if(arrival.left===0){const point={...arrival};game.api.spawnEnemy(true,point.x,point.y);game.api.setMsg('Boss encounter. Defeat '+game.api.monsterName(game.api.bossTypeForWave())+'!')}
 }
