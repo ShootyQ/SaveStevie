@@ -3,6 +3,13 @@
   "appName": "Save Stevie",
   "webDir": "_android_web",
   "android": {
-    "backgroundColor": "#26333c"
+    "backgroundColor": "#f7f1df"
+  },
+  "plugins": {
+    "SystemBars": {
+      "hidden": true,
+      "insetsHandling": "css",
+      "initialViewportFitValueHint": "cover"
+    }
   }
 }

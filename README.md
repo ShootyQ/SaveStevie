@@ -902,3 +902,37 @@ lobs, pause/death/resize, all four boss browser checks and Android packaging.
 Full fights with the starting kit and paid defensive strokes finish in roughly
 92–110 seconds in desktop, portrait and landscape simulations. These checks
 establish that the fight is winnable; human playtests will guide further tuning.
+
+Android now starts with the native layout already applied in its bundled HTML,
+uses edge-to-edge paper with no browser gutters or arena borders, and overlays a
+52dp pencil tray instead of reserving a separate toolbar row. The redundant
+browser Fullscreen control is hidden. HUD, dialogs and controls use the maximum
+of WebView safe-area values and Capacitor's injected CSS insets, avoiding double
+padding while keeping them clear of cutouts. Chapter-paper footer art ends above
+the tray so its doodles stay visible. SystemBars is explicitly configured hidden
+at startup (its default could show bars after the activity's hide call), and the
+native bridge hides them again on foregrounding. Transient swipe access remains.
+
+Settings → **Test a wave / boss** opens the scratch-page setup. Choose a wave
+(1–200), Full wave or Boss only, a drawing tool, and upgrade entries with rarity
+and copies (1–25). The four boss shortcuts select waves 5/10/15/20 in Boss-only
+mode. Boss-only starts with a visible boss and skips both the timed fight and
+off-page approach. Wave 21+ uses Endless scaling. Permanent Notebook stat bonuses
+are optional and off by default; the selected test tool supplies its real slot
+count independently of the saved tool rank.
+
+Starting builds use the same `applyUpgrade` helper as reward picks, including
+one-time unlocks, caps, rarity levels and synergies, without advancing the wave.
+Preflight rejects invalid waves, lower-tier Triple Stroke, duplicate one-time
+unlocks and effect-slot overflow before replacing the live run. The setup warns
+that a test replaces the current run; already banked scraps remain intact.
+**Repeat last test** rebuilds the same selected setup with full HP/ink. Setups
+remain session-local. Test runs stay unranked even if manual rewards are later
+disabled; starting a fresh normal run restores the saved Notebook loadout.
+
+`tests/browser-test-lab.cjs` checks actual setup controls, full-display canvas,
+cutout-safe HUD/tray, rotated layouts, boss/full-wave starts, repeated builds and
+protected records at desktop and phone sizes. `tests/validate.cjs` also checks
+atomic rejection, genuine upgrade application, optional perks and normal reset.
+Native system-bar behavior should be playtested with a newly built Android app;
+updating GitHub Pages does not update an installed Android bundle.

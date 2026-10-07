@@ -7,4 +7,4 @@ require('esbuild').buildSync({entryPoints:[path.join(root,'scripts/android-bridg
 const notices=['core','android','app'].map(name=>'@capacitor/'+name+'\n'+fs.readFileSync(path.join(root,'node_modules/@capacitor',name,'LICENSE'),'utf8')).join('\n\n');
 fs.writeFileSync(path.join(output,'android-open-source-notices.txt'),notices);
 const html=path.join(output,'index.html');
-fs.writeFileSync(html,fs.readFileSync(html,'utf8').replace('</body>','<script src="android-bridge.js"></script>\n</body>'));
+fs.writeFileSync(html,fs.readFileSync(html,'utf8').replace('<html lang="en"', '<html class="native-app" lang="en"').replace('</body>','<script src="android-bridge.js"></script>\n</body>'));

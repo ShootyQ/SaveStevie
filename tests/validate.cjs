@@ -1400,3 +1400,20 @@ console.log('PASS: three first-boss attacks, sideways curved flight, swept wall 
  }
  console.log('PASS: full first-boss fights with paid wall returns and no damage upgrades '+JSON.stringify(results));
 }
+
+// Scratch-page setup applies genuine upgrade levels without advancing waves or saves.
+{
+ const saved=new Map([['doodleDefenderBestV4','7'],['saveStevieNotebookV1',JSON.stringify({version:1,scraps:90,lifetimeScraps:100,levels:{tool:6,inkTank:2,health:1}})]]),storage={getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v))};
+ const env=load(true,{storage}),g=env.sandbox.testGame,original=[...saved];
+ const base={wave:20,phase:'boss',toolRank:6,notebook:false,upgrades:[{name:'Fire Ink',rarity:'rare',copies:2},{name:'Poison Ink',rarity:'uncommon',copies:3},{name:'Pocket Rocks',rarity:'common',copies:2},{name:'Triple Stroke',rarity:'legendary',copies:1}]};
+ assert.equal(g.api.startTestRun(base),true);assert.equal(g.state.wave,20);assert.equal(g.state.timeLeft,0);assert.equal(g.state.enemies.length,1);assert.equal(g.state.enemies[0].type,'eraser');assert.ok(g.state.enemies[0].x>0&&g.state.enemies[0].x<g.state.W&&g.state.enemies[0].y>0&&g.state.enemies[0].y<g.state.H,'boss-only test starts with a visible boss');assert.equal(g.api.bossWavePhase(),'fight');assert.equal(g.api.devRunActive(),true);assert.equal(g.api.testLabActive(),true);
+ assert.equal(g.state.stacks['Fire Ink'],6);assert.equal(g.state.stacks['Poison Ink'],6);assert.equal(g.state.stacks['Pocket Rocks'],2);assert.equal(g.state.stats.tripleLine,true);assert.ok(g.state.synergies.has('Plaguefire'));assert.equal(g.state.tool.slots,3);assert.equal(g.state.player.maxHp,75);assert.equal(g.state.stats.maxInk,160);assert.deepEqual([...saved],original,'setup does not write progression');
+ const snapshot=JSON.stringify(g.state);assert.equal(g.api.startTestRun({...base,wave:19}),false);assert.equal(JSON.stringify(g.state),snapshot,'invalid boss selection leaves the live run intact');assert.equal(g.api.startTestRun({...base,toolRank:0,upgrades:[...base.upgrades,{name:'Electric Ink',rarity:'common',copies:1}]}),false);assert.equal(JSON.stringify(g.state),snapshot,'slot overflow is rejected before reset');assert.equal(g.api.startTestRun({...base,upgrades:[{name:'Triple Stroke',rarity:'common',copies:1}]}),false);assert.equal(g.api.startTestRun({...base,upgrades:[{name:'Loaded Deck',rarity:'common',copies:2}]}),false);
+ g.state.player.hp=1;g.state.inks.fire=99;env.node('repeatTestBtn').onclick();assert.equal(g.state.player.hp,75);assert.equal(g.state.inks.fire,6);assert.equal(g.state.wave,20);assert.equal(g.state.enemies.length,1);
+ g.api.setDevMode(false);g.api.awardScraps(100);g.state.wave=90;g.api.gameOver();assert.equal(g.state.best,7);assert.deepEqual([...saved].filter(([k])=>k!=='saveStevieNoteDecks'),original,'turning dev off cannot rank a scratch run');
+ assert.equal(g.api.startTestRun({...base,wave:14,phase:'wave',notebook:true,upgrades:[]}),true);assert.equal(g.state.wave,14);assert.equal(g.state.enemies.length,0);assert.equal(g.state.timeLeft,60);assert.equal(g.state.stats.maxInk,200);assert.equal(g.state.player.maxHp,83);assert.equal(g.state.tool.rank,6);
+ assert.equal(g.api.startTestRun({...base,wave:25,phase:'boss',upgrades:[]}),true);assert.equal(g.state.endless,true);assert.equal(g.state.enemies[0].type,'boss');
+ assert.equal(g.api.startTestRun({...base,wave:0}),false);assert.equal(g.api.startTestRun({...base,wave:201}),false);assert.equal(g.api.startTestRun({...base,wave:NaN}),false);
+ g.api.setDevMode(false);g.api.resetRun();assert.equal(g.api.testLabActive(),false);assert.equal(g.api.devRunActive(),false);assert.equal(g.state.tool.rank,6);assert.equal(g.state.stats.maxInk,200);
+ console.log('PASS: instant chosen boss/full wave, genuine multi-tier builds/synergies/unlocks, fresh repeats, tool slots/caps, preflight rejection, optional saved perks, endless, reset and protected progression.');
+}

@@ -242,7 +242,17 @@
     </section>
     <section class="option-section"><h3>How you play</h3><label class="monster-setting"><input id="optionsIntros" type="checkbox" checked> Introduce new monsters before a wave</label><p class="option-help">Motion follows your device’s reduced-motion setting. Open Tool any time to pause and inspect your pencil, effects, and synergies.</p></section>
     <div class="options-links"><button class="secondary" id="optionsStatsBtn">Notebook stats</button><button class="secondary" id="changelogBtn">What’s new</button></div>
-    <section class="dev-mode-section"><button class="secondary dev-mode-button" id="devModeBtn" aria-pressed="false">DEV MODE</button><p id="devModeNote" class="option-help"></p></section>
+    <section class="dev-mode-section"><button class="secondary dev-mode-button" id="devModeBtn" aria-pressed="false">DEV MODE</button><p id="devModeNote" class="option-help"></p><button class="secondary" id="testLabBtn" aria-expanded="false" aria-controls="testLabPanel">Test a wave / boss</button>
+      <section id="testLabPanel" class="test-lab" hidden aria-labelledby="testLabTitle">
+        <h3 id="testLabTitle">The scratch page</h3><p class="option-help">Jump straight into a fight with your own build. Test runs save no scraps or records. Starting a test replaces your current run; already banked scraps stay saved.</p>
+        <div class="test-presets" aria-label="Boss shortcuts"><button type="button" data-test-wave="5">King · 5</button><button type="button" data-test-wave="10">Stapler · 10</button><button type="button" data-test-wave="15">Crayon · 15</button><button type="button" data-test-wave="20">Eraser · 20</button></div>
+        <div class="test-fields"><label>Wave<input id="testWave" type="number" min="1" max="200" step="1" value="5"></label><label>Start at<select id="testPhase"><option value="wave">Full wave</option><option value="boss">Boss only</option></select></label><label>Drawing tool<select id="testTool"><option value="0">Pencil · 2 slots</option><option value="3">Mechanical pencil · 2 slots</option><option value="6">Simple pen · 3 slots</option><option value="10">Scented Sharpie · 4 slots</option></select></label></div>
+        <label class="monster-setting"><input id="testNotebook" type="checkbox"> Include my permanent Notebook stat bonuses</label>
+        <h4>Starting upgrades</h4><p class="option-help">Add an upgrade, choose its rarity, and set how many copies to take. Slot limits, caps and one-time unlocks apply.</p>
+        <div class="test-fields"><label>Upgrade<select id="testUpgrade"></select></label><label>Rarity<select id="testRarity"><option value="common">Common · +1</option><option value="uncommon">Uncommon · +2</option><option value="rare">Rare · +3</option><option value="legendary">Legendary · +4</option></select></label><label>Copies<input id="testCopies" type="number" min="1" max="25" value="1"></label></div>
+        <button type="button" id="addTestUpgrade" class="secondary">Add to build</button><div id="testLoadout" class="test-loadout" aria-live="polite"></div>
+        <p id="testLabNotice" class="option-help" role="status"></p><div class="cardactions"><button id="startTestBtn">Start test →</button><button id="repeatTestBtn" class="secondary" hidden>Repeat last test</button><button id="clearTestBuildBtn" class="secondary">Clear build</button></div>
+      </section></section>
     <p id="optionsStorageNote" class="save-note" role="status"></p>
   </div>
 </div>
@@ -293,6 +303,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Full-page Android, instant test fights</h3><p>Android uses immersive edge-to-edge paper with a compact pencil tray and safe controls around camera cutouts. Settings → Test a wave / boss lets you choose a wave, jump directly to a boss, pick your drawing tool, and assemble upgrades with rarities and copies. Repeat a test without rebuilding its loadout; test runs do not save scraps or records.</p></article>
       <article class="build-entry"><h3>King Doodle learns three tricks</h3><p>The first boss darts around the perimeter. Draw walls to return his big orb or twin sideways arcing shots; each return knocks him down for a three-second damage opening. Marked paper bombs break cover without damaging Stevie. His guard reduces ordinary damage between openings, and the monster notebook explains the new fight.</p></article>
       <article class="build-entry"><h3>Gribble has a temper</h3><p>The first red scribble monster now has custom frame-by-frame walking and wall-bashing tantrum animations. Stevie leaves 50 different win or defeat notes, rotating through each set before repeating, and signs them with a little pencil.</p></article>
       <article class="build-entry"><h3>Bosses arrive after the bell</h3><p>Boss waves start with a timed fight and cleanup, then a paper-edge warning announces the untimed boss encounter. Portrait bosses enter from the top or bottom with room to approach. Real enclosures earn a damage window before a warned breakout; body scribbles get torn away and boss damage has a shared budget.</p></article>
@@ -467,6 +478,7 @@
 <script src="js/support-inks.js"></script>
 <script src="js/boss-encounters.js"></script>
 <script src="js/upgrades.js"></script>
+<script src="js/test-lab.js"></script>
 <script src="js/renderer.js"></script>
 <script src="js/loop.js"></script>
 <script src="js/input.js"></script>
