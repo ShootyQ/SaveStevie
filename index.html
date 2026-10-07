@@ -82,18 +82,21 @@
     <div class="overlay" id="upgradeOverlay" style="display:none">
       <div class="cardbox reward-workbench">
         <div class="reward-heading"><div><span class="section-kicker">BETWEEN THE PAGES</span><h2 id="rewardTitle">Upgrade your pencil</h2></div><button class="secondary" id="inspectToolBtn">Inspect tool</button></div>
-        <p id="rewardText">Pick one. Build weird.</p>
-        <section id="rewardTool" class="tool-panel" aria-label="Your drawing tool"></section>
-        <p class="reward-help">Pick one card. Equipped effects gain 1–4 levels based on rarity; a new effect fills a slot or replaces one you choose. Tank, health, and other utility upgrades stay outside your slots.</p>
-        <p id="rewardLuck" class="reward-luck"></p>
-        <details id="rewardLuckGuide" class="luck-guide"><summary>What does Luck do?</summary><p id="rewardLuckDetails"></p><p>Equipped effects are favored so you can grow your build. Luck improves other rarity rolls; your specialization and Collector weight the choices. Legendary offers have a separate one-in-ten campaign chance.</p></details>
+        <p id="rewardText">Tap a card to inspect it.</p>
+        <details class="reward-build"><summary>Your pencil &amp; effects</summary><section id="rewardTool" class="tool-panel" aria-label="Your drawing tool"></section></details>
+        <details class="reward-rules"><summary>Rarity &amp; Luck</summary><p class="reward-help">Effects gain 1–4 levels by rarity and use pencil slots. Utilities stay outside your slots. Special unlocks are one-time.</p><p id="rewardLuck" class="reward-luck"></p><details id="rewardLuckGuide" class="luck-guide"><summary>How Luck works</summary><p id="rewardLuckDetails"></p></details></details>
         <section id="devRewardPicker" class="dev-reward-picker" hidden aria-label="Choose a dev reward">
           <label for="devUpgrade">Upgrade<select id="devUpgrade"></select></label>
           <label for="devRarity">Rarity<select id="devRarity"><option value="common">Common · +1 level</option><option value="uncommon">Uncommon · +2 levels</option><option value="rare">Rare · +3 levels</option><option value="legendary">Legendary · +4 levels</option></select></label>
           <p>Choose below to take the upgrade. Slot limits, caps and one-time unlocks still apply.</p>
         </section>
+        <div class="cards" id="cards" aria-label="Upgrade choices"></div>
+        <section id="upgradeDetails" class="upgrade-details" hidden aria-labelledby="upgradeDetailsTitle">
+          <div class="upgrade-detail-heading"><h3 id="upgradeDetailsTitle">Upgrade details</h3><button class="secondary" id="closeUpgradeDetails" aria-label="Close upgrade details">Close</button></div>
+          <div id="upgradeDetailsBody"></div>
+          <button id="takeUpgradeBtn" disabled>Take upgrade</button>
+        </section>
         <div id="effectReplacement" class="effect-replacement" hidden aria-live="polite"></div>
-        <div class="cards" id="cards"></div>
         <div id="synergyNote"></div>
         <div class="cardactions">
           <button class="secondary" id="rerollBtn">Reroll (<span id="rerolls">1</span>)</button>
@@ -306,6 +309,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Little cards, big doodles</h3><p>Upgrade choices are smaller, with custom artwork for every effect, utility and unlock. Hover or tap a card to see its description and exact changes, then use Take upgrade to pick it. Pencil details and rarity help fold away so the choices stay clear.</p></article>
       <article class="build-entry"><h3>Less waiting, more Doodle trouble</h3><p>King Doodle brings helpers more often, with up to six alive. Paper Pop has a shorter warning and faster flight. He sprints to helpers farther from Stevie and holds them briefly before throwing, so each toss gains meaningful ground. Landing spots still give you room to defend.</p></article>
       <article class="build-entry"><h3>Zoom Nugget finds his feet</h3><p>Zoom Nugget has custom left- and right-facing run cycles with swinging arms, alternating sneakers and bouncing hair. He turns with his movement, slows his stride when chilled, and holds still when frozen or stunned. Removed Permanent Marker and Archival Ink from upgrades: longer wall lifetime was rarely useful.</p></article>
       <article class="build-entry"><h3>A clearer cover</h3><p>The main menu has three clear buttons: Play, Notebook and Settings. One short instruction replaces the extra notes and cards. Saved scraps, monsters and scores are in Notebook; music playback is in Settings. Stevie’s paper scraps and animated doodles stay.</p></article>

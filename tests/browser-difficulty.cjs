@@ -42,8 +42,8 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.evaluate(()=>{const g=testGame;g.api.resetRun();for(const name of ['Quick Refill','Quick Refill','Living Fountain Pen','Recycling','Patch Job','Emergency Medicine','Triple Stroke'])g.api.chooseUpgrade(g.catalog.upgrades.find(u=>u.name===name));g.api.openBuild()});
   assert.match(await page.textContent('#buildStats'),/Combat healing budget/);assert.match(await page.textContent('#buildStats'),/12 HP/);assert.match(await page.textContent('#buildUpgrades'),/diminishing returns/);assert.match(await page.textContent('#buildUpgrades'),/60%/);
   await page.click('#buildNotebookBtn');assert.match(await page.locator('.notebook-earn').first().textContent(),/25 kills/);assert.match(await page.locator('.notebook-earn').first().textContent(),/Chapter-clear bonuses/);await page.click('#closeNotebookBtn');
-  await page.evaluate(()=>{const g=testGame;g.state.wave=1;const names=['Quick Refill','Recycling','Patch Job'];let i=0;g.api.getUpgrade=()=>g.catalog.upgrades.find(u=>u.name===names[i++%3]);g.api.openUpgrade()});
-  assert.match(await page.textContent('#cards'),/smaller bonuses/);assert.equal(await page.locator('#cards .ucard').evaluateAll(cards=>cards.every(c=>c.scrollWidth<=c.clientWidth+1)),true);
+  await page.evaluate(()=>{const g=testGame;g.state.wave=1;const names=['Quick Refill','Recycling','Patch Job'];let i=0;g.api.getUpgrade=()=>{const name=names[i++%3];return {...g.catalog.upgrades.find(u=>u.name===name),rarity:'common'};};g.api.openUpgrade()});
+  await page.locator('#cards .ucard').first().click();assert.match(await page.textContent('#upgradeDetailsBody'),/smaller bonuses/);assert.equal(await page.locator('#cards .ucard').evaluateAll(cards=>cards.every(c=>c.scrollWidth<=c.clientWidth+1)),true);
   assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' timed boss lead-ins, paused arrivals, native fullscreen, untimed encounters and cleanup, stable playfield, accurate Build/regeneration/budget/Notebook text and reward-card fit');await page.close();
  }
  await browser.close();

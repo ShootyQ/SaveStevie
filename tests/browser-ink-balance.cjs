@@ -28,7 +28,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    });assert.equal(results.repulsion.hp,988);assert.equal(results.repulsion.moved,true);assert.ok(results.void.hp<=0);assert.equal(results.chaos.hp,984);
    await page.evaluate(()=>{testGame.api.setDevMode(true);testGame.api.openUpgrade()});
    for(const [name,phrase] of [['Repulsion Ink','impact damage'],['Void Ink','executes ordinary'],['Chaos Ink','every roll works'],['Death Ink','half health']]){
-    await page.selectOption('#devUpgrade',name);await page.selectOption('#devRarity','rare');assert.match(await page.textContent('#cards'),new RegExp(phrase));
+    await page.selectOption('#devUpgrade',name);await page.selectOption('#devRarity','rare');await page.locator('#cards .ucard').first().click();assert.match(await page.textContent('#upgradeDetailsBody'),new RegExp(phrase));
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth&&Array.from(document.querySelectorAll('.ucard')).every(c=>c.scrollWidth<=c.clientWidth+1)),true);
    }
    assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' rebalanced Repulsion/Void/Chaos combat and fitting rarity previews');await page.close();

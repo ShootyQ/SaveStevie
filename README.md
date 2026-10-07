@@ -643,7 +643,7 @@ changes, burnout, resizing and fresh-wave reset at desktop and phone sizes.
 Open **Options → DEV MODE** to choose an upgrade and its rarity on each wave's
 reward screen. The dropdown includes every currently available effect and
 utility; the preview shows its full gain. Select Common (+1), Uncommon (+2),
-Rare (+3), or Legendary (+4), then take the preview card. Normal effect slots,
+Rare (+3), or Legendary (+4), then inspect the preview card and press **Take upgrade**. Normal effect slots,
 replacement/cancellation, stat caps and one-time unlock rules still apply.
 Boss rewards also allow manual choices. Enemy behavior and combat still play
 normally; this bypasses reward randomness rather than all combat randomness.
@@ -1015,3 +1015,23 @@ Interrupting the boss, killing/freezing/stunning the helper, invalidating the
 landing or removing the owner prevents the throw without a persistent held flag.
 The full-fight regression uses efficient helper strokes and lets lethal burns
 finish instead of wasting more ink on doomed helpers.
+
+## Illustrated upgrade choices
+
+All 41 upgrades have custom colored-pencil artwork. Small reward cards show
+the name, rarity and level gain; hover or tap one to inspect its description,
+exact before/after values and slot requirements. Use the separate **Take**
+button to commit, or **Choose replacement** when every effect slot is full.
+Enter/Space opens details and focuses the confirmation; Escape/Close returns
+to the cards. Rerolling or changing a dev choice clears the previous preview.
+Pencil/build and rarity help are expandable to keep the initial screen small.
+
+The three transparent sheets in `assets/art/upgrades/gallery-*.png` contain one
+illustration per upgrade. `upgradeArtworkInfo` maps each name to its cell;
+`upgradeArtworkMarkup` clips the same illustration in cards and pencil sockets.
+Older art is retained as a missing-image fallback. Rewards, progression and
+combat balance use the existing upgrade system.
+
+Run `node tests/browser-upgrade-gallery.cjs` with Playwright/Chromium for all
+41 previews and images, touch/hover/keyboard confirmation, canceled inspection,
+stale rerolls, four boss choices, narrow layouts and image fallback.

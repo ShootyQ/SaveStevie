@@ -773,3 +773,53 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 #startOverlay .splash-art{background:url('assets/art/ui/menu-scrap.png') center/100% 145% no-repeat;border-radius:0;box-shadow:none}
 .pause-book .pause-summary{font-size:18px;padding:10px;margin:10px 0}
 .pause-actions .option-help.paper-slip{padding:10px;font-size:16px}
+
+/* Illustrated upgrade gallery: scan small cards, inspect once, then confirm. */
+.upgrade-illustration{position:relative;display:inline-block;width:var(--illustration-size,64px);height:var(--illustration-size,64px);flex:0 0 var(--illustration-size,64px);overflow:hidden;vertical-align:middle}
+.upgrade-illustration > img.upgrade-art{position:absolute;display:block;max-width:none!important;margin:0!important;float:none;object-fit:fill;border:0;border-radius:0}
+.tool-slot .upgrade-illustration{grid-column:1;grid-row:1 / span 3}
+.tool-socket .upgrade-illustration{width:80%;height:80%;flex-basis:auto}
+.reward-workbench{width:min(100%,820px)}
+.reward-workbench .reward-heading h2{font-family:'Stevie Pencil',cursive;font-size:32px;line-height:1.05}
+.reward-build,.reward-rules{border:0;background:none;padding:0;margin:8px 0;font-size:12px;text-align:left}
+.reward-build > summary,.reward-rules > summary{padding:7px 0;cursor:pointer;color:#536167;min-height:30px}
+.reward-build[open] .tool-panel{margin:8px 0 14px}
+.reward-workbench #cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 10px}
+.reward-workbench #cards.four{grid-template-columns:repeat(4,minmax(0,1fr))}
+.reward-workbench #cards.dev-preview{grid-template-columns:minmax(0,160px);justify-content:center}
+.reward-workbench #cards .ucard{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:6px;text-align:center;min-width:0;min-height:170px;padding:10px 7px;margin:0;cursor:pointer;-webkit-tap-highlight-color:transparent;box-shadow:0 3px 0 #c8bca144;transition:background .12s,border-color .12s}
+.reward-workbench #cards .ucard .upgrade-illustration{display:block;--illustration-size:72px!important}
+.reward-workbench #cards .ucard h3{font-size:15px;line-height:1.15;margin:0;min-height:34px;overflow-wrap:break-word;padding:0}
+.reward-workbench #cards .ucard .rarity{font-size:9px;line-height:1.2;letter-spacing:.2px;margin:0;float:none;padding:0}
+.reward-workbench #cards .card-level{font-size:11px;line-height:1.2;color:#5c645d;margin-top:auto}
+.reward-workbench #cards .ucard.selected{outline:2px solid #456849;outline-offset:2px;background:#f2f7e9}
+.reward-workbench #cards .ucard:focus-visible{outline:3px dashed #3562be;outline-offset:3px}
+.upgrade-details{padding:14px;border:1px solid #c5b88f;background:#fffdf5;border-radius:10px;text-align:left;margin:16px 0 12px;scroll-margin:12px}
+.upgrade-details[hidden]{display:none}
+.upgrade-detail-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.upgrade-detail-heading h3{font-family:'Stevie Pencil',cursive;font-size:26px;margin:0;line-height:1.05}
+.upgrade-detail-heading button{min-height:44px;padding:6px 10px;font-size:12px;flex-shrink:0;margin:0}
+.upgrade-detail-intro{display:flex;gap:12px;align-items:center}
+.upgrade-detail-intro p{margin:6px 0;font-size:13px;line-height:1.45}
+.upgrade-detail-intro .rarity{font-size:11px;text-transform:capitalize;color:#667067}
+.upgrade-details .reward-change{margin:12px 0;padding:10px;clear:both}
+.upgrade-details .change-values strong{font-size:18px}
+.upgrade-details .effect-comparison{gap:7px;margin:10px 0}
+.upgrade-details .effect-comparison p{text-align:left;margin:0;font-size:12px;line-height:1.45}
+.upgrade-details .slot-hint,.upgrade-details .reward-synergy{font-size:12px;line-height:1.4;margin:10px 0}
+.upgrade-details .reward-synergy{color:#735597}
+#takeUpgradeBtn{display:block;min-height:48px;width:100%;margin:12px 0 0;font-size:16px;white-space:normal}
+.reward-workbench .cardactions{margin-top:10px}.reward-workbench .cardactions button{min-height:44px;margin:0}
+@media(max-width:600px){
+ .reward-workbench{padding:14px 12px}
+ .reward-workbench .reward-heading h2{font-size:27px}
+ .reward-workbench #cards{gap:7px}
+ .reward-workbench #cards.four{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .reward-workbench #cards .ucard{min-height:145px;padding:8px 5px;gap:5px}
+ .reward-workbench #cards .ucard .upgrade-illustration{--illustration-size:58px!important}
+ .reward-workbench #cards .ucard h3{font-size:13px;min-height:30px}
+ .reward-workbench #cards .ucard .rarity{font-size:9px}
+ .reward-workbench #cards .card-level{font-size:10px}
+ .upgrade-details{padding:12px}.upgrade-detail-heading h3{font-size:24px}
+}
+@media(prefers-reduced-motion:reduce){.reward-workbench #cards .ucard{transition:none}}

@@ -37,7 +37,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    g.api.chooseUpgrade(u('Poison Ink'));g.api.chooseUpgrade(u('Fire Ink'));
    let cursor=0;const names=['Poison Ink','Bigger Ink Tank','First Aid'];g.api.getUpgrade=()=>u(names[cursor++%names.length]);g.state.legendaryWave=0;g.api.openUpgrade();
   });
-  assert.match(await page.textContent('#cards'),/NOW/);assert.match(await page.textContent('#cards'),/AFTER/);
+  await page.locator('#cards .ucard').first().click();assert.match(await page.textContent('#upgradeDetailsBody'),/NOW/);assert.match(await page.textContent('#upgradeDetailsBody'),/AFTER/);
   await page.waitForFunction(()=>document.querySelector('.instrument-art').naturalWidth>0,null,{polling:50});
   const wave=await page.evaluate(()=>testGame.state.wave);
   await page.click('#inspectToolBtn');assert.equal(await page.locator('#buildOverlay').isVisible(),true);

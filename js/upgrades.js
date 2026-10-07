@@ -63,16 +63,16 @@ function toolIllustration(rank,sockets=''){
   return `<div class="instrument-hero tool-tier-art" style="--art-offset:${toolArt(rank).offset}%;--art-height:${toolArt(rank).height};--art-image-height:${1024/toolArt(rank).height*100}%" aria-hidden="true"><img class="instrument-art" src="assets/art/tools/tool-tiers.png${query}" alt="">${sockets}</div>`;
 }
 function renderTool(id){
-  const tool=game.state.tool,effects=equippedEffects(),version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
+  const tool=game.state.tool,effects=equippedEffects();
 
   const slots=Array.from({length:tool.slots},(_,i)=>{
-    const u=effects[i];return `<div class="tool-slot"><span class="slot-number">SLOT ${i+1}</span>${u?`<img src="${game.api.upgradeArtwork(u)}${query}" alt="" width="32" height="32"><strong>${u.name}</strong><span>Level ${game.state.stacks[u.name]}</span>`:'<strong>Empty socket</strong><span>Find your first effect</span>'}</div>`;
+    const u=effects[i];return `<div class="tool-slot"><span class="slot-number">SLOT ${i+1}</span>${u?`${upgradeArtworkMarkup(u,32)}<strong>${u.name}</strong><span>Level ${game.state.stacks[u.name]}</span>`:'<strong>Empty socket</strong><span>Find your first effect</span>'}</div>`;
   }).join('');
   const sockets=Array.from({length:tool.slots},(_,i)=>{
-    const u=effects[i];return `<span class="tool-socket" style="--socket-x:${toolArt(tool.rank).sockets[i]}%;--socket-y:${toolArt(tool.rank).y}%">${u?`<img src="${game.api.upgradeArtwork(u)}${query}" alt=""><span class="socket-level">${game.state.stacks[u.name]}</span>`:'<span class="socket-plus">+</span>'}</span>`;
+    const u=effects[i];return `<span class="tool-socket" style="--socket-x:${toolArt(tool.rank).sockets[i]}%;--socket-y:${toolArt(tool.rank).y}%">${u?`${upgradeArtworkMarkup(u,24)}<span class="socket-level">${game.state.stacks[u.name]}</span>`:'<span class="socket-plus">+</span>'}</span>`;
   }).join('');
   const synergies=game.catalog.synergyDefs.filter(d=>d.req()).map(d=>d.name).join(' · ');
-  game.dom.$(id).innerHTML=`<div class="tool-heading"><div><span class="section-kicker">YOUR DRAWING TOOL</span><strong>${tool.name}</strong></div><span class="tool-rank">Rank ${tool.rank} · ${effects.length}/${tool.slots} effects</span></div>${toolIllustration(tool.rank,sockets)}<div class="tool-slots">${slots}</div><p class="tool-synergies">${synergies?'✦ Active synergies: '+synergies:'Two compatible effects can unlock a synergy. Make this pencil yours.'}</p>`;
+  game.dom.$(id).innerHTML=`<div class="tool-heading"><div><span class="section-kicker">YOUR DRAWING TOOL</span><strong>${tool.name}</strong></div><span class="tool-rank">Rank ${tool.rank} · ${effects.length}/${tool.slots} effects</span></div>${toolIllustration(tool.rank,sockets)}<div class="tool-slots">${slots}</div><p class="tool-synergies">${synergies?'✦ Active synergies: '+synergies:'Two compatible effects can unlock a synergy. Make this pencil yours.'}</p>`;bindArtworkFallback(game.dom.$(id));
 }
 const rarityLevels={common:1,uncommon:2,rare:3,legendary:4};
 function upgradeLevels(u){
@@ -271,9 +271,63 @@ function getUpgrade(forceRare=false){
   return u?{...u,rarity}:null;
 }
 
-function upgradeArtwork(u){
-  const existing={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos','Fine Tip':'pencil','Stevie Has Had Enough':'pencil'};
-  return existing[u.name]?'assets/art/'+existing[u.name]+'.png':'assets/art/upgrades/'+u.name.toLowerCase().replaceAll(' ','-')+'.svg';
+const upgradeArtGroups=[
+ ['Fire Ink','Frost Ink','Poison Ink','Repulsion Ink','Electric Ink','Blast Ink','Vampire Ink','Gravity Ink','Void Ink','Chaos Ink','Death Ink','Bigger Ink Tank','Quick Refill','Thick Ink','First Aid','Fine Tip'],
+ ['Fat Marker','Lucky Scribble','Recycling','Closed Loop','Architect','Patchwork','Double Stroke','Quick Sketch','Patch Job','Freehand','Living Fountain Pen','Triple Stroke','Bottomless Pen','Fortress Geometry','Bandages','Helmet'],
+ ['Pocket Rocks','Better Rocks','Emergency Medicine','Really Good Rocks','Stevie Has Had Enough','Loaded Deck','Reroll Coupon','Collector','Greedy Goblin']
+];
+function upgradeArtworkInfo(u){
+ for(let sheet=0;sheet<upgradeArtGroups.length;sheet++){const index=upgradeArtGroups[sheet].indexOf(u.name);if(index>=0){const grid=sheet===2?3:4;return {file:'assets/art/upgrades/gallery-'+(sheet+1)+'.png',grid,x:index%grid,y:Math.floor(index/grid)}}}
+ return null;
+}
+function legacyUpgradeArtwork(u){
+ const existing={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos','Fine Tip':'pencil','Stevie Has Had Enough':'pencil'};
+ return existing[u.name]?'assets/art/'+existing[u.name]+'.png':'assets/art/upgrades/'+u.name.toLowerCase().replaceAll(' ','-')+'.svg';
+}
+function upgradeArtwork(u){return upgradeArtworkInfo(u)?.file||legacyUpgradeArtwork(u)}
+function upgradeArtworkMarkup(u,size=64){
+ const a=upgradeArtworkInfo(u),version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
+ const style=a?`width:${a.grid*100}%;height:${a.grid*100}%;left:${-a.x*100}%;top:${-a.y*100}%;`:'width:100%;height:100%;left:0;top:0;';
+ return `<span class="upgrade-illustration" style="--illustration-size:${size}px" aria-hidden="true"><img class="upgrade-art" src="${upgradeArtwork(u)}${query}" data-art-fallback="${legacyUpgradeArtwork(u)}${query}" alt="" width="${size}" height="${size}" style="${style}"></span>`;
+}
+function bindArtworkFallback(container){
+ for(const art of container.querySelectorAll?.('.upgrade-art')||[])art.addEventListener('error',()=>{
+  if(art.dataset.fallback==='pen')return;
+  art.style.width=art.style.height='100%';art.style.left=art.style.top='0';
+  if(!art.dataset.fallback){art.dataset.fallback='old';art.src=art.dataset.artFallback}
+  else{art.dataset.fallback='pen';art.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M12 50l7-17L45 7l12 12-27 27Z" fill="#f3d273" stroke="#29343b" stroke-width="3"/></svg>')}
+ });
+}
+let rewardOfferCards=[],activeRewardPreview=null,previewPinned=false,hoverPreviewSuppressed=false;
+function clearRewardPreview(restoreFocus=false){
+ const card=activeRewardPreview?.card;activeRewardPreview=null;previewPinned=false;hoverPreviewSuppressed=restoreFocus;
+ game.dom.$('upgradeDetails').hidden=true;game.dom.$('takeUpgradeBtn').disabled=true;game.dom.$('effectReplacement').hidden=true;
+ for(const entry of rewardOfferCards){entry.card.setAttribute?.('aria-expanded','false');entry.card.classList?.remove('selected')}
+ if(restoreFocus)card?.focus?.();
+}
+function inspectReward(u,card,pin=false,keyboard=false){
+ if(!game.state.inUpgrade||game.api.infoOpen()||previewPinned&&!pin)return;
+ if(!rewardOfferCards.some(entry=>entry.u===u&&entry.card===card))return;
+ activeRewardPreview={u,card};previewPinned=pin;
+ for(const entry of rewardOfferCards){const selected=entry.card===card;entry.card.setAttribute?.('aria-expanded',String(selected));entry.card.classList?.toggle('selected',selected)}
+ game.dom.$('effectReplacement').hidden=true;
+ const preview=game.api.upgradePreview(u),stack=game.state.stacks[u.name]||0;
+ const slot=effectKeys[u.name]&&!stack?(equippedEffects().length>=game.state.tool.slots?'Choose which effect to replace after selecting this upgrade.':'Uses an empty effect slot.'):(effectKeys[u.name]?'Improves your equipped effect.':'Uses no effect slot.');
+ const related=game.catalog.synergyDefs.filter(def=>!game.state.discoveredSynergies.has(def.name)&&((u.name==='Fire Ink'&&def.name==='Plaguefire'&&game.state.inks.poison)||(u.name==='Poison Ink'&&def.name==='Plaguefire'&&game.state.inks.fire)||(u.name==='Frost Ink'&&def.name==='Cryoshock'&&game.state.inks.electric)||(u.name==='Electric Ink'&&def.name==='Cryoshock'&&game.state.inks.frost)));
+ game.dom.$('upgradeDetailsTitle').textContent=u.name;
+ game.dom.$('upgradeDetailsBody').innerHTML=`<div class="upgrade-detail-intro">${upgradeArtworkMarkup(u,72)}<div><span class="rarity">${u.rarity} · ${oneTimeUpgrades.has(u.name)?'One-time unlock':'+'+upgradeLevels(u)+' level'+(upgradeLevels(u)>1?'s':'')}</span><p>${u.desc}</p></div></div><div class="reward-change"><span class="change-label">${preview.label}</span><div class="change-values"><div><small>NOW</small><strong>${preview.before}</strong></div><span aria-hidden="true">→</span><div><small>AFTER</small><strong>${preview.after}</strong></div></div></div><div class="effect-comparison"><p><b>Now:</b> ${preview.beforeDetail}</p><p><b>After:</b> ${preview.afterDetail}</p></div><p class="slot-hint">${slot}</p>${related.map(def=>'<p class="reward-synergy">Pairs into '+def.name+' · '+def.desc+'</p>').join('')}`;
+ bindArtworkFallback(game.dom.$('upgradeDetailsBody'));game.dom.$('upgradeDetails').hidden=false;
+ game.dom.$('takeUpgradeBtn').textContent=effectKeys[u.name]&&!stack&&equippedEffects().length>=game.state.tool.slots?'Choose replacement':'Take '+u.name;
+ game.dom.$('takeUpgradeBtn').disabled=false;
+ if(pin)game.dom.$('upgradeDetails').scrollIntoView?.({block:'nearest',behavior:'auto'});
+ if(keyboard)game.dom.$('takeUpgradeBtn').focus?.();
+}
+function takeInspectedReward(){
+ const preview=activeRewardPreview;
+ if(!preview||!game.state.inUpgrade||game.api.infoOpen()||!rewardOfferCards.some(entry=>entry.u===preview.u&&entry.card===preview.card))return;
+ const base=game.catalog.upgrades.find(u=>u.name===preview.u.name);if(!base||!game.api.upgradeAvailable(base))return;
+ game.api.selectReward(preview.u);
+ if(!game.state.inUpgrade)clearRewardPreview();
 }
 function luckExplanation(){
   let description='Common gives +1 level, Uncommon +2, Rare +3, and Legendary +4. Special unlocks are one-time. Luck improves the rarity of future upgrade rolls, including rerolls. Boss rewards grant Rare levels unless a reserved Legendary offer appears. It does not change damage, enemy stats, or how often ink effects trigger. Legendary offers are reserved for 10% of campaigns, independent of Luck; rerolls cannot add more.';
@@ -285,7 +339,7 @@ function rollCards(forceRare=false){
   const dev=game.api.devModeEnabled();
   game.dom.$('devRewardPicker').hidden=!dev;game.dom.$('rerollBtn').hidden=dev;game.dom.$('rewardLuck').hidden=dev;game.dom.$('rewardLuckGuide').hidden=dev;
   if(dev){renderDevReward();return;}
-  game.dom.rewardText.textContent=forceRare?'Boss reward: four choices, Rare +3 levels or better.':'Common +1 · Uncommon +2 · Rare +3 · Legendary +4. Unlocks are one-time.';
+  game.dom.rewardText.textContent=forceRare?'Boss reward · Rare or better. Tap a card to inspect.':'Hover or tap a card, then choose your upgrade.';
   game.dom.$('rewardLuck').textContent='Luck '+game.state.stats.luck+' · Higher Luck makes rarer upgrades more likely.';
   game.dom.$('rewardLuckDetails').textContent=game.api.luckExplanation();
   game.api.renderTool('rewardTool');game.dom.$('effectReplacement').hidden=true;
@@ -310,34 +364,18 @@ function rollCards(forceRare=false){
 }
 
 function renderUpgradeCards(picks,count=picks.length){
-  game.dom.cardsEl.innerHTML='';game.dom.cardsEl.className='cards '+(count===4?'four':count===1?'dev-preview':'');
-  picks.forEach(u=>{
-    const c=document.createElement('div');c.className='ucard '+u.rarity;
-    const stack=game.state.stacks[u.name]||0;
-    let hint='';
-    const related=game.catalog.synergyDefs.filter(def=>{
-      if(game.state.discoveredSynergies.has(def.name))return false;
-      const n=u.name;
-      if(n.includes('Fire')&&def.name==='Plaguefire')return game.state.inks.poison>0;
-      if(n.includes('Poison')&&def.name==='Plaguefire')return game.state.inks.fire>0;
-      if(n.includes('Frost')&&def.name==='Cryoshock')return game.state.inks.electric>0;
-      if(n.includes('Electric')&&def.name==='Cryoshock')return game.state.inks.frost>0;
-      return false;
-    });
-    if(effectKeys[u.name]&&!stack)hint='<div class="slot-hint">'+(equippedEffects().length>=game.state.tool.slots?'Replaces one effect of your choice':'Fills an empty effect slot')+'</div>';
-    if(related.length)hint+='<div style="margin-top:7px;font-size:10px;font-weight:900;color:#8456c9">Potential synergy nearby…</div>';
-    const build=document.documentElement?.dataset?.build;
-    const icon=`<img class="upgrade-art" src="${game.api.upgradeArtwork(u)}${build?'?v='+encodeURIComponent(build):''}" alt="" width="48" height="48">`;
-    const preview=game.api.upgradePreview(u);
-    c.innerHTML=`${icon}<div class="rarity">${u.rarity} · ${oneTimeUpgrades.has(u.name)?'UNLOCK':'+'+upgradeLevels(u)+' LEVEL'+(upgradeLevels(u)>1?'S':'')} · ${effectKeys[u.name]?'EFFECT':'UTILITY'}</div><h3>${u.name}</h3><p>${u.desc}</p><div class="reward-change"><span class="change-label">${preview.label}</span><div class="change-values"><div><small>NOW</small><strong>${preview.before}</strong></div><span aria-hidden="true">→</span><div><small>AFTER</small><strong>${preview.after}</strong></div></div></div>${hint}<div class="effect-comparison"><p><b>Now:</b> ${preview.beforeDetail}</p><p><b>After:</b> ${preview.afterDetail}</p></div><div class="stack">${oneTimeUpgrades.has(u.name)?'One-time unlock':(stack?'Owned ×'+stack+' → ×'+(stack+upgradeLevels(u)):'New upgrade → ×'+upgradeLevels(u))}<span class="pick-label">${effectKeys[u.name]&&!stack&&equippedEffects().length>=game.state.tool.slots?'Choose a replacement':'Take this upgrade'} →</span></div>`;
-    const art=c.querySelector?.('.upgrade-art');
-    art?.addEventListener('error',()=>{
-      // A tiny pen stays visible even if a deployment asset cannot be loaded.
-      art.src='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M12 50l7-17L45 7l12 12-27 27Z" fill="#f3d273" stroke="#29343b" stroke-width="3"/><path d="M12 50l10-4-6-6Z" fill="#29343b"/></svg>');
-    },{once:true});
-    c.setAttribute?.('role','button');c.setAttribute?.('tabindex','0');c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();game.api.selectReward(u);}};
-    c.onclick=()=>game.api.selectReward(u);game.dom.cardsEl.appendChild(c)
-  });
+ clearRewardPreview();rewardOfferCards=[];
+ game.dom.cardsEl.innerHTML='';game.dom.cardsEl.className='cards '+(count===4?'four':count===1?'dev-preview':'');
+ picks.forEach(u=>{
+  const c=document.createElement('div');c.className='ucard '+u.rarity;const stack=game.state.stacks[u.name]||0,preview=game.api.upgradePreview(u);
+  c.innerHTML=`${upgradeArtworkMarkup(u,72)}<div class="rarity">${u.rarity} · ${oneTimeUpgrades.has(u.name)?'UNLOCK':'+'+upgradeLevels(u)+' LEVEL'+(upgradeLevels(u)>1?'S':'')}</div><h3>${u.name}</h3><span class="card-level">${oneTimeUpgrades.has(u.name)?'One-time':effectKeys[u.name]?preview.before+' → '+preview.after:(stack?'Owned ×'+stack:'Utility')}</span>`;
+  bindArtworkFallback(c);c.setAttribute?.('role','button');c.setAttribute?.('tabindex','0');c.setAttribute?.('aria-controls','upgradeDetails');c.setAttribute?.('aria-expanded','false');c.setAttribute?.('aria-label',u.name+', '+u.rarity+'. Inspect upgrade.');
+  c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inspectReward(u,c,true,true)}else if(e.key==='Escape'){e.preventDefault();clearRewardPreview(true)}};
+  c.onclick=()=>inspectReward(u,c,true);
+  c.onpointerenter=e=>{if(!hoverPreviewSuppressed&&e.pointerType==='mouse'&&typeof matchMedia==='function'&&matchMedia('(hover: hover)').matches)inspectReward(u,c)};
+  c.onpointermove=e=>{if(hoverPreviewSuppressed&&e.pointerType==='mouse'&&typeof matchMedia==='function'&&matchMedia('(hover: hover)').matches){hoverPreviewSuppressed=false;inspectReward(u,c)}};
+  rewardOfferCards.push({u,card:c});game.dom.cardsEl.appendChild(c);
+ });
 }
 
 function renderDevReward(){
@@ -349,7 +387,7 @@ function renderDevReward(){
   for(const option of game.dom.$('devRarity').options||[])option.disabled=!!base?.exclusiveRarity&&option.value!==base.exclusiveRarity;
   const rarity=base?.exclusiveRarity||(Object.hasOwn(rarityLevels,game.dom.$('devRarity').value)?game.dom.$('devRarity').value:'common');
   game.dom.$('devRarity').value=rarity;
-  game.dom.rewardText.textContent='DEV MODE · Choose one upgrade and its rarity for the next wave.';
+  game.dom.rewardText.textContent='DEV MODE · Inspect, then take your chosen upgrade.';
   game.api.renderTool('rewardTool');game.dom.$('effectReplacement').hidden=true;
   game.dom.synergyNote.innerHTML='';
   renderUpgradeCards(base?[{...base,rarity}]:[]);
@@ -384,8 +422,10 @@ function chooseSpecialization(spec){
   game.api.openUpgrade();
   game.api.setMsg('Specialization: '+({defense:'Fortress',ink:'Ink Alchemist',chaos:'Chaos'}[spec]))
 }
-const api = { applyUpgrade, isOneTimeUpgrade:name=>oneTimeUpgrades.has(name), toolIllustration, renderDevReward, upgradeLevels, upgradePreview, equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
+const api = { inspectReward, takeInspectedReward, clearRewardPreview, upgradeArtworkInfo, upgradeArtworkMarkup, applyUpgrade, isOneTimeUpgrade:name=>oneTimeUpgrades.has(name), toolIllustration, renderDevReward, upgradeLevels, upgradePreview, equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
 Object.assign(game.api, api);
+game.dom.$('takeUpgradeBtn').onclick=takeInspectedReward;game.dom.$('closeUpgradeDetails').onclick=()=>clearRewardPreview(true);
+game.dom.$('upgradeDetails').onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();clearRewardPreview(true)}};
 game.dom.$('devUpgrade').onchange=renderDevReward;game.dom.$('devRarity').onchange=renderDevReward;
 return api;
 };

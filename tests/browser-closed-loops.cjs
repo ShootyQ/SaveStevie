@@ -28,7 +28,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    await page.click('#pauseBtn');await page.click('#pauseToolBtn');assert.match(await page.textContent('#buildUpgrades'),/10.0% damage inside/);assert.match(await page.textContent('#buildUpgrades'),/15.0% paid ink back/);await page.click('#closeBuildBtn');await page.click('#resumeBtn');
    await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>testGame.api.draw());
    await page.evaluate(()=>{testGame.api.setDevMode(true);testGame.api.openUpgrade()});await page.selectOption('#devUpgrade','Fortress Geometry');await page.selectOption('#devRarity','legendary');
-   assert.match(await page.textContent('#cards'),/damage inside/);assert.equal(await page.locator('#cards .ucard').evaluateAll(cards=>cards.every(c=>c.scrollWidth<=c.clientWidth+1)),true);
+   await page.locator('#cards .ucard').first().click();assert.match(await page.textContent('#upgradeDetailsBody'),/damage inside/);assert.equal(await page.locator('#cards .ucard').evaluateAll(cards=>cards.every(c=>c.scrollWidth<=c.clientWidth+1)),true);
    await page.screenshot({path:'/tmp/closed-loop-reward-'+viewport.width+'.png'});
    assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' closed-loop refund/repair, completion pulse/note, current build and rarity previews, phone fit, reduced motion and pure rendering');await page.close();
   }
