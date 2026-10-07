@@ -116,6 +116,7 @@ function startWave(options={}){
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
   game.api.resetAbilityEffects();
+  game.api.resetLaunchEffects();
   game.api.resetSupportInks();
   game.api.resetPlaguefire();
   game.api.resetSoundEffects();game.api.resetRefuge();game.api.resetEnemyWave();game.api.resetSustain();
@@ -131,12 +132,13 @@ function startWave(options={}){
 }
 
 function waveComplete(){
-  if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending()||(game.state.wave%5!==0&&game.state.enemies.some(e=>e.hp>0))||(game.state.wave%5===0&&!game.api.bossFightResolved()))return;
+  if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending()||(game.state.wave%5!==0&&game.state.enemies.some(e=>e.hp>0||e.flight))||(game.state.wave%5===0&&!game.api.bossFightResolved()))return;
   game.api.stopSoundEffects();
   game.state.betweenWaves=true;
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
   game.api.resetAbilityEffects();
+  game.api.resetLaunchEffects();
   game.api.resetSupportInks();game.api.resetBossEncounters();
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);
   game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
@@ -175,7 +177,8 @@ function returnToMenu(){
   game.state.running=false;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
   game.state.drawing=false;game.state.currentWall=null;
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
-  game.api.resetAbilityEffects();game.api.resetSupportInks();game.api.resetBossEncounters();game.api.resetPlaguefire();
+  game.api.resetAbilityEffects();
+  game.api.resetLaunchEffects();game.api.resetSupportInks();game.api.resetBossEncounters();game.api.resetPlaguefire();
   for(const id of ['upgradeOverlay','waveOverlay','victoryOverlay','gameOverOverlay','specializeOverlay'])game.dom.$(id).style.display='none';
   game.dom.startOverlay.style.display='grid';game.api.selectMusicTrack('splash');game.api.updateUI();game.dom.$('startBtn').focus?.();
 }

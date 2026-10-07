@@ -307,6 +307,7 @@ function resize(){
     for(const wall of game.state.walls)wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
+    game.api.moveLaunchEffects(dx,dy);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
@@ -495,6 +496,7 @@ function draw(){
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
 
   game.api.drawPlaguefire();
+  game.api.drawLaunchGround();
 
   for(const w of game.state.walls){
     const hpRatio=game.api.clamp(w.hp/w.maxHp,0,1);
@@ -601,7 +603,8 @@ function draw(){
       game.dom.ctx.stroke();game.dom.ctx.restore();
     }
     const hpRatio=game.api.clamp(e.hp/e.maxHp,0,1);
-    game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y);
+    game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y-game.api.enemyFlightHeight(e));
+    if(e.flight&&!motionReduced){const t=e.flight.age/e.flight.duration;game.dom.ctx.rotate(e.flight.spin*Math.sin(t*Math.PI)*.8);const scale=1+Math.sin(t*Math.PI)*.16;game.dom.ctx.scale(scale,scale);}
 
     if(e.type==='eraser'){
       if(doodles.eraser){
@@ -706,7 +709,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 updateMenuPencil(0);
 return api;

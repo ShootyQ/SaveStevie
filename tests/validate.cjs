@@ -1417,3 +1417,61 @@ console.log('PASS: three first-boss attacks, sideways curved flight, swept wall 
  g.api.setDevMode(false);g.api.resetRun();assert.equal(g.api.testLabActive(),false);assert.equal(g.api.devRunActive(),false);assert.equal(g.state.tool.rank,6);assert.equal(g.state.stats.maxInk,200);
  console.log('PASS: instant chosen boss/full wave, genuine multi-tier builds/synergies/unlocks, fresh repeats, tool slots/caps, preflight rejection, optional saved perks, endless, reset and protected progression.');
 }
+
+// Removed contact monsters must not leave a cached status animation behind.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
+ const e=g.api.spawnEnemy(false,120,150,'grunt');e.burn=2;e.burnDps=10;
+ g.api.updateAbilityEffects(.03);env.calls.length=0;g.api.drawInkStatusEffects();assert.ok(env.calls.length>0);
+ g.state.enemies=[];env.calls.length=0;g.api.drawInkStatusEffects();assert.equal(env.calls.length,0,'removed living contact monster has no orphan fire');
+ g.state.rerolls=0;g.state.inUpgrade=false;g.api.openUpgrade();assert.equal(g.dom.rerollsEl.textContent,'1');assert.equal(env.node('rerollBtn').disabled,false);
+ g.api.openUpgrade();assert.equal(g.state.rerolls,1,'reopening reward cannot mint rerolls');
+ g.api.reroll();assert.equal(g.state.rerolls,0);assert.equal(g.dom.rerollsEl.textContent,'0');assert.equal(env.node('rerollBtn').disabled,true);
+ g.api.reroll();assert.equal(g.state.rerolls,0);g.state.inUpgrade=false;g.state.rerolls=5;g.api.openUpgrade();assert.equal(g.state.rerolls,5,'coupon stock is not truncated to three');
+ g.state.inUpgrade=false;g.api.reroll();assert.equal(g.state.rerolls,5,'cannot reroll outside a reward');
+}
+{
+ for(const [W,H] of [[800,700],[360,640],[851,300]]){
+  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.W=W;g.state.H=H;g.state.player.x=W/2;g.state.player.y=H/2;g.state.spawnTimer=999;
+  g.state.inks.repulsion=3;
+  for(const [x,y] of [[W/2,H/2],[W-20,H/2],[20,40],[W/2,H-20]]){
+   const e=g.api.spawnEnemy(false,x,y,'grunt');e.hp=e.maxHp=1000;
+   assert.ok(g.api.launchEnemy(e,x-3,y,true));const f=e.flight;
+   assert.ok(f.targetX>=e.r+24&&f.targetX<=W-e.r-24);assert.ok(f.targetY>=e.r+24&&f.targetY<=H-e.r-24);
+   assert.ok(Math.hypot(f.targetX-W/2,f.targetY-H/2)>=g.state.player.r+e.r+75);
+   g.api.updateEnemyFlight(e,.5);assert.ok(g.api.enemyFlightHeight(e)>0);assert.equal(g.api.contactStevie(e),false);
+   const snapshot=JSON.stringify(e);g.state.paused=true;g.api.update(.03);assert.equal(JSON.stringify(e),snapshot);g.state.paused=false;
+   const hp=e.hp;g.api.updateEnemyFlight(e,2);assert.equal(e.flight,undefined);assert.equal(e.hp,hp-f.damage);assert.equal(e.stun,1.6);
+  }
+  const boss=g.api.spawnEnemy(false,50,100,'boss');assert.equal(g.api.launchEnemy(boss,40,100),false);
+  g.api.resetRun();assert.equal(g.api.launchEffectsSnapshot().landings.length,0);
+ }
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;g.state.inks.fire=2;g.state.inks.blast=1;g.state.synergies.add('Napalm Scribbles');
+ const wall=()=>({pts:[{x:40,y:90},{x:260,y:90}],hp:1,maxHp:1,thick:8,life:72,maxLife:72});
+ const w=wall();g.state.walls=[w];g.api.damageWall(w,2,50,90);g.api.damageWall(w,2,50,90);assert.equal(g.api.launchEffectsSnapshot().napalm.length,1,'one patch per destroyed wall');
+ const e=g.api.spawnEnemy(false,150,90,'grunt');e.hp=1000;g.api.updateLaunchEffects(.03);assert.equal(e.burnDps,18,'midpoint of two-point stroke burns');
+ const second=wall();g.state.walls=[second];g.api.damageWall(second,2,50,90);e.burnDps=0;g.api.updateLaunchEffects(.03);assert.equal(e.burnDps,18,'overlap uses strongest patch');
+ const immune=g.api.spawnEnemy(false,150,90,'grunt');immune.immunity='fire';immune.hp=1000;const hp=immune.hp;g.api.updateLaunchEffects(.03);g.api.dealDamage(immune,immune.burnDps*.03,'fire');assert.equal(immune.hp,hp);
+ g.api.moveLaunchEffects(20,30);assert.equal(g.api.launchEffectsSnapshot().napalm[0].points[0].x,60);
+ g.api.updateLaunchEffects(4);assert.equal(g.api.launchEffectsSnapshot().napalm.length,0);g.api.startWave();assert.equal(g.api.launchEffectsSnapshot().landings.length,0);
+}
+console.log('PASS: orphan-fire removal, synchronized/disabled rerolls and preserved coupons; airborne page-safe landings, pause, fall damage/stuns and boss resistance; real bounded Napalm trails, overlap, immunity, expiry and reset.');
+
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;g.state.inks.blast=1;g.state.inks.repulsion=1;g.state.synergies.add('Cannon Ink');
+ const e=g.api.spawnEnemy(false,140,180,'grunt');e.hp=e.maxHp=10;
+ const w={pts:[{x:120,y:180},{x:160,y:180}],hp:1,maxHp:1,thick:8,life:72,maxLife:72};g.state.walls=[w];g.api.damageWall(w,2,130,180);
+ assert.ok(e.flight&&e.hp<=0,'lethal explosion still launches the body');assert.equal(g.api.nearestEnemy(e.x,e.y,100),null,'rocks do not target an airborne fatality');g.state.timeLeft=0;const kills=g.state.kills;
+ g.api.update(.03);assert.ok(g.state.enemies.includes(e));assert.equal(g.state.betweenWaves,false);assert.equal(g.state.kills,kills);
+ for(let i=0;i<35;i++)g.api.update(.03);assert.equal(g.state.enemies.includes(e),false);assert.equal(g.state.kills,kills+1);assert.equal(g.state.betweenWaves,true,'clear waits for landing');
+}
+console.log('PASS: lethal Cannon blast visibly completes flight, counts one kill on landing and then clears the wave.');
+
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;
+ const e=g.api.spawnEnemy(false,200,180,'grunt');e.hp=e.maxHp=1000;g.api.launchEnemy(e,190,180);g.api.updateEnemyFlight(e,.2);
+ const f=e.flight,dx=f.targetX,dy=f.targetY;g.api.moveLaunchEffects(100,60);assert.equal(f.targetX,dx+100);assert.equal(f.targetY,dy+60);
+ g.state.W=360;g.state.H=300;g.state.player.x=180;g.state.player.y=150;g.api.updateEnemyFlight(e,2);
+ assert.ok(e.x>=e.r+24&&e.x<=360-e.r-24);assert.ok(e.y>=e.r+76&&e.y<=300-e.r-64);assert.ok(Math.hypot(e.x-180,e.y-150)>=g.state.player.r+e.r+75);
+}
+console.log('PASS: flight trajectory translates on resize and landing is rechecked inside the smaller paper, away from Stevie.');
