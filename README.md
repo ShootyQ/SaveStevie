@@ -2,6 +2,10 @@
 
 Refactored from doodle_defender_v8.html. Open index.html directly in a modern browser. No installation or build required. Keep the folder together.
 
+## Future design ideas
+
+See the [long-term replayability ideas](docs/replayability/README.md) for shape techniques, post-victory challenges, encounters and progression possibilities. These are design notes, not shipped features.
+
 ## Android internal testing
 
 The optional Capacitor wrapper bundles the game for offline Android play. Start
