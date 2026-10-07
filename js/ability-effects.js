@@ -161,10 +161,11 @@ function drawWallExplosions(){
 // Small pen-and-pencil ornaments leave the body and health bar readable.
 function drawInkStatusEffects(){
   const ctx=game.dom.ctx;
+  const living=new Set(game.state.enemies);
   for(const s of statuses){
-    const e=s.enemy;if(e.hp<=0)continue;
+    const e=s.enemy;if(e.hp<=0||!living.has(e))continue;
     const r=Math.min(30,e.r*1.15),phase=statusClock*5+e.type.length;
-    ctx.save();ctx.translate(e.x,e.y);ctx.lineWidth=1.5;ctx.lineJoin='round';
+    ctx.save();ctx.translate(e.x,e.y-game.api.enemyFlightHeight(e));ctx.lineWidth=1.5;ctx.lineJoin='round';
     if(s.electric){
       ctx.strokeStyle='#315fd2';ctx.lineWidth=2;
       for(let i=0;i<3;i++){

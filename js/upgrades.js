@@ -9,8 +9,8 @@ game.catalog.synergyDefs = [
   {name:'Thermal Shock', req:()=>game.state.inks.fire&&game.state.inks.frost, desc:'Burning frozen enemies crack for burst damage and stun.'},
   {name:'Tesla Well', req:()=>game.state.inks.electric&&game.state.inks.gravity, desc:'Gravity-packed enemies amplify electric chaining.'},
   {name:'Event Horizon', req:()=>game.state.inks.void&&game.state.inks.gravity, desc:'Enemies near gravity walls have much higher Void proc chance.'},
-  {name:'Cannon Ink', req:()=>game.state.inks.blast&&game.state.inks.repulsion, desc:'Wall explosions violently launch nearby enemies outward.'},
-  {name:'Napalm Scribbles', req:()=>game.state.inks.fire&&game.state.inks.blast, desc:'Destroyed burning walls leave a short-lived fire patch.'},
+  {name:'Cannon Ink', req:()=>game.state.inks.blast&&game.state.inks.repulsion, desc:'Explosions send ordinary monsters flying, with safe landings, fall damage and a 1.2s stun. Bosses resist launches.'},
+  {name:'Napalm Scribbles', req:()=>game.state.inks.fire&&game.state.inks.blast, desc:'Destroyed Fire + Blast walls leave four-second burning scribbles; overlapping patches do not stack damage.'},
   {name:'Venom Ice', req:()=>game.state.inks.poison&&game.state.inks.frost, desc:'Poison decays much more slowly while enemies are chilled.'},
   {name:'Rail Ink', req:()=>game.state.inks.electric&&game.state.inks.repulsion, desc:'Repelled enemies become charged and zap nearby targets.'},
   {name:'Gravity Trap', req:()=>game.state.stacks['Closed Loop']&&game.state.inks.gravity, desc:'Closed loops pull nearby enemies toward their perimeter.'},
@@ -30,7 +30,7 @@ game.catalog.synergyDefs = [
 
   // Major three-part build transformations
   {name:'THE STORM', req:()=>game.state.inks.electric&&game.state.inks.frost&&game.state.inks.gravity, desc:'Gravity clusters, frost holds, lightning shreds the whole pack.', major:true},
-  {name:'INFERNO', req:()=>game.state.inks.fire&&game.state.inks.blast&&game.state.inks.repulsion, desc:'Burning explosions launch enemies across the page.', major:true},
+  {name:'INFERNO', req:()=>game.state.inks.fire&&game.state.inks.blast&&game.state.inks.repulsion, desc:'Burning explosions hurl ordinary monsters farther, with harder landings and a 1.6s stun; leave stronger four-second fire patches. Bosses resist launches.', major:true},
   {name:'THE BLACK HOLE', req:()=>game.state.inks.gravity&&game.state.inks.void&&game.state.stacks['Closed Loop'], desc:'Closed loops become miniature event horizons.', major:true},
   {name:'NECROTIC ENGINE', req:()=>game.state.inks.poison&&game.state.inks.vampire&&game.state.inks.gravity, desc:'Pinned poisoned enemies continuously feed Stevie health.', major:true},
   {name:'ABSOLUTE ZERO', req:()=>game.state.inks.frost&&game.state.inks.repulsion&&game.state.stats.doubleLine, desc:'Parallel walls become freezing launch rails.', major:true},
@@ -166,13 +166,15 @@ function checkSynergies(){
 }
 
 function openUpgrade(){
+  const alreadyOpen=game.state.inUpgrade;
   game.state.inUpgrade=true;game.state.betweenWaves=false;game.state.awaitingSpec=false;
-  game.state.rerolls=Math.min(3,game.state.rerolls+1);
+  if(!alreadyOpen)game.state.rerolls=Math.max(game.state.rerolls,Math.min(3,game.state.rerolls+1));
   game.dom.upgradeOverlay.style.display='grid';
   const boss=game.state.wave%5===0;
   game.dom.$('rewardTitle').textContent='Upgrade your '+game.state.tool.name.toLowerCase();
   game.dom.rewardText.textContent=boss?'Boss reward: four choices, Rare +3 levels or better.':'Common +1 · Uncommon +2 · Rare +3 · Legendary +4. Unlocks are one-time.';
   game.api.rollCards(boss);
+  game.api.updateUI();
 }
 
 function rarityRoll(forceRare=false){
@@ -377,7 +379,7 @@ function chooseUpgrade(u,replaceName){
   game.api.setMsg(u.name+' ×'+game.state.stacks[u.name]+' — '+game.api.upgradeEffect(u.name,game.state.stacks[u.name]))
 }
 
-function reroll(){if(game.api.devModeEnabled())return;if(game.state.rerolls<=0)return;game.state.rerolls--;game.api.rollCards(game.state.wave%5===0);game.api.updateUI()}
+function reroll(){if(game.api.devModeEnabled()||!game.state.inUpgrade||game.state.rerolls<=0)return;game.state.rerolls--;game.api.rollCards(game.state.wave%5===0);game.api.updateUI()}
 
 function chooseSpecialization(spec){
   game.state.specialization=spec;

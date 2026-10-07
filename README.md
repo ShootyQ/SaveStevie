@@ -198,6 +198,26 @@ older resource under the same filename. No package installation is required.
 
 ## Ability animations
 
+Cannon Ink (Blast + Repulsion) launches ordinary monsters for 0.85 seconds;
+INFERNO (Fire + Blast + Repulsion) sends them farther for 1.05 seconds.
+A rotating, lifted body and shrinking ground shadow show the arc. Landing
+positions stay on the paper, clear of Stevie by his radius + monster radius +
+75px, with room for the HUD and bottom controls. Landings deal 16 + 3 per
+Repulsion level physical damage and stun for 1.2 seconds; INFERNO uses 26 +
+3 per level and 1.6 seconds. Bosses resist launches. Explosion fatalities still
+finish their flight before registering the kill; wave cleanup waits for them.
+Pause freezes flight, and resizing translates the trajectory and rechecks its
+landing. Reduced motion removes body rotation and scaling.
+
+Napalm Scribbles now leaves real four-second animated fire trails along a
+broken Fire + Blast wall, including between the endpoints of two-point strokes.
+Grounded enemies touching them acquire burning at 10 + 4 per Fire level DPS;
+INFERNO raises that by 25%. Overlaps use the strongest patch, never add damage,
+and fire immunity applies. Trails are bounded to 12 patches / 65 samples each,
+with 16 landing dust rings, and reset on wave/menu transitions. Status ornaments
+only draw for monsters still present, preventing fire on removed bodies.
+
+
 Chain lightning branches from its source to selected nearby monsters with
 three cached jagged shapes, blue/gold pen strokes, and impact sparks. It lasts
 340ms. Explosive wall breaks leave a short stroke echo, comic burst, uneven

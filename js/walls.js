@@ -47,8 +47,94 @@ function wallNear(x,y,r){
   return false;
 }
 
+// Ground coordinates stay on the page; vertical height is presentation only.
+let napalm=[],landingPuffs=[];
+function resetLaunchEffects(){napalm=[];landingPuffs=[]}
+function landingPoint(e,x,y,inferno){
+ const {W,H,player}=game.state,margin=e.r+24,top=e.r+76,bottom=Math.max(top,H-e.r-64);
+ const length=Math.min(240,140+game.state.inks.repulsion*10+(inferno?50:0));
+ const direction=Math.atan2(e.y-y,e.x-x),clear=player.r+e.r+75;
+ let best=null,score=-Infinity;
+ for(let i=0;i<32;i++){
+  const angle=direction+i*Math.PI/16;
+  const tx=game.api.clamp(e.x+Math.cos(angle)*length,margin,Math.max(margin,W-margin));
+  const ty=game.api.clamp(e.y+Math.sin(angle)*length,top,bottom);
+  if(Math.hypot(tx-player.x,ty-player.y)<clear)continue;
+  const distance=Math.hypot(tx-e.x,ty-e.y),value=distance+Math.cos(angle-direction)*45;
+  if(value>score){score=value;best={x:tx,y:ty}}
+ }
+ return best;
+}
+function launchEnemy(e,x,y,inferno=false){
+ if(e.hp<=0||e.flight)return false;
+ if(isInkBoss(e)){game.api.animateEnemyAction(e,'slam');return false}
+ const target=landingPoint(e,x,y,inferno);if(!target)return false;
+ e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:inferno?1.05:.85,
+  height:Math.min(inferno?100:76,Math.max(16,Math.min(e.y,target.y)-e.r*2-50)),spin:target.x<e.x?-1:1,
+  damage:(inferno?26:16)+game.state.inks.repulsion*3,stun:inferno?1.6:1.2};
+ game.api.floatText(e.x,e.y,'WHOOSH!','#36786b');return true;
+}
+function enemyFlightHeight(e){const f=e.flight;return f?Math.sin(Math.min(1,f.age/f.duration)*Math.PI)*f.height:0}
+function updateEnemyFlight(e,dt){
+ const f=e.flight;if(!f)return false;
+ f.age=Math.min(f.duration,f.age+dt);const t=f.age/f.duration;
+ e.x=f.startX+(f.targetX-f.startX)*t;e.y=f.startY+(f.targetY-f.startY)*t;
+ if(t>=1){
+  // Re-evaluate after a resize so landings still miss Stevie and the paper edges.
+  const target=landingPoint(e,e.x,e.y,false);
+  const margin=e.r+24;e.x=game.api.clamp(e.x,margin,Math.max(margin,game.state.W-margin));e.y=game.api.clamp(e.y,e.r+76,Math.max(e.r+76,game.state.H-e.r-64));
+  if(Math.hypot(e.x-game.state.player.x,e.y-game.state.player.y)<game.state.player.r+e.r+75&&target){e.x=target.x;e.y=target.y}
+  delete e.flight;e.stun=Math.max(e.stun,f.stun);game.api.dealDamage(e,f.damage,'physical');
+  landingPuffs.push({x:e.x,y:e.y,r:e.r,age:0});if(landingPuffs.length>16)landingPuffs.shift();
+  game.api.animateEnemyAction(e,'slam');game.api.burst(e.x,e.y,'#9b8866',6);game.api.floatText(e.x,e.y,'THUD!','#766245');
+  if(e.hp<=0)game.api.killEnemy(e);
+ }
+ return true;
+}
+function leaveNapalm(wall){
+ const points=[],bounds=game.api.wallGeometry(wall.pts);
+ // Sample evenly by distance so a long two-point stroke leaves a real trail.
+ for(const seg of bounds.segments){const length=Math.hypot(seg.b.x-seg.a.x,seg.b.y-seg.a.y),count=Math.max(1,Math.ceil(length/24));
+  for(let i=0;i<count;i++){const t=i/count;points.push({x:seg.a.x+(seg.b.x-seg.a.x)*t,y:seg.a.y+(seg.b.y-seg.a.y)*t});if(points.length>=64)break}if(points.length>=64)break}
+ points.push({...wall.pts.at(-1)});
+ napalm.push({points,minX:bounds.minX,maxX:bounds.maxX,minY:bounds.minY,maxY:bounds.maxY,age:0,life:4,r:18,dps:(10+game.state.inks.fire*4)*(game.state.synergies.has('INFERNO')?1.25:1)});
+ if(napalm.length>12)napalm.shift();
+}
+function updateLaunchEffects(dt){
+ for(const p of napalm)p.age+=dt;napalm=napalm.filter(p=>p.age<p.life);
+ for(const p of landingPuffs)p.age+=dt;landingPuffs=landingPuffs.filter(p=>p.age<.45);
+ for(const e of game.state.enemies){
+  if(e.hp<=0||e.flight)continue;
+  let dps=0;for(const patch of napalm)if(e.x>=patch.minX-patch.r-e.r&&e.x<=patch.maxX+patch.r+e.r&&e.y>=patch.minY-patch.r-e.r&&e.y<=patch.maxY+patch.r+e.r&&patch.points.some(p=>(p.x-e.x)**2+(p.y-e.y)**2<(patch.r+e.r)**2))dps=Math.max(dps,patch.dps);
+  if(dps){e.burn=Math.max(e.burn,.5);e.burnDps=Math.max(e.burnDps,dps)}
+ }
+}
+function moveLaunchEffects(dx,dy){
+ for(const patch of napalm){patch.minX+=dx;patch.maxX+=dx;patch.minY+=dy;patch.maxY+=dy;for(const p of patch.points){p.x+=dx;p.y+=dy}}
+ for(const p of landingPuffs){p.x+=dx;p.y+=dy}
+ for(const e of game.state.enemies)if(e.flight){e.flight.startX+=dx;e.flight.targetX+=dx;e.flight.startY+=dy;e.flight.targetY+=dy}
+}
+function drawLaunchGround(){
+ const ctx=game.dom.ctx,reduced=game.api.enemyMotionReduced();
+ for(const patch of napalm){
+  ctx.save();ctx.globalAlpha=Math.min(1,(patch.life-patch.age)*2);ctx.lineWidth=2;
+  patch.points.forEach((p,i)=>{
+   ctx.fillStyle='#72523d';ctx.beginPath();ctx.ellipse(p.x,p.y,patch.r,6,0,0,Math.PI*2);ctx.fill();
+   const h=reduced?12:12+Math.sin(patch.age*11+i*2.4)*5;
+   ctx.beginPath();ctx.moveTo(p.x-6,p.y);ctx.quadraticCurveTo(p.x-10,p.y-9,p.x-2,p.y-h);ctx.quadraticCurveTo(p.x+5,p.y-7,p.x+6,p.y);ctx.closePath();ctx.fillStyle='#ee8036';ctx.fill();ctx.strokeStyle='#97452a';ctx.stroke();
+   ctx.fillStyle='#ffdd77';ctx.beginPath();ctx.moveTo(p.x-3,p.y);ctx.lineTo(p.x,p.y-h*.65);ctx.lineTo(p.x+3,p.y);ctx.fill();
+  });ctx.restore();
+ }
+ for(const e of game.state.enemies)if(e.flight){
+  const h=enemyFlightHeight(e),scale=1-h/180;ctx.save();ctx.globalAlpha=.18+h/600;ctx.fillStyle='#514531';ctx.beginPath();ctx.ellipse(e.x,e.y+e.r*.7,e.r*scale,e.r*.35*scale,0,0,Math.PI*2);ctx.fill();ctx.restore();
+ }
+ for(const p of landingPuffs){const t=p.age/.45;ctx.save();ctx.globalAlpha=(1-t)*.7;ctx.strokeStyle='#948363';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(p.x,p.y,p.r+24*t,5+10*t,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
+}
+function launchEffectsSnapshot(){return {napalm:napalm.map(p=>({...p,points:p.points.map(q=>({...q}))})),landings:landingPuffs.map(p=>({...p}))}}
+
 function damageWall(wall,amount,x,y){
   if(amount>0&&wall.hp>0)game.api.playSound('wall');
+  if(wall.hp<=0||!game.state.walls.includes(wall))return;
   wall.hp-=amount;
   if(wall.hp<=0){
     if(game.state.stats.explode||game.state.inks.blast>0){
@@ -65,20 +151,18 @@ function damageWall(wall,amount,x,y){
       }
       game.api.animateWallExplosion(wall,x,y,radius,game.state.synergies.has('INFERNO'));
 
+      if(game.state.synergies.has('Napalm Scribbles')||game.state.synergies.has('INFERNO'))leaveNapalm(wall);
       for(const e of game.state.enemies){
         const near=wall.pts.some(p=>game.api.withinRadius(p.x,p.y,e.x,e.y,radius));
         if(near){
           if(game.state.synergies.has('Singularity Ink')){
             const dx=x-e.x,dy=y-e.y,m=Math.hypot(dx,dy)||1;
-            e.x+=dx/m*24;e.y+=dy/m*24;
+            game.api.moveEnemySafely(e,dx/m*24,dy/m*24);
+          }
+          if(game.state.synergies.has('Cannon Ink')||game.state.synergies.has('INFERNO')){
+            launchEnemy(e,x,y,game.state.synergies.has('INFERNO'));
           }
           game.api.dealDamage(e,dmg,'blast');
-
-          if(game.state.synergies.has('Cannon Ink')||game.state.synergies.has('INFERNO')){
-            const dx=e.x-x,dy=e.y-y,m=Math.hypot(dx,dy)||1;
-            e.x+=dx/m*(35+game.state.inks.repulsion*12);
-            e.y+=dy/m*(35+game.state.inks.repulsion*12);
-          }
           if(game.state.synergies.has('INFERNO')||game.state.synergies.has('Napalm Scribbles')){
             e.burn=Math.max(e.burn,2.8);
             e.burnDps=Math.max(e.burnDps,10+game.state.inks.fire*4);
@@ -355,7 +439,7 @@ function applySynergies(e,dt){
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
-const api = { electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
+const api = { launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
 Object.assign(game.api, api);
 return api;
 };

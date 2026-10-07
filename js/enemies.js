@@ -148,6 +148,7 @@ function killEnemy(e){
 function nearestEnemy(x,y,maxD){
   let bestE=null,bestD=maxD;
   for(const e of game.state.enemies){
+    if(e.hp<=0)continue;
     const d=game.api.dist(x,y,e.x,e.y);if(d<bestD){bestD=d;bestE=e}
   }
   return bestE;
@@ -275,7 +276,7 @@ function bossSpawnPoint(){
 function bossArrivalSnapshot(){return arrival?{...arrival}:null}
 function refreshBossArrival(){if(arrival)arrival={...bossSpawnPoint(),left:arrival.left}}
 function updateBossArrival(dt){
- if(bossSpawned||game.state.enemies.some(e=>e.hp>0))return;
+ if(bossSpawned||game.state.enemies.some(e=>e.hp>0||e.flight))return;
  if(!arrival){arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
  arrival.left=Math.max(0,arrival.left-dt);
  if(arrival.left===0){const point={...arrival};game.api.spawnEnemy(true,point.x,point.y);game.api.setMsg('Boss encounter. Defeat '+game.api.monsterName(game.api.bossTypeForWave())+'!')}
@@ -393,7 +394,7 @@ function damageStevie(damage,source,impact=game.state.player){
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }
 function contactStevie(e){
-  if(e.hp<=0||!game.state.enemies.includes(e))return false;
+  if(e.hp<=0||e.flight||!game.state.enemies.includes(e))return false;
   const player=game.state.player;
   if(!game.api.touchesRefuge(e))return false;
   if(game.api.shotBlocked(e.x,e.y,player.x,player.y,0))return false;
