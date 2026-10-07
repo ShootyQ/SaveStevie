@@ -360,6 +360,13 @@ function rollCards(forceRare=false){
   if(picks.length<count){
     for(const u of game.catalog.upgrades.filter(u=>!u.exclusiveRarity&&game.api.upgradeAvailable(u)))if(!picks.some(p=>p.name===u.name)&&picks.length<count)picks.push({...u,rarity:forceRare?'rare':game.api.rarityRoll()});
   }
+  // Keep the first reward useful for drawing, even when all random picks are
+  // utilities. Preserve the slot's rarity and any reserved Legendary offer.
+  if(game.state.wave===1&&!picks.some(u=>effectKeys[u.name])){
+    const pool=game.catalog.upgrades.filter(u=>effectKeys[u.name]&&game.api.upgradeAvailable(u));
+    const effect=game.api.weightedPick(pool);
+    if(effect){const slot=picks.length-1;picks[slot]={...effect,rarity:picks[slot].rarity};}
+  }
   renderUpgradeCards(picks,count);
 }
 
