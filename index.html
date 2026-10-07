@@ -79,7 +79,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <aside id="scrapGuideCover" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>Psst! You earned scraps! They stay in my Notebook even when the monsters get me. Let’s see how they make our next adventure stronger.</p><div class="cardactions"><button id="scrapGuideShow">Show me →</button><button class="secondary" id="scrapGuideSkip">Got it</button></div></div></aside><div class="splash-footer"><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -180,7 +180,7 @@
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
           <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="deathNoteHeading"></h3><p id="deathNoteMessage"></p><small id="deathNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
         </aside>
-        <div class="cardactions"><button class="gold" id="deathNotebookBtn">Spend Scraps</button><button id="againBtn">Try Again</button></div>
+        <div class="cardactions"><button class="gold" id="deathNotebookBtn">Spend Scraps</button><button id="againBtn">Return to main menu</button></div>
       </div>
     </div>
   </div>
@@ -210,10 +210,10 @@
   <div class="cardbox build-box notebook-hub">
     <div class="build-heading"><h2 class="paper-slip" id="hubTitle">My notebook</h2><button class="paper-slip" id="closeHubBtn">Back</button></div>
     <p class="hub-note">Saved scraps: <span id="splashScraps">0</span></p>
-    <nav class="hub-pages" aria-label="Notebook pages">
+    <aside id="scrapGuideHub" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>This is our Notebook! Choose Spend scraps below. That’s where we keep the upgrades that last between adventures.</p><div class="cardactions"><button class="secondary" id="scrapGuideHubSkip">Got it</button></div></div></aside><nav class="hub-pages" aria-label="Notebook pages">
       <button class="paper-slip" id="hubMonstersBtn">Monster notes</button>
       <button class="paper-slip" id="hubToolBtn">My pencil</button>
-      <button class="paper-slip" id="hubNotebookBtn">Saved scraps</button>
+      <button class="paper-slip" id="hubNotebookBtn">Spend scraps</button>
       <button class="paper-slip" id="hubSettingsBtn">Settings</button>
       <button class="paper-slip" id="hubStatsBtn">My scores</button>
       <button class="paper-slip" id="hubChangelogBtn">New stuff</button>
@@ -280,7 +280,7 @@
   <div class="cardbox build-box notebook-book">
     <div class="build-heading"><h2 id="notebookTitle">Back of the Notebook</h2><button id="closeNotebookBtn">Close</button></div>
     <div class="notebook-wallet"><img class="notebook-scrap" src="assets/art/ui/scraps.png" alt="" width="84" height="84"><div><strong id="notebookBank">0</strong> <b>Notebook Scraps</b><small>Saved on this browser · Kept after defeat</small></div></div>
-    <p id="notebookNotice" role="status"></p>
+    <aside id="scrapGuideShop" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>Each upgrade shows its price and what changes. Tap Buy rank when you have enough scraps. Greyed-out buttons mean you need more scraps, the perk is full, or a run is still active. First ranks start at 5 scraps—keep saving! Bought perks help every new run.</p><div class="cardactions"><button id="scrapGuideDone">Got it, Stevie!</button></div></div></aside><p id="notebookNotice" role="status"></p>
     <div class="notebook-earn"><b>How to collect scraps</b><span>1 per 25 kills (up to 8 per run) · 1 per cleared wave · Chapter-clear bonuses: 6 / 8 / 10 / 12 · 5 extra for winning wave 20. A defeat with no earnings keeps 1 consolation scrap.</span></div>
     <h3>Your next starting kit</h3><p id="notebookLoadout"></p>
     <div id="notebookPerks" class="notebook-grid"></div>
@@ -315,6 +315,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Stevie shows you the scraps</h3><p>The defeat screen now offers Return to main menu. After you earn your first scrap, Stevie gives a one-time guide to the Notebook and permanent upgrades on your next menu visit.</p></article>
       <article class="build-entry"><h3>Gravity gets closer; synergies get a moment</h3><p>Gravity has tight reach and pulls without lingering slows, extra damage or slower wall bites. King Doodle resists its pull; nearby walls gently bend his returnable shots instead. Newly activated synergies get an animated paper reveal at the next wave, with ingredients, an explanation and a “Cool—let’s go!” button. Combat waits for you; repeats use a short message.</p></article>
       <article class="build-entry"><h3>The King makes an entrance</h3><p>After wave 5’s last monster falls, the music stops as King Doodle-Doom stomps in from the side. The camera closes in for his roar, then his royal stomp destroys every remaining wall before his new battle music begins. Waves 16–20 also have a fresh Final Draft soundtrack.</p></article>
       <article class="build-entry"><h3>Refills, extra credit and more variety</h3><p>Buy three permanent +1 ink/second ranks in the Notebook for 5, 12 and 24 scraps. Extra Credit costs 25 scraps and gives four reward choices from your first wave. Equipped ink effects still appear more often, but leave more room for other upgrades.</p></article>

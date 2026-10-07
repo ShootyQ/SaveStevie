@@ -888,3 +888,15 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 @keyframes synergy-page-in{from{opacity:0;transform:translateY(25px) rotate(-5deg) scale(.85)}to{opacity:1;transform:none}}
 @keyframes synergy-ink-pulse{0%,100%{transform:rotate(-3deg) scale(1)}50%{transform:rotate(3deg) scale(1.07)}}
 @media(prefers-reduced-motion:reduce){.synergy-reveal-paper,.synergy-ingredient,.synergy-burst{animation:none}}
+
+/* Stevie's one-time guidance stays on the paper, beside the actual controls. */
+.scrap-guide[hidden]{display:none!important}
+.scrap-guide{display:flex;align-items:flex-start;gap:12px;margin:16px 0;padding:16px;background:#fff4ce;border:2px dashed #ad9569;border-radius:4px 12px 5px 9px;text-align:left;color:#413d35;box-shadow:2px 3px 0 #72674f30}
+.scrap-guide img{flex:0 0 54px;width:54px;height:60px;object-fit:contain}
+.scrap-guide h3{font:26px 'Stevie Pencil',cursive;margin:0 0 6px;color:#315d8c}
+.scrap-guide p{font:20px/1.35 'Stevie Pencil',cursive;margin:0 0 10px}
+.scrap-guide .cardactions{justify-content:flex-start;flex-wrap:wrap;gap:8px;margin:0}
+.scrap-guide button{min-height:44px;padding:8px 12px;font-size:15px}
+#startOverlay .scrap-guide{grid-column:1/-1;width:100%;margin:0}
+.scrap-guide-target{outline:3px dashed #d5a029!important;outline-offset:5px}
+@media(max-width:480px){.scrap-guide{gap:8px;padding:12px}.scrap-guide img{width:40px;flex-basis:40px}.scrap-guide h3{font-size:23px}.scrap-guide p{font-size:18px}}

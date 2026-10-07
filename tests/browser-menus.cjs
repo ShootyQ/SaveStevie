@@ -19,7 +19,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.screenshot({path:'/tmp/main-menu-'+viewport.width+'.png'});
   assert.equal(await page.locator('#startOverlay').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
   assert.equal(await page.locator('.bottom').isVisible(),false);
-  assert.deepEqual(await page.locator('#startOverlay button').allTextContents(),['Play →','Notebook','Settings']);
+  assert.deepEqual(await page.locator('#startOverlay button:visible').allTextContents(),['Play →','Notebook','Settings']);
   for(const id of ['startBtn','splashHubBtn','splashOptionsBtn']){const b=await page.locator('#'+id).boundingBox();assert.ok(b.height>=44&&b.x>=0&&b.y>=0&&b.x+b.width<=viewport.width+1&&b.y+b.height<=viewport.height+1,'cover action fits '+id)}
   await page.click('#splashHubBtn');assert.equal(await page.locator('#hubOverlay').isVisible(),true);
   for(const [button,overlay,close] of [['hubMonstersBtn','compendiumOverlay','closeCompendiumBtn'],['hubToolBtn','buildOverlay','closeBuildBtn'],['hubNotebookBtn','notebookOverlay','closeNotebookBtn'],['hubSettingsBtn','optionsOverlay','closeOptionsBtn'],['hubStatsBtn','statisticsOverlay','closeStatisticsBtn'],['hubChangelogBtn','changelogOverlay','closeChangelogBtn']]){

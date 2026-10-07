@@ -15,11 +15,12 @@ const perks=game.catalog.notebookPerks=[
   {id:'rerolls',name:'Lunch Money',max:2,art:'reroll-coupon',desc:'+1 starting reroll per rank. Each cleared wave still supplies a free reroll.',effect:n=>'+'+n+' starting rerolls'},
   {id:'luck',name:'Lucky Eraser',max:4,art:'lucky-scribble',desc:'+2 starting Luck per rank, improving upgrade rarity odds.',effect:n=>'+'+2*n+' starting Luck'}
 ];
-let progress={version:1,scraps:0,lifetimeScraps:0,levels:{}},storageIssue=false,runScraps=0,runActive=false,killScraps=0;
+let progress={version:1,scraps:0,lifetimeScraps:0,scrapTutorialDone:false,levels:{}},storageIssue=false,runScraps=0,runActive=false,killScraps=0;
 const cleanNumber=n=>Number.isSafeInteger(n)&&n>=0?Math.min(maxCurrency,n):0;
 try{
   const saved=JSON.parse(localStorage.getItem(key)||'null');
   if(saved&&saved.version===1&&typeof saved.levels==='object'&&saved.levels!==null){
+    progress.scrapTutorialDone=saved.scrapTutorialDone===true;
     progress.scraps=cleanNumber(saved.scraps);progress.lifetimeScraps=Math.max(progress.scraps,cleanNumber(saved.lifetimeScraps));
     for(const p of perks)progress.levels[p.id]=Math.min(p.max,cleanNumber(saved.levels[p.id]));
   }
@@ -110,8 +111,19 @@ function renderNotebook(){
     button.onclick=()=>buyNotebookPerk(perk.id);card.appendChild(button);list.appendChild(card);
   }
 }
+// Wait until a later menu visit; never interrupt earning scraps or a live run.
+function syncScrapTutorial(){
+ const eligible=progress.lifetimeScraps>0&&!progress.scrapTutorialDone&&!game.state.running;
+ const shop=eligible&&game.dom.$('notebookOverlay').style.display==='grid';
+ const hub=eligible&&game.dom.$('hubOverlay').style.display==='grid';
+ const cover=eligible&&!game.api.infoOpen()&&game.dom.startOverlay.style.display!=='none';
+ game.dom.$('scrapGuideCover').hidden=!cover;game.dom.$('scrapGuideHub').hidden=!hub;game.dom.$('scrapGuideShop').hidden=!shop;
+ game.dom.$('splashHubBtn').classList?.toggle('scrap-guide-target',cover);
+ game.dom.$('hubNotebookBtn').classList?.toggle('scrap-guide-target',hub);
+}
+function finishScrapTutorial(){progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial()}
 function openNotebook(){game.api.openInfo('notebook')}
 function closeNotebook(){game.api.closeInfo()}
-const api={awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
+const api={syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;
 };

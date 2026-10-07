@@ -8,6 +8,7 @@ function text(node,value){
 function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
+  game.api.syncScrapTutorial();
   game.api.updateChapterBackground();
   game.dom.$('app').classList?.toggle('menu-view',!game.state.running&&game.dom.startOverlay.style.display!=='none');
   const overtime=game.dom.$('bossOvertime'),bossWave=game.state.wave%5===0;
@@ -173,6 +174,7 @@ function openInfo(kind){
   if(kind==='options')game.api.renderOptions();
   if(kind==='statistics')game.api.renderStatistics();
   game.dom.$(kind+'Overlay').style.display='grid';
+  game.api.syncScrapTutorial();
   game.dom.$(infoButtons[kind]).focus?.({preventScroll:true});
   const cards=game.dom.$(kind+'Overlay').querySelector?.('.build-box');
   if(cards)cards.scrollTop=0;
@@ -184,6 +186,7 @@ function closeInfo(back=true){
   game.dom.$(kind+'Overlay').style.display='none';
   game.dom.$('pauseBtn').textContent='Pause';
   if(goBack){openInfo(goBack);return}
+  game.api.syncScrapTutorial();
   if(kind==='monsterIntro'||(focusBeforeInfo?.getClientRects&&focusBeforeInfo.getClientRects().length===0))game.dom.$(game.state.running?'pauseBtn':'splashHubBtn').focus?.();else focusBeforeInfo?.focus?.();
 }
 function handleInfoKey(e){
