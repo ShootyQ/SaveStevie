@@ -123,7 +123,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
   game.state.enemies.push(enemy);game.api.discoverMonster(type);
-  if(forceBoss){bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null}
+  if(forceBoss){bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null;game.api.playSound('bossEnter')}
   return enemy;
 }
 
@@ -133,7 +133,7 @@ function killEnemy(e){
   game.state.kills++;game.state.waveKills++;game.state.score+=10;
   game.api.awardKillScraps(e);
   game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
-  if(e.waveBoss)bossResolved=true;
+  if(e.waveBoss){bossResolved=true;game.api.selectMusicTrack('victory')}
   game.api.burst(e.x,e.y,e.color,12);
 
   if(e.type==='eraser') game.state.finalBossDefeated=true;
