@@ -120,7 +120,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
   };
   return effects[name]?effects[name]():game.catalog.upgrades.find(u=>u.name===name)?.desc||'Active';
 }
-let activeInfo=null,pausedBeforeInfo=false,focusBeforeInfo=null,returnToPause=false;
+let activeInfo=null,pausedBeforeInfo=false,focusBeforeInfo=null,returnInfo=null;
 function renderBuild(){
   game.api.renderTool('buildTool');
   const s=game.state.stats,f=v=>Number(v.toFixed(2));
@@ -140,13 +140,14 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
-const infoButtons={pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(activeInfo===kind||activeInfo==='monsterIntro')return;
-  if(activeInfo){const back=returnToPause||activeInfo==='pause';closeInfo(false);returnToPause=back&&kind!=='pause'}
+  if(activeInfo){const back=returnInfo||(['pause','hub'].includes(activeInfo)?activeInfo:null);closeInfo(false);returnInfo=back&&kind!==back?back:null}
   game.api.endDraw();pausedBeforeInfo=game.state.paused;focusBeforeInfo=document.activeElement;
   game.state.paused=true;activeInfo=kind;
+  game.dom.$('pauseBtn').textContent='Resume';
   if(kind==='pause'){
     game.dom.$('quitConfirmation').hidden=true;game.dom.$('pauseActions').hidden=false;
     game.dom.$('pauseSummary').textContent='Wave '+game.state.wave+' · '+game.state.tool.name+' · '+game.api.notebookSnapshot().runScraps+' scraps earned';
@@ -164,10 +165,11 @@ function openInfo(kind){
 }
 function closeInfo(back=true){
   if(!activeInfo)return;
-  const kind=activeInfo,goBack=back&&returnToPause;returnToPause=false;activeInfo=null;game.state.paused=pausedBeforeInfo;
+  const kind=activeInfo,goBack=back&&returnInfo;returnInfo=null;activeInfo=null;game.state.paused=pausedBeforeInfo;
   game.dom.$(kind+'Overlay').style.display='none';
-  if(goBack){openInfo('pause');return}
-  if(kind==='monsterIntro'||(focusBeforeInfo?.getClientRects&&focusBeforeInfo.getClientRects().length===0))game.dom.$('pauseBtn').focus?.();else focusBeforeInfo?.focus?.();
+  game.dom.$('pauseBtn').textContent='Pause';
+  if(goBack){openInfo(goBack);return}
+  if(kind==='monsterIntro'||(focusBeforeInfo?.getClientRects&&focusBeforeInfo.getClientRects().length===0))game.dom.$(game.state.running?'pauseBtn':'splashHubBtn').focus?.();else focusBeforeInfo?.focus?.();
 }
 function handleInfoKey(e){
   if(!activeInfo){
