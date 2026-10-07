@@ -1241,11 +1241,11 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
   constructor(){ctx=this;this.state='running';this.currentTime=0;this.destination={}}
   createGain(){return node()}
   createDynamicsCompressor(){return {...node(),threshold:param(),knee:param(),ratio:param(),attack:param(),release:param()}}
-  decodeAudioData(){return Promise.resolve({duration:.5})}
+  decodeAudioData(){return Promise.resolve({duration:8})}
   createBufferSource(){const s={connect(){},disconnect(){},start(...args){this.args=args},stop(){this.onended?.()}};sources.push(s);return s}
  };
  env.sandbox.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(4)});
- g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,11);
+ g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,18);
  const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('sound must not use combat RNG')};
  assert.equal(g.api.playSound('scribble'),true);assert.equal(sources[0].args[2],.28);assert.equal(g.api.playSound('scribble'),false);
  sources[0].onended();ctx.currentTime=.3;assert.equal(g.api.playSound('scribble'),true);assert.equal(g.api.soundEffectsSnapshot().voices[0].name,'scribble-2');
@@ -1254,7 +1254,11 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  for(let i=0;i<100;i++){ctx.currentTime+=.01;g.api.playSound('electric');g.api.playSound('wall')}assert.ok(g.api.soundEffectsSnapshot().voices.length<=6);assert.equal(g.api.soundEffectsSnapshot().voices.filter(v=>v.kind==='electric').length,1);
  g.state.paused=true;g.api.syncSoundEffects();assert.equal(g.api.soundEffectsSnapshot().voices.length,0);assert.equal(g.api.playSound('rock'),false);g.state.paused=false;
  g.api.setAudioVolume('effectsVolume',0);assert.equal(g.api.playSound('rock'),false);assert.equal(g.api.audioSettings().musicVolume,.35);g.api.setAudioVolume('effectsVolume',.4);ctx.currentTime=2;assert.equal(g.api.playSound('rock'),true);g.api.resetSoundEffects();assert.equal(g.api.soundEffectsSnapshot().voices.length,0);
- env.sandbox.Math.random=random;console.log('PASS: eleven decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
+ const bubbles=[];for(let i=0;i<5;i++){ctx.currentTime+=1;g.api.stopSoundEffects();assert.equal(g.api.playSound('poison'),true);bubbles.push(g.api.soundEffectsSnapshot().voices[0].name)}
+ assert.equal(sources.at(-1).args[1],2.9,'bubble grain starts at an audible burst');
+ assert.deepEqual(bubbles,['poison-bubble-1','poison-bubble-2','poison-bubble-3','poison-bubble-4','poison-bubble-1']);g.api.stopSoundEffects();
+ for(const kind of ['fire','frost','bossEnter']){ctx.currentTime+=3;assert.equal(g.api.playSound(kind),true);g.api.stopSoundEffects()}
+ env.sandbox.Math.random=random;console.log('PASS: eighteen decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
 })().catch(error=>{console.error(error);process.exitCode=1});
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();const triple=g.catalog.upgrades.find(u=>u.name==='Triple Stroke');assert.equal(triple.exclusiveRarity,'legendary');
@@ -1707,4 +1711,17 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const before=JSON.stringify(g.state),random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('art consumes RNG')};g.api.draw();assert.equal(JSON.stringify(g.state),before);env.sandbox.Math.random=random;
  g.state.enemies=[];g.state.wave=12;g.api.pick=pool=>{assert.ok(!pool.includes('basil'));return pool[0]};g.api.enemyType();g.state.wave=13;g.api.pick=pool=>{assert.ok(pool.includes('basil'));return 'basil'};assert.equal(g.api.enemyType(),'basil');
  console.log('PASS: Basil wave-13 pool, bounded guests/hosts, real lure/seating, warned 2× rush and expiry, pause, freeze/death cancellation, boss exclusions and pure artwork.');
+}
+
+{
+ let plays=0;const env=load(true,{audio:{play(){plays++;return Promise.resolve()},pause(){}}}),g=env.sandbox.testGame;g.api.resetRun();
+ for(const wave of [5,10,15,20,25]){
+  g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,20,20);g.api.killEnemy(boss);
+  assert.equal(g.api.musicStatus().track,'victory');assert.equal(env.node('gameMusic').loop,false);const count=plays;
+  g.api.killEnemy(boss);assert.equal(plays,count,'duplicate kill cannot replay victory');
+  env.node('gameMusic').listeners.ended();assert.equal(g.api.musicStatus().track,g.api.chapterForWave().id);assert.equal(env.node('gameMusic').loop,true);
+ }
+ g.api.toggleMusic();g.state.wave=5;g.api.startWave();const count=plays;g.api.killEnemy(g.api.spawnEnemy(true,20,20));assert.equal(plays,count,'boss victory respects music mute');
+ g.api.toggleMusic();g.state.wave=6;g.api.startWave();assert.equal(g.api.musicStatus().track,'pop-quiz-panic');assert.equal(env.node('gameMusic').loop,true);
+ console.log('PASS: every campaign/endless boss plays a one-shot victory, resumes its chapter, respects mute and transitions cleanly to the next wave.');
 }

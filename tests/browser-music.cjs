@@ -11,16 +11,25 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;
    try{body=fs.readFileSync(path.join(root,name))}catch{return route.fulfill({status:404,body:''})}
    if(name==='game.js')body=body.toString('utf8').replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');
-   return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
+   return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':name.endsWith('.wav')?'audio/wav':'text/html'});
   });
   await page.goto('http://127.0.0.1:8001/');await page.evaluate(()=>document.documentElement.dataset.build='browser-test');assert.equal(await page.locator('#gameMusic').evaluate(a=>a.paused),true,'intro waits for a tap');
   await page.click('#splashOptionsBtn');await page.waitForFunction(()=>!document.querySelector('#gameMusic').paused&&document.querySelector('#gameMusic').readyState>=2);await page.click('#closeOptionsBtn');
   assert.equal(await page.evaluate(()=>testGame.api.musicStatus().track),'splash');assert.ok(Math.abs(await page.locator('#gameMusic').evaluate(a=>a.duration)-117.432)<.1);
   await page.click('#startBtn');await page.waitForFunction(()=>!document.querySelector('#gameMusic').paused&&document.querySelector('#gameMusic').readyState>=2);
-  for(const [wave,id,duration] of [[1,'margin-mischief',83.472],[6,'pop-quiz-panic',73.992],[11,'crayon-catastrophe',129.24],[16,'final-draft',86.424]]){
+  for(const [wave,id,duration] of [[1,'margin-mischief',359.88],[6,'pop-quiz-panic',360.432],[11,'crayon-catastrophe',360.432],[16,'final-draft',86.424]]){
    await page.evaluate(wave=>{testGame.state.wave=wave;testGame.api.startWave()},wave);await page.waitForFunction(()=>!document.querySelector('#gameMusic').paused&&document.querySelector('#gameMusic').readyState>=2);
    assert.equal(await page.evaluate(()=>testGame.api.musicStatus().track),id);assert.ok(Math.abs(await page.locator('#gameMusic').evaluate(a=>a.duration)-duration)<.1);assert.equal(await page.locator('#gameMusic').evaluate(a=>a.loop),true);assert.ok(await page.locator('#gameMusic').evaluate(a=>a.src.includes('?v=')));
    const before=await page.locator('#gameMusic').evaluate(a=>({time:a.currentTime,src:a.currentSrc}));await page.evaluate(()=>testGame.api.startWave());const after=await page.locator('#gameMusic').evaluate(a=>({time:a.currentTime,src:a.currentSrc}));assert.equal(after.src,before.src);assert.ok(after.time>=before.time&&after.time-before.time<1,'same chapter keeps its stream');
+  }
+  for(const wave of [5,10,15,20]){
+   await page.evaluate(wave=>{const g=testGame;g.state.wave=wave;g.api.startWave();g.api.killEnemy(g.api.spawnEnemy(true,30,30));},wave);
+   await page.waitForFunction(()=>!document.querySelector('#gameMusic').paused&&document.querySelector('#gameMusic').readyState>=2);
+   assert.equal(await page.evaluate(()=>testGame.api.musicStatus().track),'victory');assert.equal(await page.locator('#gameMusic').evaluate(a=>a.loop),false);
+   assert.ok(Math.abs(await page.locator('#gameMusic').evaluate(a=>a.duration)-9.16)<.1);
+   await page.locator('#gameMusic').evaluate(a=>a.currentTime=a.duration-.1);
+   await page.waitForFunction(()=>testGame.api.musicStatus().track!=='victory');
+   assert.equal(await page.evaluate(()=>testGame.api.musicStatus().track===testGame.api.chapterForWave().id),true);
   }
   await page.click('#pauseBtn');await page.click('#musicBtn');await page.click('#resumeBtn');await page.evaluate(()=>{testGame.state.wave=6;testGame.api.startWave()});assert.equal(await page.locator('#gameMusic').evaluate(a=>a.paused),true);assert.equal(await page.evaluate(()=>testGame.api.musicStatus().muted),true);
   await page.reload();assert.equal(await page.evaluate(()=>testGame.api.musicStatus().muted),true);await page.click('#splashOptionsBtn');await page.click('#splashMusicBtn');await page.waitForFunction(()=>!document.querySelector('#gameMusic').paused);

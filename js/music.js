@@ -3,6 +3,7 @@ DoodleDefender.systems.music = function createMusic(game) {
 const audio=game.dom.$('gameMusic'),button=game.dom.$('musicBtn'),introButton=game.dom.$('splashMusicBtn'),key='saveStevieMusicMuted';
 const tracks=game.catalog.musicTracks={
   splash:{name:'Save Stevie Splash',file:'save-stevie-splash.mp3'},
+  victory:{name:'Stevie Victory',file:'stevie-victory.wav'},
   'margin-mischief':{name:'Save Stevie',file:'save-stevie.mp3'},
   'pop-quiz-panic':{name:'Pop Quiz Panic',file:'pop-quiz-panic.mp3'},
   'crayon-catastrophe':{name:'Crayon Catastrophe',file:'crayon-catastrophe.mp3'},
@@ -35,6 +36,7 @@ function playMusic(){
 function selectMusicTrack(id){
   if(!tracks[id]||id===track)return false;
   track=id;playAttempt++;blocked=false;audio.pause?.();
+  audio.loop=id!=='victory';
   const version=document.documentElement?.dataset?.build;
   audio.src='assets/audio/'+tracks[id].file+(version?'?v='+encodeURIComponent(version):'');
   try{audio.currentTime=0}catch{}
@@ -53,6 +55,7 @@ function musicStatus(){return {muted,started,blocked,track}}
 button.onclick=toggleMusic;introButton.onclick=toggleMusic;
 document.addEventListener?.('visibilitychange',()=>{if(document.hidden){playAttempt++;audio.pause?.()}else playMusic()});
 audio.addEventListener?.('error',()=>{blocked=true;updateMusicButton()});
+audio.addEventListener?.('ended',()=>{if(track==='victory')selectMusicTrack(game.api.chapterForWave().id)});
 // Respect saved mute; retry denied autoplay inside the next real gesture.
 function retryMusicOnGesture(event){
   if(event?.target?.closest?.('#musicBtn, #splashMusicBtn, #startBtn'))return;

@@ -6,7 +6,11 @@ const groups={
  rock:{files:['rock-hit-1','rock-hit-2'],gain:.5,gap:.06,cap:2,priority:2},
  wall:{files:['wall-hit'],gain:.27,gap:.18,cap:1,priority:1},
  electric:{files:['electric-zap'],gain:.32,gap:.16,cap:1,priority:2},
- defeated:{files:['monster-down'],gain:.38,gap:.12,cap:1,priority:3}
+ defeated:{files:['monster-down'],gain:.38,gap:.12,cap:1,priority:3},
+ fire:{files:['fire-crackle'],gain:.2,gap:.85,cap:1,priority:1,duration:.6},
+ frost:{files:['frost-crackle'],gain:.3,gap:.6,cap:1,priority:2,duration:.8},
+ poison:{files:['poison-bubble-1','poison-bubble-2','poison-bubble-3','poison-bubble-4'],offsets:[2.9,5.7,1.7,.5],gain:.5,gap:.85,cap:1,priority:1,duration:.6},
+ bossEnter:{files:['boss-enter'],gain:.45,gap:2,cap:1,priority:3}
 };
 let context=null,master=null,compressor=null,loading=null,voices=[],last={},variants={},ready=0,failed=0,played=0,dropped=0;
 const buffers=new Map(),maxVoices=6;
@@ -37,9 +41,9 @@ function playSound(kind,menu=false){
  if(voices.filter(v=>v.kind===kind).length>=g.cap){dropped++;return false}
  if(voices.length>=maxVoices){const candidate=voices.find(v=>groups[v.kind].priority<g.priority);if(!candidate){dropped++;return false}stopVoice(candidate)}
  const name=available[(variants[kind]||0)%available.length];variants[kind]=(variants[kind]||0)+1;
- try{const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffers.get(name);if(kind==='rock'&&source.playbackRate)source.playbackRate.value=(variants[kind]%2)?.97:1.03;const duration=kind==='scribble'?Math.min(.28,source.buffer.duration):source.buffer.duration;
+ try{const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffers.get(name);if(kind==='rock'&&source.playbackRate)source.playbackRate.value=(variants[kind]%2)?.97:1.03;const offset=Math.min(g.offsets?.[g.files.indexOf(name)]||0,Math.max(0,source.buffer.duration-.1)),duration=Math.min(kind==='scribble'?.28:g.duration??Infinity,source.buffer.duration-offset);
   const level=g.gain*(menu?.55:1);gain.gain.setValueAtTime(level,now);gain.gain.setValueAtTime(level,now+Math.max(0,duration-.025));gain.gain.linearRampToValueAtTime(0,now+duration);source.connect(gain);gain.connect(master);
-  const voice={source,gain,kind,name,stopped:false};voices.push(voice);source.onended=()=>{voice.stopped=true;source.disconnect?.();gain.disconnect?.();voices=voices.filter(v=>v!==voice)};source.start(0,0,duration);last[kind]=now;played++;return true;
+  const voice={source,gain,kind,name,stopped:false};voices.push(voice);source.onended=()=>{voice.stopped=true;source.disconnect?.();gain.disconnect?.();voices=voices.filter(v=>v!==voice)};source.start(0,offset,duration);last[kind]=now;played++;return true;
  }catch{stopSoundEffects(kind);return false}
 }
 function syncSoundEffects(){if(!combatActive()){for(const v of [...voices])if(v.kind!=='scribble'||!menuActive())stopVoice(v)}}

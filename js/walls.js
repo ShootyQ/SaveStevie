@@ -303,10 +303,12 @@ function applyInkContact(e,dt,wall=null){
   if(game.state.inks.chaos>0)applyChaosContact(e,dt);
 
   if(game.state.inks.fire>0){
+    if(e.immunity!=='fire')game.api.playSound('fire');
     e.burn=Math.max(e.burn,1.5+game.state.inks.fire*.6);
     e.burnDps=Math.max(e.burnDps,3+game.state.inks.fire*3);
   }
   if(game.state.inks.poison>0){
+    if(e.immunity!=='poison')game.api.playSound('poison');
     e.poison=Math.min(6,e.poison+dt*(1+game.state.inks.poison*.55));
     e.poisonDps=2+game.state.inks.poison*2.5;
   }

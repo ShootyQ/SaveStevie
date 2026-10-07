@@ -28,6 +28,7 @@ function applyFrostContact(e,dt){
   if(data.cold+1e-9>=t.frostCharge){
     const duration=t.frostDuration*(boss(e)?.5:1);
     e.freeze=Math.max(e.freeze,duration);data.cold=0;data.cooldown=duration+1.5;
+    game.api.playSound('frost');
   }
 }
 function pullGravity(e,dt,immobilized=false){
