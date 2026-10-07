@@ -7,7 +7,7 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['basil','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b'];
+const doodleNames=['basil','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{
@@ -21,6 +21,12 @@ if(typeof Image!=='undefined')for(const name of doodleNames){
         frame.getContext('2d').drawImage(image,(i%4)*image.naturalWidth/4,Math.floor(i/4)*image.naturalHeight/sheet.rows,image.naturalWidth/4,image.naturalHeight/sheet.rows,0,0,160,160);
         doodles[sheet.type+'-frame-'+i]=frame;
       }
+    }
+    if(name==='stevie-threats')for(let i=0;i<2;i++){
+      const frame=document.createElement('canvas');frame.width=128;frame.height=136;
+      frame.naturalWidth=128;frame.naturalHeight=136;
+      frame.getContext('2d').drawImage(image,i*image.naturalWidth/2,0,image.naturalWidth/2,image.naturalHeight,0,0,128,136);
+      doodles[i?'stevie-cover':'stevie-concerned']=frame;
     }
     inkSprites.clear();
   };
@@ -48,16 +54,31 @@ const reducedMotion=typeof matchMedia==='function'?matchMedia('(prefers-reduced-
 let motionReduced=!!reducedMotion?.matches;
 reducedMotion?.addEventListener?.('change',event=>{motionReduced=event.matches;resetEnemyAnimations();updateMenuPencil(0)});
 let idleTime=0,throwTime=Infinity,throwDuration=.38,throwFacing=1,flinchAge=1,cheerAge=Infinity;
+let stevieThreat=0,threatRelease=0;
 const wavePortrait=document.getElementById('waveStevie'),waveCtx=wavePortrait?.getContext('2d');
-function resetStevieAnimation(){idleTime=0;throwTime=Infinity;throwFacing=1;flinchAge=1;cheerAge=Infinity}
-function updateStevieAnimation(dt){idleTime=(idleTime+dt)%2.2;throwTime+=dt;flinchAge+=dt}
+function resetStevieAnimation(){idleTime=0;throwTime=Infinity;throwFacing=1;flinchAge=1;cheerAge=Infinity;stevieThreat=0;threatRelease=0}
+function updateStevieAnimation(dt){
+  idleTime=(idleTime+dt)%2.2;throwTime+=dt;flinchAge+=dt;
+  let nearest=Infinity,count=0;
+  for(const e of game.state.enemies)if(e.hp>0){
+    count++;nearest=Math.min(nearest,Math.hypot(e.x-game.state.player.x,e.y-game.state.player.y)-e.r-game.state.player.r);
+  }
+  // Edge distances work for tiny runners and large bosses. Separate release
+  // thresholds and a short hold keep a hovering enemy from flickering poses.
+  const desired=nearest<30?2:nearest<110||count>=8?1:0;
+  const held=stevieThreat===2&&nearest<48?2:stevieThreat>=1&&(nearest<140||count>=6)?1:0;
+  if(desired>=stevieThreat){stevieThreat=desired;threatRelease=0}
+  else if(held===stevieThreat)threatRelease=0;
+  else if((threatRelease+=dt)>=.6){stevieThreat=Math.max(desired,held);threatRelease=0}
+}
 function reactStevieHit(){if(!motionReduced)flinchAge=0}
-function celebrateStevie(){cheerAge=0;throwTime=Infinity;flinchAge=1}
+function celebrateStevie(){cheerAge=0;throwTime=Infinity;flinchAge=1;stevieThreat=0;threatRelease=0}
 function updateStevieCelebration(dt){cheerAge=Math.min(1.2,cheerAge+dt)}
 function stevieReactionPose(){
-  if(motionReduced)return {sprite:null,y:0,angle:0};
+  if(motionReduced)return {sprite:stevieThreat===2?'stevie-cover':stevieThreat===1?'stevie-concerned':null,y:0,angle:0};
   if(flinchAge<.22)return {sprite:'stevie-flinch',y:0,angle:-.08*Math.sin(flinchAge/.22*Math.PI)};
   if(cheerAge!==Infinity){const bounce=cheerAge<1.2?Math.abs(Math.sin(cheerAge/1.2*Math.PI*2)):0;return {sprite:cheerAge<.6?'stevie-cheer-a':'stevie-cheer-b',y:-bounce*4,angle:0}}
+  if(stevieThreat)return {sprite:stevieThreat===2?'stevie-cover':'stevie-concerned',y:Math.sin(idleTime*Math.PI*4)*(stevieThreat===2?.35:.65),angle:Math.sin(idleTime*Math.PI*3)*(stevieThreat===2?.025:.012)};
   return {sprite:null,y:0,angle:0};
 }
 function drawWaveStevie(){
@@ -87,7 +108,7 @@ function motionFor(e){
   let m=enemyMotion.get(e);
   if(!m){
     const heavy=['tank','brute','bulwark','boss','stapler','crayon','eraser'].includes(e.type);
-    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='basil'?3.2:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,walkAge:0,gruntFrame:0,runDistance:0,fastFrame:0,action:null,readyUntil:-1,sprite:null,facing:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
+    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='basil'?3.2:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,walkAge:0,gruntFrame:0,runDistance:0,fastFrame:0,action:null,readyUntil:-1,sprite:null,facing:game.state.player.x<e.x?-1:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
   }
   return m;
 }
@@ -118,13 +139,23 @@ function enemySpriteFrame(e){
   if(e.type==='grunt'&&doodles['grunt-frame-0'])return 'grunt-frame-'+(motionReduced?0:(enemyMotion.get(e)?.gruntFrame||0));
   return null;
 }
+// Native profile direction: Staple Snack's open jaws point left; the other
+// profile monsters point right. Front-facing silhouettes keep their artwork.
+const profileDirections={fast:1,sprinter:1,flanker:1,mini:1,basil:1,sniper:1,stapler:-1};
+function enemyFacing(e){
+  const m=enemyMotion.get(e);
+  if(e.type==='sniper')return game.state.player.x<e.x?-1:1;
+  if(m?.actionAge<.3&&['bite','slam'].includes(m.action))return m.actionFacing;
+  return m?.facing??(game.state.player.x<e.x?-1:1);
+}
 function updateEnemyAnimations(dt){
   motionTime+=dt;
-  if(motionReduced){splitEchoes=[];return}
+  if(motionReduced)splitEchoes=[];
   for(const e of game.state.enemies){
     const m=motionFor(e),distance=Math.hypot(e.x-m.x,e.y-m.y),heavy=m.heavy;
-    if(Math.abs(e.x-m.x)>.001)m.facing=e.x<m.x?-1:1;
+    if(e.freeze<=0&&e.stun<=0&&Math.abs(e.x-m.x)>.05)m.facing=e.x<m.x?-1:1;
     m.x=e.x;m.y=e.y;m.hitAge+=dt;m.birthAge+=dt;m.actionAge+=dt;
+    if(motionReduced)continue;
     const moving=distance>.001&&e.freeze<=0&&e.stun<=0;
     if(e.type==='grunt'&&e.freeze<=0&&e.stun<=0){
       if(moving)m.walkAge+=dt;
@@ -156,6 +187,7 @@ function updateEnemyAnimations(dt){
     if(e.freeze>0||e.stun>0)continue;
     // Distinct silhouettes reuse the existing art. These offsets never touch
     // enemy coordinates, attack timers, damage, or the combat random stream.
+    if(moving&&e.type==='flanker'){p.angle+=m.facing*.12;p.y-=Math.abs(step)*1.6;p.sx+=step*.06;p.sy-=step*.04}
     if(moving&&(e.type==='fast'||e.type==='mini')){p.angle+=m.facing*.09;p.sx+=step*.05;p.sy-=step*.05;}
     if(moving&&e.type==='grunt'&&!doodles['grunt-frame-0']){p.sx+=step*.035;p.sy-=step*.035;}
     if(e.type==='boss'&&game.api.isFirstBoss(e)){
@@ -273,7 +305,7 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
   // Squash around the feet so hit reactions remain small and planted.
   const foot=top+height;ctx.translate(0,foot);ctx.scale(pose.sx,pose.sy);ctx.translate(0,-foot);
-  if((e.type==='sniper'&&game.state.player.x<e.x)||(e.type==='fast'&&!name.startsWith('fast-frame-')&&(enemyMotion.get(e)?.facing??(game.state.player.x<e.x?-1:1))<0))ctx.scale(-1,1);
+  if(profileDirections[e.type]&&!name.startsWith('fast-frame-')&&enemyFacing(e)!==profileDirections[e.type])ctx.scale(-1,1);
   // Damage never fades the body: health belongs in the separate bar.
   ctx.drawImage(tintedDoodle(name,colors),left,top,width,height);
   ctx.restore();
@@ -734,7 +766,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { enemyFacing, enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 updateMenuPencil(0);
 return api;

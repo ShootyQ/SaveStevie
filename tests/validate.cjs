@@ -1791,3 +1791,34 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const next=load(true,{storage:{getItem:k=>pending.get(k)||null,setItem:(k,v)=>pending.set(k,v)}});assert.equal(next.node('scrapGuideCover').hidden,false,'next session teaches players with earnings');next.node('scrapGuideSkip').onclick();assert.equal(next.node('scrapGuideCover').hidden,true);
  console.log('PASS: defeat returns to menu; scrap guide waits for earnings/menu, follows Notebook/shop, preserves currency, accepts dismissal and persists completion.');
 }
+
+// Direction and threat presentation never alter combat state.
+{
+ for(const reduced of [false,true]){
+  const env=load(true,{images:true,reduced}),g=env.sandbox.testGame;g.api.resetRun();
+  for(const type of ['fast','sprinter','flanker','mini','basil','stapler']){
+   const e=g.api.spawnEnemy(false,100,140,type);g.state.enemies=[e];g.api.updateEnemyAnimations(0);
+   e.x-=5;g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyFacing(e),-1,type+' faces left');
+   e.y+=5;g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyFacing(e),-1,'vertical holds facing');
+   e.x+=5;g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyFacing(e),1);
+   e.freeze=1;e.x-=5;g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyFacing(e),1,'freeze holds direction');
+   e.freeze=0;e.stun=1;e.x-=5;g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyFacing(e),1,'stun holds direction');
+  }
+  g.state.enemies=[];g.api.resetStevieAnimation();g.api.updateStevieAnimation(0);assert.equal(g.api.stevieReactionPose().sprite,null);
+  const e=g.api.spawnEnemy(false,g.state.player.x+150,g.state.player.y,'sprinter');g.state.enemies=[e];
+  const gap=n=>{e.x=g.state.player.x+g.state.player.r+e.r+n};
+  gap(90);g.api.updateStevieAnimation(.01);assert.equal(g.api.stevieReactionPose().sprite,'stevie-concerned');
+  gap(20);g.api.updateStevieAnimation(.01);assert.equal(g.api.stevieReactionPose().sprite,'stevie-cover');
+  gap(35);g.api.updateStevieAnimation(1);assert.equal(g.api.stevieReactionPose().sprite,'stevie-cover','cover hysteresis');
+  gap(80);g.api.updateStevieAnimation(.3);assert.equal(g.api.stevieReactionPose().sprite,'stevie-cover','brief hold');
+  g.api.updateStevieAnimation(.31);assert.equal(g.api.stevieReactionPose().sprite,'stevie-concerned');
+  gap(250);g.api.updateStevieAnimation(.61);assert.equal(g.api.stevieReactionPose().sprite,null);
+  g.state.enemies=Array.from({length:8},()=>({...e}));g.api.updateStevieAnimation(.01);assert.equal(g.api.stevieReactionPose().sprite,'stevie-concerned','crowd at distance');
+  g.state.enemies.forEach(n=>n.hp=0);g.api.updateStevieAnimation(.61);assert.equal(g.api.stevieReactionPose().sprite,null,'dead monsters ignored');
+  e.hp=10;gap(20);g.state.enemies=[e];g.api.updateStevieAnimation(.01);
+  const pose=JSON.stringify(g.api.stevieReactionPose());g.state.paused=true;g.api.update(.5);assert.equal(JSON.stringify(g.api.stevieReactionPose()),pose);
+  const state=JSON.stringify(g.state);env.sandbox.Math.random=()=>{throw Error('presentation consumed RNG')};g.api.updateEnemyAnimations(.01);g.api.updateStevieAnimation(.01);g.api.draw();assert.equal(JSON.stringify(g.state),state);
+  g.api.celebrateStevie();g.api.resetStevieAnimation();assert.equal(g.api.stevieReactionPose().sprite,null);
+ }
+ console.log('PASS: directional profiles, vertical/freeze/stun holds, crowd/proximity/cover hysteresis, dead exclusions, pause, reduced motion, pure combat state and RNG.');
+}
