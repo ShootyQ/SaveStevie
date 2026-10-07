@@ -15,7 +15,7 @@ function update(dt){
     const previous=game.state.timeLeft;
     game.state.timeLeft=Math.max(0,previous-dt);
     if(previous>0&&game.state.timeLeft===0)game.api.setMsg('No more arrivals. Defeat the remaining monsters!');
-    if(game.state.wave%5!==0&&game.state.timeLeft===0&&!game.state.enemies.some(e=>e.hp>0)){
+    if(game.state.wave%5!==0&&game.state.timeLeft===0&&!game.state.enemies.some(e=>e.hp>0||e.flight)){
       game.api.waveComplete();return;
     }
   }
@@ -88,11 +88,12 @@ function update(dt){
 
   game.api.updateSupportInkTime(dt);
   game.api.updatePlaguefire(dt);
+  game.api.updateLaunchEffects(dt);
 
   game.api.updateBossFields(dt);
   for(const e of [...game.state.enemies]){
     if(game.state.player.hp<=0)break;
-    if(e.hp<=0){game.api.killEnemy(e);continue}
+    if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(e.shockRest>0)e.shockRest=Math.max(0,e.shockRest-dt);e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
     game.api.updateSupportInkEnemy(e,dt);
@@ -112,11 +113,13 @@ function update(dt){
         }
       }
     }
+    if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
+    if(game.api.updateEnemyFlight(e,dt))continue;
     game.api.updateEnemyBehavior(e,dt);
     game.api.applySynergies(e,dt);
     game.api.eraserAttack(e,dt);
 
-    if(e.hp<=0){game.api.killEnemy(e);continue}
+    if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.contactStevie(e))continue;
     const immobilized=e.stun>0||e.freeze>0;
     game.api.pullGravity(e,dt,immobilized);
@@ -209,7 +212,7 @@ function update(dt){
   game.state.floaters=game.state.floaters.filter(f=>f.t>0);
 
   if(game.state.player.hp<=0)game.api.gameOver();
-  else if(game.api.bossFightResolved()||(game.state.wave%5!==0&&game.state.timeLeft===0&&!game.state.enemies.some(e=>e.hp>0)))game.api.waveComplete();
+  else if(game.api.bossFightResolved()||(game.state.wave%5!==0&&game.state.timeLeft===0&&!game.state.enemies.some(e=>e.hp>0||e.flight)))game.api.waveComplete();
   game.api.updateUI();
 }
 

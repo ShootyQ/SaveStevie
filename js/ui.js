@@ -32,6 +32,7 @@ function updateUI(){
   text(game.dom.hpText,Math.ceil(game.state.player.hp)+' / '+Math.ceil(game.state.player.maxHp));
   text(game.dom.timeText,Math.max(0,Math.ceil(game.state.timeLeft)));
   text(game.dom.rerollsEl,game.state.rerolls);
+  game.dom.$('rerollBtn').disabled=game.state.rerolls<=0||!game.state.inUpgrade;
   const fhm=game.dom.$('freehandMeter'), fhb=game.dom.$('freehandBar'), fht=game.dom.$('freehandText');
   if(game.state.stats.freehandLevel>0){
     fhm.style.display='block';
