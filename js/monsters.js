@@ -1,6 +1,7 @@
 /* Illustrated field guide and wave-start introductions; no combat state or RNG. */
 DoodleDefender.systems.monsters = function createMonstersSystem(game) {
 const monsters=game.catalog.monsters=[
+  {type:'basil',wave:8,name:'Basil',role:'Fancy-feast rabbit',flavor:'Calls your pencil lines artisanal spaghetti.',ability:'Hops toward Stevie and takes exaggerated forkfuls out of walls. His fine dining is mostly carrot.',tip:'Serve him a sturdy wall with damaging ink. Frost slows his dinner plans.'},
   {type:'grunt',wave:1,name:'Scribble Gribble',role:'Grunt',flavor:'The doodle that started this whole mess.',ability:'Walks straight toward Stevie and chews through walls in its way.',tip:'A simple barrier works. Keep enough ink for repairs.'},
   {type:'fast',wave:3,name:'Zoom Nugget',role:'Fast runner',flavor:'Has never once walked in a school hallway.',ability:'Small and fast, with less health than most monsters.',tip:'Draw early. Leave space between your wall and Stevie.'},
   {type:'bouncer',wave:5,name:'Boingus',role:'Bouncer',flavor:'A rubber band with unresolved feelings.',ability:'Ricochets up to three times, looking for a route around your walls before attacking them.',tip:'Close the gaps. Frost and layered barriers buy time.'},

@@ -107,3 +107,8 @@ are individually generated original transparent colored-pencil/pen doodles.
 The full sprites are preserved without an atlas dependency and are loaded with
 existing asset versioning, status tints, movement, and hit animation. Procedural
 body fallbacks keep gameplay functional while artwork loads.
+
+Basil (`basil.png`) is an original generated transparent rabbit gourmand doodle,
+matching the monster roster's crayon texture. His hopping, squash and forkful
+wall-bite animation uses renderer transforms, without extra frame assets or
+combat random draws. Reduced motion uses the static drawing.
