@@ -112,3 +112,17 @@ Basil (`basil.png`) is an original generated transparent rabbit gourmand doodle,
 matching the monster roster's crayon texture. His hopping, squash and forkful
 wall-bite animation uses renderer transforms, without extra frame assets or
 combat random draws. Reduced motion uses the static drawing.
+
+## Threat reactions and monster facing
+
+`stevie-threats.png` is an original generated transparent two-cell sheet, based
+on Stevie's existing artwork: concerned on the left, taking cover on the right.
+The renderer crops both poses once at load and animates a small nervous sway.
+Static expressions remain available with reduced motion. Threat levels use
+living enemy counts and distance between collider edges, with hysteresis.
+These reactions do not change attacks, damage, or colliders.
+
+Sprinter, flanker, mini, Basil and Staple Snack now mirror to horizontal travel
+(or a bite/slam target), alongside the existing fast runner and aiming sniper.
+Vertical motion preserves facing; frozen/stunned monsters hold it. Flankers
+have an extra running lean and bounce. Reduced motion retains facing.
