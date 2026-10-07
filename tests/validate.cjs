@@ -662,8 +662,8 @@ assert.ok(Number(stored.get('doodleDefenderBestV4'))>=15,'existing best never er
 const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:2000,lifetimeScraps:2000,levels:{}}):null,setItem(){}};
 const rich=load(true,{storage:richStore}).sandbox.testGame;
 for(const p of rich.catalog.notebookPerks){for(let rank=0;rank<p.max;rank++)assert.equal(rich.api.buyNotebookPerk(p.id),true);assert.equal(rich.api.buyNotebookPerk(p.id),false,'rank cap')}
-assert.equal(rich.api.notebookSnapshot().scraps,1308,'all rank prices charged exactly');
-rich.api.resetRun();assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,97,107,9,1.3,2,8]);
+assert.equal(rich.api.notebookSnapshot().scraps,1242,'all rank prices charged exactly');
+rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,8);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);rich.api.rollCards();assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,97,107,9,1.3,2,8]);
 rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.3,'rock unlock preserves faster starter throws');assert.equal(rich.state.stats.rockDamage,13);
 const dirty=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:-5,lifetimeScraps:'oops',levels:{inkTank:999,health:-2,rocks:1.5,luck:'4'}}):null,setItem(){}}}).sandbox.testGame;
 assert.equal(dirty.api.notebookSnapshot().scraps,0);dirty.api.resetRun();assert.equal(dirty.state.stats.maxInk,260);assert.equal(dirty.state.player.maxHp,75);assert.equal(dirty.state.stats.rockDamage,0);assert.equal(dirty.state.stats.luck,0);
@@ -802,7 +802,7 @@ console.log('PASS: five soundtrack loops, intro autoplay with manual retry, chap
  take('Electric Ink','Frost Ink');assert.equal(g.state.inks.electric,1);take('Death Ink','Electric Ink');assert.equal(g.state.inks.electric,0);assert.equal(g.state.stats.wallDamage,13);
  take('Blast Ink','Death Ink');assert.equal(g.state.stats.wallDamage,8,'replacing Death removes only its damage');
  const counts={owned:0,new:0};for(let i=0;i<1000;i++){const u=g.api.getUpgrade();if(g.state.stacks[u.name])counts.owned++;else counts.new++;}
- assert.ok(counts.owned>counts.new,'equipped effects are favored');
+ assert.ok(counts.new>counts.owned,'new upgrades outnumber repeats while equipped effects remain favored individually');
  let tickets=0;for(let i=0;i<20000;i++){g.api.resetRewardPlan();if(g.state.legendaryWave){tickets++;assert.ok(g.state.legendaryWave>=1&&g.state.legendaryWave<=19);}}
  assert.ok(tickets>1800&&tickets<2200,'seeded campaign chance is approximately 10%: '+tickets);
  g.state.wave=7;g.state.legendaryWave=7;g.state.legendaryOffered=false;g.state.stats.luck=1000;g.state.specialization='chaos';
@@ -1724,4 +1724,14 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.api.toggleMusic();g.state.wave=5;g.api.startWave();const count=plays;g.api.killEnemy(g.api.spawnEnemy(true,20,20));assert.equal(plays,count,'boss victory respects music mute');
  g.api.toggleMusic();g.state.wave=6;g.api.startWave();assert.equal(g.api.musicStatus().track,'pop-quiz-panic');assert.equal(env.node('gameMusic').loop,true);
  console.log('PASS: every campaign/endless boss plays a one-shot victory, resumes its chapter, respects mute and transitions cleanly to the next wave.');
+}
+
+// Owned effects remain attractive without crowding out the rest of the catalog.
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun();
+ for(const name of ['Fire Ink','Poison Ink'])g.api.applyUpgrade({...g.catalog.upgrades.find(u=>u.name===name),rarity:'common'});
+ let owned=0,other=0;const seen=new Set();
+ for(let i=0;i<4000;i++){const u=g.api.getUpgrade();seen.add(u.name);if(['Fire Ink','Poison Ink'].includes(u.name))owned++;else other++}
+ assert.ok(owned>400&&owned<1400,'equipped effects remain discoverable without dominating draws');assert.ok(other>2600);assert.ok(seen.size>=35,'broad upgrade variety remains available');
+ console.log('PASS: equipped effects remain favored while most draws offer other upgrades.');
 }

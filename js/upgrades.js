@@ -239,6 +239,7 @@ game.catalog.upgrades = [
 const oneTimeUpgrades = new Set(['Double Stroke','Triple Stroke','Quick Sketch','Loaded Deck','Collector','Greedy Goblin']);
 function upgradeAvailable(u){
   if(oneTimeUpgrades.has(u.name)&&game.state.stacks[u.name])return false;
+  if(u.name==='Greedy Goblin'&&game.state.stats.extraChoice)return false;
   if(u.name==='Double Stroke'&&game.state.stats.doubleLine)return false;
   if(u.name==='Helmet'&&game.state.stats.playerArmor>=.55)return false;
   if(u.name==='Reroll Coupon'&&game.state.rerolls>=5)return false;
@@ -246,7 +247,7 @@ function upgradeAvailable(u){
 }
 function upgradeWeight(u){
   let w=1;
-  if(effectKeys[u.name])w*=game.state.stacks[u.name]?6:(equippedEffects().length>=game.state.tool.slots?0.2:1);
+  if(effectKeys[u.name])w*=game.state.stacks[u.name]?2:(equippedEffects().length>=game.state.tool.slots?0.2:1);
   if(game.state.specialization==='defense'&&u.cat==='defense')w*=3;
   if(game.state.specialization==='ink'&&u.cat==='ink')w*=3;
   if(game.state.stats.newCardBias&&!game.state.stacks[u.name])w*=1.8;
@@ -266,7 +267,7 @@ function getUpgrade(forceRare=false){
   const rarity=game.api.rarityRoll(forceRare);
   const available=game.catalog.upgrades.filter(u=>game.api.upgradeAvailable(u)&&(!u.exclusiveRarity||u.exclusiveRarity===rarity));
   const owned=equippedEffects().filter(u=>game.api.upgradeAvailable(u));
-  const pool=owned.length&&Math.random()<.45?owned:available;
+  const pool=owned.length&&Math.random()<.15?owned:available;
   const u=game.api.weightedPick(pool);
   return u?{...u,rarity}:null;
 }

@@ -315,7 +315,7 @@ combat hashes. See `docs/performance.md` for measured results and limits.
 ## Notebook Scraps (first progression layer)
 
 Open **Back of the Notebook** from the splash screen, defeat/victory screens,
-or Your Build. The six permanent perks show current and next effects, rank
+or Your Build. The permanent perks show current and next effects, rank
 caps, prices, and a preview of your next starting kit. Purchases are available
 outside an active run and apply on the next new run; they stack with run
 upgrades. Continuing Endless uses the current run's kit.
@@ -1063,3 +1063,7 @@ Validation: `node tests/validate.cjs` and `tests/browser-wave-finale.cjs` cover
 real close-up/pop/clear, delayed awards, pause/input lock, splits/death/victory,
 discovery persistence/order and narrow layouts. `tests/browser-basil.cjs`
 checks the retained animation.
+
+### Notebook refills and reward variety
+
+Refill Practice grants +1 starting ink/second per rank (three ranks costing 5, 12, and 24 scraps). Extra Credit is a single 25-scrap purchase granting four normal reward choices from wave one. Boss rewards remain four; Greedy Goblin is excluded once four choices are already unlocked. Existing Notebook saves gain the new ranks at zero. Equipped effects retain double offer weight and a 15% owned-only draw chance, reduced from sixfold weight and 45%, leaving more room for other upgrades.
