@@ -1035,3 +1035,31 @@ combat balance use the existing upgrade system.
 Run `node tests/browser-upgrade-gallery.cjs` with Playwright/Chromium for all
 41 previews and images, touch/hover/keyboard confirmation, canceled inspection,
 stale rerolls, four boss choices, narrow layouts and image fallback.
+
+## Last-enemy finale and discovered Monster notes
+
+When the last ordinary monster is defeated after arrivals end, or a wave boss
+is defeated, `js/wave-finale.js` pauses combat for a 1.65-second close-up,
+wiggle, pop and cheer. Kill rewards resolve once; wave bonuses and victory
+wait until the scene ends. Split children and airborne enemies must resolve
+first. Pause freezes the scene, new runs/waves cancel it, and defeat takes
+priority. Reduced motion uses a short pop without camera movement or shaking.
+The wave-clear and victory cards use notebook paper and Stevie's handwriting.
+
+Monster notes show encountered types in first-wave order. Encounters and
+shown introductions persist in `saveStevieDiscoveredMonstersV1`; unknown
+entries have no visible names or pictures. Dev/test encounters do not unlock
+future campaign entries. Older runs have no encounter log, so their entries
+unlock as they are encountered again; best-wave records stay untouched.
+
+Basil starts at wave 13 with Fancy Feast: six nearby ordinary guests approach
+at 1.6× speed, gather for three seconds, and get a 0.8-second warning before
+a four-second 2× rush. Freeze, stun or defeating Basil cancels dinner. Walls
+still block guests, bosses are excluded, buffs do not stack, and at most two
+Basils are alive. Wave 13's scripted groups include him. His existing rabbit
+art and hopping animation are retained, with dinner and rush markers.
+
+Validation: `node tests/validate.cjs` and `tests/browser-wave-finale.cjs` cover
+real close-up/pop/clear, delayed awards, pause/input lock, splits/death/victory,
+discovery persistence/order and narrow layouts. `tests/browser-basil.cjs`
+checks the retained animation.

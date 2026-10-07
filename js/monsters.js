@@ -1,7 +1,6 @@
 /* Illustrated field guide and wave-start introductions; no combat state or RNG. */
 DoodleDefender.systems.monsters = function createMonstersSystem(game) {
 const monsters=game.catalog.monsters=[
-  {type:'basil',wave:8,name:'Basil',role:'Fancy-feast rabbit',flavor:'Calls your pencil lines artisanal spaghetti.',ability:'Hops toward Stevie and takes exaggerated forkfuls out of walls. His fine dining is mostly carrot.',tip:'Serve him a sturdy wall with damaging ink. Frost slows his dinner plans.'},
   {type:'grunt',wave:1,name:'Scribble Gribble',role:'Grunt',flavor:'The doodle that started this whole mess.',ability:'Walks straight toward Stevie and chews through walls in its way.',tip:'A simple barrier works. Keep enough ink for repairs.'},
   {type:'fast',wave:3,name:'Zoom Nugget',role:'Fast runner',flavor:'Has never once walked in a school hallway.',ability:'Small and fast, with less health than most monsters.',tip:'Draw early. Leave space between your wall and Stevie.'},
   {type:'bouncer',wave:5,name:'Boingus',role:'Bouncer',flavor:'A rubber band with unresolved feelings.',ability:'Ricochets up to three times, looking for a route around your walls before attacking them.',tip:'Close the gaps. Frost and layered barriers buy time.'},
@@ -17,6 +16,7 @@ const monsters=game.catalog.monsters=[
   {type:'brood',wave:10,name:'Matryoshk-AAAA!',role:'Nested splitter',flavor:'There are more monsters inside the monster.',ability:'Splits into two Twicey Diceys when killed; each can split into two Niblets. Four final children!',tip:'Save splash damage for the family reunion. Contact with Stevie does not produce children.'},
   {type:'bulwark',wave:11,name:'Captain Nope',role:'Armored defender',flavor:'That shield is absolutely a stolen desk.',ability:'Takes only 35% of physical damage. Elemental damage bypasses this armor.',tip:'Bring damaging elemental inks instead of relying entirely on rocks or plain walls.'},
   {type:'gnawer',wave:12,name:'Chompzilla',role:'Wall gnawer',flavor:'Eats pencils. Also the pencil sharpener.',ability:'Bites walls every 0.24 seconds, faster than the usual 0.42-second attack interval.',tip:'Use damaging inks and sturdy backup walls. Repair alone may struggle to keep up.'},
+  {type:'basil',wave:13,name:'Basil',role:'Fine-food fanatic',flavor:'One tiny carrot. Five-star service. Terrible table manners.',ability:'Serves a Fancy Feast: up to six nearby ordinary monsters hurry to his plate at 1.6× speed. After three seconds and a last-bite warning, guests nearby rush Stevie at 2× speed for four seconds. Bosses are not invited.',tip:'Box in the dinner party. Freeze, stun or defeat Basil before the last bite to cancel the rush.'},
   {type:'medic',wave:13,name:'Dr. Oopsie',role:'Healer',flavor:'Medical degree drawn in crayon.',ability:'Heals living allies within 95px for 3 HP/s. Cannot heal itself or revive defeated monsters.',tip:'Prioritize the doctor. Freeze or stun stops its healing.'},
   {type:'brute',wave:14,name:'Homework Hulk',role:'Heavy brute',flavor:'The assignment got angry.',ability:'A slow heavyweight with lots of health and powerful contact damage.',tip:'Use sustained elemental damage behind strong defenses.'},
   {type:'crayon',wave:15,name:'Count Crayon',role:'Summoner boss',flavor:'His evil plan is mostly purple.',ability:'Draws delayed red damage, blue ink-drain and green summon runes, plus rolling crayon shots. Below 40% health it paints two runes at once.',tip:'Draw through a rune to cancel it. Freeze or stun interrupts casts; summons are capped at six. Close a loop for bonus damage.'},
@@ -28,6 +28,13 @@ for(const m of monsters)if(['stapler','crayon','eraser'].includes(m.type)){
   m.ability+=' Arrives after the timed fight and cleanup. Tears through strokes drawn across its body; overlapping damage shares a limit.';
   m.tip='Build a perimeter with room around the boss. Enclosure grants 35% extra damage for a short window before a 1.2s warned breakout. Keep ink for the next enclosure and block its projectiles.';
 }
+const discoveryKey='saveStevieDiscoveredMonstersV1',knownMonsters=new Set();
+try{const saved=JSON.parse(localStorage.getItem(discoveryKey)||'[]');if(Array.isArray(saved))for(const type of saved)if(monsters.some(m=>m.type===type))knownMonsters.add(type)}catch{}
+function discoverMonster(type){
+ if(!monsters.some(m=>m.type===type)||knownMonsters.has(type)||game.api.devRunActive?.()||game.api.devModeEnabled?.()||game.api.testLabActive?.())return false;
+ knownMonsters.add(type);try{localStorage.setItem(discoveryKey,JSON.stringify([...knownMonsters]))}catch{}return true;
+}
+function discoveredMonsterTypes(){return monsters.filter(m=>knownMonsters.has(m.type)).map(m=>m.type)}
 const preferenceKey='saveStevieMonsterIntros';
 let enabled=true;
 try{enabled=localStorage.getItem(preferenceKey)!=='off'}catch{}
@@ -52,12 +59,14 @@ function renderMonsterCards(entries){
 }
 function renderCompendium(){
   game.dom.$('monsterIntrosEnabled').checked=enabled;
-  game.dom.$('monsterCards').innerHTML=renderMonsterCards(monsters);
+  game.dom.$('monsterCards').innerHTML=renderMonsterCards(monsters.filter(m=>knownMonsters.has(m.type)).sort((a,b)=>a.wave-b.wave));
+  game.dom.$('monsterDiscoveryNote').textContent=knownMonsters.size?'Discovered '+knownMonsters.size+' / '+monsters.length+' · Keep exploring the notebook.':'Meet monsters during a run to add their notes here.';
 }
 function introduceWave(){
   if(!enabled)return;
   const entries=monsters.filter(m=>m.wave===game.state.wave);
   if(!entries.length)return;
+  if(!game.api.devRunActive?.()&&!game.api.devModeEnabled?.()&&!game.api.testLabActive?.())for(const m of entries)discoverMonster(m.type);
   game.dom.$('monsterIntroTitle').textContent=entries.length===1?'Meet '+entries[0].name+'!':'New notebook nuisances!';
   game.dom.$('monsterIntroNote').textContent='Wave '+game.state.wave+' · '+entries.length+' new monster '+(entries.length===1?'type':'types')+'. Base stats shown; HP and speed scale with waves.';
   game.dom.$('monsterIntroCards').innerHTML=renderMonsterCards(entries);
@@ -68,6 +77,6 @@ function continueMonsterIntro(){
   if(game.dom.$('hideMonsterIntros').checked)setMonsterIntrosEnabled(false);
   game.api.closeInfo();
 }
-const api={monsterName,monsterIntrosEnabled,setMonsterIntrosEnabled,renderMonsterCards,renderCompendium,introduceWave,continueMonsterIntro};
+const api={discoverMonster,discoveredMonsterTypes,monsterName,monsterIntrosEnabled,setMonsterIntrosEnabled,renderMonsterCards,renderCompendium,introduceWave,continueMonsterIntro};
 Object.assign(game.api,api);return api;
 };

@@ -17,7 +17,7 @@ const mode=process.argv[4]||'simulation';
  const session=await page.context().newCDPSession(page);await session.send('Profiler.enable');await session.send('Profiler.start');
  const result=await page.evaluate(mode=>{
   if(mode==='wave20'){
-    const g=testGame;g.state.wave=20;g.api.startWave();const {W,H}=g.state,types=g.catalog.monsters.map(e=>e.type);
+    const g=testGame;g.state.wave=20;g.api.startWave();const {W,H}=g.state,types=g.catalog.monsters.map(e=>e.type).filter(type=>type!=='basil');
     g.state.spawnTimer=1e6;g.state.player.hp=g.state.player.maxHp=1e8;
     for(let i=0;i<180;i++){
       const e=g.api.spawnEnemy(false,25+(i%15)*(W-50)/14,125+Math.floor(i/15)*(H-190)/11,types[i%types.length]);e.hp=e.maxHp=1e6;
