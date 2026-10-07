@@ -756,7 +756,7 @@ console.log('PASS: HP curve, gentler opening, timed/capped groups, untimed requi
 
 {
 let plays=0;const env=load(true,{audio:{play(){plays++;return Promise.resolve()},pause(){}}}),g=env.sandbox.testGame;
-assert.equal(g.api.musicStatus().track,'splash');assert.equal(plays,1,'splash attempts autoplay');env.node('splashMusicBtn').onclick();assert.equal(plays,2);assert.equal(g.api.musicStatus().muted,false);
+assert.equal(g.api.musicStatus().track,'splash');assert.equal(plays,1,'splash attempts autoplay');env.node('splashMusicBtn').onclick();assert.equal(g.api.musicStatus().muted,true);env.node('splashMusicBtn').onclick();assert.equal(plays,2);assert.equal(g.api.musicStatus().muted,false);
 env.node('startBtn').onclick();assert.equal(g.api.musicStatus().track,'margin-mischief');assert.equal(plays,3);env.node('gameMusic').currentTime=12;g.state.wave=5;g.api.startWave();assert.equal(env.node('gameMusic').currentTime,12);assert.equal(plays,3);
 for(const [wave,id] of [[6,'pop-quiz-panic'],[11,'crayon-catastrophe'],[16,'final-draft']]){g.state.wave=wave;g.api.startWave();assert.equal(g.api.musicStatus().track,id);assert.equal(env.node('gameMusic').currentTime,0);assert.ok(env.node('gameMusic').src.includes(g.catalog.musicTracks[id].file));assert.ok(fs.statSync(path.join(root,'assets/audio',g.catalog.musicTracks[id].file)).size>1000000)}
 const count=plays;g.state.wave=21;g.api.startWave();assert.equal(plays,count,'endless keeps final loop');g.api.toggleMusic();g.state.wave=6;g.api.startWave();assert.equal(plays,count,'muted transitions stay muted');assert.equal(g.api.musicStatus().track,'pop-quiz-panic');g.api.toggleMusic();assert.equal(plays,count+1);

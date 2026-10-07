@@ -970,8 +970,8 @@ hand-torn notebook-paper artwork, with actual readable labels in the
 same Stevie Pencil font as his notes. Individual slips use small fixed rotations;
 hover motion respects reduced-motion preferences. Phone portrait/landscape and
 native Android layouts keep controls reachable by scrolling within the menus.
-The title's **My notebook** opens Monsters, the drawing tool, permanent scraps,
-Settings, Stats and What's new. Closing these pages returns to My notebook;
+The title's **Notebook** opens Monsters, the drawing tool, permanent scraps,
+Settings, Stats and What's new. Closing these pages returns to the notebook;
 closing the notebook returns focus to its title-screen button.
 
 The live toolbar now contains only **Pause/Resume** and web **Screen**. Native
@@ -980,3 +980,9 @@ Monster notes and Settings are in Pause; Erase walls and the music mute toggle
 also live there. Resume restores the run. Quit still warns that run upgrades are
 lost and earned scraps remain saved. Updated browser menu, notebook, tool,
 options and Android test-lab checks exercise these actual navigation routes.
+
+The cover now has three actions: Play, Notebook and Settings. Decorative titles
+and one short drawing instruction sit directly on the page; raised paper scraps
+are reserved for buttons. Notebook contains saved scraps, monster notes, pencils,
+scores and updates. Music playback is in Settings and toggles the current track
+without resetting it to the intro during a run.

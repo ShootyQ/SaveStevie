@@ -688,31 +688,22 @@ button.paper-slip:hover{transform:rotate(calc(var(--tilt) + .6deg)) translateY(-
 button.paper-slip:active{transform:rotate(var(--tilt)) translateY(2px)}
 button.paper-slip:focus-visible{outline:3px dashed #3562be;outline-offset:3px}
 .paper-slip .scrap-caption{display:block;font-size:15px;line-height:1.1;margin-top:3px;color:#6e6656}
-#startOverlay .splash-box{width:min(100%,900px);max-height:100%;padding:22px 24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:'eyebrow eyebrow' 'art title' 'art tagline' 'art howto' 'art start' 'art hub' 'scraps links' 'footer footer';gap:12px 24px;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:auto;align-items:center;transform:none}
+/* The cover has three actions; only buttons look like loose paper scraps. */
+#startOverlay .splash-box{width:min(100%,820px);max-height:100%;padding:24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:'art title' 'art tagline' 'art start' 'art hub' 'art settings' 'footer footer';gap:14px 32px;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:auto;align-items:center;transform:none}
 #startOverlay .splash-box::before{display:none}
-#startOverlay .splash-eyebrow{grid-area:eyebrow;justify-self:center;width:max-content;max-width:100%;padding:9px 20px;font-size:19px;letter-spacing:0;text-transform:none}
-#startOverlay .splash-eyebrow span{font-size:14px;margin-left:9px;background:transparent;color:#a44d44}
 #startOverlay .splash-art{grid-area:art;width:100%;height:auto;aspect-ratio:440 / 250;margin:0;align-self:center}
-#startOverlay .splash-title{grid-area:title;--tilt:1.7deg;display:block;line-height:1.05;margin:0;padding:18px 12px 12px;font-size:clamp(48px,7vw,74px);letter-spacing:-1px;color:#393e40}
-#startOverlay .splash-title span{color:#315d8c;background:transparent}
-#startOverlay .splash-tagline{grid-area:tagline;--tilt:-2.2deg;font-size:21px!important;line-height:1.1;padding:10px;margin:0}
-#startOverlay .splash-howto{grid-area:howto;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:0;margin:2px 0;background:none;border:0}
-#startOverlay .splash-howto > div{display:block;padding:9px 4px 7px;transform:rotate(var(--tilt));min-width:0;border:0;background:transparent}
-#startOverlay .splash-howto > div:nth-child(2){--tilt:2deg}
-#startOverlay .splash-howto > div:nth-child(3){--tilt:-3deg}
-#startOverlay .splash-howto b{display:block;font-size:17px;font-weight:400;letter-spacing:0;line-height:1.05;margin:0 0 4px;text-transform:none;color:#315d8c}
-#startOverlay .splash-howto span{display:block;font-size:13px;line-height:1.1}
-#startOverlay .splash-howto .howto-icon{display:none}
-#startOverlay #startBtn{grid-area:start;--tilt:-1.4deg;font-size:30px;color:#305e39;min-height:64px;margin:0}
-#startOverlay #startBtn::after{content:'';position:absolute;left:17%;right:17%;bottom:9px;height:3px;background:#71896170;transform:rotate(-1deg);border-radius:40%}
-#startOverlay #splashHubBtn{grid-area:hub;--tilt:1.4deg;min-height:64px;color:#315d8c}
-#startOverlay #splashNotebookBtn{grid-area:scraps;--tilt:-2deg;margin:0;min-height:52px;font-size:23px;padding:9px 12px}
-#startOverlay .splash-links{grid-area:links;display:flex;gap:7px;flex-wrap:nowrap;align-items:center;margin:0}
-#startOverlay .splash-links button{flex:1;min-width:0;padding:8px 5px;min-height:48px;margin:0!important;font-size:18px!important;line-height:1.05}
-#startOverlay .splash-links button:nth-child(2){--tilt:2deg}
-#startOverlay .splash-footer{grid-area:footer;--tilt:.5deg;justify-self:center;width:max-content;max-width:100%;margin:4px 0 0;padding:12px 20px;font-size:17px;line-height:1.15}
-#startOverlay .copyright-notice{font-family:'Stevie Pencil',cursive;font-size:12px;margin-top:4px}
-#startOverlay .splash-scribble{font-family:'Stevie Pencil',cursive;font-size:22px}
+#startOverlay .splash-title{grid-area:title;display:block;transform:none;line-height:1.05;margin:0;padding:0;font-size:clamp(48px,7vw,72px);letter-spacing:-1px;color:#fff4dc;text-align:center}
+#startOverlay .splash-title span{color:#bedcff;background:transparent}
+#startOverlay .splash-tagline{grid-area:tagline;transform:none;text-align:center;font-size:20px!important;line-height:1.2;padding:0;margin:0 0 8px;color:#e9dfcc}
+#startOverlay button.paper-slip{--tilt:0deg;min-height:54px;margin:0;padding:12px 20px;font-size:27px;color:#315d8c}
+#startOverlay button.paper-slip::before{filter:drop-shadow(1px 4px 2px #65583f55)}
+#startOverlay #startBtn{grid-area:start;--tilt:-1deg;color:#305e39;font-size:32px;min-height:64px}
+#startOverlay #startBtn::before{filter:sepia(.25) drop-shadow(1px 4px 2px #65583f55)}
+#startOverlay #startBtn::after{content:'';position:absolute;left:25%;right:25%;bottom:9px;height:3px;background:#71896170;transform:rotate(-1deg);border-radius:40%}
+#startOverlay #splashHubBtn{grid-area:hub}
+#startOverlay #splashOptionsBtn{grid-area:settings}
+#startOverlay .splash-footer{grid-area:footer;justify-self:center;width:auto;max-width:100%;margin:12px 0 0;padding:0;transform:none;line-height:1.15}
+#startOverlay .copyright-notice{font-family:'Stevie Pencil',cursive;font-size:12px;margin:0;color:#d3c9b7}
 /* Only these two controls remain on the live paper. */
 .bottom{height:52px;flex:0 0 52px;justify-content:flex-end;flex-wrap:nowrap;background:transparent;border:0;box-shadow:none;padding:4px 6px;gap:9px}
 .bottom button{flex:0 0 104px;max-width:140px;min-height:44px;height:44px;flex-direction:row;gap:7px;font-family:'Stevie Pencil',cursive;font-weight:400;font-size:21px;border-width:1px}
@@ -737,55 +728,47 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 .notebook-hub .build-heading{position:static;background:transparent;gap:16px;align-items:center;border:0}
 .notebook-hub h2{padding:15px 20px;font-size:42px;font-weight:400;margin:0;color:#315d8c}
 .notebook-hub #closeHubBtn{font-size:24px;padding:12px 18px;min-width:78px}
-.notebook-hub .hub-note{--tilt:1.6deg;font-size:22px;padding:14px;margin:14px 0 22px;text-align:center}
+.notebook-hub .hub-note{font-size:19px;padding:0;margin:12px 0 20px;text-align:center;color:#59564e}
 .hub-pages{display:grid;grid-template-columns:1fr 1fr;gap:20px 14px}
 .hub-pages button{min-height:84px;padding:15px 12px;font-size:27px;color:#315d8c}
 .hub-pages button:nth-child(2n){--tilt:2.3deg;color:#56683c}
 .hub-pages button:nth-child(3n){--tilt:-2.5deg;color:#875347}
 .hub-pages .scrap-caption{font-size:17px}
 @media(max-width:600px){
- #startOverlay .splash-box{grid-template-columns:minmax(0,1fr);grid-template-areas:'eyebrow' 'title' 'tagline' 'art' 'howto' 'start' 'hub' 'scraps' 'links' 'footer';gap:7px;padding:14px 12px;width:min(100%,440px)}
- #startOverlay .splash-art{width:min(100%,340px);max-height:180px;justify-self:center}
- #startOverlay .splash-title{font-size:60px;padding:15px 10px 10px}
- #startOverlay .splash-eyebrow{font-size:17px;padding:7px 12px}
- #startOverlay .splash-eyebrow span{display:block;font-size:12px;margin:1px 0 0}
- #startOverlay .splash-tagline{font-size:20px!important;padding:8px}
- #startOverlay #startBtn{font-size:28px;min-height:56px}
- #startOverlay #splashHubBtn{min-height:60px}
- #startOverlay .splash-footer{font-size:14px;padding:9px 12px}
+ #startOverlay .splash-box{grid-template-columns:minmax(0,1fr);grid-template-areas:'title' 'art' 'tagline' 'start' 'hub' 'settings' 'footer';gap:14px;padding:18px 16px;width:min(100%,400px)}
+ #startOverlay .splash-art{width:min(100%,300px);max-height:170px;justify-self:center}
+ #startOverlay .splash-title{font-size:58px;padding:0}
+ #startOverlay .splash-tagline{font-size:20px!important;padding:0;margin:0 0 6px}
+ #startOverlay #startBtn{font-size:32px;min-height:60px}
+ #startOverlay .splash-footer{margin:10px 0 0;padding:0}
  .notebook-hub{padding:14px 12px}.notebook-hub h2{font-size:34px;padding:12px}
  .hub-pages{gap:16px 9px}.hub-pages button{font-size:24px;min-height:84px}.hub-pages .scrap-caption{font-size:15px}
  .pause-book{padding:14px 12px}.pause-actions{gap:10px}.pause-actions button{font-size:22px}
 }
 @media(max-height:700px) and (max-width:600px){
- #startOverlay .splash-box{padding:8px 12px;gap:5px}
- #startOverlay .splash-art{width:205px;max-height:117px}
- #startOverlay .splash-title{font-size:50px;padding:10px}
- #startOverlay .splash-tagline{font-size:18px!important;padding:5px}
- #startOverlay .splash-eyebrow{font-size:15px;padding:5px 12px}
- #startOverlay .splash-howto > div{padding:6px 3px}#startOverlay .splash-howto b{font-size:16px}#startOverlay .splash-howto span{font-size:12px}
- #startOverlay #startBtn{font-size:26px;min-height:48px}#startOverlay #splashHubBtn{min-height:51px;font-size:24px}
- #startOverlay #splashNotebookBtn{min-height:41px;font-size:21px}
- #startOverlay .splash-links button{min-height:40px;font-size:17px!important}
- #startOverlay .splash-footer{font-size:13px;margin:0;padding:8px 12px}
+ #startOverlay .splash-box{padding:12px 16px;gap:10px}
+ #startOverlay .splash-art{width:225px;max-height:128px}
+ #startOverlay .splash-title{font-size:48px;padding:0}
+ #startOverlay .splash-tagline{font-size:18px!important;padding:0}
+ #startOverlay button.paper-slip{min-height:48px;font-size:25px}
+ #startOverlay #startBtn{font-size:30px;min-height:54px}
+ #startOverlay .splash-footer{margin:8px 0 0;padding:0}
  .pause-book h2{font-size:40px;padding:9px;margin:9px 0}.pause-actions{gap:9px}.pause-actions button{min-height:45px}
 }
 @media(max-height:520px) and (min-width:600px){
- #startOverlay .splash-box{padding:8px 14px;gap:6px 18px;width:min(100%,800px)}
- #startOverlay .splash-art{max-width:330px;justify-self:center}
- #startOverlay .splash-title{font-size:43px;padding:10px}
- #startOverlay .splash-eyebrow{font-size:16px;padding:5px 12px}#startOverlay .splash-tagline{font-size:17px!important;padding:6px}
- #startOverlay .splash-howto > div{padding:6px 3px}#startOverlay .splash-howto b{font-size:15px}#startOverlay .splash-howto span{font-size:11px}
- #startOverlay #startBtn,#startOverlay #splashHubBtn{min-height:45px;font-size:24px;padding:7px 12px}#startOverlay #splashHubBtn .scrap-caption{font-size:13px}
- #startOverlay #splashNotebookBtn{font-size:21px;min-height:42px}
- #startOverlay .splash-links button{font-size:16px!important;min-height:40px}
- #startOverlay .splash-footer{font-size:13px;margin:0;padding:8px 12px}.notebook-hub .hub-note{margin:8px 0 14px;padding:9px}
+ #startOverlay .splash-box{padding:12px 18px;gap:9px 26px;width:min(100%,800px)}
+ #startOverlay .splash-art{max-width:310px;justify-self:center}
+ #startOverlay .splash-title{font-size:43px;padding:0}
+ #startOverlay .splash-tagline{font-size:18px!important;padding:0;margin:0 0 4px}
+ #startOverlay button.paper-slip{min-height:44px;font-size:24px;padding:8px 12px}
+ #startOverlay #startBtn{min-height:48px;font-size:28px}
+ #startOverlay .splash-footer{margin:2px 0 0;padding:0}.notebook-hub .hub-note{margin:8px 0 14px;padding:9px}
  .hub-pages{gap:12px}.hub-pages button{min-height:65px}.pause-book h2{font-size:38px;margin:6px 0;padding:7px}.pause-actions{gap:9px}.pause-actions button{min-height:45px}
 }
 @media(prefers-reduced-motion:reduce){button.paper-slip{transition:none}button.paper-slip:hover{transform:rotate(var(--tilt))}}
 
 /* Existing icon pseudo-elements must not replace the scrap underneath a label. */
-#startOverlay #splashNotebookBtn::before,#pauseOverlay #clearBtn::before{display:block;width:auto;height:auto;margin:0;background:url('assets/art/ui/menu-scrap.png') center/100% 145% no-repeat}
+#pauseOverlay #clearBtn::before{display:block;width:auto;height:auto;margin:0;background:url('assets/art/ui/menu-scrap.png') center/100% 145% no-repeat}
 #startOverlay .splash-eyebrow span{border:0;border-radius:0;letter-spacing:0;padding:0}
 #startOverlay .splash-art{background:url('assets/art/ui/menu-scrap.png') center/100% 145% no-repeat;border-radius:0;box-shadow:none}
 .pause-book .pause-summary{font-size:18px;padding:10px;margin:10px 0}
