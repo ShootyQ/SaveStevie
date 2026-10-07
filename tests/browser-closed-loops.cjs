@@ -25,7 +25,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    });assert.ok(Math.abs(result.spent-148.8*.85)<1e-6);assert.equal(result.repair,6);assert.equal(result.closed,true);assert.equal(result.note,true);
    await page.screenshot({path:'/tmp/closed-loop-'+viewport.width+'.png'});
    const pure=await page.evaluate(()=>{const a=JSON.stringify(testGame.state);testGame.api.draw();return a===JSON.stringify(testGame.state)});assert.equal(pure,true);
-   await page.click('#buildBtn');assert.match(await page.textContent('#buildUpgrades'),/10.0% damage inside/);assert.match(await page.textContent('#buildUpgrades'),/15.0% paid ink back/);await page.click('#closeBuildBtn');
+   await page.click('#pauseBtn');await page.click('#pauseToolBtn');assert.match(await page.textContent('#buildUpgrades'),/10.0% damage inside/);assert.match(await page.textContent('#buildUpgrades'),/15.0% paid ink back/);await page.click('#closeBuildBtn');await page.click('#resumeBtn');
    await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>testGame.api.draw());
    await page.evaluate(()=>{testGame.api.setDevMode(true);testGame.api.openUpgrade()});await page.selectOption('#devUpgrade','Fortress Geometry');await page.selectOption('#devRarity','legendary');
    assert.match(await page.textContent('#cards'),/damage inside/);assert.equal(await page.locator('#cards .ucard').evaluateAll(cards=>cards.every(c=>c.scrollWidth<=c.clientWidth+1)),true);

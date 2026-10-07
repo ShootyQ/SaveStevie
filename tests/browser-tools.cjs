@@ -54,7 +54,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await frost.click();await page.getByRole('button',{name:'Replace Fire Ink · level 1',exact:true}).click();
   assert.equal(await page.locator('#upgradeOverlay').isVisible(),false);
   assert.deepEqual(await page.evaluate(()=>[testGame.state.inks.poison,testGame.state.inks.fire,testGame.state.inks.frost,testGame.state.wave]),[8,0,1,wave+1]);
-  await page.click('#buildBtn');assert.match(await page.textContent('#buildTool'),/Venom Ice/);assert.doesNotMatch(await page.textContent('#buildTool'),/Plaguefire/);await page.click('#closeBuildBtn');
+  await page.click('#pauseBtn');await page.click('#pauseToolBtn');assert.match(await page.textContent('#buildTool'),/Venom Ice/);assert.doesNotMatch(await page.textContent('#buildTool'),/Plaguefire/);await page.click('#closeBuildBtn');await page.click('#resumeBtn');
   await page.evaluate(()=>{
    const g=testGame;g.api.resetRun();
    for(let wave=1;wave<=20;wave++){

@@ -32,16 +32,17 @@ window.addEventListener('resize',game.api.resize);
 window.visualViewport?.addEventListener('resize',game.api.resize);
 document.addEventListener?.('fullscreenchange',()=>{game.api.resize();updateScreenButton()});
 game.dom.$('fullscreenBtn').onclick=toggleScreen;updateScreenButton();
-game.dom.$('buildBtn').onclick=game.api.openBuild;
 game.dom.$('inspectToolBtn').onclick=game.api.openBuild;
-for(const id of ['optionsBtn','splashOptionsBtn'])game.dom.$(id).onclick=game.api.openOptions;
+for(const id of ['splashOptionsBtn'])game.dom.$(id).onclick=game.api.openOptions;
 game.dom.$('closeOptionsBtn').onclick=game.api.closeOptions;
 for(const id of ['optionsStatsBtn','splashStatsBtn'])game.dom.$(id).onclick=game.api.openStatistics;
 game.dom.$('closeStatisticsBtn').onclick=game.api.closeStatistics;
 game.dom.$('closeBuildBtn').onclick=game.api.closeBuild;
 game.dom.$('changelogBtn').onclick=game.api.openChangelog;
 game.dom.$('closeChangelogBtn').onclick=game.api.closeChangelog;
-game.dom.$('compendiumBtn').onclick=game.api.openCompendium;
+game.dom.$('splashHubBtn').onclick=()=>game.api.openInfo('hub');
+game.dom.$('closeHubBtn').onclick=()=>game.api.closeInfo();
+for(const [id,kind] of Object.entries({hubMonstersBtn:'compendium',hubToolBtn:'build',hubNotebookBtn:'notebook',hubSettingsBtn:'options',hubStatsBtn:'statistics',hubChangelogBtn:'changelog'}))game.dom.$(id).onclick=()=>game.api.openInfo(kind);
 game.dom.$('closeCompendiumBtn').onclick=game.api.closeCompendium;
 game.dom.$('monsterIntrosEnabled').onchange=e=>game.api.setMonsterIntrosEnabled(e.target.checked);
 game.dom.$('continueMonsterIntroBtn').onclick=game.api.continueMonsterIntro;
@@ -82,8 +83,9 @@ game.dom.$('clearBtn').onclick=()=>{
   game.api.setMsg('Walls erased. Reclaimed a little ink.')
 };
 game.dom.$('pauseBtn').onclick=()=>{
-  if(game.dom.$('pauseOverlay').style.display==='grid'){game.api.closeInfo(false);return}
-  if(game.api.infoOpen()||!game.state.running||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
+  if(game.dom.$('monsterIntroOverlay').style.display==='grid')return;
+  if(!game.state.running||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
+  if(game.api.infoOpen()){game.api.closeInfo(false);return}
   game.api.openInfo('pause');
 };
 game.dom.$('resumeBtn').onclick=()=>game.api.closeInfo(false);
