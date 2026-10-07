@@ -35,7 +35,7 @@ game.dom.$('fullscreenBtn').onclick=toggleScreen;updateScreenButton();
 game.dom.$('inspectToolBtn').onclick=game.api.openBuild;
 for(const id of ['splashOptionsBtn'])game.dom.$(id).onclick=game.api.openOptions;
 game.dom.$('closeOptionsBtn').onclick=game.api.closeOptions;
-for(const id of ['optionsStatsBtn','splashStatsBtn'])game.dom.$(id).onclick=game.api.openStatistics;
+for(const id of ['optionsStatsBtn'])game.dom.$(id).onclick=game.api.openStatistics;
 game.dom.$('closeStatisticsBtn').onclick=game.api.closeStatistics;
 game.dom.$('closeBuildBtn').onclick=game.api.closeBuild;
 game.dom.$('changelogBtn').onclick=game.api.openChangelog;
@@ -46,7 +46,7 @@ for(const [id,kind] of Object.entries({hubMonstersBtn:'compendium',hubToolBtn:'b
 game.dom.$('closeCompendiumBtn').onclick=game.api.closeCompendium;
 game.dom.$('monsterIntrosEnabled').onchange=e=>game.api.setMonsterIntrosEnabled(e.target.checked);
 game.dom.$('continueMonsterIntroBtn').onclick=game.api.continueMonsterIntro;
-for(const id of ['splashNotebookBtn','deathNotebookBtn','victoryNotebookBtn','buildNotebookBtn'])game.dom.$(id).onclick=game.api.openNotebook;
+for(const id of ['deathNotebookBtn','victoryNotebookBtn','buildNotebookBtn'])game.dom.$(id).onclick=game.api.openNotebook;
 game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
 game.dom.$('resetNotebookBtn').onclick=game.api.resetNotebookProgress;
 window.addEventListener('keydown',game.api.handleInfoKey);

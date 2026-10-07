@@ -20,7 +20,7 @@ function updateMusicButton(){
   const label=!supported?'Music unavailable':muted?'Turn music on':blocked||!started?'Play music':'Mute music';
   button.title=label+' · '+tracks[track].name;button.setAttribute?.('aria-label',button.title);button.setAttribute?.('aria-pressed',String(!muted&&!blocked&&started));
   button.classList?.toggle('music-muted',muted||blocked);
-  introButton.textContent=started&&!muted&&!blocked&&track==='splash'?'♫ Intro playing':'♫ Play intro music';
+  introButton.textContent=label;introButton.setAttribute?.('aria-pressed',String(!muted&&!blocked&&started));
 }
 function playMusic(){
   if(!supported||muted||!started||document.hidden)return;
@@ -50,7 +50,7 @@ function toggleMusic(){
   updateMusicButton();
 }
 function musicStatus(){return {muted,started,blocked,track}}
-button.onclick=toggleMusic;introButton.onclick=startSplashMusic;
+button.onclick=toggleMusic;introButton.onclick=toggleMusic;
 document.addEventListener?.('visibilitychange',()=>{if(document.hidden){playAttempt++;audio.pause?.()}else playMusic()});
 audio.addEventListener?.('error',()=>{blocked=true;updateMusicButton()});
 // Respect saved mute; retry denied autoplay inside the next real gesture.

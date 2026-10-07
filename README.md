@@ -970,8 +970,8 @@ hand-torn notebook-paper artwork, with actual readable labels in the
 same Stevie Pencil font as his notes. Individual slips use small fixed rotations;
 hover motion respects reduced-motion preferences. Phone portrait/landscape and
 native Android layouts keep controls reachable by scrolling within the menus.
-The title's **My notebook** opens Monsters, the drawing tool, permanent scraps,
-Settings, Stats and What's new. Closing these pages returns to My notebook;
+The title's **Notebook** opens Monsters, the drawing tool, permanent scraps,
+Settings, Stats and What's new. Closing these pages returns to the notebook;
 closing the notebook returns focus to its title-screen button.
 
 The live toolbar now contains only **Pause/Resume** and web **Screen**. Native
@@ -980,6 +980,23 @@ Monster notes and Settings are in Pause; Erase walls and the music mute toggle
 also live there. Resume restores the run. Quit still warns that run upgrades are
 lost and earned scraps remain saved. Updated browser menu, notebook, tool,
 options and Android test-lab checks exercise these actual navigation routes.
+
+The cover now has three actions: Play, Notebook and Settings. Decorative titles
+and one short drawing instruction sit directly on the page; raised paper scraps
+are reserved for buttons. Notebook contains saved scraps, monster notes, pencils,
+scores and updates. Music playback is in Settings and toggles the current track
+without resetting it to the intro during a run.
+
+Permanent Marker and Archival Ink are removed from the upgrade catalog, reward
+pools, effect summaries, previews and developer/test loadouts. Base wall life
+remains 72 seconds; walls still expire normally during long boss encounters.
+
+Zoom Nugget (`fast`, wave 3) uses `assets/art/fast-animations.png`: four right-facing
+running poses on row 1 and four left-facing poses on row 2. Equal cells are
+extracted once at load and share the existing bounded status-tint cache. Stride
+advances with distance travelled, holds during freeze/stun/pause, and uses a
+fixed pose for airborne/reduced-motion display. Missing sheets retain the
+existing sprite. Combat speed, damage, health and colliders are unchanged.
 
 King Doodle now keeps one orbit direction across attack turns, covering the whole
 perimeter. Only his wave-5 fight adds a slow stream of Gribbles: first arrival

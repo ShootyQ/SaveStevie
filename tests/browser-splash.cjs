@@ -38,7 +38,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   assert.deepEqual(await page.locator('#startBtn').boundingBox(),controls,'decorative movement leaves controls stationary');
   assert.equal(await page.evaluate(()=>testGame.state.running),false,'scene never starts combat');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  for(const id of ['startBtn','splashNotebookBtn','splashMusicBtn']){
+  for(const id of ['startBtn','splashHubBtn','splashOptionsBtn']){
    const box=await page.locator('#'+id).boundingBox(),card=await page.locator('.splash-box').boundingBox();assert.ok(box.y>=card.y&&box.y+box.height<=card.y+card.height+1,id+' is visible without scrolling');assert.ok(box.x>=0&&box.x+box.width<=viewport.width+1&&box.y>=0&&box.y+box.height<=viewport.height+1,id+' fits');
   }
   await page.screenshot({path:'/tmp/splash-animated-'+viewport.width+'.png'});
@@ -55,9 +55,9 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.evaluate(()=>testGame.api.setAudioVolume('effectsVolume',.7));
   // Resume before testing the actual hidden-overlay lifecycle.
   await page.evaluate(()=>document.querySelectorAll('.splash-art *').forEach(e=>e.getAnimations().forEach(a=>a.play())));
-  await page.locator('#splashNotebookBtn').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('#notebookOverlay').isVisible(),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#splashNotebookBtn').evaluate(e=>e===document.activeElement),true);
-  await page.click('#splashMusicBtn');await page.waitForFunction(()=>!document.querySelector('#gameMusic').paused,null,{polling:50});
-  await page.click('#startBtn');assert.equal(await page.locator('#startOverlay').isVisible(),false);
+  await page.locator('#splashHubBtn').focus();await page.keyboard.press('Enter');assert.equal(await page.locator('#hubOverlay').isVisible(),true);await page.click('#hubNotebookBtn');await page.keyboard.press('Escape');assert.equal(await page.locator('#hubOverlay').isVisible(),true);await page.keyboard.press('Escape');assert.equal(await page.locator('#splashHubBtn').evaluate(e=>e===document.activeElement),true);
+  await page.click('#splashOptionsBtn');if(await page.evaluate(()=>testGame.api.musicStatus().muted))await page.click('#splashMusicBtn');await page.waitForFunction(()=>!document.querySelector('#gameMusic').paused,null,{polling:50});
+  await page.click('#closeOptionsBtn');await page.click('#startBtn');assert.equal(await page.locator('#startOverlay').isVisible(),false);
   assert.equal(await page.locator('.splash-stevie-frames').evaluate(e=>getComputedStyle(e).animationPlayState),'paused');
   await page.evaluate(()=>{testGame.api.gameOver();testGame.api.openNotebook()});
   page.once('dialog',d=>d.accept());await page.click('#resetNotebookBtn');
