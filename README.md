@@ -986,3 +986,14 @@ and one short drawing instruction sit directly on the page; raised paper scraps
 are reserved for buttons. Notebook contains saved scraps, monster notes, pencils,
 scores and updates. Music playback is in Settings and toggles the current track
 without resetting it to the intro during a run.
+
+Permanent Marker and Archival Ink are removed from the upgrade catalog, reward
+pools, effect summaries, previews and developer/test loadouts. Base wall life
+remains 72 seconds; walls still expire normally during long boss encounters.
+
+Zoom Nugget (`fast`, wave 3) uses `assets/art/fast-animations.png`: four right-facing
+running poses on row 1 and four left-facing poses on row 2. Equal cells are
+extracted once at load and share the existing bounded status-tint cache. Stride
+advances with distance travelled, holds during freeze/stun/pause, and uses a
+fixed pose for airborne/reduced-motion display. Missing sheets retain the
+existing sprite. Combat speed, damage, health and colliders are unchanged.

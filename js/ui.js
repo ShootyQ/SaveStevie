@@ -89,7 +89,6 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Fine Tip':()=>`${f((1-Math.pow(.88,n))*100)}% cheaper strokes (multiplicative)`,
     'Fat Marker':()=>`+${2*n}px width; +${15*n} base wall HP`, 'Lucky Scribble':()=>`+${8*n} Luck — better rarity odds on rewards and rerolls`,
     'Recycling':()=>`+${5*n} ink per kill; shared 8 ink/s budget`, 'Closed Loop':()=>`+${40*n}% closed-wall durability; `+loopDetails(n,'Fortress Geometry'),
-    'Permanent Marker':()=>`+${10*n}s wall lifetime`, 'Archival Ink':()=>`+${25*n}s wall lifetime`,
     'Architect':()=>`+${15*n}% durability per intersection`, 'Patchwork':()=>`+${18*n} HP per repaired wall`,
     'Double Stroke':()=>`One-time unlock: 2 walls per stroke (3 with Triple Stroke); extra walls have 60% HP`,
     'Quick Sketch':()=>`One-time unlock: first stroke each wave is free`,

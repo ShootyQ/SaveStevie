@@ -1520,3 +1520,24 @@ console.log('PASS: unattended starting-kit fight loses; perfect active paid-wall
  assert.deepEqual([...bar.matchAll(/<button[^>]+id="([^"]+)"/g)].map(m=>m[1]),['fullscreenBtn','pauseBtn']);assert.match(html,/id="pauseOverlay"[\s\S]*?id="clearBtn"/);assert.match(html,/id="pauseOverlay"[\s\S]*?id="musicBtn"/);
 }
 console.log('PASS: notebook hub opens monster pages and returns correctly; pause/resume closes submenus; live toolbar contains only Screen and Pause, with erasing/music in Pause.');
+
+{
+ const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
+ for(const name of ['Permanent Marker','Archival Ink']){
+  assert.ok(!g.catalog.upgrades.some(u=>u.name===name));const state=JSON.stringify(g.state);
+  assert.equal(g.api.applyUpgrade({name,rarity:'legendary'}),undefined);assert.equal(JSON.stringify(g.state),state,'removed lifetime rewards cannot apply');
+  assert.equal(g.api.startTestRun({wave:3,phase:'wave',toolRank:0,notebook:false,upgrades:[{name,rarity:'common',copies:1}]}),false,'removed reward rejected in test setup');
+ }
+ assert.equal(g.state.stats.wallLife,72,'base expiration remains');
+ const e=g.api.spawnEnemy(false,100,140,'fast');g.api.updateEnemyAnimations(0);const right=[],left=[];
+ for(let i=0;i<4;i++){e.x+=6;g.api.updateEnemyAnimations(.1);right.push(g.api.enemySpriteFrame(e))}
+ for(let i=0;i<4;i++){e.x-=6;g.api.updateEnemyAnimations(.1);left.push(g.api.enemySpriteFrame(e))}
+ assert.equal(new Set(right).size,4);assert.equal(new Set(left).size,4);assert.ok(right.every(s=>/^fast-frame-[0-3]$/.test(s)));assert.ok(left.every(s=>/^fast-frame-[4-7]$/.test(s)));
+ const frame=g.api.enemySpriteFrame(e);e.freeze=1;e.x-=6;g.api.updateEnemyAnimations(.2);assert.equal(g.api.enemySpriteFrame(e),frame);e.freeze=0;e.stun=1;e.x-=6;g.api.updateEnemyAnimations(.2);assert.equal(g.api.enemySpriteFrame(e),frame);e.stun=0;
+ g.state.paused=true;g.api.update(.5);assert.equal(g.api.enemySpriteFrame(e),frame);g.state.paused=false;
+ const before=JSON.stringify(g.state);env.sandbox.Math.random=()=>{throw Error('animation uses no combat RNG')};g.api.draw();g.api.updateEnemyAnimations(.01);assert.equal(JSON.stringify(g.state),before);
+ g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemySpriteFrame(e),'fast-frame-4','stationary left-facing runner rests');g.api.startWave();assert.equal(g.api.enemySpriteFrame(e),'fast-frame-0','wave reset clears direction/stride records');
+ const reduced=load(true,{images:true,reduced:true}).sandbox.testGame;reduced.api.resetRun();const still=reduced.api.spawnEnemy(false,100,140,'fast');for(let i=0;i<8;i++){still.x+=6;reduced.api.updateEnemyAnimations(.1);assert.equal(reduced.api.enemySpriteFrame(still),'fast-frame-0')}
+ assert.equal(load(true).sandbox.testGame.api.enemySpriteFrame({type:'fast'}),null,'missing sheet retains original sprite');
+ console.log('PASS: retired lifetime rewards rejected without mutation, base expiry preserved; four unique run poses per direction, freeze/stun/pause/rest, pure rendering, no RNG, reduced motion and asset fallback.');
+}
