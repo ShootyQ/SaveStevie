@@ -35,7 +35,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
      const portrait=g.state.H>g.state.W;
      const e=g.api.spawnEnemy(true,portrait?g.state.W*.5:90,portrait?Math.max(115,g.state.H*.22):g.state.H*.62);e.hp=e.maxHp=1000;
      const pts=portrait?[{x:25,y:g.state.player.y-60},{x:g.state.W-25,y:g.state.player.y-60}]:[{x:g.state.player.x-60,y:75},{x:g.state.player.x-60,y:g.state.H-20}];
-     g.state.walls=[{pts,hp:200,maxHp:200,thick:8,life:100,maxLife:100}];
+     g.state.walls=[{pts,hp:200,maxHp:200,thick:8,life:100,maxLife:100},{pts:pts.map(p=>({x:p.x+(portrait?0:18),y:p.y+(portrait?18:0)})),hp:200,maxHp:200,thick:8,life:100,maxLife:100}];
      const b=g.api.bossBrain(e);b.turn=turn;b.cd=0;g.api.updateBossEncounter(e,.01);g.api.draw();
      return {kind:b.cast.kind,targets:b.cast.targets};
     },turn);
@@ -51,7 +51,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
      const g=testGame,e=g.state.enemies[0],hp=g.state.player.hp;g.api.updateEnemyShots(6);g.api.draw();return {hpKept:g.state.player.hp===hp,bossHp:e.hp,recovery:g.api.bossBrain(e).recovery,walls:g.state.walls.length};
     });
     assert.equal(resolution.hpKept,true,'cover returns attacks and paper bombs do not hurt Stevie');
-    if(turn<2){assert.ok(resolution.bossHp<1000);assert.equal(resolution.recovery,3)}
+    if(turn<2){assert.ok(resolution.bossHp<1000);assert.equal(resolution.recovery,1.25)}
    }
    await page.evaluate(()=>{const g=testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();const e=g.api.spawnEnemy(true,g.state.W*.3,g.state.H*.4);e.hp=e.maxHp=10000;const x=e.x,y=e.y;g.state.walls=[{pts:[{x:x-65,y:y-65},{x:x+65,y:y-65},{x:x+65,y:y+65},{x:x-65,y:y+65},{x:x-65,y:y-65}],closed:true,thick:8,hp:500,maxHp:500,life:100}];g.api.updateBossEncounter(e,.01);g.api.updateBossEncounter(e,1.8);g.api.draw()});
    assert.equal(await page.evaluate(()=>testGame.api.bossEncounterSnapshot().bosses[0].cast.kind),'breakout');

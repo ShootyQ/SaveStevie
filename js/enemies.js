@@ -7,7 +7,7 @@ const defs=game.catalog.enemyDefs={
     flanker:{r:10,hp:30,speed:39,dmg:9,color:'#6b8bd8'},
     tank:{r:16,hp:70,speed:23,dmg:15,color:'#6d6b73'},
     splitter:{r:13,hp:40,speed:31,dmg:10,color:'#8456c9'},
-    sniper:{r:12,hp:36,speed:27,dmg:7,color:'#4b79d8'},
+    sniper:{r:12,hp:36,speed:78,dmg:7,color:'#4b79d8'},
     gnawer:{r:12,hp:42,speed:30,dmg:18,color:'#86563d'},
     brute:{r:19,hp:105,speed:20,dmg:22,color:'#51634a'},
     elite:{r:13,hp:68,speed:42,dmg:13,color:'#b34e82'},
@@ -106,7 +106,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(forceBoss)type=game.api.bossTypeForWave();
   const scale=game.api.enemyHpScale()*game.state.stats.enemyScale;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
-  const earlyBoss=forceBoss&&(game.state.wave===5||game.state.wave===10),bossHp=earlyBoss?1.8:1,bossSpeed=forceBoss&&game.state.wave===5?5.3:earlyBoss?2:1;
+  const earlyBoss=forceBoss&&(game.state.wave===5||game.state.wave===10),bossHp=forceBoss&&game.state.wave===5?3:earlyBoss?1.8:1,bossSpeed=forceBoss&&game.state.wave===5?7.8:earlyBoss?2:1;
   const enemy={
     x:px,y:py,type,r:d.r,hp:baseHp*scale*bossHp,maxHp:baseHp*scale*bossHp,speed:d.speed*(1+game.state.wave*.006)*bossSpeed,
     dmg:d.dmg,color:d.color,attackCd:0,shootCd:game.api.rand(1.3,2.1),stun:0,burn:0,burnDps:0,
@@ -260,7 +260,7 @@ function eraserAttack(e,dt){
 }
 
 let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,bossPhase='timed',arrival=null;
-function resetEnemyWave(){bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;game.api.resetBossEncounters()}
+function resetEnemyWave(){sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;game.api.resetBossEncounters()}
 function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
@@ -331,6 +331,55 @@ function updateEnemyBehavior(e,dt){
     if(healing)game.api.animateEnemyAction(e,'heal');
   }
 }
+// Cached, deterministic firing-position search. Closed defenses remain solid.
+let sniperRoutes=new WeakMap();
+function sniperCanAim(e){const p=game.state.player,d=Math.hypot(e.x-p.x,e.y-p.y);return d>=90&&d<=260&&!game.api.shotBlocked(e.x,e.y,p.x,p.y,3)}
+function sniperPathClear(e,x,y){const p=game.state.player;return game.api.pointSegDist(p.x,p.y,e.x,e.y,x,y)>p.r+e.r+40&&bouncePathClear(e,x,y,0)}
+function sniperRoute(e){
+ const p=game.state.player,candidates=[],margin=e.r+20;
+ for(const radius of [145,210])for(let i=0;i<16;i++){
+  const a=i*Math.PI/8,x=game.api.clamp(p.x+Math.cos(a)*radius,margin,game.state.W-margin),y=game.api.clamp(p.y+Math.sin(a)*radius,margin,game.state.H-margin);
+  if(Math.hypot(x-p.x,y-p.y)<90||game.api.shotBlocked(x,y,p.x,p.y,3))continue;
+  candidates.push({x,y});
+ }
+ let best=null,score=Infinity;
+ for(const q of candidates)if(sniperPathClear(e,q.x,q.y)){const d=Math.hypot(q.x-e.x,q.y-e.y);if(d<score){score=d;best=q}}
+ if(best)return best;
+ // Search wall ends, choosing reachable steps toward a clear firing position.
+ for(const w of game.state.walls){if(w.closed||w.pts.length<2)continue;
+  for(const index of [0,w.pts.length-1]){
+   const end=w.pts[index],other=w.pts[index?index-1:1],length=Math.hypot(end.x-other.x,end.y-other.y)||1,tx=(end.x-other.x)/length,ty=(end.y-other.y)/length,pad=e.r+w.thick/2+10;
+   for(const side of [-1,1]){
+    const x=end.x+tx*pad-ty*side*pad,y=end.y+ty*pad+tx*side*pad;
+    if(x<margin||y<margin||x>game.state.W-margin||y>game.state.H-margin||Math.hypot(x-e.x,y-e.y)<4||!sniperPathClear(e,x,y))continue;
+    const remaining=candidates.length?Math.min(...candidates.map(q=>Math.hypot(q.x-x,q.y-y))):Math.hypot(x-p.x,y-p.y);
+    const value=Math.hypot(x-e.x,y-e.y)+remaining;if(value<score){score=value;best={x,y,detour:true}}
+   }
+  }
+ }
+ return best;
+}
+function updateSniper(e,dt){
+ if(e.hp<=0)return true;
+ if(e.freeze>0||e.stun>0){e.shootCd=Math.max(.65,e.shootCd);return true;}
+ if(sniperCanAim(e)){
+  sniperRoutes.delete(e);e.shootCd-=dt;
+  if(e.shootCd<=0){fireSniper(e);e.shootCd=1.7}
+  return true;
+ }
+ // Losing sight interrupts the aim. Opening a lane never produces a surprise shot.
+ e.shootCd=Math.max(.65,e.shootCd);
+ let route=sniperRoutes.get(e);
+ if(route)route.left-=dt;
+ if(route?.blocked&&route.left>0)return false;
+ if(!route||route.left<=0||!sniperPathClear(e,route.x,route.y)||Math.hypot(route.x-e.x,route.y-e.y)<4){
+  const next=sniperRoute(e);route=next?{...next,left:next.detour?2:.4}:{blocked:true,left:.4};sniperRoutes.set(e,route);
+ }
+ if(!route||route.blocked)return false; // A genuine closed cage still takes wall contact damage.
+ const dx=route.x-e.x,dy=route.y-e.y,d=Math.hypot(dx,dy)||1,travel=Math.min(d,e.speed*enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7))*dt);
+ return moveEnemySafely(e,dx/d*travel,dy/d*travel);
+}
+
 function enemyMoveScale(e){return game.api.enemySpeedScale()*(e.type==='sprinter'&&e.dashTime>=2.6?2.6:1)}
 function enemyTarget(e){
   if(e.waveBoss)return game.api.bossTarget(e);
@@ -415,7 +464,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { sniperCanAim, updateSniper, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };
