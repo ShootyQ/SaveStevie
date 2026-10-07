@@ -1,13 +1,14 @@
 /* Boss encounter combat and handmade telegraphs; bounded hazards, no draw RNG. */
 DoodleDefender.systems.bossEncounters=function(game){
 let brains=new WeakMap(),marks=[],clock=0;
+const minFriendGain=70;
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
 function isFirstBoss(e){return e.waveBoss&&e.type==='boss'&&game.state.wave===5}
-function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160}}
+function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:furious?3.5:4.5,helperCap:6,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:1.8,minThrowGain:minFriendGain}}
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
 const colors={boss:'#9b3549',stapler:'#ad741f',crayon:'#8751ac',eraser:'#b95176'};
-function bossBrain(e){let b=brains.get(e);if(!b){b={cd:3,cast:null,turn:0,moveCd:0,target:null,enclosed:false,enclosedAge:0,damageBudget:Math.max(30,e.maxHp*.045)*.5,contactCd:0,recovery:0,charge:0,action:null,repeat:0,helperCd:2.5,helperSerial:0,pickup:null};brains.set(e,b)}return b}
+function bossBrain(e){let b=brains.get(e);if(!b){b={cd:3,cast:null,turn:0,moveCd:0,target:null,enclosed:false,enclosedAge:0,damageBudget:Math.max(30,e.maxHp*.045)*.5,contactCd:0,recovery:0,charge:0,action:null,repeat:0,helperCd:1.5,helperSerial:0,pickup:null};brains.set(e,b)}return b}
 function resetBossEncounters(){brains=new WeakMap();marks=[];clock=0}
 function inside(e,w){let yes=false;const pts=w.pts;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a.y>e.y)!==(b.y>e.y)&&e.x<(b.x-a.x)*(e.y-a.y)/(b.y-a.y)+a.x)yes=!yes}return yes}
 function nearestBossWall(e,range=150){let best=null;for(const w of game.state.walls){const p=game.api.nearestPointOnWall(e,w);if(!p)continue;const d=Math.hypot(p.x-e.x,p.y-e.y);if(d<range){range=d;best={wall:w,...p}}}return best}
@@ -36,24 +37,41 @@ function volley(e,cast,count,kind){const angle=Math.atan2(cast.y-e.y,cast.x-e.x)
 function updateFirstBossHelpers(dt){
  const e=game.state.enemies.find(e=>isFirstBoss(e)&&e.hp>0);if(!e)return;
  const b=bossBrain(e);b.helperCd-=dt;if(b.helperCd>0)return;
- b.helperCd=firstBossTuning(e).furious?6:7;
- if(game.state.enemies.filter(n=>n.bossOwner===e&&n.hp>0).length>=4)return;
+ b.helperCd=firstBossTuning(e).helperGap;
+ if(game.state.enemies.filter(n=>n.bossOwner===e&&n.hp>0).length>=firstBossTuning(e).helperCap)return;
  const {W,H}=game.state,side=b.helperSerial++%4;
  const x=side===1?W+26:side===3?-26:W*(side===0?.25:.75),y=side===0?-26:side===2?H+26:H*(side===1?.3:.7);
  const friend=game.api.spawnEnemy(false,x,y,'grunt');if(friend)friend.bossOwner=e;
 }
 function friendCanBePicked(e,n){
- const p=game.state.player;return n.bossOwner===e&&n.hp>0&&!n.flight&&n.freeze<=0&&n.stun<=0&&game.state.enemies.includes(n)&&n.x>=n.r&&n.x<=game.state.W-n.r&&n.y>=n.r&&n.y<=game.state.H-n.r&&Math.hypot(n.x-p.x,n.y-p.y)>p.r+n.r+115;
+ const p=game.state.player;return n.bossOwner===e&&n.hp>0&&!n.flight&&n.freeze<=0&&n.stun<=0&&game.state.enemies.includes(n)&&n.x>=n.r&&n.x<=game.state.W-n.r&&n.y>=n.r&&n.y<=game.state.H-n.r&&Math.hypot(n.x-p.x,n.y-p.y)>p.r+n.r+75+firstBossTuning(e).minThrowGain+12;
 }
 function friendLanding(n){
- const {player:p,W,H}=game.state,clear=p.r+n.r+75,distance=Math.hypot(n.x-p.x,n.y-p.y),radius=Math.min(distance-35,clear+30),angle=Math.atan2(n.y-p.y,n.x-p.x);
+ const {player:p,W,H}=game.state,clear=p.r+n.r+75,distance=Math.hypot(n.x-p.x,n.y-p.y),radius=clear+12,angle=Math.atan2(n.y-p.y,n.x-p.x);
  for(const turn of [0,.35,-.35,.7,-.7,1.1,-1.1,Math.PI]){
   const a=angle+turn,x=game.api.clamp(p.x+Math.cos(a)*radius,n.r+24,W-n.r-24),y=game.api.clamp(p.y+Math.sin(a)*radius,n.r+76,Math.max(n.r+76,H-n.r-64));
-  const d=Math.hypot(x-p.x,y-p.y);if(d>=clear&&d<distance-20)return {x,y};
+  const d=Math.hypot(x-p.x,y-p.y);if(d>=clear&&distance-d>=minFriendGain)return {x,y};
  }
  return null;
 }
 function pickupPathClear(e,n){const p=game.state.player,r=game.api.refugeBounds();return game.api.pointSegDist(p.x,p.y,e.x,e.y,n.x,n.y)>e.r+Math.hypot(r.halfWidth,r.halfHeight)+8&&bossPathClear(e,n.x,n.y)}
+
+function bossChaseScale(e){return isFirstBoss(e)&&bossBrain(e).pickup?firstBossTuning(e).chaseScale:1}
+function bossFriendHeld(n){
+ const e=n.bossOwner;if(!e||!isFirstBoss(e)||e.hp<=0||e.freeze>0||e.stun>0||!game.state.enemies.includes(e))return false;
+ const c=bossBrain(e).cast;return c?.kind==='friend-fling'&&c.friend===n&&c.left>0&&n.hp>0&&n.freeze<=0&&n.stun<=0;
+}
+function chooseBossFriend(e){
+ const p=game.state.player,t=firstBossTuning(e);let best=null,score=-Infinity;
+ for(const n of game.state.enemies){
+  if(!friendCanBePicked(e,n)||!pickupPathClear(e,n))continue;const landing=friendLanding(n);if(!landing)continue;
+  const pace=e.speed*game.api.enemyMoveScale(e)*t.chaseScale*(1-game.api.clamp(e.gravitySlow,0,.7)),chase=Math.max(0,Math.hypot(n.x-e.x,n.y-e.y)-60)/Math.max(1,pace);
+  if(chase>2.25)continue;
+  const gain=Math.hypot(n.x-p.x,n.y-p.y)-Math.hypot(landing.x-p.x,landing.y-p.y)-chase*n.speed*game.api.enemyMoveScale(n)*(1-game.api.clamp(n.gravitySlow,0,.7));
+  const value=gain-chase*45;if(gain>=t.minThrowGain&&value>score){best=n;score=value}
+ }
+ return best;
+}
 
 function firstBossCurvePlan(e,side){
  const p=game.state.player,dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1,nx=-dy/d*side,ny=dx/d*side;
@@ -82,7 +100,7 @@ function firstBossLobs(e,targets){
  for(const q of targets){
   if(game.state.enemyShots.length>=32)break;
   // Lobs only damage ink walls, never Stevie, even if a small screen moves the marker.
-  game.state.enemyShots.push({x:e.x,y:e.y,vx:0,vy:0,r:6,damage:0,life:1.5,age:0,duration:1.5,startX:e.x,startY:e.y,targetX:q.x,targetY:q.y,owner:e,bossKind:'paper-lob',trail:[]});
+  game.state.enemyShots.push({x:e.x,y:e.y,vx:0,vy:0,r:6,damage:0,life:firstBossTuning(e).paperFlight,age:0,duration:firstBossTuning(e).paperFlight,startX:e.x,startY:e.y,targetX:q.x,targetY:q.y,owner:e,bossKind:'paper-lob',trail:[]});
  }
 }
 function shotCircleTime(x,y,nx,ny,cx,cy,r){const dx=nx-x,dy=ny-y,px=x-cx,py=y-cy,a=dx*dx+dy*dy,c=px*px+py*py-r*r;if(c<=0)return 0;if(!a)return null;const b=2*(px*dx+py*dy),disc=b*b-4*a*c;if(disc<0)return null;const t=(-b-Math.sqrt(disc))/(2*a);return t>=0&&t<=1?t:null}
@@ -138,7 +156,7 @@ function execute(e,b,c){
   if(c.kind==='mirror-orb')firstBossCurve(e,Math.floor(b.turn/4)%2?1:-1,'mirror-orb');else for(const side of [-1,1])firstBossCurve(e,side,'arc-spark');
   game.api.animateEnemyAction(e,'fire');
  }else if(c.kind==='friend-fling'){
-  const n=c.friend;if(friendCanBePicked(e,n)&&Math.hypot(n.x-e.x,n.y-e.y)<=100&&bossPathClear(e,n.x,n.y))game.api.flingBossFriend(n,c.landing);
+  const n=c.friend,p=game.state.player,gain=Math.hypot(n.x-p.x,n.y-p.y)-Math.hypot(c.landing.x-p.x,c.landing.y-p.y);if(friendCanBePicked(e,n)&&gain>=firstBossTuning(e).minThrowGain&&Math.hypot(n.x-e.x,n.y-e.y)<=100&&bossPathClear(e,n.x,n.y))game.api.flingBossFriend(n,c.landing);
   game.api.animateEnemyAction(e,'summon');b.pickup=null;
  }else if(c.kind==='paper-lob'){firstBossLobs(e,c.targets);game.api.animateEnemyAction(e,'summon');
  }else if(c.kind==='breakout'){
@@ -156,7 +174,7 @@ function execute(e,b,c){
   const kinds=['red','blue','green'];for(let i=0;i<(furious?2:1)&&marks.length<8;i++)marks.push({x:c.x+(i?45:0),y:c.y,r:42,age:0,life:5,kind:kinds[(b.turn+i)%3],owner:e,hatched:false});game.api.animateEnemyAction(e,'summon');
  }else if(c.kind==='summon')summon(e,'mini',2);
  else volley(e,c,e.type==='stapler'?(furious?5:3):3,e.type==='stapler'?'staple':e.type==='crayon'?'crayon':'ink');
- b.cd=isFirstBoss(e)?firstBossTuning(e).cooldown:earlyBoss(e)?(furious?2.5:3.5):(furious?3.2:4.5);b.turn++;b.cast=null;e.bossWindup=0;
+ b.cd=isFirstBoss(e)?(c.kind==='paper-lob'?firstBossTuning(e).paperCooldown:firstBossTuning(e).cooldown):earlyBoss(e)?(furious?2.5:3.5):(furious?3.2:4.5);b.turn++;b.cast=null;e.bossWindup=0;
 }
 function updateBossEncounter(e,dt){
  const b=bossBrain(e);if(b.action){b.action.age+=dt;if(b.action.age>.65)b.action=null}b.contactCd=Math.max(0,b.contactCd-dt);b.recovery=Math.max(0,b.recovery-dt);
@@ -173,7 +191,7 @@ function updateBossEncounter(e,dt){
   if(!friendCanBePicked(e,n)||b.pickup.left<=0||b.enclosed){b.pickup=null;b.turn++;b.cd=.5;return}
   if(Math.hypot(n.x-e.x,n.y-e.y)>60||!bossPathClear(e,n.x,n.y))return;
   const landing=friendLanding(n);if(!landing){b.pickup=null;b.turn++;b.cd=.5;return}
-  const duration=firstBossTuning(e).windup;b.cast={kind:'friend-fling',friend:n,landing,x:n.x,y:n.y,left:duration,duration};e.bossWindup=duration;
+  const duration=firstBossTuning(e).friendWindup;b.cast={kind:'friend-fling',friend:n,landing,x:n.x,y:n.y,left:duration,duration};e.bossWindup=duration;
   game.api.floatText(e.x,e.y-e.r-14,'FRIEND FLING!','#a55b39');return;
  }
  if(earlyBoss(e)&&b.enclosed)b.cd=Math.min(b.cd,1.8);
@@ -181,14 +199,14 @@ function updateBossEncounter(e,dt){
  const wall=nearestBossWall(e),player=game.state.player;
  let kind=isFirstBoss(e)?['mirror-orb','arc-fan','paper-lob','friend-fling'][b.turn%4]:e.type==='stapler'?(b.turn%2===0?'charge':'volley'):e.type==='crayon'?(b.turn%4===3?'volley':'paint'):e.type==='eraser'?(wall?'swipe':'clean'):(b.turn%3===2?'summon':'volley');
  if(kind==='friend-fling'){
-  const friend=game.state.enemies.filter(n=>friendCanBePicked(e,n)&&friendLanding(n)).sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y))[0];
-  if(friend&&!b.enclosed){b.pickup={friend,left:3.5};b.moveCd=0;b.detour=false;return}
+  const friend=chooseBossFriend(e);
+  if(friend&&!b.enclosed){b.pickup={friend,left:2.25};b.moveCd=0;b.detour=false;return}
   kind='paper-lob';
  }
  if(!isFirstBoss(e)&&b.enclosed&&wall&&e.type!=='stapler'&&e.type!=='eraser'&&(earlyBoss(e)||b.turn%2===1))kind='swipe';
  const target=(kind==='swipe'||kind==='charge')&&wall?wall:player;
  if(isFirstBoss(e))game.api.floatText(e.x,e.y-e.r-14,kind==='mirror-orb'?'DRAW TO RETURN!':kind==='arc-fan'?'SIDE SPARKS!':'WATCH YOUR WALLS!','#9b3549');
- const windup=isFirstBoss(e)?firstBossTuning(e).windup:1.2;
+ const windup=isFirstBoss(e)?(kind==='paper-lob'?firstBossTuning(e).paperWindup:firstBossTuning(e).windup):1.2;
  b.cast={kind,x:kind==='swipe'?e.x:target.x,y:kind==='swipe'?e.y:target.y,wall:target.wall,left:windup,duration:windup};
  if(kind==='paper-lob')b.cast.targets=firstBossLobTargets(e);
  e.bossWindup=windup;
@@ -301,5 +319,5 @@ function drawBossEncounters(){const ctx=game.dom.ctx;
   ctx.restore();
  }
 }
-const api={updateFirstBossHelpers, friendLanding, firstBossTuning,drawFirstBossShot,isFirstBoss,updateFirstBossShot,firstBossCurve,bossMoveClear,updateBossDamageBudgets,limitBossDamage,pushThroughBossStrokes,bossPathClear,bossWallHit,bossBrain,resetBossEncounters,bossDamageMultiplier,bossContact,updateBossEncounter,bossTarget,updateBossFields,moveBossFields,bossEncounterSnapshot,drawBossEncounters};Object.assign(game.api,api);return api;
+const api={bossChaseScale,bossFriendHeld,chooseBossFriend,updateFirstBossHelpers, friendLanding, firstBossTuning,drawFirstBossShot,isFirstBoss,updateFirstBossShot,firstBossCurve,bossMoveClear,updateBossDamageBudgets,limitBossDamage,pushThroughBossStrokes,bossPathClear,bossWallHit,bossBrain,resetBossEncounters,bossDamageMultiplier,bossContact,updateBossEncounter,bossTarget,updateBossFields,moveBossFields,bossEncounterSnapshot,drawBossEncounters};Object.assign(game.api,api);return api;
 };

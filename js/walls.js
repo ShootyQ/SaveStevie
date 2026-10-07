@@ -76,7 +76,7 @@ function launchEnemy(e,x,y,inferno=false){
 }
 function flingBossFriend(e,target){
  if(e.hp<=0||e.flight||isInkBoss(e))return false;
- e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:1,
+ e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:.65,
   height:Math.min(90,Math.max(16,Math.min(e.y,target.y)-e.r*2-50)),spin:target.x<e.x?-1:1,damage:0,stun:0,bossThrown:true};
  game.api.floatText(e.x,e.y,'WHEEEE!','#a55b39');return true;
 }

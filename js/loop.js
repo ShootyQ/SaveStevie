@@ -44,6 +44,7 @@ function update(dt){
 
     if(game.state.synergies.has('Gravity Trap')||game.state.synergies.has('THE BLACK HOLE')){
       for(const e of game.state.enemies){
+        if(game.api.bossFriendHeld(e))continue;
         if(game.api.withinRadius(e.x,e.y,cx,cy,135)){
           const dx=cx-e.x,dy=cy-e.y,m=Math.hypot(dx,dy)||1;
           const pull=(game.state.synergies.has('THE BLACK HOLE')?20:10)+(game.state.inks.gravity*4);
@@ -115,6 +116,7 @@ function update(dt){
     }
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.updateEnemyFlight(e,dt))continue;
+    if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
     game.api.updateEnemyBehavior(e,dt);
     game.api.applySynergies(e,dt);
     game.api.eraserAttack(e,dt);
@@ -177,7 +179,7 @@ function update(dt){
       if(e.waveBoss){
         const brain=game.api.bossBrain(e);
         if(!brain.enclosed&&!brain.cast&&brain.recovery<=0&&brain.charge<=0&&game.api.bossPathClear(e,targetX,targetY)){
-          const pace=e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7));
+          const pace=e.speed*game.api.enemyMoveScale(e)*game.api.bossChaseScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7));
           if(game.api.moveEnemySafely(e,dx/d*pace*dt,dy/d*pace*dt))continue;
         }
       }
@@ -191,7 +193,7 @@ function update(dt){
     }
 
     if(immobilized)continue;
-    let speed=e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7));
+    let speed=e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7))*(e.waveBoss?game.api.bossChaseScale(e):1);
     if(e.waveBoss)game.api.moveEnemySafely(e,dx/d*speed*dt,dy/d*speed*dt);
     else if(e.type==='sniper')game.api.moveEnemySafely(e,dx/d*speed*dt,dy/d*speed*dt);
     else {e.x+=dx/d*speed*dt;e.y+=dy/d*speed*dt}

@@ -1171,7 +1171,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
 {
  const env=load(true),g=env.sandbox.testGame;
  const setup=wave=>{g.api.resetRun();g.state.wave=wave;g.api.startWave();g.state.spawnTimer=9999;g.api.spawnEnemy(true,200,200);return g.state.enemies[0]};
- for(const wave of [5,10,15,20]){const e=setup(wave);assert.equal(g.state.enemies.length,1);assert.equal(e.waveBoss,true);for(let i=0;i<60;i++)g.api.spawnWaveEnemies(.1);assert.equal(g.state.enemies.length,wave===5?2:1,'only King Doodle gets a slow helper stream');}
+ for(const wave of [5,10,15,20]){const e=setup(wave);assert.equal(g.state.enemies.length,1);assert.equal(e.waveBoss,true);for(let i=0;i<60;i++)g.api.spawnWaveEnemies(.1);assert.equal(g.state.enemies.length,wave===5?3:1,'only King Doodle gets a slow helper stream');}
  const king=setup(5);king.x=250;king.y=250;const wall={pts:[{x:160,y:160},{x:340,y:160},{x:340,y:340},{x:160,y:340},{x:160,y:160}],closed:true,thick:8,hp:1000,maxHp:1000,life:300};g.state.walls=[wall];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),1.35);const hp=king.hp;g.api.dealDamage(king,10);assert.ok(Math.abs(king.hp-(hp-13.5))<1e-8);g.state.walls=[];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),.25);
  const b=g.api.bossBrain(king);b.cd=0;g.api.updateBossEncounter(king,.01);assert.equal(g.state.enemyShots.length,0);assert.equal(b.cast.kind,'mirror-orb');g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemyShots.length,1);assert.equal(g.state.enemyShots[0].bossKind,'mirror-orb');
  b.turn=2;b.cd=0;g.api.updateBossEncounter(king,.01);g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemies.filter(e=>e.bossOwner===king).length,0,'first boss has no summons');
@@ -1394,9 +1394,9 @@ console.log('PASS: three first-boss attacks, sideways curved flight, swept wall 
     g.api.createWall([{x:s.x-nx*28,y:s.y-ny*28},{x:s.x+nx*28,y:s.y+ny*28}]);spent+=before-g.state.stats.ink;handled.add(s);
    }
    for(const n of g.state.enemies){
-    if(n.waveBoss||n.hp<=0||n.flight||Math.hypot(n.x-g.state.player.x,n.y-g.state.player.y)>190||g.api.nearestWallHit(n))continue;
+    if(n.waveBoss||n.hp<=0||n.flight||n.burn*n.burnDps>=n.hp||Math.hypot(n.x-g.state.player.x,n.y-g.state.player.y)>190||g.api.nearestWallHit(n))continue;
     const dx=g.state.player.x-n.x,dy=g.state.player.y-n.y,d=Math.hypot(dx,dy)||1,nx=-dy/d,ny=dx/d,before=g.state.stats.ink;
-    g.api.createWall([{x:n.x-nx*28,y:n.y-ny*28},{x:n.x+nx*28,y:n.y+ny*28}]);spent+=before-g.state.stats.ink;
+    g.api.createWall([{x:n.x-nx*16,y:n.y-ny*16},{x:n.x+nx*16,y:n.y+ny*16}]);spent+=before-g.state.stats.ink;
    }
    g.api.update(.03);seconds+=.03;if(boss.x>0&&boss.x<width&&boss.y>0&&boss.y<height)closest=Math.min(closest,Math.hypot(boss.x-g.state.player.x,boss.y-g.state.player.y));
   }
@@ -1490,7 +1490,7 @@ console.log('PASS: flight trajectory translates on resize and landing is recheck
  g.api.firstBossCurve(e,1,'mirror-orb');g.api.updateEnemyShots(6);assert.equal(g.state.walls.includes(wall),false,'even permanent-strength cover pays one wall per return');assert.equal(e.hp,935);
  const hp=g.state.player.hp;g.api.firstBossCurve(e,1,'mirror-orb');g.api.updateEnemyShots(6);assert.equal(g.state.player.hp,hp-14,'an old returned wall cannot protect the next attack');
  const normal=g.api.firstBossTuning(e);e.hp=390;const furious=g.api.firstBossTuning(e);assert.ok(furious.cooldown<normal.cooldown&&furious.windup<normal.windup&&furious.orbDamage>normal.orbDamage);
- const b=g.api.bossBrain(e);b.recovery=0;b.turn=2;b.cd=0;g.api.updateBossEncounter(e,.01);assert.equal(b.cast.targets.length,3);assert.equal(b.cast.left,.75);
+ const b=g.api.bossBrain(e);b.recovery=0;b.turn=2;b.cd=0;g.api.updateBossEncounter(e,.01);assert.equal(b.cast.targets.length,3);assert.equal(b.cast.left,.32);
  const cast=b.cast;g.api.firstBossCurve(e,1,'mirror-orb');g.state.walls=[{...wall,hp:10000}];g.api.updateEnemyShots(6);assert.equal(b.cast,cast,'returns cannot cancel the next warned attack');assert.equal(b.recovery,1.25);
 }
 // Sir Pew-Pew goes around an open wall to earn a clear firing lane.
@@ -1564,16 +1564,16 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  }
  function effectiveTop(height){return height<400?65:110}
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();const boss=g.api.spawnEnemy(true,180,160),b=g.api.bossBrain(boss);
- g.api.spawnWaveEnemies(2.4);assert.equal(g.state.enemies.length,1);g.api.spawnWaveEnemies(.11);assert.equal(g.state.enemies.length,2);
- for(let i=0;i<30;i++)g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,4,'helper stream is capped');
- const friend=g.state.enemies.find(n=>n.bossOwner===boss);g.api.killEnemy(friend);g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,4,'stream replaces defeated helpers');
- const n=g.state.enemies.find(n=>n.bossOwner===boss);n.x=210;n.y=165;b.turn=3;b.cd=0;g.api.updateBossEncounter(boss,.01);assert.equal(b.pickup.friend,n,'seeks nearest available helper');
+ g.api.spawnWaveEnemies(1.4);assert.equal(g.state.enemies.length,1);g.api.spawnWaveEnemies(.11);assert.equal(g.state.enemies.length,2);
+ for(let i=0;i<30;i++)g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,6,'helper stream is capped');
+ const friend=g.state.enemies.find(n=>n.bossOwner===boss);g.api.killEnemy(friend);g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,6,'stream replaces defeated helpers');
+ const n=g.state.enemies.find(n=>n.bossOwner===boss);g.state.enemies=[boss,n];n.x=210;n.y=165;b.turn=3;b.cd=0;g.api.updateBossEncounter(boss,.01);assert.equal(b.pickup.friend,n,'seeks nearest available helper');
  g.api.updateBossEncounter(boss,.01);assert.equal(b.cast.kind,'friend-fling');assert.ok(!n.flight,'warning precedes flight');const target={...b.cast.landing},distance=Math.hypot(n.x-g.state.player.x,n.y-g.state.player.y),hp=n.hp;
  assert.ok(Math.hypot(target.x-g.state.player.x,target.y-g.state.player.y)<distance-20);
  const snapshot=JSON.stringify(g.api.bossEncounterSnapshot()),state=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),state);assert.equal(JSON.stringify(g.api.bossEncounterSnapshot()),snapshot);
  g.state.paused=true;g.api.update(.5);assert.equal(JSON.stringify(g.api.bossEncounterSnapshot()),snapshot);g.state.paused=false;
  g.api.updateBossEncounter(boss,1);assert.ok(n.flight?.bossThrown);
- g.state.walls=[{pts:[{x:250,y:0},{x:250,y:700}],hp:1000,maxHp:1000,thick:8,life:100}];g.api.updateEnemyFlight(n,.5);assert.ok(g.api.enemyFlightHeight(n)>0,'visible airborne arc');g.api.updateEnemyFlight(n,.5);
+ g.state.walls=[{pts:[{x:250,y:0},{x:250,y:700}],hp:1000,maxHp:1000,thick:8,life:100}];g.api.updateEnemyFlight(n,.325);assert.ok(g.api.enemyFlightHeight(n)>0,'visible airborne arc');g.api.updateEnemyFlight(n,.325);
  assert.equal(n.hp,hp,'friends take no fall damage');assert.equal(n.stun,0,'friends land without added stun');assert.ok(n.x>250,'passes over cover');assert.ok(Math.hypot(n.x-g.state.player.x,n.y-g.state.player.y)>=g.state.player.r+n.r+75,'safe distance from Stevie');
  g.state.walls=[];n.x=210;n.y=165;n.stun=.2;g.api.flingBossFriend(n,target);g.api.updateEnemyFlight(n,1);assert.equal(n.stun,.2,'does not erase a player stun');
  n.x=210;n.y=165;n.stun=0;b.turn=3;b.cd=0;b.recovery=0;g.api.updateBossEncounter(boss,.01);g.api.updateBossEncounter(boss,.01);assert.ok(b.cast);g.api.killEnemy(n);g.api.updateBossEncounter(boss,1);assert.ok(!n.flight,'dead helper is never launched');
@@ -1590,4 +1590,22 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  assert.ok(friend.flight?.bossThrown,'real combat loop runs to and throws a walking helper');assert.ok(Math.hypot(boss.x-80,boss.y-150)>50,'boss visibly approaches his helper');
  const hp=g.state.player.hp;for(let i=0;i<35;i++)g.api.update(.03);assert.ok(!friend.flight);assert.equal(friend.stun,0);assert.equal(g.state.player.hp,hp,'throw and landing do not hit Stevie');
  console.log('PASS: actual boss AI approaches a moving helper, warns, throws, and resumes safely after landing.');
+}
+
+// Faster Paper Pop and meaningful, interruptible buddy throws.
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.spawnTimer=9999;
+ const boss=g.api.spawnEnemy(true,120,160),b=g.api.bossBrain(boss);b.helperCd=999;
+ const near=g.api.spawnEnemy(false,175,180,'grunt'),far=g.api.spawnEnemy(false,130,90,'grunt');near.bossOwner=far.bossOwner=boss;
+ assert.equal(g.api.chooseBossFriend(boss),far,'prefers more ground gained rather than nearest buddy');
+ g.state.walls=[{pts:[{x:50,y:125},{x:250,y:125}],hp:1000,maxHp:1000,thick:8,life:100}];assert.equal(g.api.chooseBossFriend(boss),near,'does not choose a helper behind solid cover');g.state.walls=[];
+ g.state.enemies=[boss,near];b.turn=3;b.cd=0;g.api.updateBossEncounter(boss,.01);assert.equal(g.api.bossChaseScale(boss),1.8);g.api.updateBossEncounter(boss,.01);assert.equal(b.cast.kind,'friend-fling');assert.equal(b.cast.duration,.4);assert.ok(g.api.bossFriendHeld(near));
+ const before={x:near.x,y:near.y,hp:near.hp};near.burn=3;near.burnDps=8;g.api.update(.1);assert.equal(near.x,before.x);assert.equal(near.y,before.y);assert.ok(near.hp<before.hp,'held helper still takes damage');
+ boss.freeze=1;g.api.update(.1);assert.equal(g.api.bossFriendHeld(near),false,'boss interruption releases helper');assert.equal(b.cast,null);assert.equal(near.flight,undefined);boss.freeze=0;
+ near.x=g.state.player.x-170;near.y=g.state.player.y;assert.equal(g.api.friendLanding(near),null,'already-close helper cannot receive a tiny throw');b.turn=3;b.cd=0;b.recovery=0;g.api.updateBossEncounter(boss,.01);assert.equal(b.cast.kind,'paper-lob','too-close helpers get useful Paper Pop fallback');
+ g.api.resetRun();g.state.wave=5;g.api.startWave();const e=g.api.spawnEnemy(true,200,150),brain=g.api.bossBrain(e);brain.helperCd=999;brain.turn=2;brain.cd=0;
+ const wall={pts:[{x:280,y:200},{x:320,y:200}],hp:1000,maxHp:1000,thick:8,life:100};g.state.walls=[wall];g.api.updateBossEncounter(e,.01);assert.equal(brain.cast.left,.45);
+ g.api.updateBossEncounter(e,.44);assert.equal(g.state.enemyShots.length,0,'short warning is still respected');g.api.updateBossEncounter(e,.02);assert.equal(g.state.enemyShots[0].duration,.55);assert.equal(brain.cd,.9);
+ const playerHp=g.state.player.hp;g.api.updateEnemyShots(.54);assert.equal(wall.hp,1000,'no pop before flight ends');g.api.updateEnemyShots(.02);assert.equal(wall.hp,840);assert.equal(g.state.player.hp,playerHp);assert.equal(g.state.enemyShots.length,0);
+ console.log('PASS: useful-gain buddy priority, reachable routes, accelerated pickup, held walking/attacks with continuing damage, clean freeze release, close-helper fallback and accurately warned one-second Paper Pop.');
 }
