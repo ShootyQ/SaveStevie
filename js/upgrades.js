@@ -357,7 +357,7 @@ function renderDevReward(){
   renderUpgradeCards(base?[{...base,rarity}]:[]);
 }
 
-function chooseUpgrade(u,replaceName){
+function applyUpgrade(u,replaceName){
   const base=game.catalog.upgrades.find(candidate=>candidate.name===u?.name);
   if(!base||!game.api.upgradeAvailable(base)||!upgradeLevels(u))return;
   if(effectKeys[u.name]&&!game.state.stacks[u.name]&&equippedEffects().length>=game.state.tool.slots){
@@ -367,6 +367,10 @@ function chooseUpgrade(u,replaceName){
   const levels=upgradeLevels(u);
   for(let i=0;i<levels;i++){game.state.stacks[u.name]=(game.state.stacks[u.name]||0)+1;base.apply();}
   game.api.checkSynergies();
+  return true;
+}
+function chooseUpgrade(u,replaceName){
+  if(!applyUpgrade(u,replaceName))return;
   game.state.wave++;
   if(!game.api.devRunActive()&&game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
   game.state.inUpgrade=false;game.dom.upgradeOverlay.style.display='none';game.api.startWave();game.api.updateUI();
@@ -382,7 +386,7 @@ function chooseSpecialization(spec){
   game.api.openUpgrade();
   game.api.setMsg('Specialization: '+({defense:'Fortress',ink:'Ink Alchemist',chaos:'Chaos'}[spec]))
 }
-const api = { toolIllustration, renderDevReward, upgradeLevels, upgradePreview, equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
+const api = { applyUpgrade, isOneTimeUpgrade:name=>oneTimeUpgrades.has(name), toolIllustration, renderDevReward, upgradeLevels, upgradePreview, equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
 Object.assign(game.api, api);
 game.dom.$('devUpgrade').onchange=renderDevReward;game.dom.$('devRarity').onchange=renderDevReward;
 return api;

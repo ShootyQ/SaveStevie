@@ -642,3 +642,40 @@ html.native-app #app{width:100%;max-width:none;height:100dvh;max-height:none;gap
 html.native-app .panel{border-radius:0;border:0;box-shadow:none}
 
 .signature-pencil{display:inline-block;width:40px;height:20px;vertical-align:middle;transform:rotate(-9deg);margin-left:3px}
+
+/* Native Android: paper edge to edge, controls float on a compact pencil tray. */
+html.native-app{--native-top:max(env(safe-area-inset-top,0px),var(--safe-area-inset-top,0px));--native-right:max(env(safe-area-inset-right,0px),var(--safe-area-inset-right,0px));--native-bottom:max(env(safe-area-inset-bottom,0px),var(--safe-area-inset-bottom,0px));--native-left:max(env(safe-area-inset-left,0px),var(--safe-area-inset-left,0px));background:var(--paper)}
+html.native-app body{display:block;padding:0;background:var(--paper)}
+html.native-app #app{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;padding:0;gap:0}
+html.native-app .panel{flex:1;width:100%;min-height:0;border:0;border-radius:0;box-shadow:none}
+html.native-app .hud{left:calc(6px + var(--native-left));right:calc(6px + var(--native-right));top:calc(6px + var(--native-top) + var(--dev-inset,0px));gap:5px;grid-template-columns:1fr 1fr 68px;grid-template-areas:"ink hp time"}
+html.native-app .hud .box{padding:4px 5px;border-width:1px;border-radius:7px;background:#fffdf0e8;box-shadow:none}
+html.native-app .bar{height:7px}
+html.native-app .barlabel{font-size:10px;margin-bottom:3px}
+html.native-app .bottom{position:absolute;z-index:8;left:0;right:0;bottom:0;height:calc(52px + var(--native-bottom));flex:none;display:flex;gap:4px;padding:4px calc(5px + var(--native-right)) calc(4px + var(--native-bottom)) calc(5px + var(--native-left));border:0;border-top:1px solid #ae997966;border-radius:0;background:#e4d7bbef;box-shadow:0 -2px 8px #745b3415}
+html.native-app .bottom button{flex:1;min-width:0;height:44px;min-height:44px;padding:2px;font-size:10px;border-radius:7px;box-shadow:none}
+html.native-app .bottom #fullscreenBtn{display:none}
+html.native-app .bottom #musicBtn{flex:0 0 40px}
+html.native-app.menu-view .bottom{display:none}
+html.native-app #upgradeList,html.native-app #inkTags{display:none}
+html.native-app #chapterPaper{top:calc(48px + var(--native-top) + var(--dev-inset,0px))}
+html.native-app #freehandMeter{top:calc(52px + var(--native-top) + var(--dev-inset,0px))!important;left:calc(6px + var(--native-left))!important;padding:3px 5px!important;width:140px!important}
+html.native-app .overlay{padding:calc(10px + var(--native-top)) calc(10px + var(--native-right)) calc(62px + var(--native-bottom)) calc(10px + var(--native-left))}
+html.native-app .build-overlay{padding:calc(10px + var(--native-top)) calc(10px + var(--native-right)) calc(10px + var(--native-bottom)) calc(10px + var(--native-left))}
+html.native-app #startOverlay{padding:calc(10px + var(--native-top)) calc(10px + var(--native-right)) calc(10px + var(--native-bottom)) calc(10px + var(--native-left));background:repeating-linear-gradient(0deg,#f7f1df 0 27px,#d9e2e7 27px 28px)}
+html.native-app .splash-box{border:0;box-shadow:none;width:min(100%,760px);max-height:100%;background-color:#fffaf0}
+html.native-app .dev-run-banner{top:var(--native-top);font-size:9px;padding:2px 8px;max-width:calc(100% - 30px);overflow:hidden;text-overflow:ellipsis}
+.test-lab[hidden],#repeatTestBtn[hidden]{display:none}
+.test-lab{margin-top:14px;padding:12px;background:#fff5d9;border:2px dashed #ad9569;border-radius:10px}
+.test-lab h3,.test-lab h4{margin:8px 0;font-family:'Stevie Pencil',sans-serif;font-weight:400;font-size:26px}
+.test-fields{display:grid;grid-template-columns:2fr 1.4fr 1fr;gap:8px;margin:12px 0}
+.test-fields label{font-size:12px;font-weight:bold;min-width:0}
+.test-fields select,.test-fields input{display:block;width:100%;min-width:0;min-height:44px;margin-top:5px;padding:8px;border:1px solid #bba985;border-radius:6px;background:#fffdf7;color:#26333c;font:inherit}
+.test-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin:12px 0}.test-presets button{padding:6px;font-size:11px;background:#765b82}
+.test-loadout{display:grid;gap:5px;margin-top:10px}.test-loadout-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px;border-bottom:1px dashed #c5b690;font-size:12px}.test-loadout-row button{padding:5px 8px;font-size:11px}
+@media(max-width:480px){.test-fields{grid-template-columns:1fr}.test-presets{grid-template-columns:1fr 1fr}.test-lab .cardactions{display:grid;grid-template-columns:1fr;width:100%}}
+
+html.native-app:has(#devRunBanner:not([hidden])){--dev-inset:14px}
+
+html.native-app #bossOvertime{top:calc(50px + var(--native-top) + var(--dev-inset,0px));left:auto;right:calc(6px + var(--native-right));transform:none;max-width:calc(100% - 166px - var(--native-left) - var(--native-right));padding:4px 7px;font-size:11px}
+html.native-app #chapterPaper{bottom:calc(52px + var(--native-bottom))}
