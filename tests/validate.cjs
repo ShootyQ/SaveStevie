@@ -54,7 +54,11 @@ both(e=>{const c=e.node('game');c.listeners.pointerdown({clientX:180,clientY:180
 both(e=>e.node('pauseBtn').onclick());compare('pause');both(e=>e.node('pauseBtn').onclick());compare('resume');
 for(let i=1;i<=2000;i++){both(e=>e.sandbox.frame(i*16));if(i%100===0)compare('frame '+i);}
 both(e=>e.node('continueBtn').onclick());compare('wave reward');
-both(e=>{const cards=e.node('cards').children;if(cards.length){cards.at(-1).onclick();if(e.sandbox.testGame)e.node('takeUpgradeBtn').onclick();}});compare('upgrade');assert.match(b.node('message').textContent,/×1 — /,'upgrade confirmation includes the new stack and effect');
+// This seeded first reward needs the new guaranteed effect. Match its extra
+// random draw in the legacy fixture before comparing unchanged combat.
+a.sandbox.Math.random();
+// Compare the unchanged first utility card; the last slot now guarantees ink.
+both(e=>{const cards=e.node('cards').children;if(cards.length){cards[0].onclick();if(e.sandbox.testGame)e.node('takeUpgradeBtn').onclick();}});compare('upgrade');assert.match(b.node('message').textContent,/×1 — /,'upgrade confirmation includes the new stack and effect');
 both(e=>e.node('clearBtn').onclick());compare('clear walls');
 both(e=>e.node('againBtn').onclick());compare('reset');
 
@@ -1624,4 +1628,21 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  env.node('cards').children[0].onclick();env.node('takeUpgradeBtn').onclick();assert.equal(g.state.inks.frost,3);assert.equal(g.state.inks.fire,0);const wave=g.state.wave;g.api.takeInspectedReward();assert.equal(g.state.wave,wave,'confirmation cannot advance twice');
  const cells=g.catalog.upgrades.map(u=>{const a=g.api.upgradeArtworkInfo(u);assert.ok(a&&a.x<a.grid&&a.y<a.grid);return a.file+':'+a.x+':'+a.y;});assert.equal(new Set(cells).size,41);
  console.log('PASS: reward inspection/close are read-only without RNG; stale dev choices cannot reopen/commit; explicit confirmation applies once and every upgrade has distinct artwork.');
+}
+
+// First-wave rewards must offer an effect even when random draws favor utilities.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.legendaryWave=0;
+ let next=0;const utilities=['Bigger Ink Tank','Quick Refill','Thick Ink','Fine Tip'];
+ g.api.getUpgrade=()=>{const name=utilities[next++%utilities.length];return {...g.catalog.upgrades.find(u=>u.name===name),rarity:'uncommon'};};
+ const cards=()=>env.node('cards').children;
+ const effects=()=>cards().filter(c=>g.catalog.upgrades.some(u=>u.cat==='ink'&&c.innerHTML.includes('<h3>'+u.name+'</h3>')));
+ env.node('cards').children=[];g.api.openUpgrade();
+ assert.equal(cards().length,3);assert.equal(effects().length,1);assert.match(effects()[0].className,/uncommon/,'guaranteed effect preserves the replaced rarity');
+ for(let i=0;i<3;i++){g.state.rerolls=1;env.node('cards').children=[];g.api.reroll();assert.equal(cards().length,3);assert.equal(effects().length,1);assert.equal(g.state.rerolls,0);}
+ g.state.legendaryWave=1;g.state.legendaryOffered=false;g.api.weightedPick=pool=>pool.find(u=>u.name==='Bigger Ink Tank')||pool[0];
+ env.node('cards').children=[];g.api.rollCards();assert.equal(cards().length,3);assert.equal(effects().length,1);assert.match(cards()[0].innerHTML,/Bigger Ink Tank/);assert.match(cards()[0].className,/legendary/);
+ effects()[0].onclick();env.node('takeUpgradeBtn').onclick();assert.equal(g.state.wave,2);assert.equal(g.api.equippedEffects().length,1);
+ env.node('cards').children=[];g.api.openUpgrade();assert.equal(effects().length,0,'later rewards keep their ordinary random pool');
+ console.log('PASS: first-wave ink guarantee survives utility-only draws and rerolls, preserves rarity and Legendary offers, equips normally and leaves later rewards unchanged.');
 }
