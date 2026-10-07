@@ -40,12 +40,16 @@
     </div>
     <div id="upgradeList"></div>
     <div id="hitNotice" role="status" style="display:none"></div>
-    <div id="synergySplash" style="display:none;position:absolute;left:50%;top:24%;transform:translate(-50%,-50%);z-index:7;
-      background:rgba(34,28,48,.94);color:white;border:3px solid #d8a72e;border-radius:16px;padding:14px 20px;
-      text-align:center;box-shadow:0 12px 35px rgba(0,0,0,.28);pointer-events:none;min-width:260px">
-      <div style="font-size:11px;font-weight:1000;letter-spacing:1.4px;color:#f0c95c">SYNERGY UNLOCKED</div>
-      <div id="synergySplashName" style="font-size:24px;font-weight:1000;margin-top:3px"></div>
-      <div id="synergySplashDesc" style="font-size:12px;color:#ddd5f2;margin-top:3px"></div>
+    <div id="synergySplash" class="overlay synergy-reveal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="synergySplashName" aria-describedby="synergySplashDesc">
+      <div class="synergy-reveal-paper">
+        <p id="synergyRevealLabel">NEW SYNERGY!</p>
+        <h2 id="synergySplashName"></h2>
+        <div id="synergyRevealArt" class="synergy-reveal-art"></div>
+        <div class="synergy-burst" aria-hidden="true">✦ BOOM! ✦</div>
+        <p id="synergySplashDesc"></p>
+        <p class="synergy-reveal-note">Your inks just learned a new trick.</p>
+        <button id="continueSynergyBtn" class="paper-slip">Cool—let’s go!</button>
+      </div>
     </div>
 
     <div class="overlay" id="startOverlay">
@@ -311,6 +315,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Gravity gets closer; synergies get a moment</h3><p>Gravity has tight reach and pulls without lingering slows, extra damage or slower wall bites. King Doodle resists its pull; nearby walls gently bend his returnable shots instead. Newly activated synergies get an animated paper reveal at the next wave, with ingredients, an explanation and a “Cool—let’s go!” button. Combat waits for you; repeats use a short message.</p></article>
       <article class="build-entry"><h3>The King makes an entrance</h3><p>After wave 5’s last monster falls, the music stops as King Doodle-Doom stomps in from the side. The camera closes in for his roar, then his royal stomp destroys every remaining wall before his new battle music begins. Waves 16–20 also have a fresh Final Draft soundtrack.</p></article>
       <article class="build-entry"><h3>Refills, extra credit and more variety</h3><p>Buy three permanent +1 ink/second ranks in the Notebook for 5, 12 and 24 scraps. Extra Credit costs 25 scraps and gives four reward choices from your first wave. Equipped ink effects still appear more often, but leave more room for other upgrades.</p></article>
       <article class="build-entry"><h3>Fresh tunes and bubbling ink</h3><p>New versions of Save Stevie, Pop Quiz Panic and Crayon Catastrophe play through their chapters. Every defeated boss gets Stevie’s victory tune. Fire crackles, freezing ice crunches, poison cycles four bubble sounds, and bosses arrive with a paper shuffle.</p></article>

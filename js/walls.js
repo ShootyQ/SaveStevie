@@ -162,7 +162,7 @@ function damageWall(wall,amount,x,y){
       for(const e of game.state.enemies){
         const near=wall.pts.some(p=>game.api.withinRadius(p.x,p.y,e.x,e.y,radius));
         if(near){
-          if(game.state.synergies.has('Singularity Ink')){
+          if(game.state.synergies.has('Singularity Ink')&&!game.api.isFirstBoss(e)){
             const dx=x-e.x,dy=y-e.y,m=Math.hypot(dx,dy)||1;
             game.api.moveEnemySafely(e,dx/m*24,dy/m*24);
           }
@@ -291,7 +291,7 @@ function applyInkContact(e,dt,wall=null){
     e.poisonDps=Math.max(e.poisonDps,4+game.state.inks.poison*3);
   }
 
-  if(game.state.synergies.has('Event Horizon')&&e.gravitySlow>.12&&game.state.inks.void>0){
+  if(game.state.synergies.has('Event Horizon')&&game.api.gravityWallHit(e)&&game.state.inks.void>0){
     const c=.006*game.state.inks.void*dt*60;
     if(Math.random()<c){
       if(e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss)game.api.dealDamage(e,65+game.state.inks.void*30,'void');
@@ -373,7 +373,7 @@ function applyOneInk(kind,e,dt,chaos=false){
     if(game.state.player.hp>0)game.api.healStevie(Math.max(0,Math.min(hp,hp-e.hp))*.25);
     game.api.animateLeech(e,game.state.player.hp-before);
   }
-  if(kind==='gravity'){e.gravitySlow=Math.max(e.gravitySlow,.55);e.stun=Math.max(e.stun,isInkBoss(e)?.1:.2)}
+  if(kind==='gravity'&&!game.api.isFirstBoss(e)){const p=game.api.nearestWallPoint(e.x,e.y,42);if(p){const dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1;game.api.moveEnemySafely(e,dx/d*8,dy/d*8)}}
 }
 
 function electricTuning(level){
@@ -384,7 +384,7 @@ function chainLightning(source,level){
   if(source.hp<=0||(source.chainCd||0)>0)return;
   const t=electricTuning(level);let {count,range}=t,mult=1;
   if(game.state.synergies.has('Cryoshock')&&source.freeze>0){range+=25;count++;mult+=.15}
-  if(game.state.synergies.has('Tesla Well')&&source.gravitySlow>.15){range+=20;count++;mult+=.1}
+  if(game.state.synergies.has('Tesla Well')&&game.api.gravityWallHit(source)){range+=20;count++;mult+=.1}
   if(game.state.synergies.has('THE STORM')){range+=30;count++;mult+=.15}
   count=Math.min(8,count);range=Math.min(220,range);
   const nearby=[],visited=new Set([source]);let from=source;
@@ -430,7 +430,7 @@ function applySynergies(e,dt){
     }
   }
 
-  if(game.state.synergies.has('Tesla Well')&&e.gravitySlow>.15){
+  if(game.state.synergies.has('Tesla Well')&&game.api.gravityWallHit(e)){
     game.api.dealDamage(e,electricTuning(game.state.inks.electric).fieldDps*.7*dt,'electric');
   }
 
@@ -438,12 +438,12 @@ function applySynergies(e,dt){
     e.poison=Math.min(6,e.poison+dt*.18);
   }
 
-  if(game.state.synergies.has('NECROTIC ENGINE')&&e.poison>0&&e.gravitySlow>.15){
+  if(game.state.synergies.has('NECROTIC ENGINE')&&e.poison>0&&game.api.gravityWallHit(e)){
     const before=game.state.player.hp;game.api.healStevie(e.poisonDps*dt*.02);
     game.api.animateLeech(e,game.state.player.hp-before);
   }
 
-  if(game.state.synergies.has('THE STORM')&&e.freeze>0&&e.gravitySlow>.1){
+  if(game.state.synergies.has('THE STORM')&&e.freeze>0&&game.api.gravityWallHit(e)){
     game.api.dealDamage(e,electricTuning(game.state.inks.electric).fieldDps*dt,'electric');
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }

@@ -159,7 +159,7 @@ function checkSynergies(){
   if(newly.length){
     const def=newly[newly.length-1];
     game.dom.synergyNote.innerHTML='<div class="synergy">'+(def.major?'MAJOR ':'')+'SYNERGY: '+def.name+' — '+def.desc+'</div>';
-    game.api.showSynergySplash(def.name,def.desc,!!def.major);
+    for(const unlocked of newly)game.api.showSynergySplash(unlocked.name,unlocked.desc,!!unlocked.major);
   }else game.dom.synergyNote.innerHTML='';
 }
 
@@ -230,7 +230,7 @@ game.catalog.upgrades = [
   {name:'Electric Ink',cat:'ink',desc:'Wall contact sparks a fading chain with brief shock. Shared recovery prevents overlapping zaps; every three levels add a jump, with capped reach and targets.',apply:()=>game.state.inks.electric++},
   {name:'Blast Ink',cat:'ink',desc:'Destroyed walls explode and damage nearby enemies.',apply:()=>game.state.inks.blast++},
   {name:'Vampire Ink',cat:'ink',desc:'Deals life-drain damage on contact and heals for 25% of damage dealt, sharing the 6 HP/s healing budget.',apply:()=>game.state.inks.vampire++},
-  {name:'Gravity Ink',cat:'ink',desc:'Pulls enemies to wall segments and holds them there. Held enemies take more damage and bite walls 30% slower.',apply:()=>game.state.inks.gravity++},
+  {name:'Gravity Ink',cat:'ink',desc:'Tugs nearby enemies toward wall segments without slowing movement or wall bites. Tight reach; King Doodle resists the pull, but his returnable shots bend slightly toward nearby walls.',apply:()=>game.state.inks.gravity++},
   {name:'Void Ink',cat:'ink',desc:'Deals steady Void damage on contact and executes weakened ordinary enemies; bosses cannot be executed.',apply:()=>game.state.inks.void++},
   {name:'Chaos Ink',cat:'ink',desc:'Sustained contact guarantees timed random ink rolls. Every roll has a working effect and extra impact damage.',apply:()=>game.state.inks.chaos++},
   {name:'Death Ink',cat:'ink',desc:'Per level: +5 base wall damage per second. Physical hits deal bonus damage against enemies at half health or lower.',apply:()=>game.state.stats.wallDamage+=5},

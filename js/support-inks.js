@@ -4,7 +4,7 @@ const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-mot
 let reduced=!!preference?.matches,memory=new WeakMap(),clock=0,bites=[],lastBite=-Infinity;
 preference?.addEventListener?.('change',e=>{reduced=e.matches});
 function supportInkTuning(n){return {
-  gravityRange:Math.min(240,140+15*n),gravityPull:60+10*n,gravityBonus:Math.min(.4,.12+.04*n),gravityAttack:.7,
+  gravityRange:Math.min(64,34+4*n),gravityPull:Math.min(95,35+6*n),gravityBonus:0,gravityAttack:1,
   frostSlow:Math.min(.65,.25+.05*(n-1)),frostCharge:Math.max(.45,1.2/(1+.18*(n-1))),frostDuration:Math.min(1.2,.65+.08*(n-1)),
   vampireDps:5+3*n,vampireHeal:.25
 }}
@@ -32,7 +32,9 @@ function applyFrostContact(e,dt){
   }
 }
 function pullGravity(e,dt,immobilized=false){
-  const n=game.state.inks.gravity;if(!n||e.hp<=0)return;
+  let data=memory.get(e);if(data){data.held=0;data.wall=null}
+  const n=game.state.inks.gravity;if(!n||e.hp<=0||game.api.isFirstBoss(e))return;
+  data??=state(e);
   const t=supportInkTuning(n);let bestWall=null,bestSeg=0,bestX=0,bestY=0,distance=t.gravityRange*t.gravityRange;
   for(const wall of game.state.walls){
     if(wall.hp<=0)continue;
@@ -46,20 +48,28 @@ function pullGravity(e,dt,immobilized=false){
     }
   }
   if(!bestWall)return;
-  const data=state(e),d=Math.sqrt(distance),stop=e.r+bestWall.thick/2+1.05;
-  if(data.wall!==bestWall||data.seg!==bestSeg)data.hit={wall:bestWall,seg:bestSeg};
+  const d=Math.sqrt(distance),stop=e.r+bestWall.thick/2+1.05;
+  if(data.hit?.wall!==bestWall||data.hit?.seg!==bestSeg)data.hit={wall:bestWall,seg:bestSeg};
   data.wall=bestWall;data.seg=bestSeg;data.x=bestX;data.y=bestY;data.held=.3;
-  e.gravitySlow=Math.max(e.gravitySlow,.25);
+
   if(!immobilized&&d>stop){
     const travel=Math.min(d-stop,t.gravityPull*(boss(e)?.6:1)*dt);
     game.api.moveEnemySafely(e,(bestX-e.x)/d*travel,(bestY-e.y)/d*travel);
   }
   data.cacheX=e.x;data.cacheY=e.y;data.cachePoints=bestWall.pts;
-  if(gravityWallHit(e))e.gravitySlow=Math.max(e.gravitySlow,.65);
+
+}
+function gravityPullActive(e){
+  const data=memory.get(e);
+  if(!data||!game.state.inks.gravity||!data.held||!data.wall||data.wall.hp<=0||!game.state.walls.includes(data.wall)||game.api.isFirstBoss(e))return false;
+  const q=game.api.nearestPointOnWall(e,data.wall);
+  if(!q||Math.hypot(q.x-e.x,q.y-e.y)>=supportInkTuning(game.state.inks.gravity).gravityRange){data.held=0;data.wall=null;return false}
+  return true;
 }
 function gravityWallHit(e){
   const data=memory.get(e);
   if(!game.state.inks.gravity||!data||data.held<=0||!data.wall||data.wall.hp<=0||!game.state.walls.includes(data.wall))return null;
+  if(!gravityPullActive(e))return null;
   // The pull already identified the nearest segment. Reuse it for damage,
   // attack and visual queries instead of rescanning the whole wall per hit.
   const a=data.wall.pts[data.seg-1],b=data.wall.pts[data.seg];
@@ -74,7 +84,7 @@ function gravityWallHit(e){
   const p=game.api.nearestPointOnWall(e,data.wall);
   return p&&game.api.withinRadius(e.x,e.y,p.x,p.y,radius)?data.hit:null;
 }
-function gravityDamageMultiplier(e){return gravityWallHit(e)?1+supportInkTuning(game.state.inks.gravity).gravityBonus:1}
+function gravityDamageMultiplier(){return 1}
 function applyVampireContact(e,dt){
   const n=game.state.inks.vampire;if(!n||e.hp<=0)return;
   const t=supportInkTuning(n),before=Math.max(0,e.hp);
@@ -86,7 +96,7 @@ function applyVampireContact(e,dt){
   }
 }
 function supportInkSnapshot(){return {
-  enemies:game.state.enemies.filter(e=>memory.has(e)).map(e=>{const d=memory.get(e);return {x:e.x,y:e.y,cold:d.cold,cooldown:d.cooldown,held:!!gravityWallHit(e),pulling:!!game.state.inks.gravity&&d.held>0&&!!d.wall&&game.state.walls.includes(d.wall),targetX:d.x,targetY:d.y}}),
+  enemies:game.state.enemies.filter(e=>memory.has(e)).map(e=>{const d=memory.get(e);return {x:e.x,y:e.y,cold:d.cold,cooldown:d.cooldown,held:!!gravityWallHit(e),pulling:gravityPullActive(e),targetX:d.x,targetY:d.y}}),
   bites:bites.map(b=>({...b})),clock
 }}
 function moveSupportInkVisuals(dx,dy){for(const e of game.state.enemies){const d=memory.get(e);if(d){d.x+=dx;d.y+=dy}}for(const b of bites){b.x+=dx;b.y+=dy}}
@@ -94,7 +104,7 @@ function drawSupportInks(){
   const ctx=game.dom.ctx;let count=0;
   for(const e of game.state.enemies){
     const data=memory.get(e);if(!data||e.hp<=0)continue;
-    const pulling=game.state.inks.gravity&&data.held>0&&data.wall&&game.state.walls.includes(data.wall);
+    const pulling=gravityPullActive(e);
     const chilling=game.state.inks.frost&&data.cold>0;
     if(!pulling&&!chilling)continue;if(count++>=24)break;
     ctx.save();ctx.lineWidth=1.5;
@@ -123,6 +133,6 @@ function drawSupportInks(){
     ctx.restore();
   }
 }
-const api={supportInkTuning,resetSupportInks,updateSupportInkTime,updateSupportInkEnemy,applyFrostContact,pullGravity,gravityWallHit,gravityDamageMultiplier,applyVampireContact,supportInkSnapshot,moveSupportInkVisuals,drawSupportInks};
+const api={gravityPullActive,supportInkTuning,resetSupportInks,updateSupportInkTime,updateSupportInkEnemy,applyFrostContact,pullGravity,gravityWallHit,gravityDamageMultiplier,applyVampireContact,supportInkSnapshot,moveSupportInkVisuals,drawSupportInks};
 Object.assign(game.api,api);return api;
 };

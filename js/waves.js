@@ -86,6 +86,7 @@ function waveDuration(){
 }
 
 function resetRun(options={}){
+  game.api.resetSynergyReveals();
   game.api.resetWaveFinale();
   noteChosen={death:null,victory:null};
   game.api.closeInfo(false);
@@ -176,6 +177,7 @@ function proceedAfterWave(){
 }
 
 function returnToMenu(){
+  game.api.resetSynergyReveals();
   game.api.resetEnemyWave();
   game.api.resetWaveFinale();
   game.api.closeInfo(false);game.api.finishScrapRun(false,false);game.api.stopSoundEffects();
@@ -188,6 +190,7 @@ function returnToMenu(){
   game.dom.startOverlay.style.display='grid';game.api.selectMusicTrack('splash');game.api.updateUI();game.dom.$('startBtn').focus?.();
 }
 function gameOver(){
+  game.api.resetSynergyReveals();
   game.api.resetWaveFinale();
   game.api.stopSoundEffects();
   game.api.finishScrapRun();renderStevieNote();

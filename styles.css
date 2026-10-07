@@ -871,3 +871,20 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 .wave-clear-book .scrap-summary{font-size:12px;line-height:1.5}
 .wave-clear-book #continueBtn{width:100%;min-height:52px;font-family:'Stevie Pencil',cursive;font-size:25px;margin:12px 0 0}
 @media(max-width:600px){.wave-clear-book{padding:16px}.wave-clear-book h2{font-size:29px}.wave-clear-book #waveStevie{width:70px;height:75px}.wave-clear-book .wave-grade{font-size:44px}.wave-clear-book .summary > div{padding:8px;font-size:12px}}
+
+/* A new combination gets a deliberate, readable notebook celebration. */
+.synergy-reveal{z-index:40;background:rgba(48,36,30,.65);padding:16px;overflow:auto}
+.synergy-reveal-paper{width:min(520px,100%);box-sizing:border-box;padding:24px;background:repeating-linear-gradient(#fff9e8 0 27px,#aabbdc55 28px,#fff9e8 29px);border:2px solid #82735b;border-radius:5px 15px 8px 4px;box-shadow:8px 10px 0 #2d241b44;text-align:center;animation:synergy-page-in .45s ease-out}
+.synergy-reveal-paper h2{font-family:'Stevie Pencil',cursive;font-size:clamp(26px,6vw,40px);margin:10px 0;overflow-wrap:anywhere}
+#synergyRevealLabel{font-weight:900;letter-spacing:2px;color:#774c99;margin:0}
+.synergy-reveal[data-major="true"] #synergyRevealLabel{color:#a3600c}
+.synergy-reveal-art{display:flex;align-items:center;justify-content:center;gap:10px;margin:20px 0}
+.synergy-ingredient{min-width:0;flex:1;max-width:120px;animation:synergy-ink-pulse 1.8s ease-in-out infinite}
+.synergy-ingredient:nth-of-type(2){animation-delay:.2s}.synergy-ingredient:nth-of-type(3){animation-delay:.4s}
+.synergy-ingredient .upgrade-illustration{margin:auto}
+.synergy-ingredient span{display:block;font-size:12px;font-weight:700;margin-top:6px}
+.synergy-burst{font-family:cursive;font-weight:900;color:#9d477d;font-size:24px;animation:synergy-ink-pulse 1.8s ease-in-out infinite}
+#synergySplashDesc{line-height:1.5}.synergy-reveal-note{font-size:13px;color:#756754}
+@keyframes synergy-page-in{from{opacity:0;transform:translateY(25px) rotate(-5deg) scale(.85)}to{opacity:1;transform:none}}
+@keyframes synergy-ink-pulse{0%,100%{transform:rotate(-3deg) scale(1)}50%{transform:rotate(3deg) scale(1.07)}}
+@media(prefers-reduced-motion:reduce){.synergy-reveal-paper,.synergy-ingredient,.synergy-burst{animation:none}}

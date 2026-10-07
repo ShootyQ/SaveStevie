@@ -46,6 +46,7 @@ for(const [id,kind] of Object.entries({hubMonstersBtn:'compendium',hubToolBtn:'b
 game.dom.$('closeCompendiumBtn').onclick=game.api.closeCompendium;
 game.dom.$('monsterIntrosEnabled').onchange=e=>game.api.setMonsterIntrosEnabled(e.target.checked);
 game.dom.$('continueMonsterIntroBtn').onclick=game.api.continueMonsterIntro;
+game.dom.$('continueSynergyBtn').onclick=game.api.continueSynergyReveal;
 for(const id of ['deathNotebookBtn','victoryNotebookBtn','buildNotebookBtn'])game.dom.$(id).onclick=game.api.openNotebook;
 game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
 game.dom.$('resetNotebookBtn').onclick=game.api.resetNotebookProgress;
@@ -55,7 +56,7 @@ window.addEventListener('savestevie:background',()=>{
   game.api.stopSoundEffects();
 });
 game.dom.canvas.addEventListener('pointerdown',e=>{
-  if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.waveFinaleActive()||game.api.firstBossIntroActive())return;
+  if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.firstBossIntroActive())return;
   if(!game.api.canStartStroke()){game.api.setMsg('Let your ink refill to 6 before drawing.');return;}
   game.state.drawing=true;game.state.currentWall=[game.api.pointerPos(e)];game.dom.canvas.setPointerCapture(e.pointerId)
 });

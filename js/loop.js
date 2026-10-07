@@ -9,6 +9,7 @@ function update(dt){
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
 
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
+  if(game.api.synergyRevealActive()||game.api.beginSynergyReveal())return;
   if(game.api.firstBossIntroActive()){game.api.updateFirstBossIntro(dt);game.api.updateUI();return}
   if(game.state.wave===5&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
   game.api.updateRefuge(dt);
@@ -48,12 +49,12 @@ function update(dt){
 
     if(game.state.synergies.has('Gravity Trap')||game.state.synergies.has('THE BLACK HOLE')){
       for(const e of game.state.enemies){
-        if(game.api.bossFriendHeld(e))continue;
-        if(game.api.withinRadius(e.x,e.y,cx,cy,135)){
+        if(game.api.bossFriendHeld(e)||game.api.isFirstBoss(e))continue;
+        if(game.api.withinRadius(e.x,e.y,cx,cy,game.api.supportInkTuning(game.state.inks.gravity).gravityRange)){
           const dx=cx-e.x,dy=cy-e.y,m=Math.hypot(dx,dy)||1;
           const pull=(game.state.synergies.has('THE BLACK HOLE')?20:10)+(game.state.inks.gravity*4);
           game.api.moveEnemySafely(e,dx/m*pull*dt,dy/m*pull*dt);
-          e.gravitySlow=Math.max(e.gravitySlow,.18);
+
         }
       }
     }
@@ -178,7 +179,7 @@ function update(dt){
         continue;
       }
 
-      if(!immobilized)e.attackCd-=dt*(game.api.gravityWallHit(e)?game.api.supportInkTuning(game.state.inks.gravity).gravityAttack:1);
+      if(!immobilized)e.attackCd-=dt;
       if(e.type==='sapper'&&e.attackCd>0&&e.attackCd<=.16)game.api.prepareSapperStrike(e);
       const dps=game.api.applyInkContact(e,dt,hit.wall);
       game.api.dealDamage(e,dps*dt,'physical');

@@ -68,16 +68,32 @@ function updateUI(){
 
 function roman(n){return ['','I','II','III','IV','V'][n]||n}
 
+let synergyQueue=[],synergySeen=new Set(),synergyCurrent=null,synergyRevealsEnabled=true;
 function showSynergySplash(name,desc,major=false){
-  const box=game.dom.$('synergySplash'), n=game.dom.$('synergySplashName'), d=game.dom.$('synergySplashDesc');
-  n.textContent=(major?'★ ':'')+name+(major?' ★':'');
-  d.textContent=desc;
-  box.style.display='block';
-  box.style.borderColor=major?'#ffd166':'#b892ff';
-  box.style.transform='translate(-50%,-50%) scale(1.05)';
-  setTimeout(()=>box.style.transform='translate(-50%,-50%) scale(1)',60);
-  clearTimeout(game.state.synergySplashTimer);
-  game.state.synergySplashTimer=setTimeout(()=>box.style.display='none',2200);
+  if(synergySeen.has(name)){game.api.setMsg('Synergy active again: '+name);return}
+  synergySeen.add(name);synergyQueue.push({name,desc,major});
+}
+function synergyRevealActive(){return !!synergyCurrent}
+function resetSynergyReveals(){synergyQueue=[];synergySeen.clear();synergyCurrent=null;game.dom.$('synergySplash').style.display='none'}
+function setSynergyRevealsEnabled(enabled){synergyRevealsEnabled=!!enabled;if(!enabled){synergyQueue=[];synergyCurrent=null;game.dom.$('synergySplash').style.display='none'}}
+function beginSynergyReveal(){
+  if(game.state.paused||!synergyRevealsEnabled||synergyCurrent||!synergyQueue.length||game.api.firstBossIntroActive())return false;
+  // A replaced effect may have removed a synergy before the next wave begins.
+  synergyQueue=synergyQueue.filter(d=>game.state.synergies.has(d.name));
+  if(!synergyQueue.length)return false;
+  synergyCurrent=synergyQueue.shift();const d=synergyCurrent,box=game.dom.$('synergySplash');
+  game.dom.$('synergySplashName').textContent=d.name;
+  game.dom.$('synergySplashDesc').textContent=d.desc;
+  game.dom.$('synergyRevealLabel').textContent=d.major?'MAJOR SYNERGY!':'NEW SYNERGY!';
+  const def=game.catalog.synergyDefs.find(x=>x.name===d.name),source=String(def?.req||'');
+  const ingredients=game.catalog.upgrades.filter(u=>{const key={'Fire Ink':'fire','Frost Ink':'frost','Electric Ink':'electric','Poison Ink':'poison','Gravity Ink':'gravity','Blast Ink':'blast','Vampire Ink':'vampire','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos'}[u.name];return key?source.includes('inks.'+key):source.includes("stacks['"+u.name+"']")||u.name==='Double Stroke'&&source.includes('stats.doubleLine')});
+  game.dom.$('synergyRevealArt').innerHTML=ingredients.map(u=>'<div class="synergy-ingredient">'+game.api.upgradeArtworkMarkup(u)+'<span>'+u.name+'</span></div>').join('<b aria-hidden="true">+</b>');
+  box.dataset.major=String(d.major);box.style.display='grid';game.api.endDraw?.();game.api.stopSoundEffects();
+  game.dom.$('continueSynergyBtn').focus?.();return true;
+}
+function continueSynergyReveal(){
+  if(!synergyCurrent)return;synergyCurrent=null;game.dom.$('synergySplash').style.display='none';
+  if(!beginSynergyReveal())game.dom.$('pauseBtn').focus?.();
 }
 
 function upgradeEffect(name,n=game.state.stacks[name]||0){
@@ -112,7 +128,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Electric Ink':()=>{const t=game.api.electricTuning(n);return `${f(t.damage)} source damage; each jump retains 72% damage; up to ${t.count} additional enemies, ${t.range}px per hop within 360px of the source. Shared ${f(t.cooldown)}s hit recovery, ${f(t.stun)}s shock (bosses half), 1.25s shock recovery. Synergies cap at 8 jumps and 220px per hop.`},
     'Blast Ink':()=>`${35+20*n} explosion damage; ${70+12*n}px radius; synergies can boost this`,
     'Vampire Ink':()=>`${t.vampireDps} life-drain damage/s on contact; heals 25% of actual damage, sharing the 6 HP/s budget`,
-    'Gravity Ink':()=>`${t.gravityPull}px/s pull to wall segments within ${t.gravityRange}px (60% pull on bosses); held enemies take +${f(t.gravityBonus*100)}% damage (cap 40%) and bite walls 30% slower`,
+    'Gravity Ink':()=>`${t.gravityPull}px/s pull within ${t.gravityRange}px (range cap 64px; 60% pull on other bosses). No lingering slow, damage bonus or reduced wall bites. King Doodle is immune; his returnable shots get a slight wall nudge within 28px (maximum 8px per shot)`,
     'Void Ink':()=>`${r.voidDps} Void damage/s; executes ordinary enemies below ${f(r.voidExecute*100)}% HP (cap 30%); bosses take damage without execution`,
     'Chaos Ink':()=>`One random ink after every ${f(r.chaosInterval)}s contact; every roll works and adds ${r.chaosDamage} impact damage; rolls scale with Chaos level`,
     'Death Ink':()=>`+${5*n} base wall damage/s; +${f(Math.min(.4,.16+.04*n)*100)}% physical damage against enemies at half health or lower (cap 40%)`
@@ -171,6 +187,11 @@ function closeInfo(back=true){
   if(kind==='monsterIntro'||(focusBeforeInfo?.getClientRects&&focusBeforeInfo.getClientRects().length===0))game.dom.$(game.state.running?'pauseBtn':'splashHubBtn').focus?.();else focusBeforeInfo?.focus?.();
 }
 function handleInfoKey(e){
+  if(synergyRevealActive()){
+    if(e.key==='Tab'){e.preventDefault?.();game.dom.$('continueSynergyBtn').focus?.()}
+    if(e.key==='Escape'){e.preventDefault?.();continueSynergyReveal()}
+    return;
+  }
   if(!activeInfo){
     if(e.key==='Escape'&&game.state.running&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec){e.preventDefault();openInfo('pause')}
     return;
@@ -195,7 +216,7 @@ function closeBuild(){if(activeInfo==='build')closeInfo()}
 function openChangelog(){openInfo('changelog')}
 function closeChangelog(){if(activeInfo==='changelog')closeInfo()}
 
-const api = { openInfo, closeInfo, infoOpen, handleInfoKey, openCompendium, closeCompendium, openChangelog, closeChangelog, upgradeEffect, renderBuild, openBuild, closeBuild, setMsg, updateUI, roman, showSynergySplash };
+const api = { synergyRevealActive, resetSynergyReveals, setSynergyRevealsEnabled, beginSynergyReveal, continueSynergyReveal, openInfo, closeInfo, infoOpen, handleInfoKey, openCompendium, closeCompendium, openChangelog, closeChangelog, upgradeEffect, renderBuild, openBuild, closeBuild, setMsg, updateUI, roman, showSynergySplash };
 Object.assign(game.api, api);
 return api;
 };
