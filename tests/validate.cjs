@@ -1245,7 +1245,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
   createBufferSource(){const s={connect(){},disconnect(){},start(...args){this.args=args},stop(){this.onended?.()}};sources.push(s);return s}
  };
  env.sandbox.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(4)});
- g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,18);
+ g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,20);
  const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('sound must not use combat RNG')};
  assert.equal(g.api.playSound('scribble'),true);assert.equal(sources[0].args[2],.28);assert.equal(g.api.playSound('scribble'),false);
  sources[0].onended();ctx.currentTime=.3;assert.equal(g.api.playSound('scribble'),true);assert.equal(g.api.soundEffectsSnapshot().voices[0].name,'scribble-2');
@@ -1258,7 +1258,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  assert.equal(sources.at(-1).args[1],2.9,'bubble grain starts at an audible burst');
  assert.deepEqual(bubbles,['poison-bubble-1','poison-bubble-2','poison-bubble-3','poison-bubble-4','poison-bubble-1']);g.api.stopSoundEffects();
  for(const kind of ['fire','frost','bossEnter']){ctx.currentTime+=3;assert.equal(g.api.playSound(kind),true);g.api.stopSoundEffects()}
- env.sandbox.Math.random=random;console.log('PASS: eighteen decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
+ env.sandbox.Math.random=random;console.log('PASS: twenty decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
 })().catch(error=>{console.error(error);process.exitCode=1});
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();const triple=g.catalog.upgrades.find(u=>u.name==='Triple Stroke');assert.equal(triple.exclusiveRarity,'legendary');
@@ -1282,7 +1282,7 @@ for(const child of [...g.state.enemies])g.api.killEnemy(child);
 g.api.update(.02);assert.equal(g.state.betweenWaves,true);const score=g.state.score;g.api.update(.02);assert.equal(g.state.score,score,'clear pays once');
 g.api.resetRun();g.state.timeLeft=0;g.state.player.hp=0;g.api.update(.02);assert.equal(g.state.betweenWaves,false,'death takes priority over cleanup clear');
 for(const wave of [5,10,15,20,25]){
- g.api.resetRun();g.state.endless=wave>20;g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;g.api.update(.01);assert.equal(g.api.bossWavePhase(),'warning');g.api.update(2.4);
+ g.api.resetRun();g.state.endless=wave>20;g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;g.api.update(.01);assert.equal(g.api.bossWavePhase(),g.state.wave===5?'entrance':'warning');g.api.update(g.state.wave===5?6.582:2.4);
  const boss=g.state.enemies.find(e=>e.waveBoss);assert.ok(boss);boss.freeze=999;boss.x=-100;boss.y=-100;
  const time=g.state.timeLeft;for(let i=0;i<70;i++)g.api.update(1);
  assert.equal(g.state.timeLeft,time);assert.equal(g.state.betweenWaves,false);assert.ok(g.state.waveElapsed>60);
@@ -1334,12 +1334,12 @@ console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss l
  g.api.update(.03);assert.ok(g.state.enemies.some(e=>!e.waveBoss));assert.equal(g.state.enemies.some(e=>e.waveBoss),false);
  const survivor=g.state.enemies[0];survivor.freeze=999;g.state.timeLeft=.01;g.api.update(.03);
  assert.equal(g.api.bossWavePhase(),'timed');assert.equal(g.api.bossArrivalSnapshot(),null,'cleanup precedes arrival');
- g.api.killEnemy(survivor);g.api.update(.03);assert.equal(g.api.bossWavePhase(),'warning');assert.equal(g.state.betweenWaves,false);
+ g.api.killEnemy(survivor);g.api.update(.03);assert.equal(g.api.bossWavePhase(),'entrance');assert.equal(g.state.betweenWaves,false);
  const warning=g.api.bossArrivalSnapshot();g.state.paused=true;g.api.update(10);assert.equal(g.api.bossArrivalSnapshot().left,warning.left);g.state.paused=false;
  env.node('game').getBoundingClientRect=()=>({left:0,top:0,width:360,height:640});g.api.resize();
- const point=g.api.bossArrivalSnapshot();assert.ok(['top','bottom'].includes(point.side));assert.ok(Math.hypot(point.x-g.state.player.x,point.y-g.state.player.y)>=220);
+ const point=g.api.bossArrivalSnapshot();assert.ok(['left','right'].includes(point.side));assert.ok(point.targetX>=50&&point.targetX<=g.state.W-50);
  const snapshot=JSON.stringify(g.api.bossArrivalSnapshot());g.api.draw();assert.equal(JSON.stringify(g.api.bossArrivalSnapshot()),snapshot);
- g.api.update(2.4);const e=g.state.enemies.find(n=>n.waveBoss);assert.ok(e);assert.equal(g.state.timeLeft,0);assert.equal(g.api.bossWavePhase(),'fight');
+ g.api.update(6.582);const e=g.state.enemies.find(n=>n.waveBoss);assert.ok(e);assert.equal(g.state.timeLeft,0);assert.equal(g.api.bossWavePhase(),'fight');
  g.state.walls=[];e.x=100;e.y=200;e.hp=e.maxHp=1000;g.api.resetBossEncounters();
  const stroke={pts:[{x:80,y:200},{x:120,y:200}],closed:false,thick:8,hp:200,maxHp:200,life:100};g.state.walls=[stroke];
  assert.equal(g.api.moveEnemySafely(e,10,0),true,'body-crossing stroke does not pin the boss');g.api.pushThroughBossStrokes(e,.6);assert.equal(g.state.walls.length,0);
@@ -1734,4 +1734,16 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  for(let i=0;i<4000;i++){const u=g.api.getUpgrade();seen.add(u.name);if(['Fire Ink','Poison Ink'].includes(u.name))owned++;else other++}
  assert.ok(owned>400&&owned<1400,'equipped effects remain discoverable without dominating draws');assert.ok(other>2600);assert.ok(seen.size>=35,'broad upgrade variety remains available');
  console.log('PASS: equipped effects remain favored while most draws offer other upgrades.');
+}
+
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.timeLeft=0;g.state.spawnTimer=999;
+ g.api.createWall([{x:70,y:170},{x:270,y:170}]);g.api.update(.01);assert.ok(g.api.firstBossIntroActive());
+ const wall=g.state.walls[0],life=wall.life,elapsed=g.state.waveElapsed,hp=g.state.player.hp,ink=g.state.stats.ink;
+ g.api.update(3.5);assert.equal(g.api.firstBossIntroPose().stage,'roar');assert.equal(wall.life,life);assert.equal(g.state.waveElapsed,elapsed);assert.equal(g.state.player.hp,hp);assert.equal(g.state.stats.ink,ink);assert.equal(g.state.enemies.length,0);
+ const pose=JSON.stringify(g.api.firstBossIntroPose());g.api.draw();assert.equal(JSON.stringify(g.api.firstBossIntroPose()),pose,'entrance rendering is pure');
+ g.state.paused=true;g.api.update(10);assert.equal(JSON.stringify(g.api.firstBossIntroPose()),pose);g.state.paused=false;
+ g.api.update(2.65);assert.equal(g.state.walls.length,0);assert.equal(g.api.firstBossIntroPose().stage,'smash');g.api.update(.5);assert.equal(g.api.firstBossIntroActive(),false);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1);assert.equal(g.api.musicStatus().track,'first-boss');
+ g.api.resetRun();assert.equal(g.api.firstBossIntroActive(),false);assert.equal(g.api.musicStatus().track,'margin-mischief');
+ console.log('PASS: wave-5 entrance freezes gameplay, respects pause, renders purely, wipes walls and starts one boss with its music.');
 }

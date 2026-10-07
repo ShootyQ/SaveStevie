@@ -176,6 +176,7 @@ function proceedAfterWave(){
 }
 
 function returnToMenu(){
+  game.api.resetEnemyWave();
   game.api.resetWaveFinale();
   game.api.closeInfo(false);game.api.finishScrapRun(false,false);game.api.stopSoundEffects();
   game.state.running=false;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;

@@ -503,7 +503,8 @@ function drawToolStroke(points,thick,opacity,color){
 function draw(){
   drawWaveStevie();
   game.dom.ctx.clearRect(0,0,game.state.W,game.state.H);game.dom.ctx.save();
-  const camera=game.api.waveFinaleCamera();game.dom.ctx.translate(game.state.W/2,game.state.H/2);game.dom.ctx.scale(camera.zoom,camera.zoom);game.dom.ctx.translate(-camera.x,-camera.y);
+  const intro=game.api.firstBossIntroPose();
+  const camera=intro?{zoom:intro.zoom,x:game.api.clamp(intro.x,game.state.W/(2*intro.zoom),game.state.W-game.state.W/(2*intro.zoom)),y:game.api.clamp(intro.y,game.state.H/(2*intro.zoom),game.state.H-game.state.H/(2*intro.zoom))}:game.api.waveFinaleCamera();game.dom.ctx.translate(game.state.W/2,game.state.H/2);game.dom.ctx.scale(camera.zoom,camera.zoom);game.dom.ctx.translate(-camera.x,-camera.y);
   game.dom.ctx.strokeStyle='rgba(212,76,76,.35)';game.dom.ctx.lineWidth=2;
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
 
@@ -719,6 +720,14 @@ function draw(){
     game.dom.ctx.textAlign='center';game.dom.ctx.fillText(f.text,f.x,f.y);game.dom.ctx.globalAlpha=1
   }
   game.api.drawDamageNumbers();
+  if(intro){
+    const ctx=game.dom.ctx;ctx.save();ctx.translate(intro.x,intro.y-intro.hop);
+    const e={type:'boss',r:28,hp:1,maxHp:1,freeze:0,stun:0,burn:0,poison:0,charged:0,gravitySlow:0};
+    if(!drawDoodleEnemy(e,1,false)){ctx.fillStyle='#962f3d';ctx.beginPath();ctx.arc(0,0,28,0,Math.PI*2);ctx.fill()}
+    if(intro.stage==='roar'){ctx.fillStyle='#962f3d';ctx.font='bold 23px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillText('ROOOAR!',0,-65)}
+    if(intro.stage==='smash'){ctx.strokeStyle='#b17635';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,40+(intro.age-6.132)*game.state.W*3,0,Math.PI*2);ctx.stroke()}
+    ctx.restore();
+  }
   game.api.drawWaveFinale(drawDoodleEnemy);game.dom.ctx.restore();
   if(game.state.paused){
     game.dom.ctx.fillStyle='rgba(20,25,28,.38)';game.dom.ctx.fillRect(0,0,game.state.W,game.state.H);

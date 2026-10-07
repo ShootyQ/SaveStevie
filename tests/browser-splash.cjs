@@ -45,7 +45,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.evaluate(()=>document.querySelectorAll('.splash-art *').forEach(e=>e.getAnimations().forEach(a=>{a.currentTime=2500})));
   await page.evaluate(()=>{testGame.api.resetMenuPencil();testGame.api.updateMenuPencil(2.5)});
   await page.screenshot({path:'/tmp/splash-drawing-'+viewport.width+'.png'});
-  await page.evaluate(()=>testGame.api.unlockSoundEffects());await page.waitForFunction(()=>testGame.api.soundEffectsSnapshot().ready===18,null,{polling:50});
+  await page.evaluate(()=>testGame.api.unlockSoundEffects());await page.waitForFunction(()=>testGame.api.soundEffectsSnapshot().ready===20,null,{polling:50});
   await page.evaluate(()=>{testGame.api.resetMenuPencil();testGame.api.updateMenuPencil(2)});
   assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().voices.some(v=>v.kind==='scribble')),true,'drawing has real menu scribble audio');
   await page.evaluate(()=>testGame.api.updateMenuPencil(3));assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().voices.length),0,'rest stops scribble');

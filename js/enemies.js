@@ -123,7 +123,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
   game.state.enemies.push(enemy);game.api.discoverMonster(type);
-  if(forceBoss){bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null;game.api.playSound('bossEnter')}
+  if(forceBoss){const cinematic=firstBossIntroActive();bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss')}
   return enemy;
 }
 
@@ -265,7 +265,7 @@ function eraserAttack(e,dt){
 }
 
 let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,bossPhase='timed',arrival=null;
-function resetEnemyWave(){sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;game.api.resetBossEncounters()}
+function resetEnemyWave(){if(firstBossIntroActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;game.api.resetBossEncounters()}
 function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
@@ -279,9 +279,34 @@ function bossSpawnPoint(){
  return {side,x:side==='left'?-pad:side==='right'?W+pad:game.api.clamp(player.x,40,W-40),y:side==='top'?-pad:side==='bottom'?H+pad:game.api.clamp(player.y,40,H-40)};
 }
 function bossArrivalSnapshot(){return arrival?{...arrival}:null}
-function refreshBossArrival(){if(arrival)arrival={...bossSpawnPoint(),left:arrival.left}}
+function refreshBossArrival(){if(arrival){if(arrival.intro){const {W,H,player}=game.state;arrival.startX=arrival.side==='left'?-80:W+80;arrival.targetX=arrival.side==='left'?Math.max(50,W*.2):W-Math.max(50,W*.2);arrival.y=game.api.clamp(player.y-120,60,H-60)}else arrival={...bossSpawnPoint(),left:arrival.left}}}
+function firstBossIntroActive(){return !!arrival?.intro}
+function firstBossIntroPose(){
+ if(!firstBossIntroActive())return null;
+ const a=arrival,t=game.api.clamp(a.age/3.375,0,1),reduced=game.api.enemyMotionReduced();
+ return {x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.stage,zoom:reduced?1:1+.65*game.api.clamp(t*2,0,1)*(a.stage==='smash'?game.api.clamp((6.582-a.age)/.45,0,1):1),hop:reduced||a.stage!=='stomp'?0:Math.abs(Math.sin(a.age*9))*5};
+}
+function beginFirstBossIntro(){
+ const {W,player}=game.state;game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);
+ arrival={intro:true,side:player.x>=W/2?'left':'right',age:0,left:6.582,stage:'stomp'};refreshBossArrival();bossPhase='entrance';
+ game.api.playSound('bossStomp');game.api.setMsg('Pencils down… King Doodle-Doom is stomping in!');
+}
+function updateFirstBossIntro(dt){
+ if(!firstBossIntroActive()||document.hidden)return;
+ const a=arrival;a.age=Math.min(6.582,a.age+dt);a.left=6.582-a.age;
+ if(a.age<3.375){if(!game.api.soundEffectsSnapshot().voices.some(v=>v.kind==='bossStomp'))game.api.playSound('bossStomp',false,a.age)}
+ else if(a.age<6.132){
+  if(a.stage==='stomp'){game.api.stopSoundEffects('bossStomp');a.stage='roar';game.api.setMsg('King Doodle-Doom: CLASS IS IN SESSION!')}
+  if(!game.api.soundEffectsSnapshot().voices.some(v=>v.kind==='bossRoar'))game.api.playSound('bossRoar',false,a.age-3.375);
+ }else{
+  if(a.stage!=='smash'){a.stage='smash';game.api.stopSoundEffects('bossRoar');game.state.walls=[];game.state.projectiles=[];game.state.enemyShots=[];game.api.resetAbilityEffects();game.api.resetSupportInks();game.api.resetPlaguefire();game.api.setMsg('His royal stomp tears every wall off the page!')}
+  if(a.age>=6.582){game.api.spawnEnemy(true,a.targetX,a.y);game.api.suspendMusic(false);game.api.setMsg('Draw fresh walls to return his shots!')}
+ }
+}
 function updateBossArrival(dt){
+ if(firstBossIntroActive()){updateFirstBossIntro(dt);return}
  if(bossSpawned||game.state.enemies.some(e=>e.hp>0||e.flight))return;
+ if(!arrival&&game.state.wave===5){beginFirstBossIntro();return}
  if(!arrival){arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
  arrival.left=Math.max(0,arrival.left-dt);
  if(arrival.left===0){const point={...arrival};game.api.spawnEnemy(true,point.x,point.y);game.api.setMsg('Boss encounter. Defeat '+game.api.monsterName(game.api.bossTypeForWave())+'!')}
@@ -500,7 +525,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

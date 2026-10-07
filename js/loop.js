@@ -9,6 +9,8 @@ function update(dt){
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec)return;
 
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
+  if(game.api.firstBossIntroActive()){game.api.updateFirstBossIntro(dt);game.api.updateUI();return}
+  if(game.state.wave===5&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
   game.api.updateRefuge(dt);
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
   game.state.waveElapsed+=dt;
