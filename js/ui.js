@@ -12,11 +12,13 @@ function updateUI(){
   game.dom.$('app').classList?.toggle('menu-view',!game.state.running&&game.dom.startOverlay.style.display!=='none');
   const overtime=game.dom.$('bossOvertime'),bossWave=game.state.wave%5===0;
   const active=game.state.running&&!game.state.betweenWaves&&!game.state.inUpgrade;
-  overtime.style.display=active&&(bossWave||game.state.timeLeft===0)?'block':'none';
-  if(bossWave)text(overtime,'Defeat '+game.api.monsterName(game.api.bossTypeForWave()));
+  const fighting=bossWave&&game.api.bossWavePhase()==='fight',arrival=game.api.bossArrivalSnapshot();
+  overtime.style.display=active&&(fighting||game.state.timeLeft===0)?'block':'none';
+  if(fighting)text(overtime,'Defeat '+game.api.monsterName(game.api.bossTypeForWave()));
+  else if(arrival)text(overtime,game.api.monsterName(game.api.bossTypeForWave())+' arriving · '+Math.ceil(arrival.left)+'s');
   else if(game.state.timeLeft===0)text(overtime,'Clear the remaining monsters · '+game.state.enemies.filter(e=>e.hp>0).length+' left');
-  game.dom.$('waveCountdown').style.display=bossWave?'none':'';
-  game.dom.timeBar.style.display=bossWave?'none':'';
+  game.dom.$('waveCountdown').style.display=fighting||arrival?'none':'';
+  game.dom.timeBar.style.display=fighting||arrival?'none':'';
   const hit=game.state.floaters.findLast(f=>f.hitMarker&&f.t>0),notice=game.dom.$('hitNotice');
   notice.style.display=hit?'block':'none';
   if(hit)text(notice,hit.source+' −'+Number(hit.amount.toFixed(1)));
@@ -95,10 +97,10 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Triple Stroke':()=>`One-time unlock: 3 walls per stroke; extra walls have 60% HP`,
     'Bottomless Pen':()=>`+${40*n} max ink; +${f(game.api.regenStackEffect('Bottomless Pen',n))} ink/s; diminishing returns`, 'Fortress Geometry':()=>`+${50*n}% closed-wall durability; `+loopDetails(n,'Closed Loop'),
     'Bandages':()=>`+${8*n} HP healed between waves`, 'Helmet':()=>`${f(Math.min(.55,.1*n)*100)}% damage reduction (cap 55%)`,
-    'Pocket Rocks':()=>`+${9*n} rock damage; unlocks throwing without slowing improved throws`,
-    'Better Rocks':()=>`+${12*n} rock damage; each level reduces throw interval by 0.12s, floor 0.45s`,
-    'Emergency Medicine':()=>`Up to ${2*n} HP per kill; shared 6 HP/s combat budget`, 'Really Good Rocks':()=>`+${24*n} rock damage; each level reduces throw interval by 0.1s, floor 0.35s`,
-    'Stevie Has Had Enough':()=>`+${15*n} rock damage; each level reduces throw interval by 0.24s, floor 0.28s`,
+    'Pocket Rocks':()=>`+${game.api.rockTotal('Pocket Rocks',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
+    'Better Rocks':()=>`+${game.api.rockTotal('Better Rocks',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
+    'Emergency Medicine':()=>`Up to ${2*n} HP per kill; shared 6 HP/s combat budget`, 'Really Good Rocks':()=>`+${game.api.rockTotal('Really Good Rocks',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
+    'Stevie Has Had Enough':()=>`+${game.api.rockTotal('Stevie Has Had Enough',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
     'Loaded Deck':()=>`One-time unlock: normal rewards are Uncommon or better`,
     'Reroll Coupon':()=>`+2 rerolls per level (inventory cap 5)`,
     'Collector':()=>`One-time unlock: ×1.8 selection weight for unowned upgrades`,
@@ -107,7 +109,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Frost Ink':()=>`${f(t.frostSlow*100)}% contact slow; freeze after ${f(t.frostCharge)}s contact for ${f(t.frostDuration)}s (half on bosses); 1.5s thaw recovery`,
     'Poison Ink':()=>`${f(1+.55*n)} poison stacks/s on contact (cap 6); ${f((2+2.5*n)*.24)} damage/s per poison stack`,
     'Repulsion Ink':()=>`${r.repulsionDamage} impact damage and ${r.repulsionPush}px safe shove after every 0.8s contact; 0.12s stagger; bosses halve shove and stagger`,
-    'Electric Ink':()=>`${3+2*n} source damage; ${4+3*n} damage per jump, up to ${Math.min(12,1+Math.floor(n/2))} additional enemies, ${110+n*18}px reach per hop; repeats every ${f(Math.max(.22,.8-n*.12))}s on contact. Each hit shocks for ${f(Math.min(.45,.12+n*.025))}s (bosses half); immune enemies block shocks. Synergies add reach and jumps (12 maximum).`,
+    'Electric Ink':()=>{const t=game.api.electricTuning(n);return `${f(t.damage)} source damage; each jump retains 72% damage; up to ${t.count} additional enemies, ${t.range}px per hop within 360px of the source. Shared ${f(t.cooldown)}s hit recovery, ${f(t.stun)}s shock (bosses half), 1.25s shock recovery. Synergies cap at 8 jumps and 220px per hop.`},
     'Blast Ink':()=>`${35+20*n} explosion damage; ${70+12*n}px radius; synergies can boost this`,
     'Vampire Ink':()=>`${t.vampireDps} life-drain damage/s on contact; heals 25% of actual damage, sharing the 6 HP/s budget`,
     'Gravity Ink':()=>`${t.gravityPull}px/s pull to wall segments within ${t.gravityRange}px (60% pull on bosses); held enemies take +${f(t.gravityBonus*100)}% damage (cap 40%) and bite walls 30% slower`,

@@ -289,7 +289,7 @@ function resize(){
     game.api.moveRefuge(dx,dy);game.api.moveSupportInkVisuals(dx,dy);game.api.moveBossFields(dx,dy);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
-  game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;
+  game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;game.api.refreshBossArrival();
 }
 
 

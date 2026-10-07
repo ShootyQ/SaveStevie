@@ -18,7 +18,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    await page.evaluate(()=>{testGame.api.setDevMode(true);testGame.api.resetRun()});
    for(const wave of [5,10,15,20]){
     const warning=await page.evaluate(wave=>{
-     const g=testGame;g.api.setDevMode(true);g.api.resetRun();g.state.wave=wave;g.api.startWave();g.state.spawnTimer=9999;g.state.timeLeft=g.state.waveTime-3;g.api.spawnWaveEnemies(.01);
+     const g=testGame;g.api.setDevMode(true);g.api.resetRun();g.state.wave=wave;g.api.startWave();g.state.spawnTimer=9999;g.state.timeLeft=g.state.waveTime-3;g.api.spawnEnemy(true,200,200);
      const e=g.state.enemies[0];e.x=g.state.W*.3;e.y=g.state.H*.35;e.hp=e.maxHp=10000;const b=g.api.bossBrain(e);b.cd=0;
      if(wave===20)g.state.walls=[{pts:[{x:e.x+50,y:e.y-70},{x:e.x+50,y:e.y+70}],thick:8,hp:1000,maxHp:1000,life:300,maxLife:300}];
      g.api.updateBossEncounter(e,.01);g.api.draw();return g.api.bossEncounterSnapshot().bosses[0];
@@ -29,7 +29,12 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
     const pause=await page.evaluate(()=>{const g=testGame;g.state.paused=true;const a=JSON.stringify(g.api.bossEncounterSnapshot());g.api.update(.3);g.api.draw();return a===JSON.stringify(g.api.bossEncounterSnapshot())});assert.equal(pause,true);
     await page.emulateMedia({reducedMotion:'reduce'});await page.evaluate(()=>testGame.api.draw());await page.emulateMedia({reducedMotion:'no-preference'});
    }
-   assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' all four boss warnings/actions, custom shots/runes, pause, pure rendering and reduced motion');await page.close();
+   await page.evaluate(()=>{const g=testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();const e=g.api.spawnEnemy(true,g.state.W*.3,g.state.H*.4);e.hp=e.maxHp=10000;const x=e.x,y=e.y;g.state.walls=[{pts:[{x:x-65,y:y-65},{x:x+65,y:y-65},{x:x+65,y:y+65},{x:x-65,y:y+65},{x:x-65,y:y-65}],closed:true,thick:8,hp:500,maxHp:500,life:100}];g.api.updateBossEncounter(e,.01);g.api.updateBossEncounter(e,1.8);g.api.draw()});
+   assert.equal(await page.evaluate(()=>testGame.api.bossEncounterSnapshot().bosses[0].cast.kind),'breakout');
+   await page.screenshot({path:'/tmp/boss-breakout-warning-'+viewport.width+'.png'});
+   await page.evaluate(()=>{const g=testGame;g.api.updateBossEncounter(g.state.enemies[0],1.2);g.api.updateBossFields(.1);g.api.updateEnemyAnimations(.1);g.api.draw()});
+   assert.equal(await page.evaluate(()=>testGame.state.walls.length),0);await page.screenshot({path:'/tmp/boss-breakout-action-'+viewport.width+'.png'});
+   assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' all four boss warnings/actions, enclosure breakout, custom shots/runes, pause, pure rendering and reduced motion');await page.close();
   }
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

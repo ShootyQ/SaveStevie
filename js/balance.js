@@ -31,5 +31,15 @@ function regenPick(name,rank=Math.max(0,(game.state.stacks[name]||1)-1)){
   return (name==='Quick Refill'?settings.quickRegen:settings.bottomlessRegen)/(1+.4*rank);
 }
 function regenStackEffect(name,n){let result=name==='Living Fountain Pen'?1:0;for(let i=0;i<n;i++){if(name==='Living Fountain Pen')result*=regenPick(name,i);else result+=regenPick(name,i)}return result}
-const api={enemyHpScale,resetSustain,updateSustain,healStevie,refundKillInk,repairWallsOnKill,regenPick,regenStackEffect};Object.assign(game.api,api);return api;
+const rockBases={'Pocket Rocks':4,'Better Rocks':6,'Really Good Rocks':12,'Stevie Has Had Enough':8};
+const rockCaps={'Pocket Rocks':9,'Better Rocks':12,'Really Good Rocks':24,'Stevie Has Had Enough':15};
+function rockGain(name,rank){return Math.min(rockCaps[name],rockBases[name]+Math.max(0,rank-1)*(name==='Really Good Rocks'?4:name==='Pocket Rocks'?1:2))}
+function rockTotal(name,n){let sum=0;for(let rank=1;rank<=n;rank++)sum+=rockGain(name,rank);return sum}
+function applyRockUpgrade(name){
+ const rank=game.state.stacks[name]||1,s=game.state.stats;
+ s.rockDamage+=rockGain(name,rank);
+ const interval=name==='Pocket Rocks'?1.6:name==='Better Rocks'?Math.max(.65,(s.rockRate||1.6)-.08):name==='Really Good Rocks'?Math.max(.55,(s.rockRate||1.6)-.08):Math.max(.45,(s.rockRate||1.6)-.14);
+ s.rockRate=Math.min(s.rockRate||interval,interval);
+}
+const api={rockGain,rockTotal,applyRockUpgrade,enemyHpScale,resetSustain,updateSustain,healStevie,refundKillInk,repairWallsOnKill,regenPick,regenStackEffect};Object.assign(game.api,api);return api;
 };

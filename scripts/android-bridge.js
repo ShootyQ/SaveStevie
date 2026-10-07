@@ -1,6 +1,8 @@
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 if (Capacitor.isNativePlatform()) {
+  document.documentElement.classList.add('native-app');
+  window.dispatchEvent(new Event('resize'));
   App.addListener('backButton', () => {
     const menu = document.getElementById('startOverlay');
     const dialog = Array.from(document.querySelectorAll('.build-overlay')).find(el => getComputedStyle(el).display !== 'none');

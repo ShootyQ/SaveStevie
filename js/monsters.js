@@ -23,6 +23,10 @@ const monsters=game.catalog.monsters=[
   {type:'elite',wave:16,name:'Professor Problems',role:'Elite attacker',flavor:'Extra credit. Extra violence.',ability:'Combines good speed, substantial health, and stronger hits.',tip:'Layer slowing effects with damage. Keep a reserve of ink for emergency repairs.'},
   {type:'eraser',wave:20,name:'The Big Rub-Out',role:'The Eraser · Final boss',flavor:'Would like to delete your entire semester.',ability:'Warns before a nearby wall swipe dealing 65 damage, or 90 below 40% health. Without a nearby wall, cleans off burning and poison, then throws eraser crumbs and becomes exposed.',tip:'Layer your walls and attack during its exposed recovery. Contact no longer defeats the boss; defeating it clears the encounter.'}
 ];
+for(const m of monsters)if(['boss','stapler','crayon','eraser'].includes(m.type)){
+  m.ability+=' Arrives after the timed fight and cleanup. Tears through strokes drawn across its body; overlapping damage shares a limit.';
+  m.tip='Build a perimeter with room around the boss. Enclosure grants 35% extra damage for a short window before a 1.2s warned breakout. Keep ink for the next enclosure and block its projectiles.';
+}
 const preferenceKey='saveStevieMonsterIntros';
 let enabled=true;
 try{enabled=localStorage.getItem(preferenceKey)!=='off'}catch{}

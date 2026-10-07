@@ -146,7 +146,7 @@ choose('Fire Ink');choose('Fire Ink');
 assert.equal(bg.state.inks.fire,2);assert.match(bg.api.upgradeEffect('Fire Ink'),/9 burn damage/);
 choose('Pocket Rocks');choose('Better Rocks');const rate=bg.state.stats.rockRate;
 choose('Pocket Rocks');assert.equal(bg.state.stats.rockRate,rate,'repeated Pocket Rocks preserves faster throws');
-assert.equal(bg.state.stats.rockDamage,30);
+assert.equal(bg.state.stats.rockDamage,15);
 choose('Double Stroke');choose('Double Stroke');
 assert.equal(bg.state.stacks['Double Stroke'],1,'one-time unlock cannot be wasted twice');
 choose('Triple Stroke');assert.equal(bg.api.upgradeAvailable(bg.catalog.upgrades.find(u=>u.name==='Double Stroke')),false);
@@ -193,8 +193,8 @@ for(const wave of [8,10,14,15,20]){
   const old=arrivals(wave,true),now=arrivals(wave);
   pressureCounts.push({wave,old:old.count,new:now.count,ratio:Number((now.count/old.count).toFixed(2))});
   if(wave===14)assert.ok(now.count/old.count>=2&&now.count/old.count<2.5,'wave 14 roughly doubles arrivals');
-  if(wave%5===0)assert.equal(now.count,1,'boss waves have no ordinary arrivals');
-  if(wave%5===0)assert.equal(now.bosses,1,'boss is spawned once, even if killed early');
+  if(wave%5===0)assert.ok(now.count>1,'boss waves have a timed ordinary fight');
+  if(wave%5===0)assert.equal(now.bosses,0,'boss waits until after the timed fight');
 }
 console.log('PASS: 60-second arrival counts '+JSON.stringify(pressureCounts));
 pg.state.wave=20;pg.api.startWave();pg.state.timeLeft=51;const surgeGap=pg.api.spawnGap();pg.state.timeLeft=57;
@@ -485,11 +485,11 @@ c.api.animateChainLightning=()=>{};c.api.animateWallExplosion=()=>{};
 for(const game of [g,c]){
  game.api.resetRun();game.state.spawnTimer=999;const {x,y}=game.state.player;
  for(const [dx,dy] of [[100,0],[140,0],[100,40],[500,0]]){const e=game.api.spawnEnemy(false,x+dx,y+dy,'tank');e.hp=e.maxHp=500;e.speed=0}
- game.api.chainLightning(game.state.enemies[0],2);
+ game.api.chainLightning(game.state.enemies[0],3);
 }
 assert.equal(JSON.stringify(g.state),JSON.stringify(c.state),'lightning cosmetics preserve all combat results and random particle draws');
 let fx=g.api.abilityEffectsSnapshot();assert.equal(fx.lightning.length,1);assert.equal(fx.lightning[0].targets.length,2,'arcs match selected targets');
-assert.deepEqual(JSON.parse(JSON.stringify(fx.lightning[0].targets)),g.state.enemies.slice(1,3).map(e=>({x:e.x,y:e.y,immune:false})));assert.equal(g.state.enemies[0].hp,493);assert.equal(g.state.enemies[1].hp,490);assert.equal(g.state.enemies[3].hp,500,'out-of-range enemy is untouched');
+assert.deepEqual(JSON.parse(JSON.stringify(fx.lightning[0].targets)),g.state.enemies.slice(1,3).map(e=>({x:e.x,y:e.y,immune:false})));assert.ok(Math.abs(g.state.enemies[0].hp-493.4)<1e-8);assert.ok(Math.abs(g.state.enemies[1].hp-495.248)<1e-8);assert.equal(g.state.enemies[3].hp,500,'out-of-range enemy is untouched');
 for(const game of [g,c]){
  game.state.inks.blast=2;game.state.synergies.add('Heavy Artillery');game.state.synergies.add('Demolition Grid');game.state.synergies.add('INFERNO');
  const {x,y}=game.state.player,wall={pts:[{x:x+60,y},{x:x+180,y}],thick:8,hp:1,maxHp:1,life:50,maxLife:50,intersections:2};game.state.walls=[wall];game.api.damageWall(wall,2,x+120,y);
@@ -660,7 +660,7 @@ const rich=load(true,{storage:richStore}).sandbox.testGame;
 for(const p of rich.catalog.notebookPerks){for(let rank=0;rank<p.max;rank++)assert.equal(rich.api.buyNotebookPerk(p.id),true);assert.equal(rich.api.buyNotebookPerk(p.id),false,'rank cap')}
 assert.equal(rich.api.notebookSnapshot().scraps,1308,'all rank prices charged exactly');
 rich.api.resetRun();assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,97,107,9,1.3,2,8]);
-rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.25,'run rock unlock speeds up starter rocks');assert.equal(rich.state.stats.rockDamage,18);
+rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.3,'rock unlock preserves faster starter throws');assert.equal(rich.state.stats.rockDamage,13);
 const dirty=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:-5,lifetimeScraps:'oops',levels:{inkTank:999,health:-2,rocks:1.5,luck:'4'}}):null,setItem(){}}}).sandbox.testGame;
 assert.equal(dirty.api.notebookSnapshot().scraps,0);dirty.api.resetRun();assert.equal(dirty.state.stats.maxInk,260);assert.equal(dirty.state.player.maxHp,75);assert.equal(dirty.state.stats.rockDamage,0);assert.equal(dirty.state.stats.luck,0);
 const blocked=load(true,{storage:{getItem:()=>null,setItem(){throw Error('blocked')}}}),sg=blocked.sandbox.testGame;
@@ -736,7 +736,7 @@ for(const wave of [5,10,15]){
 }
 g.api.resetRun();g.state.wave=5;g.api.startWave();const early=g.api.spawnEnemy(true,100,100);g.api.killEnemy(early);g.api.waveComplete();assert.equal(g.state.betweenWaves,true,'defeating the boss clears the encounter without waiting');
 g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.betweenWaves,true);
-g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'missing boss is ensured without a timer');g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'required boss never duplicates');
+g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.update(.016);assert.equal(g.api.bossWavePhase(),'warning');g.api.update(2.4);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'boss follows arrival warning');g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'required boss never duplicates');
 const contactBoss=g.state.enemies.find(e=>e.waveBoss);contactBoss.x=g.state.player.x;contactBoss.y=g.state.player.y;g.api.contactStevie(contactBoss);assert.ok(g.state.enemies.includes(contactBoss),'boss contact cannot remove the encounter');g.api.killEnemy(contactBoss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);
 g.api.resetRun();g.state.stats.killHeal=g.state.stats.refund=g.state.stats.repairOnKill=100;g.state.player.hp=20;g.state.stats.ink=0;g.state.walls=[{hp:10,maxHp:100},{hp:10,maxHp:100}];
 for(let i=0;i<4;i++)g.api.killEnemy(g.api.spawnEnemy(false,0,0,'grunt'));
@@ -1092,21 +1092,21 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
 }
 
 {
- const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.enemies=[];
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.enemies=[];
  const spawn=(x,hp=500)=>{const e=g.api.spawnEnemy(false,x,200,'tank');e.hp=e.maxHp=hp;e.speed=0;return e};
- const source=spawn(60),second=spawn(190),third=spawn(320),dead=spawn(200,0),far=spawn(700);
- g.api.chainLightning(source,2);
- assert.equal(second.hp,490);assert.equal(third.hp,490,'second hop reaches beyond source radius');assert.equal(far.hp,500);assert.equal(dead.hp,0);
- assert.ok(Math.abs(source.stun-.17)<1e-9);assert.ok(Math.abs(third.stun-.17)<1e-9);
- const fx=g.api.abilityEffectsSnapshot();assert.equal(fx.lightning[0].targets.length,2);
- g.api.resetAbilityEffects();source.immunity='electric';second.immunity='electric';source.stun=second.stun=0;const hp=source.hp;
- g.api.chainLightning(source,2);assert.equal(source.hp,hp);assert.equal(source.stun,0);assert.equal(second.stun,0,'immune target cannot be shocked');
- const boss=g.api.spawnEnemy(false,450,200,'boss');boss.hp=10000;boss.stun=0;g.state.enemies=[boss];g.api.chainLightning(boss,2);assert.ok(Math.abs(boss.stun-.085)<1e-9);
- g.state.enemies=[];for(let i=0;i<16;i++)spawn(40+i*25);g.api.resetAbilityEffects();g.api.chainLightning(g.state.enemies[0],50);
- assert.equal(g.api.abilityEffectsSnapshot().lightning[0].targets.length,12,'high levels have twelve rendered and damaging hops');assert.equal(g.state.enemies[13].hp,500);
+ const source=spawn(60),second=spawn(190),third=spawn(320),far=spawn(700),dead=spawn(200,0);
+ g.api.chainLightning(source,3);
+ assert.ok(source.hp<second.hp&&second.hp<third.hp,'each hop loses damage');assert.equal(far.hp,500);assert.equal(dead.hp,0);
+ const hp=g.state.enemies.map(e=>e.hp);g.api.chainLightning(second,30);g.api.chainLightning(source,3);
+ assert.deepEqual(g.state.enemies.map(e=>e.hp),hp,'chained targets cannot immediately launch or receive another chain');
+ assert.ok(source.stun<=.18);assert.ok(source.chainCd>=.8);
+ g.api.resetAbilityEffects();source.chainCd=0;source.immunity='electric';source.stun=0;g.api.chainLightning(source,3);assert.equal(source.stun,0);assert.equal(source.hp,hp[0]);
+ const boss=g.api.spawnEnemy(false,450,200,'boss');boss.hp=10000;g.state.enemies=[boss];g.api.chainLightning(boss,3);assert.ok(Math.abs(boss.stun-.06)<1e-9);
+ g.state.enemies=[];for(let i=0;i<20;i++)spawn(40+i*25);g.state.synergies.add('THE STORM');g.api.resetAbilityEffects();g.api.chainLightning(g.state.enemies[0],50);
+ assert.ok(g.api.abilityEffectsSnapshot().lightning[0].targets.length<=8);assert.equal(g.state.enemies[15].hp,500,'chain stays within its source radius');
  const snapshot=JSON.stringify(g.api.abilityEffectsSnapshot()),state=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),state);assert.equal(JSON.stringify(g.api.abilityEffectsSnapshot()),snapshot);
- assert.match(g.api.upgradeEffect('Electric Ink',2),/146px reach per hop/);assert.match(g.api.upgradeEffect('Electric Ink',2),/2 additional enemies/);
- console.log('PASS: sequential lightning reach, live distinct targets, shock immunity and boss duration, twelve-hop combat/visual cap, accurate previews and pure drawing.');
+ assert.match(g.api.upgradeEffect('Electric Ink',3),/146px per hop/);assert.match(g.api.upgradeEffect('Electric Ink',3),/2 additional enemies/);
+ console.log('PASS: fading lightning, shared source/target cooldown, immunity, brief boss shock, bounded chains, accurate descriptions and pure rendering.');
 }
 
 {
@@ -1150,7 +1150,7 @@ console.log('PASS: personal end-of-run notes, strongest equipped ink, replacemen
 
 {
  const env=load(true),g=env.sandbox.testGame;
- const setup=wave=>{g.api.resetRun();g.state.wave=wave;g.api.startWave();g.state.spawnTimer=9999;g.state.timeLeft=g.state.waveTime-3;g.api.spawnWaveEnemies(.01);return g.state.enemies[0]};
+ const setup=wave=>{g.api.resetRun();g.state.wave=wave;g.api.startWave();g.state.spawnTimer=9999;g.api.spawnEnemy(true,200,200);return g.state.enemies[0]};
  for(const wave of [5,10,15,20]){const e=setup(wave);assert.equal(g.state.enemies.length,1);assert.equal(e.waveBoss,true);for(let i=0;i<60;i++)g.api.spawnWaveEnemies(.1);assert.equal(g.state.enemies.length,1,'boss-only wave does not add regular monsters');}
  const king=setup(5);king.x=250;king.y=250;const wall={pts:[{x:160,y:160},{x:340,y:160},{x:340,y:340},{x:160,y:340},{x:160,y:160}],closed:true,thick:8,hp:1000,maxHp:1000,life:300};g.state.walls=[wall];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),1.35);const hp=king.hp;g.api.dealDamage(king,10);assert.ok(Math.abs(king.hp-(hp-13.5))<1e-8);g.state.walls=[];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),1);
  const b=g.api.bossBrain(king);b.cd=0;g.api.updateBossEncounter(king,.01);assert.equal(g.state.enemyShots.length,0);assert.equal(b.cast.kind,'volley');g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemyShots.length,3);assert.ok(g.state.enemyShots.every(s=>s.bossKind==='ink'));
@@ -1255,7 +1255,7 @@ for(const child of [...g.state.enemies])g.api.killEnemy(child);
 g.api.update(.02);assert.equal(g.state.betweenWaves,true);const score=g.state.score;g.api.update(.02);assert.equal(g.state.score,score,'clear pays once');
 g.api.resetRun();g.state.timeLeft=0;g.state.player.hp=0;g.api.update(.02);assert.equal(g.state.betweenWaves,false,'death takes priority over cleanup clear');
 for(const wave of [5,10,15,20,25]){
- g.api.resetRun();g.state.endless=wave>20;g.state.wave=wave;g.api.startWave();g.api.update(.01);
+ g.api.resetRun();g.state.endless=wave>20;g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;g.api.update(.01);assert.equal(g.api.bossWavePhase(),'warning');g.api.update(2.4);
  const boss=g.state.enemies.find(e=>e.waveBoss);assert.ok(boss);boss.freeze=999;boss.x=-100;boss.y=-100;
  const time=g.state.timeLeft;for(let i=0;i<70;i++)g.api.update(1);
  assert.equal(g.state.timeLeft,time);assert.equal(g.state.betweenWaves,false);assert.ok(g.state.waveElapsed>60);
@@ -1273,10 +1273,10 @@ for(const [wave,hp,speed] of [[5,745.2,37.08],[10,1402.2,40.28],[15,1512,18.53],
  if(wave>10)continue;
  const wall={pts:[{x:200,y:200},{x:300,y:200},{x:300,y:300},{x:200,y:300},{x:200,y:200}],closed:true,thick:8,hp:200,maxHp:200,life:300};g.state.walls=[wall];
  const b=g.api.bossBrain(boss);b.cd=4.5;b.turn=0;g.api.updateBossEncounter(boss,.01);assert.ok(b.cd<1.8);
- g.api.updateBossEncounter(boss,1.8);assert.equal(b.cast.kind,wave===5?'swipe':'charge');assert.equal(wall.hp,200,'warning precedes damage');
+ g.api.updateBossEncounter(boss,1.8);assert.equal(b.cast.kind,'breakout');assert.equal(wall.hp,200,'warning precedes damage');
  boss.freeze=1;g.api.updateBossEncounter(boss,.1);assert.equal(b.cast,null,'freeze interrupts escape attack');boss.freeze=0;b.cd=0;
- g.api.updateBossEncounter(boss,.01);g.api.updateBossEncounter(boss,1.2);assert.equal(wall.hp,wave===5?100:90);assert.equal(b.cd,3.5);
- assert.equal(g.api.bossDamageMultiplier(boss),1.35,'boxing still rewards damage');
+ g.api.updateBossEncounter(boss,.01);g.api.updateBossEncounter(boss,1.2);assert.equal(g.state.walls.includes(wall),false,'warned breakout tears the cage open');assert.equal(b.cd,3.5);
+ assert.equal(g.api.bossDamageMultiplier(boss),1.35,'brief breakout recovery remains vulnerable');
 }
 console.log('PASS: stronger/faster early bosses, unchanged later/ordinary stats, quicker warned enclosure response and freeze interruption.');
 }
@@ -1299,4 +1299,41 @@ g.state.walls=[];g.state.stats.freehandBank=0;g.state.stats.tripleLine=true;g.ap
 const p=g.api.upgradePreview({...g.catalog.upgrades.find(u=>u.name==='Fortress Geometry'),rarity:'legendary'});assert.match(p.afterDetail,/damage inside/);
 for(const n of [2,4,20,100]){const t=g.api.loopUtilityTuning(n);assert.ok(t.refund<=.35&&t.damage<=.25&&t.repair<=.3)}
 console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss limits, expired loops, free/banked ink, copied strokes, diminishing caps and previews.');
+}
+
+// Android balance pass: real wave transitions, body scribbles and bounded damage.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.spawnTimer=0;
+ g.api.update(.03);assert.ok(g.state.enemies.some(e=>!e.waveBoss));assert.equal(g.state.enemies.some(e=>e.waveBoss),false);
+ const survivor=g.state.enemies[0];survivor.freeze=999;g.state.timeLeft=.01;g.api.update(.03);
+ assert.equal(g.api.bossWavePhase(),'timed');assert.equal(g.api.bossArrivalSnapshot(),null,'cleanup precedes arrival');
+ g.api.killEnemy(survivor);g.api.update(.03);assert.equal(g.api.bossWavePhase(),'warning');assert.equal(g.state.betweenWaves,false);
+ const warning=g.api.bossArrivalSnapshot();g.state.paused=true;g.api.update(10);assert.equal(g.api.bossArrivalSnapshot().left,warning.left);g.state.paused=false;
+ env.node('game').getBoundingClientRect=()=>({left:0,top:0,width:360,height:640});g.api.resize();
+ const point=g.api.bossArrivalSnapshot();assert.ok(['top','bottom'].includes(point.side));assert.ok(Math.hypot(point.x-g.state.player.x,point.y-g.state.player.y)>=220);
+ const snapshot=JSON.stringify(g.api.bossArrivalSnapshot());g.api.draw();assert.equal(JSON.stringify(g.api.bossArrivalSnapshot()),snapshot);
+ g.api.update(2.4);const e=g.state.enemies.find(n=>n.waveBoss);assert.ok(e);assert.equal(g.state.timeLeft,0);assert.equal(g.api.bossWavePhase(),'fight');
+ g.state.walls=[];e.x=100;e.y=200;e.hp=e.maxHp=1000;g.api.resetBossEncounters();
+ const stroke={pts:[{x:80,y:200},{x:120,y:200}],closed:false,thick:8,hp:200,maxHp:200,life:100};g.state.walls=[stroke];
+ assert.equal(g.api.moveEnemySafely(e,10,0),true,'body-crossing stroke does not pin the boss');g.api.pushThroughBossStrokes(e,.6);assert.equal(g.state.walls.length,0);
+ const budget=45*.5;g.api.dealDamage(e,10000,'blast');assert.equal(e.hp,1000-budget);g.api.dealDamage(e,10000,'fire');assert.equal(e.hp,1000-budget,'different overlapping sources share boss budget');
+ g.api.updateBossDamageBudgets(1);g.api.dealDamage(e,10000,'electric');assert.equal(e.hp,1000-budget*2,'boss budget has bounded burst capacity');
+ g.state.walls=[{pts:[{x:50,y:140},{x:170,y:140},{x:170,y:260},{x:50,y:260},{x:50,y:140}],closed:true,thick:8,hp:200,maxHp:200,life:100}];
+ g.api.updateBossEncounter(e,.01);assert.equal(g.api.bossBrain(e).enclosed,true);assert.equal(g.api.bossDamageMultiplier(e),1.35);
+ g.api.updateBossEncounter(e,1.8);assert.equal(g.api.bossBrain(e).cast.kind,'breakout');assert.equal(g.state.walls.length,1);
+ g.api.updateBossEncounter(e,1.2);assert.equal(g.state.walls.length,0,'breakout only tears the cage after warning');
+ for(const name of ['Pocket Rocks','Better Rocks','Really Good Rocks','Stevie Has Had Enough']){assert.ok(g.api.rockGain(name,1)<g.api.rockGain(name,4));assert.ok(g.api.rockGain(name,100)>=g.api.rockGain(name,4))}
+ g.api.resetRun();const rocks=g.catalog.upgrades.find(u=>u.name==='Better Rocks');g.api.chooseUpgrade({...rocks,rarity:'rare'});assert.equal(g.state.stats.rockDamage,24,'Rare applies three smaller growing gains');
+ const preview=g.api.upgradePreview({...rocks,rarity:'common'});assert.equal(preview.before,'24');assert.equal(preview.after,'36');
+ console.log('PASS: timed boss lead-in, survivor cleanup, paused warnings, portrait resize and arrival safety, body-stroke crushing, shared boss damage budgets, enclosure breakout and rarity rock progression.');
+}
+{
+ const cageDamage=count=>{const g=load(true).sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;g.state.inks.electric=3;g.state.synergies.add('TESLA CAGE');const e=g.api.spawnEnemy(false,100,100,'tank');e.hp=e.maxHp=1000;e.speed=0;
+  for(let i=0;i<count;i++)g.state.walls.push({pts:[{x:30,y:30},{x:170,y:30},{x:170,y:170},{x:30,y:170},{x:30,y:30}],closed:true,intersections:1,thick:8,hp:100,maxHp:100,life:100});g.api.update(.1);return 1000-e.hp;
+ };
+ assert.ok(cageDamage(1)>0);assert.equal(cageDamage(12),cageDamage(1),'overlapping Tesla cages share one field tick');
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;g.state.inks.electric=3;g.state.synergies.add('Rail Ink');
+ for(let i=0;i<20;i++){const e=g.api.spawnEnemy(false,100+i*.5,100,'tank');e.hp=e.maxHp=1000;e.speed=0;e.charged=1}
+ g.api.update(.1);assert.ok(g.state.enemies.every(e=>1000-e.hp<=g.api.electricTuning(3).fieldDps*.1+1e-8),'charged crowds do not multiply Rail damage by enemy count');
+ console.log('PASS: overlapping Tesla fields and crowded Rail electricity have bounded per-enemy damage.');
 }

@@ -95,6 +95,7 @@ function updateBossAbility(e,dt){
 function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(!forceBoss&&game.state.enemies.length>=pressure.maxEnemies)return null;
   let side=Math.floor(Math.random()*4),px,py;
+  if(forceBoss&&x===null){const point=bossSpawnPoint();x=point.x;y=point.y}
   if(x!==null){px=x;py=y}else{
     if(side===0){px=game.api.rand(20,game.state.W-20);py=-26}
     if(side===1){px=game.state.W+26;py=game.api.rand(20,game.state.H-20)}
@@ -118,7 +119,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='sprinter')enemy.dashTime=0;
   if(type==='medic')enemy.healPulse=0;
   game.state.enemies.push(enemy);
-  if(forceBoss){bossSpawned=true;enemy.waveBoss=true}
+  if(forceBoss){bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null}
   return enemy;
 }
 
@@ -193,9 +194,10 @@ function updateProjectiles(dt){
 
 // Sniper rounds travel visibly and collide along their whole step, so a thin
 // wall cannot be skipped even when the browser drops frames.
-function shotBlocked(x,y,nx,ny,r=3){
+function shotBlocked(x,y,nx,ny,r=3,ignored=null){
   const from={x,y},to={x:nx,y:ny};
   for(const wall of game.state.walls){
+    if(ignored?.has(wall))continue;
     const bounds=game.api.wallGeometry(wall.pts),pad=wall.thick/2+r;
     const minX=Math.min(x,nx)-pad,maxX=Math.max(x,nx)+pad,minY=Math.min(y,ny)-pad,maxY=Math.max(y,ny)+pad;
     if(bounds.maxX<minX||bounds.minX>maxX||bounds.maxY<minY||bounds.minY>maxY)continue;
@@ -255,11 +257,28 @@ function eraserAttack(e,dt){
   }
 }
 
-let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0;
-function resetEnemyWave(){bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;game.api.resetBossEncounters()}
+let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,bossPhase='timed',arrival=null;
+function resetEnemyWave(){bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;game.api.resetBossEncounters()}
 function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
+function bossWavePhase(){return bossPhase}
+function bossSpawnPoint(){
+ const {W,H,player}=game.state,minimum=220;
+ const sides=W<H?['top','bottom']:['top','bottom','left','right'];
+ const distances={top:player.y,bottom:H-player.y,left:player.x,right:W-player.x};
+ const side=sides.reduce((a,b)=>distances[a]>=distances[b]?a:b);
+ const pad=Math.max(42,minimum-distances[side]);
+ return {side,x:side==='left'?-pad:side==='right'?W+pad:game.api.clamp(player.x,40,W-40),y:side==='top'?-pad:side==='bottom'?H+pad:game.api.clamp(player.y,40,H-40)};
+}
+function bossArrivalSnapshot(){return arrival?{...arrival}:null}
+function refreshBossArrival(){if(arrival)arrival={...bossSpawnPoint(),left:arrival.left}}
+function updateBossArrival(dt){
+ if(bossSpawned||game.state.enemies.some(e=>e.hp>0))return;
+ if(!arrival){arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+' is coming. Build your enclosure!');return}
+ arrival.left=Math.max(0,arrival.left-dt);
+ if(arrival.left===0){const point={...arrival};game.api.spawnEnemy(true,point.x,point.y);game.api.setMsg('Boss encounter. Defeat '+game.api.monsterName(game.api.bossTypeForWave())+'!')}
+}
 function spawnChapterGroup(){
   const wave=game.state.wave;if(wave<6)return;
   const types=wave<=10?(wave>=9?['sniper','fast']:wave>=7?['flanker','fast']:['tank','fast']):wave<=15?(wave>=13?['medic','bulwark','brood']:['bulwark','brood']):['sapper','elite','sprinter'];
@@ -279,7 +298,7 @@ function spawnGap(){
   return Math.max(.12,base/(game.api.wavePressure()*surge));
 }
 function spawnWaveEnemies(dt){
-  if(game.state.wave%5===0){game.api.ensureWaveBoss();return}
+  if(game.state.wave%5===0&&(bossPhase!=='timed'||game.state.timeLeft<=0)){if(bossPhase!=='fight')updateBossArrival(dt);return}
   if(game.state.timeLeft<=0)return;
   const elapsed=game.state.waveTime-game.state.timeLeft;
   if([4,6,9,11,14,16,19,21].includes(game.state.wave)&&relocatedSpawned<3&&elapsed>=[12,28,44][relocatedSpawned]){
@@ -288,8 +307,7 @@ function spawnWaveEnemies(dt){
   if(game.state.wave>=6&&groupsSpawned<2&&elapsed>=[20,40][groupsSpawned]){game.api.spawnChapterGroup();groupsSpawned++}
   game.state.spawnTimer-=dt;
   if(game.state.spawnTimer<=0){
-    const bossDue=game.state.wave%5===0&&!bossSpawned&&game.state.timeLeft<game.state.waveTime-2;
-    game.api.spawnEnemy(bossDue);
+    game.api.spawnEnemy(false);
     game.state.spawnTimer=game.state.wave<=5?game.api.spawnGap():game.state.spawnTimer+game.api.spawnGap();
   }
 }
@@ -324,9 +342,10 @@ function enemyTarget(e){
   }
   return target;
 }
-function bouncePathClear(e,x,y,tolerance=.05){
+function bouncePathClear(e,x,y,tolerance=.05,ignored=null){
   const target={x,y};
   for(const w of game.state.walls){
+    if(ignored?.has(w))continue;
     const bounds=game.api.wallGeometry(w.pts),radius=e.r+w.thick/2+1;
     const minX=Math.min(e.x,x)-radius,maxX=Math.max(e.x,x)+radius,minY=Math.min(e.y,y)-radius,maxY=Math.max(e.y,y)+radius;
     if(bounds.maxX<minX||bounds.minX>maxX||bounds.maxY<minY||bounds.minY>maxY)continue;
@@ -362,7 +381,7 @@ function steerBounce(e,dt){
 // Forced motion must respect live barriers just like bouncer path checks.
 function moveEnemySafely(e,dx,dy){
   const x=e.x+dx,y=e.y+dy;
-  if(!game.api.bouncePathClear(e,x,y,0))return false;
+  if(e.waveBoss?!game.api.bossMoveClear(e,x,y):!game.api.bouncePathClear(e,x,y,0))return false;
   e.x=x;e.y=y;return true;
 }
 function damageStevie(damage,source,impact=game.state.player){
@@ -394,7 +413,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

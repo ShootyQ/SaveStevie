@@ -71,7 +71,7 @@ function startWave(){
   game.state.stats.firstStrokeUsed=false;
   game.state.waveElapsed=0;game.state.waveKills=0;game.state.waveTime=game.api.waveDuration();game.state.timeLeft=game.state.waveTime;game.state.spawnTimer=game.state.wave===1?game.catalog.balance.openingDelay:.5;
   game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+game.state.stats.playerRegen+5);
-  game.api.setMsg(game.state.wave===20&&!game.state.endless?game.api.monsterName('eraser')+' approaches. This seems personal.':game.state.wave%5===0?'Boss wave. Fresh page, full ink.':'Wave '+game.state.wave+'. Fresh page, full ink.');
+  game.api.setMsg(game.state.wave%5===0?'Wave '+game.state.wave+'. Clear the timed fight; the boss follows.':'Wave '+game.state.wave+'. Fresh page, full ink.');
   game.api.updateUI();
   game.api.introduceWave();
 }
