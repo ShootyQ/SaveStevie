@@ -4,7 +4,10 @@ const $=game.dom.$,rarities=['common','uncommon','rare','legendary'];
 const tools={0:{name:'Pencil',slots:2},3:{name:'Mechanical Pencil',slots:2},6:{name:'Simple Pen',slots:3},10:{name:'Scented Sharpie',slots:4}};
 let loadout=[],last=null,active=false;
 function testLabActive(){return active}
-function resetTestLabRun(){active=false}
+const restartIds=['pauseRestartTestBtn','waveRestartTestBtn','deathRestartTestBtn','victoryRestartTestBtn'];
+function syncTestRestartButtons(){for(const id of restartIds)$(id).hidden=!(active&&last)}
+function restartTestRun(){return !!(active&&last&&startTestRun(last))}
+function resetTestLabRun(){active=false;syncTestRestartButtons()}
 function testLabSnapshot(){return {active,loadout:loadout.map(x=>({...x})),last:last?{...last,upgrades:last.upgrades.map(x=>({...x}))}:null}}
 function notice(text){$('testLabNotice').textContent=text}
 function renderLoadout(){
@@ -61,9 +64,10 @@ function startTestRun(config=readSetup()){
  }
  game.state.stats.ink=game.state.stats.maxInk;game.dom.synergyNote.innerHTML='';game.state.synergySplashTimer=0;$('synergySplash').style.display='none';
  game.api.updateUI();game.api.setMsg('SCRATCH PAGE · Wave '+config.wave+' · '+(config.phase==='boss'?'Boss only':'Full wave'));
- last={...config,upgrades:entries.map(x=>({...x}))};$('repeatTestBtn').hidden=false;notice('Test ready. No scraps or records are saved.');return true;
+ last={...config,upgrades:entries.map(x=>({...x}))};$('repeatTestBtn').hidden=false;syncTestRestartButtons();notice('Test ready. No scraps or records are saved.');return true;
 }
-const api={openTestLab,addTestUpgrade,startTestRun,testLabActive,resetTestLabRun,testLabSnapshot};Object.assign(game.api,api);
+const api={openTestLab,addTestUpgrade,startTestRun,testLabActive,resetTestLabRun,testLabSnapshot,restartTestRun,syncTestRestartButtons};Object.assign(game.api,api);
+for(const id of restartIds)$(id).onclick=restartTestRun;
 $('testLabBtn').onclick=()=>{$('testLabPanel').hidden?openTestLab():($('testLabPanel').hidden=true,$('testLabBtn').setAttribute?.('aria-expanded','false'))};
 $('testUpgrade').onchange=syncTestRarity;$('addTestUpgrade').onclick=addTestUpgrade;
 $('startTestBtn').onclick=()=>startTestRun();$('repeatTestBtn').onclick=()=>last&&startTestRun(last);
