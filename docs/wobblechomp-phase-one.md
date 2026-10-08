@@ -24,12 +24,12 @@ phases will replace that temporary finish with their transitions.
   bite. Base tooth HP is 6 (11.4 on wave 10). Blocked teeth take wall ink damage and chew for 3 damage every 0.65 seconds; frozen teeth still take ink damage but cannot chew. Cover, killing, freeze and stun answer the bite. At most ten helpers live.
 - Beam: one laser sweeps between up to six existing drawings, leaving fading cosmetic scorch marks. It starts erasing after 0.45
   seconds, removing another every 0.18 seconds. Earlier cuts save more walls.
-  No player damage or ink stealing. Cutting the stalk cancels its beam.
+  No player damage or ink stealing. Cutting the stalk cancels its beam. It remains cuttable for 1.2 seconds after the beam ends, with the boss held still.
 - Roll: tuck, marked orbit route, fast movement, three spaced spike bursts and
   three tooth drops. No leg means no rolling spikes; teeth remain available.
   Joints are hidden while tucked. Boss body contact never damages Stevie.
 
-Draw across the **green-ringed joint** and release. Each appendage needs two
+Slash through the **visible green ring** on the stalk or spiky leg and release. Their full 18-pixel ring is a cut target, rather than only the tiny joint line. Arm cuts still cross its joint. A paid eye/foot slash must be at least 12 pixels long; arm stroke requirements are unchanged. Each appendage needs two
 separate paid strokes. The first cut interrupts that part and opens a 1.6-second
 second-cut opportunity (2.2 seconds for the leg); the arm instead needs a second punch. Repeated crossings
 and copied lines count once per released stroke. Existing walls do not cut.
@@ -71,3 +71,5 @@ Scratch Page tests offer **Restart test · same build** from pause, defeat, wave
 `tests/browser-wobblechomp-effects.cjs` checks one rendered laser, scorch marks, fixed fallen parts, pause and pure rendering at four viewports. `tests/browser-test-lab.cjs` exercises same-build restarts from pause, defeat, wave clear and campaign victory.
 
 Portrait phones alternate attack positions above and below Stevie, with side routes around the fort and side rolls. Attacks wait until he is at least 145 pixels above/below Stevie. The side margin is 24 pixels; keepout stays 95 pixels on roomy phone pages and adapts to the available side-lane width on narrow pages (79 pixels on a 320-pixel canvas). Desktop movement is unchanged.
+
+Tall desktop pages reserve space below the HUD and all three instruction lines for the complete upright stalk. The same top boundary applies to the entrance, idle movement, rolls, wall routes and resize recovery.

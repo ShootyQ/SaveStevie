@@ -20,6 +20,12 @@ const root=path.resolve(__dirname,'..');
   assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().voices.some(v=>v.kind==='bossRoar')),true);await page.screenshot({path:'/tmp/wobble-fight-roar-'+viewport.width+'.png'});if(viewport.width===360){await page.emulateMedia({reducedMotion:'reduce'});await page.waitForFunction(()=>testGame.api.enemyMotionReduced(),null,{polling:50});assert.equal(await page.evaluate(()=>testGame.api.wobbleIntroPose().zoom),1)}
   await page.evaluate(()=>{testGame.api.update(2.632);testGame.state.stats.rockDamage=0;testGame.state.stats.ink=testGame.state.stats.maxInk=1000;testGame.state.player.hp=testGame.state.player.maxHp=10000;testGame.api.draw()});
   assert.equal(await page.evaluate(()=>testGame.state.enemies.filter(e=>e.waveBoss).length),1);assert.equal(await page.evaluate(()=>testGame.api.bossEntranceActive()),false);assert.equal(await page.evaluate(()=>testGame.api.musicStatus().track),'pop-quiz-panic');
+  if(viewport.width===1280){const headroom=await page.evaluate(()=>{
+   const g=testGame,ctx=g.dom.ctx,drawImage=ctx.drawImage,fillText=ctx.fillText;let artTop=Infinity,hintBottom=0;
+   ctx.drawImage=function(img,...args){if(img.src?.includes('wobblechomp-parts.png')&&args.length===8){const [,,,,x,y,w,h]=args,m=this.getTransform();for(const [px,py] of [[x,y],[x+w,y],[x,y+h],[x+w,y+h]])artTop=Math.min(artTop,m.b*px+m.d*py+m.f)}return drawImage.call(this,img,...args)};
+   ctx.fillText=function(text,x,y,...args){if(text.startsWith('PHASE 1'))hintBottom=y+32;return fillText.call(this,text,x,y,...args)};
+   try{g.api.draw()}finally{ctx.drawImage=drawImage;ctx.fillText=fillText}return {artTop,hintBottom,y:g.state.enemies.find(e=>e.waveBoss).y,minimum:g.api.wobbleSnapshot(g.state.enemies.find(e=>e.waveBoss)).topMargin};
+  });assert(headroom.artTop>headroom.hintBottom,'entire desktop puppet below HUD/instructions');assert(headroom.y>=headroom.minimum)}
   const coverStart=await page.evaluate(()=>{
    const g=testGame,p=g.state.player,e=g.state.enemies.find(e=>e.waveBoss);g.state.walls=[];p.hp=p.maxHp=75;
    g.api.createWall([{x:p.x-90,y:p.y-85},{x:p.x+90,y:p.y-85},{x:p.x+90,y:p.y+85},{x:p.x-90,y:p.y+85},{x:p.x-90,y:p.y-85}]);
@@ -49,7 +55,7 @@ const root=path.resolve(__dirname,'..');
     for(let i=0;i<2500;i++){s=g.api.wobbleSnapshot(e);if(s.available.includes(part)&&s.model.rollAge===null)break;g.api.update(.01)}
     if(!s.available.includes(part))throw Error('No opening for '+part);
     const j=s.parts[part].joint,a=j.a,b=j.b,x=(a.x+b.x)/2,y=(a.y+b.y)/2,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy),r=g.dom.canvas.getBoundingClientRect();g.api.draw();
-    return [{x:x-dy/l*24,y:y+dx/l*24},{x:x+dy/l*24,y:y-dx/l*24}].map(p=>({x:r.left+p.x,y:r.top+p.y}));
+    return (part==='arm'?[{x:x-dy/l*24,y:y+dx/l*24},{x:x+dy/l*24,y:y-dx/l*24}]:[{x:x-dx/l*20-dy/l*10,y:y-dy/l*20+dx/l*10},{x:x+dx/l*20-dy/l*10,y:y+dy/l*20+dx/l*10}]).map(p=>({x:r.left+p.x,y:r.top+p.y}));
    },part);
    for(const p of points)assert(p.x>=0&&p.x<=viewport.width&&p.y>=0&&p.y<=viewport.height,'joint reachable on '+viewport.width+': '+JSON.stringify(points));
    if(touch){await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[points[0]]});await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[points[1]]});await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]})}
