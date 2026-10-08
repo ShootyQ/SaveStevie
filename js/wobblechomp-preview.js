@@ -3,7 +3,7 @@ DoodleDefender.systems.wobblePreview=function(game){
  const $=game.dom.$,rig=DoodleDefender.WobblechompRig,canvas=$('wobbleCanvas'),ctx=canvas.getContext('2d');
  let model=rig.create(),image=null,toothImage=null,ready=false,loading=false,opened=false,paused=false,frame=null,last=null,nextPunch=.8,nextAttack=0,stroke=null,pointer=null,strokeLife=0,view=null;
  const media=window.matchMedia?.('(prefers-reduced-motion: reduce)'),reduced=()=>!!media?.matches;
- const attacks=[{button:'wobblePunchBtn',cuts:'armCuts',run:rig.punch},{button:'wobbleSpikesBtn',cuts:'legCuts',run:rig.shootSpikes},{button:'wobbleBeamBtn',cuts:'stalkCuts',run:rig.eyeBeam},{button:'wobbleTeethBtn',run:rig.shakeTeeth}];
+ const attacks=[{button:'wobblePunchBtn',cuts:'armCuts',run:rig.punch},{button:'wobbleSpikesBtn',cuts:'legCuts',run:rig.shootSpikes},{button:'wobbleBeamBtn',cuts:'stalkCuts',run:rig.eyeBeam},{button:'wobbleTeethBtn',run:rig.shakeTeeth},{button:'wobbleRollBtn',run:rig.tuckAndRoll}];
  const limbs=attacks.filter(a=>a.cuts);
  const instructions='Cut any circled joint twice. Try the attacks at both speeds.';
  function status(text){$('wobbleStatus').textContent=text}
@@ -58,13 +58,13 @@ DoodleDefender.systems.wobblePreview=function(game){
  canvas.addEventListener('pointermove',e=>{if(e.pointerId!==pointer||!stroke)return;const p=point(e),q=stroke.at(-1);if(Math.hypot(p.x-q.x,p.y-q.y)>2&&stroke.length<1024)stroke.push(p);render()});
  canvas.addEventListener('pointerup',e=>{
   if(e.pointerId!==pointer||!stroke)return;stroke.push(point(e));
-  if(rig.cutStroke(model,stroke,reduced())){const part=model.lastCut,name={arm:'Arm',leg:'Spiky leg',stalk:'Eye stalk'}[part],cuts=model[{arm:'armCuts',leg:'legCuts',stalk:'stalkCuts'}[part]];status(limbs.every(a=>model[a.cuts]===2)?'All three parts detached! Reset to try again.':cuts===1?name+' is hanging by a thread!':name+' detached! Try the remaining parts.')}else if(limbs.some(a=>model[a.cuts]<2))status('Cross the threads inside a green circle, then lift your finger.');
+  if(rig.cutStroke(model,stroke,reduced())){const part=model.lastCut,name={arm:'Arm',leg:'Spiky leg',stalk:'Eye stalk'}[part],cuts=model[{arm:'armCuts',leg:'legCuts',stalk:'stalkCuts'}[part]];status(limbs.every(a=>model[a.cuts]===2)?'All three parts detached! Reset to try again.':cuts===1?name+' is hanging by a thread!':name+' detached! Try the remaining parts.')}else if(model.rollAge!==null)status('His joints are tucked away. Cut them after he unfolds.');else if(limbs.some(a=>model[a.cuts]<2))status('Cross the threads inside a green circle, then lift your finger.');
   const id=pointer;pointer=null;if(canvas.hasPointerCapture?.(id))canvas.releasePointerCapture(id);strokeLife=.6;sync();render();
  });
  canvas.addEventListener('pointercancel',()=>{clearPointer();render()});
  canvas.addEventListener('lostpointercapture',()=>{if(pointer!==null){clearPointer();render()}});
  $('openWobblePreviewBtn').onclick=open;$('closeWobblePreviewBtn').onclick=close;
- for(const a of attacks)$(a.button).onclick=()=>{if(!paused&&ready&&a.run(model)){nextPunch=.8;if(a.run===rig.shakeTeeth)status('Watch the teeth launch, bounce and scurry.');sync();render()}};
+ for(const a of attacks)$(a.button).onclick=()=>{if(!paused&&ready&&a.run(model)){nextPunch=.8;if(a.run===rig.shakeTeeth)status('Watch the teeth launch, bounce and scurry.');if(a.run===rig.tuckAndRoll)status('Tuck, wind up, roll! Watch for spikes and dropped teeth.');sync();render()}};
  $('wobbleSpeed').onchange=()=>{last=null;clearPointer();render()};
  $('wobblePauseBtn').onclick=()=>{paused=!paused;last=null;clearPointer();sync();render()};
  $('wobbleResetBtn').onclick=()=>{model=rig.create();paused=false;nextPunch=.8;nextAttack=0;last=null;clearPointer();status(instructions);sync();render()};
