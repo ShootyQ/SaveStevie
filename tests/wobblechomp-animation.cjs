@@ -90,3 +90,7 @@ for(let mask=0;mask<8;mask++){
 }
 const damaged=rig.create();for(const name of ['arm','leg','stalk'])rig.cutStroke(damaged,limbCross(damaged,name));assert.ok(rig.tuckAndRoll(damaged));for(let i=0;i<46;i++)rig.update(damaged,.1);assert.deepEqual([damaged.armCuts,damaged.legCuts,damaged.stalkCuts],[1,1,1],'dangling state survives roll');
 console.log('PASS: all eight roll part combinations, tuck/wind/travel/turn/brake/unfold, hidden-joint rejection, missing-leg spike suppression, three tooth drops, pure/reduced drawing, alternating repeats and persistent dangling parts.');
+
+// Gait advances with actual movement, including the missing-leg hop.
+const walker=rig.create();walker.time=1;rig.stepWalk(walker,11,.1,-1);const gait=rig.pose(walker).walk;assert(gait.blend>0&&gait.lift<0&&gait.sx>1);assert.equal(walker.walkFacing,-1);const phase=walker.walkPhase;rig.stepWalk(walker,0,.1);assert.equal(walker.walkPhase,phase,'blocked movement cannot advance the stride');const hop=rig.create();hop.time=1;hop.legCuts=2;rig.stepWalk(hop,11,.1,-1);assert(Math.abs(rig.pose(hop).walk.lift)>Math.abs(gait.lift));assert.equal(rig.pose(hop,true).walk.blend,0);const saved=JSON.stringify(walker);rig.draw(ctx,image,walker);assert.equal(JSON.stringify(walker),saved);for(let i=0;i<20;i++)rig.update(walker,.1);assert(rig.pose(walker).walk.blend<.001,'stopping settles the gait');
+console.log('PASS: distance-driven stomp, blocked movement, missing-leg hop, reduced motion and pure walking render.');

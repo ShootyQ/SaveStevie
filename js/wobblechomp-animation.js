@@ -8,7 +8,7 @@ DoodleDefender.WobblechompRig=(()=>{
  };
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t;
  const ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t)};
- function create(){return {time:0,punchAge:null,spikeAge:null,beamAge:null,teethAge:null,rollAge:null,rollDirection:1,rollBursts:0,rollDrops:0,teethVolley:2,teethPlan:[],teeth:[],armCuts:0,legCuts:0,stalkCuts:0,reaction:0,impact:0,wrist:{x:310,y:365},angle:-.35,debris:null,fallenParts:[],spikes:[],marks:[],lastCut:null}}
+ function create(){return {time:0,walkPhase:0,walkBlend:0,walkFacing:1,phaseTwoRoll:false,ballAngle:0,punchAge:null,spikeAge:null,beamAge:null,teethAge:null,rollAge:null,rollDirection:1,rollBursts:0,rollDrops:0,teethVolley:2,teethPlan:[],teeth:[],armCuts:0,legCuts:0,stalkCuts:0,reaction:0,impact:0,wrist:{x:310,y:365},angle:-.35,debris:null,fallenParts:[],spikes:[],marks:[],lastCut:null}}
  const busy=m=>m.punchAge!==null||m.spikeAge!==null||m.beamAge!==null||m.teethAge!==null||m.rollAge!==null;
  function attack(m,part,key){if(m[specs[part].cuts]===2||busy(m))return false;m[key]=0;return true}
  const punch=m=>attack(m,'arm','punchAge'),shootSpikes=m=>attack(m,'leg','spikeAge'),eyeBeam=m=>attack(m,'stalk','beamAge');
@@ -22,6 +22,7 @@ DoodleDefender.WobblechompRig=(()=>{
  }
  function rollPose(m,reduced=false){
   if(m.rollAge===null)return null;
+  if(m.phaseTwoRoll)return {phase:'rolling',tuck:1,x:570,y:410,angle:reduced?0:m.ballAngle,direction:1,scaleX:1,scaleY:1};
   const t=m.rollAge,first=m.rollDirection<0?160:790,second=m.rollDirection<0?790:160;
   let phase,tuck,x=570,direction=m.rollDirection;
   if(t<.55){phase='tucking';tuck=ease(t/.55)}
@@ -46,8 +47,12 @@ DoodleDefender.WobblechompRig=(()=>{
   return {x:t.x,y:t.y-hop,angle:reduced?0:waiting?0:Math.sin(landed*10+t.index)*.08,scaleX:squash?1.2:1,scaleY:squash?.8:1,phase:bouncing?'bouncing':waiting?'waiting':'scurrying'};
  }
 
+ function stepWalk(m,distance,dt,direction=1){
+  if(m.rollAge!==null)return;m.walkPhase=(m.walkPhase+Math.max(0,distance)/22*Math.PI)%(Math.PI*2);m.walkFacing=direction;
+  const moving=dt>0?clamp(distance/dt/90,0,1):0;m.walkBlend=mix(m.walkBlend||0,moving,1-Math.exp(-dt*18));
+ }
  function update(m,dt){
-  dt=clamp(dt,0,.1);m.time+=dt;m.reaction=Math.max(0,m.reaction-dt);m.impact=Math.max(0,m.impact-dt);
+  dt=clamp(dt,0,.1);m.walkBlend=(m.walkBlend||0)*Math.exp(-dt*5);m.time+=dt;m.reaction=Math.max(0,m.reaction-dt);m.impact=Math.max(0,m.impact-dt);
   for(const mark of m.marks)mark.life-=dt;m.marks=m.marks.filter(mark=>mark.life>0);
   let x=310,y=m.armCuts?495:365,angle=m.armCuts?-.95:-.35;
   if(m.punchAge!==null){
@@ -110,8 +115,11 @@ DoodleDefender.WobblechompRig=(()=>{
  function pose(m,reduced=false){
   const entry=(1-ease(m.time/.9))*70,bob=reduced?0:Math.sin(m.time*3)*(m.legCuts===2?5:3);
   const shake=!reduced&&m.teethAge!==null&&m.teethAge<.85?Math.sin(m.teethAge*48)*6:0;
-  const at=(x,y)=>({x:x+entry+shake,y:y+bob});
+  const blend=reduced||m.rollAge!==null?0:(m.walkBlend||0),step=Math.sin(m.walkPhase||0),lift=-Math.abs(step)*(m.legCuts===2?24:16)*blend,sway=step*6*blend;
+  const walk={blend,lift,sway,sx:1+Math.abs(step)*.05*blend,sy:1-Math.abs(step)*.07*blend,lean:(step*.08+(m.walkFacing||1)*.07)*blend};
+  const at=(x,y)=>({x:x+entry+shake+sway,y:y+bob+lift});
   let legX=721,legY=m.legCuts?567:522,legAngle=m.legCuts ? .2 : 0;
+  if(m.spikeAge===null){legX+=Math.cos(m.walkPhase||0)*28*blend;legY-=Math.max(0,step)*30*blend;legAngle+=step*.18*blend}
   if(m.spikeAge!==null){const t=m.spikeAge;
    const lift=t<.95?ease(t/.95):t<1.3?1:1-ease((t-1.3)/.8);
    legX+=lift*45;legY-=lift*115;legAngle-=lift*.45;
@@ -119,7 +127,7 @@ DoodleDefender.WobblechompRig=(()=>{
   let eyeX=m.stalkCuts?755:630,eyeY=m.stalkCuts?360:226,eyeAngle=m.stalkCuts?-.9:0;
   if(m.beamAge!==null){const t=m.beamAge,coil=t<.8?ease(t/.8):1-ease((t-2.1)/.7);eyeX+=coil*25;eyeY-=coil*25;eyeAngle-=coil*.3}
   if(!reduced){legAngle+=Math.sin(m.time*2.5)*.04;eyeAngle+=Math.sin(m.time*2)*.06}
-  const parts={arm:part(at(466,418),at(m.wrist.x,m.wrist.y),m.angle,'arm',m.armCuts),leg:part(at(675,495),at(legX,legY),legAngle,'leg',m.legCuts),stalk:part(at(646,311),at(eyeX,eyeY),eyeAngle,'stalk',m.stalkCuts)};
+  const parts={arm:part(at(466,418),at(m.wrist.x+(m.punchAge===null?Math.cos(m.walkPhase||0)*14*blend:0),m.wrist.y),m.angle,'arm',m.armCuts),leg:part(at(675,495),at(legX,legY),legAngle,'leg',m.legCuts),stalk:part(at(646,311),at(eyeX,eyeY),eyeAngle,'stalk',m.stalkCuts)};
   const roll=rollPose(m,reduced);
   if(roll){
    const folds={arm:{root:{x:-75,y:0},end:{x:-75,y:-50},angle:-.35,scale:.55},leg:{root:{x:65,y:30},end:{x:60,y:55},angle:-.5,scale:.6},stalk:{root:{x:45,y:-50},end:{x:35,y:-75},angle:-.8,scale:.55}};
@@ -127,7 +135,7 @@ DoodleDefender.WobblechompRig=(()=>{
    for(const [name,limb] of Object.entries(parts)){const fold=folds[name];parts[name]=part(transform(limb.root,fold.root),transform(limb.end,fold.end),mix(limb.angle,fold.angle,roll.tuck)+roll.angle,name,limb.cuts,mix(1,fold.scale,roll.tuck))}
   }
   const arm=parts.arm;
-  return {roll,entry:entry+shake,bob,mouth:at(570,428),parts,root:arm.root,wrist:arm.end,joint:arm.joint,bodyAngle:reduced?0:Math.sin(m.time*2)*.025+(m.legCuts===2?-.07:0)+(m.teethAge!==null&&m.teethAge<.85?Math.sin(m.teethAge*38)*.04:0),angle:arm.angle};
+  return {roll,walk,entry:entry+shake,bob,mouth:at(570,428),parts,root:arm.root,wrist:arm.end,joint:arm.joint,bodyAngle:reduced?0:walk.lean+Math.sin(m.time*2)*.025+(m.legCuts===2?-.07:0)+(m.teethAge!==null&&m.teethAge<.85?Math.sin(m.teethAge*38)*.04:0),angle:arm.angle};
  }
  function crossing(a,b,c,d){
   const dx=b.x-a.x,dy=b.y-a.y,ex=d.x-c.x,ey=d.y-c.y,den=dx*ey-dy*ex;
@@ -174,18 +182,27 @@ DoodleDefender.WobblechompRig=(()=>{
   if(m.beamAge===null||m.stalkCuts===2)return null;
   const t=m.beamAge,f=ease((t-.8)/1.3);return {origin:p.parts.stalk.center,target:{x:150,y:mix(300,590,f)},firing:t>=.8&&t<2.1};
  }
- function drawFallenPart(ctx,image,d,reduced=false){const s=specs[d.part];ctx.save();ctx.translate(d.x,d.y);ctx.rotate(reduced?0:d.angle);const a={x:(s.pivot.x-.5)*s.w,y:(s.pivot.y-.5)*s.h};noodle(ctx,a,{x:a.x+30,y:a.y+28},12,13);ctx.restore();tile(ctx,image,s.col,s.row,d.x,d.y,s.w,s.h,reduced?0:d.angle)}
+ function drawInkFoot(ctx,x,y,w,h,angle,pivot,level=1){
+  if(level<=0)return;ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.translate(-w*pivot.x,-h*pivot.y);
+  const spikes=[[[.40,.37],[.35,.48],[.46,.49]],[[.57,.36],[.52,.45],[.61,.47]],[[.75,.47],[.69,.53],[.80,.56]],[[.87,.62],[.83,.65],[.87,.70]]];
+  for(const points of spikes){ctx.save();ctx.beginPath();points.forEach(([px,py],i)=>i?ctx.lineTo(px*w,py*h):ctx.moveTo(px*w,py*h));ctx.closePath();ctx.clip();const low=Math.min(...points.map(p=>p[1])),high=Math.max(...points.map(p=>p[1]));ctx.fillStyle='#203b4d';ctx.fillRect(0,(low+(high-low)*(1-level))*h,w,h);ctx.strokeStyle='#70afb5';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(points[1][0]*w,(high-.02)*h);ctx.lineTo(points[2][0]*w,(high-.02)*h);ctx.stroke();ctx.restore()}
+  ctx.restore();
+ }
+ function drawFallenPart(ctx,image,d,reduced=false){const s=specs[d.part];ctx.save();ctx.translate(d.x,d.y);ctx.rotate(reduced?0:d.angle);const a={x:(s.pivot.x-.5)*s.w,y:(s.pivot.y-.5)*s.h};noodle(ctx,a,{x:a.x+30,y:a.y+28},12,13);ctx.restore();tile(ctx,image,s.col,s.row,d.x,d.y,s.w,s.h,reduced?0:d.angle);if(d.part==='leg')drawInkFoot(ctx,d.x,d.y,s.w,s.h,reduced?0:d.angle,{x:.5,y:.5},d.inkLevel??1)}
  function draw(ctx,image,m,{reduced=false,guide=true,toothImage=null,effects=true,debris=true}={}){
   const p=pose(m,reduced);ctx.save();
   for(const limb of Object.values(p.parts))if(limb.cuts<2){
    const s=specs[limb.name];noodle(ctx,limb.joint.b,limb.end,limb.name==='arm'?(limb.cuts?70:35):limb.cuts?25:-10,limb.name==='stalk'?12:16);
-   tile(ctx,image,s.col,s.row,limb.end.x,limb.end.y,s.w*limb.scale,s.h*limb.scale,limb.angle,s.pivot);
+   tile(ctx,image,s.col,s.row,limb.end.x,limb.end.y,s.w*limb.scale,s.h*limb.scale,limb.angle,s.pivot);if(limb.name==='leg')drawInkFoot(ctx,limb.end.x,limb.end.y,s.w*limb.scale,s.h*limb.scale,limb.angle,s.pivot);
   }
   const openMouth=m.reaction>0||(m.teethAge!==null&&m.teethAge>=.72&&m.teethAge<1.9);
   if(p.roll){const r=p.roll;ctx.save();ctx.translate(r.x+p.entry,r.y);ctx.rotate(r.angle);ctx.scale(r.scaleX,r.scaleY);
    ctx.globalAlpha=1-r.tuck;tile(ctx,image,openMouth?2:0,openMouth?1:0,0,0,320,320);
    ctx.globalAlpha=r.tuck;tile(ctx,image,1,1,0,0,280,280);ctx.restore();
-  }else tile(ctx,image,openMouth?2:0,openMouth?1:0,570+p.entry,410+p.bob,320,320,p.bodyAngle);
+  }else{
+   if(p.walk.blend>0){ctx.save();ctx.globalAlpha=.12;ctx.fillStyle='#5d5340';ctx.beginPath();ctx.ellipse(570+p.entry,565+p.bob,100*p.walk.sx,13,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+   ctx.save();ctx.translate(570+p.entry+p.walk.sway,410+p.bob+p.walk.lift);ctx.rotate(p.bodyAngle);ctx.scale(p.walk.sx,p.walk.sy);tile(ctx,image,openMouth?2:0,openMouth?1:0,0,0,320,320);ctx.restore();
+  }
   for(const limb of Object.values(p.parts)){
    if(p.roll)continue;
    if(limb.cuts<2)threads(ctx,limb);
@@ -219,5 +236,5 @@ DoodleDefender.WobblechompRig=(()=>{
   if(guide&&!p.roll)for(const limb of Object.values(p.parts))if(limb.cuts<2){const {a,b}=limb.joint;ctx.strokeStyle='#28796d';ctx.lineWidth=3;ctx.setLineDash([6,5]);ctx.beginPath();ctx.arc((a.x+b.x)/2,(a.y+b.y)/2,36,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
   ctx.restore();
  }
- return {WIDTH,HEIGHT,create,update,punch,shootSpikes,eyeBeam,shakeTeeth,tuckAndRoll,rollPose,toothPose,busy,pose,cutStroke,draw,drawFallenPart};
+ return {WIDTH,HEIGHT,create,update,stepWalk,punch,shootSpikes,eyeBeam,shakeTeeth,tuckAndRoll,rollPose,toothPose,busy,pose,cutStroke,draw,drawFallenPart};
 })();

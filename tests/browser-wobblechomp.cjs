@@ -63,6 +63,7 @@ const root=path.resolve(__dirname,'..');
   await page.screenshot({path:'/tmp/wobble-idle-'+viewport.width+'.png'});
   assert.equal(await page.locator('#optionsOverlay').evaluate(el=>el.inert),true);
   assert.equal(await page.locator('#wobblePreviewOverlay').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
+  await page.click('#wobbleWalkBtn');await advance(.37);assert((await snap()).model.walkBlend>.5);assert.equal(await page.locator('#wobbleWalkBtn').getAttribute('aria-pressed'),'true');await page.screenshot({path:'/tmp/wobble-walk-'+viewport.width+'.png'});await page.click('#wobblePauseBtn');const walking=(await snap()).model;await advance(.5);assert.deepEqual((await snap()).model,walking);await page.click('#wobblePauseBtn');await page.click('#wobbleWalkBtn');await advance(1);assert((await snap()).model.walkBlend<.01);
   await page.click('#wobblePunchBtn');await advance(1.4);assert.ok((await snap()).model.wrist.x<170);
   await page.screenshot({path:'/tmp/wobble-punch-'+viewport.width+'.png'});
   await cut('arm',true);assert.equal((await snap()).model.armCuts,1,'one cut per scribble');await advance(1);

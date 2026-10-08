@@ -13,7 +13,7 @@ function resetBossEncounters(){brains=new WeakMap();marks=[];clock=0}
 function inside(e,w){let yes=false;const pts=w.pts;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a.y>e.y)!==(b.y>e.y)&&e.x<(b.x-a.x)*(e.y-a.y)/(b.y-a.y)+a.x)yes=!yes}return yes}
 function nearestBossWall(e,range=150){let best=null;for(const w of game.state.walls){const p=game.api.nearestPointOnWall(e,w);if(!p)continue;const d=Math.hypot(p.x-e.x,p.y-e.y);if(d<range){range=d;best={wall:w,...p}}}return best}
 function updateBossDamageBudgets(dt){for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e),rate=Math.max(30,e.maxHp*.045);b.damageBudget=Math.min(rate*.5,b.damageBudget+rate*dt)}}
-function limitBossDamage(e,amount,kind){if(game.api.isWobbleBoss(e))amount=Math.min(amount,Math.max(0,e.hp-e.maxHp*.04));if(!e.waveBoss||(kind==='reflected'&&isFirstBoss(e)))return amount;const b=bossBrain(e),guard=isFirstBoss(e)&&!b.enclosed&&b.recovery<=0?.25:1,actual=Math.min(amount,b.damageBudget*guard);b.damageBudget-=actual/guard;return actual}
+function limitBossDamage(e,amount,kind){if(game.api.isWobbleBoss(e)&&game.api.wobblePhase(e)===2)return 0;if(game.api.isWobbleBoss(e))amount=Math.min(amount,Math.max(0,e.hp-e.maxHp*.04));if(!e.waveBoss||(kind==='reflected'&&isFirstBoss(e)))return amount;const b=bossBrain(e),guard=isFirstBoss(e)&&!b.enclosed&&b.recovery<=0?.25:1,actual=Math.min(amount,b.damageBudget*guard);b.damageBudget-=actual/guard;return actual}
 function pushThroughBossStrokes(e,dt){
  for(const w of [...game.state.walls]){if(w.hp<=0)continue;const p=game.api.nearestPointOnWall(e,w);
   if(p&&Math.hypot(p.x-e.x,p.y-e.y)<e.r*.8+w.thick/2){

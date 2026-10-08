@@ -26,10 +26,10 @@ function updateUI(){
   text(game.dom.$('liveWave'),game.state.wave);
   text(game.dom.$('pressure'),Number(game.api.wavePressure().toFixed(1))+'×');
   text(game.dom.waveEl,game.state.wave);text(game.dom.scoreEl,game.state.score);text(game.dom.killsEl,game.state.kills);text(game.dom.luckEl,game.state.stats.luck);text(game.dom.bestEl,game.state.best);
-  game.dom.inkBar.style.width=(100*game.state.stats.ink/game.state.stats.maxInk)+'%';
+  game.dom.inkBar.style.width=game.api.wobbleInfiniteInk?.()?'100%':(100*game.state.stats.ink/game.state.stats.maxInk)+'%';
   game.dom.hpBar.style.width=(100*game.state.player.hp/game.state.player.maxHp)+'%';
   game.dom.timeBar.style.width=(100*game.state.timeLeft/game.state.waveTime)+'%';
-  text(game.dom.inkText,Math.ceil(game.state.stats.ink)+' / '+Math.ceil(game.state.stats.maxInk));
+  text(game.dom.inkText,game.api.wobbleInfiniteInk?.()?'∞':Math.ceil(game.state.stats.ink)+' / '+Math.ceil(game.state.stats.maxInk));
   text(game.dom.hpText,Math.ceil(game.state.player.hp)+' / '+Math.ceil(game.state.player.maxHp));
   text(game.dom.timeText,Math.max(0,Math.ceil(game.state.timeLeft)));
   text(game.dom.rerollsEl,game.state.rerolls);
