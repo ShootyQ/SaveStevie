@@ -166,3 +166,5 @@ only attached appendages around it. Missing parts remain separate fallen
 pieces. Rocking, rolling rotation, braking and unfolding use the same atlas,
 with no new images. Removing the spiky leg suppresses rolling spike bursts;
 the tooth doodle is reused for rolling drops and landing animation.
+
+`sniper-animations.png` is a transparent generated 4-column, 3-row sheet for Sir Pew-Pew, closely based on `sniper.png`. Its twelve cells contain four marching poses, four pencil wind-up/release/recoil poses, and four menu idle/flip/catch/wink poses. The original generated PNG is preserved unchanged. Combat crops and caches 160-pixel frames once at load, advances the walk by travel distance, flips toward movement or the aiming target, and holds frames during freeze/stun. The menu uses CSS steps on the same sheet; reduced motion shows its idle cell. Projectile pencils keep the existing shot collision point, speed and damage.

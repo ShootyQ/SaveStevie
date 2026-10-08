@@ -14,6 +14,13 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
   });
   await page.goto('http://127.0.0.1:8001/');await page.waitForFunction(()=>testGame.api.artworkReady(),null,{polling:50});await page.click('#startBtn');
+  const pew=await page.evaluate(()=>{
+   const g=testGame;g.api.resetRun();const e=g.api.spawnEnemy(false,70,180,'sniper');g.state.enemies=[e];e.shootCd=1.7;g.api.updateEnemyAnimations(0);const walk=[],pixels=[],random=Math.random;Math.random=()=>{throw Error('Pew animation used combat RNG')};
+   try{for(let i=0;i<4;i++){e.x+=12;g.api.updateEnemyAnimations(.1);walk.push(g.api.enemySpriteFrame(e));const before=JSON.stringify(g.state);g.api.draw();if(before!==JSON.stringify(g.state))throw Error('Pew render changed state');pixels.push(g.dom.canvas.toDataURL())}
+    g.api.updateEnemyAnimations(.1);const idle=g.api.enemySpriteFrame(e);e.x=g.state.player.x-120;e.y=g.state.player.y;e.shootCd=.5;g.api.updateEnemyAnimations(.01);const aim=g.api.enemySpriteFrame(e);e.shootCd=.2;g.api.updateEnemyAnimations(.01);const puff=g.api.enemySpriteFrame(e);e.shootCd=1.7;Math.random=random;g.api.fireSniper(e);Math.random=()=>{throw Error('Pew animation used combat RNG')};const shot=JSON.stringify(g.state.enemyShots);g.api.updateEnemyAnimations(.01);const fire=g.api.enemySpriteFrame(e);g.api.updateEnemyAnimations(.12);const recoil=g.api.enemySpriteFrame(e);e.freeze=1;g.api.updateEnemyAnimations(.1);const frozen=g.api.enemySpriteFrame(e);e.freeze=0;g.api.updateEnemyAnimations(.2);const recovered=g.api.enemySpriteFrame(e);e.x-=12;g.api.updateEnemyAnimations(.1);const facing=g.api.enemyFacing(e);g.api.draw();return {walk,distinct:new Set(pixels).size,idle,aim,puff,fire,recoil,frozen,recovered,facing,shotsUnchanged:shot===JSON.stringify(g.state.enemyShots)};
+   }finally{Math.random=random;g.api.resetRun()}
+  });
+  assert.equal(new Set(pew.walk).size,4);assert.equal(pew.distinct,4);for(const [key,frame] of Object.entries({idle:8,aim:4,puff:5,fire:6,recoil:7,frozen:7,recovered:8}))assert.equal(pew[key],'sniper-frame-'+frame,key);assert.equal(pew.facing,-1);assert(pew.shotsUnchanged);
   const frames=await page.evaluate(()=>{
    const g=testGame;g.state.spawnTimer=999;
    const grunt=g.api.spawnEnemy(false,70,90,'grunt');grunt.speed=0;g.state.enemies=[grunt];g.api.updateEnemyAnimations(0);
@@ -91,7 +98,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.evaluate(()=>{gallery.forEach(e=>{e.freeze=0;e.stun=0;testGame.api.animateEnemyAction(e,'erase');});testGame.api.updateEnemyAnimations(.1);testGame.api.draw();});
   assert.deepEqual(await page.evaluate(()=>gallery.map(e=>testGame.api.enemyAnimationPose(e))),Array.from({length:6},()=>({x:0,y:0,angle:0,sx:1,sy:1})));
   assert.equal(await page.evaluate(()=>testGame.api.enemySpriteFrame(testGame.api.spawnEnemy(false,90,90,'grunt'))),'grunt-frame-0','reduced motion uses a static Gribble frame');
-  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' 16 custom Gribble frames, real attacks, six animated/tinted sprites, changing pixels, render purity, pause, freeze/stun and dynamic reduced motion');await page.close();
+  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' 12 Pew-Pew poses, 16 custom Gribble frames, real attacks, six animated/tinted sprites, changing pixels, render purity, pause, freeze/stun and dynamic reduced motion');await page.close();
  }
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exit(1);});
