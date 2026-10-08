@@ -148,6 +148,7 @@ function update(dt){
     if(game.api.contactStevie(e))continue;
     const immobilized=e.stun>0||e.freeze>0;
     game.api.pullGravity(e,dt,immobilized);
+    if(e.type==='tank'&&game.api.updateChonks(e,dt))continue;
     if(e.type==='sniper'&&immobilized)e.shootCd=Math.max(.65,e.shootCd);
     if(e.type==='sniper'&&!immobilized&&!game.api.feastHost(e)&&game.api.updateSniper(e,dt))continue;
 
