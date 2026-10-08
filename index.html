@@ -255,7 +255,8 @@
     <div class="options-links"><button class="secondary" id="optionsStatsBtn">Notebook stats</button><button class="secondary" id="changelogBtn">What’s new</button></div>
     <section class="dev-mode-section"><button class="secondary dev-mode-button" id="devModeBtn" aria-pressed="false">DEV MODE</button><p id="devModeNote" class="option-help"></p><button class="secondary" id="testLabBtn" aria-expanded="false" aria-controls="testLabPanel">Test a wave / boss</button>
       <section id="testLabPanel" class="test-lab" hidden aria-labelledby="testLabTitle">
-        <h3 id="testLabTitle">The scratch page</h3><p class="option-help">Jump straight into a fight with your own build. Test runs save no scraps or records. Starting a test replaces your current run; already banked scraps stay saved.</p>
+        <h3 id="testLabTitle">The scratch page</h3>
+        <button type="button" class="secondary" id="openWobblePreviewBtn">Wobblechomp · Animation preview</button><p class="option-help">Jump straight into a fight with your own build. Test runs save no scraps or records. Starting a test replaces your current run; already banked scraps stay saved.</p>
         <div class="test-presets" aria-label="Boss shortcuts"><button type="button" data-test-wave="5">King · 5</button><button type="button" data-test-wave="10">Stapler · 10</button><button type="button" data-test-wave="15">Crayon · 15</button><button type="button" data-test-wave="20">Eraser · 20</button></div>
         <div class="test-fields"><label>Wave<input id="testWave" type="number" min="1" max="200" step="1" value="5"></label><label>Start at<select id="testPhase"><option value="wave">Full wave</option><option value="boss">Boss only</option></select></label><label>Drawing tool<select id="testTool"><option value="0">Pencil · 2 slots</option><option value="3">Mechanical pencil · 2 slots</option><option value="6">Simple pen · 3 slots</option><option value="10">Scented Sharpie · 4 slots</option></select></label></div>
         <label class="monster-setting"><input id="testNotebook" type="checkbox"> Include my permanent Notebook stat bonuses</label>
@@ -265,6 +266,16 @@
         <p id="testLabNotice" class="option-help" role="status"></p><div class="cardactions"><button id="startTestBtn">Start test →</button><button id="repeatTestBtn" class="secondary" hidden>Repeat last test</button><button id="clearTestBuildBtn" class="secondary">Clear build</button></div>
       </section></section>
     <p id="optionsStorageNote" class="save-note" role="status"></p>
+  </div>
+</div>
+<div class="overlay build-overlay" id="wobblePreviewOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="wobblePreviewTitle">
+  <div class="cardbox build-box wobble-preview">
+    <div class="build-heading"><div><span class="section-kicker">THE SCRATCH PAGE</span><h2 id="wobblePreviewTitle">Wobblechomp</h2></div><button class="secondary" id="closeWobblePreviewBtn">Close</button></div>
+    <p class="wobble-intro">Try his punch. Draw two separate strokes across the shoulder threads inside the green circle.</p>
+    <canvas id="wobbleCanvas" aria-label="Wobblechomp animation preview. Use a mouse or finger to cut across his shoulder threads twice."></canvas>
+    <div class="wobble-feedback"><strong id="wobbleCutCount">0 / 2 cuts</strong><span id="wobbleStatus" role="status" aria-live="polite"></span></div>
+    <div class="wobble-controls"><button id="wobblePunchBtn">Punch</button><button class="secondary" id="wobblePauseBtn" aria-pressed="false">Pause</button><button class="secondary" id="wobbleResetBtn">Reset</button><label><input id="wobbleAutoPunch" type="checkbox" checked> Repeat punches</label></div>
+    <p class="wobble-preview-note">First animation preview: body, fist, two cuts and a falling arm. Your run stays paused; this page spends no ink or scraps.</p>
   </div>
 </div>
 <div class="overlay build-overlay" id="statisticsOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="statisticsTitle">
@@ -315,6 +326,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Wobblechomp’s first moves</h3><p>The Scratch Page has an animation preview for Wobblechomp. Watch his distant punch, cut through his shoulder threads twice, and see his arm dangle and fall off. Pause, reset or repeat punches to try it again.</p></article>
       <article class="build-entry"><h3>Staple Snack fights dirty</h3><p>Staple Snack chains attacks: four-burst staple stitches, wall-crushing charges from changing angles, and paper punches followed by a volley from the other side. New ink during every charge warning jams his armor; disabling both nests or crossing his clamp also earns an attack window. His faster Jamling packs keep you busy while the final phase brings eight misfire bursts and a three-burst overload.</p></article>
       <article class="build-entry"><h3>Staple Snack gets moving</h3><p>Staple Snack circles Stevie faster between attacks and repositions during recovery. His cooldown overlaps recovery to keep the fight moving. Jamling minions now visibly fly out after staple fans and paper punches, with marked landings and a brief pause before they attack.</p></article>
       <article class="build-entry"><h3>Staple Snack starts a riot</h3><p>Wave 10 gets a snapping paper entrance, three phases with nine attacks, and bent staple Jamling minions. Block charges to expose him, cross a clamped wall to release it, and draw through nests to jam them. Phase changes give you time to rebuild. Count Crayon’s runes can now be stopped by walls across their marked casting lane.</p></article>
@@ -517,6 +529,8 @@
 <script src="js/test-lab.js"></script>
 <script src="js/wave-finale.js"></script>
 <script src="js/renderer.js"></script>
+<script src="js/wobblechomp-animation.js"></script>
+<script src="js/wobblechomp-preview.js"></script>
 <script src="js/loop.js"></script>
 <script src="js/input.js"></script>
 <script src="game.js"></script>

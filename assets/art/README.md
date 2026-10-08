@@ -133,3 +133,14 @@ have an extra running lean and bounce. Reduced motion retains facing.
 from bent silver/orange staples, based on the Staple Snack and mini art style.
 Renderer hopping, twisting legs and warning squash animate the single pose.
 It is a boss-owned helper, never a random wave spawn.
+
+## Wobblechomp modular preview
+
+`wobblechomp-parts.png` is original generated transparent crayon artwork,
+preserved as a 1536 × 1024 atlas with six equal 512 × 512 cells. Top row:
+body, fist, spiky foot. Bottom row: stalk eye, tucked body, startled body.
+The preview crops cells at draw time and connects the parts with procedural
+noodle limbs; body-part combinations need no extra complete-monster sprites.
+The fist's painted wrist anchor is at roughly (65%, 92%) within its cell.
+The atlas loads on opening the Scratch Page preview, not during normal combat.
+The tucked body is reserved for a later rolling slice.

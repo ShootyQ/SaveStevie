@@ -900,3 +900,19 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 #startOverlay .scrap-guide{grid-column:1/-1;width:100%;margin:0}
 .scrap-guide-target{outline:3px dashed #d5a029!important;outline-offset:5px}
 @media(max-width:480px){.scrap-guide{gap:8px;padding:12px}.scrap-guide img{width:40px;flex-basis:40px}.scrap-guide h3{font-size:23px}.scrap-guide p{font-size:18px}}
+
+/* An isolated paper stage for the first Wobblechomp animation slice. */
+#wobblePreviewOverlay{z-index:50}
+.wobble-preview{width:min(960px,100%);padding:20px;background:#fffaf0}
+.wobble-preview .build-heading h2{font-family:'Stevie Pencil',cursive;font-weight:400;font-size:38px;color:#2858a8;margin:0}
+.wobble-preview .wobble-intro{text-align:left;color:#35444b;font-size:15px;line-height:1.4;margin:0 0 10px}
+#wobbleCanvas{display:block;width:100%;height:clamp(260px,52vh,520px);border:1px solid #c7b996;border-radius:10px;background:repeating-linear-gradient(0deg,#f7f1df 0 27px,#d9e2e7 27px 28px);touch-action:none;user-select:none}
+.wobble-feedback{display:flex;gap:12px;align-items:center;flex-wrap:wrap;min-height:45px;color:#35444b;font-size:14px}
+#wobbleCutCount{color:#245f54;white-space:nowrap}
+.wobble-controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.wobble-controls button{min-height:44px}
+.wobble-controls label{display:flex;align-items:center;gap:7px;color:#35444b;font-size:14px}
+.wobble-controls input{width:22px;height:22px;accent-color:#2858a8}
+.wobble-preview .wobble-preview-note{text-align:left;font-size:12px;line-height:1.4;color:#51483b;margin:12px 0 0}
+@media(max-width:480px){#wobbleCanvas{height:260px}.wobble-preview{padding:14px}.wobble-preview .build-heading h2{font-size:32px}.wobble-controls{gap:8px}.wobble-controls label{width:100%}}
+@media(max-height:500px){#wobbleCanvas{height:260px}.wobble-preview{padding:12px}}
