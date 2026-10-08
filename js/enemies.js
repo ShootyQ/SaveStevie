@@ -21,8 +21,8 @@ const defs=game.catalog.enemyDefs={
     jamling:{r:10,hp:26,speed:26,dmg:5,color:'#928276'},
     mini:{r:7,hp:12,speed:49,dmg:5,color:'#a56cc1'},
     boss:{r:28,hp:270,speed:18,dmg:27,color:'#962f3d'},
-    wobblechomp:{r:28,hp:380,speed:120,dmg:14,color:'#dfbd29',boss:true},
-    'wobble-tooth':{r:10,hp:22,speed:45,dmg:9,color:'#e6d4a7'},
+    wobblechomp:{r:22,hp:380,speed:120,dmg:12,color:'#dfbd29',boss:true},
+    'wobble-tooth':{r:10,hp:22,speed:45,dmg:7,color:'#e6d4a7'},
     stapler:{r:30,hp:410,speed:19,dmg:27,color:'#c98a32',boss:true},
     crayon:{r:30,hp:540,speed:17,dmg:29,color:'#9354b9',boss:true},
     eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'}
@@ -242,7 +242,7 @@ function updateEnemyShots(dt){
     // retroactively absorb a shot that already reached him.
     const endX=shot.x+dx*(hitTime??1),endY=shot.y+dy*(hitTime??1);shot.life-=dt;
     const stapleWall=(shot.stapleOwner||shot.wobbleOwner)?game.api.bossShotWallHit(shot,endX,endY):null;
-    if(stapleWall){const x=shot.x+(endX-shot.x)*stapleWall.t,y=shot.y+(endY-shot.y)*stapleWall.t;game.api.damageWall(stapleWall.wall,8,x,y);game.api.burst(x,y,'#928276',5);continue}
+    if(stapleWall){const x=shot.x+(endX-shot.x)*stapleWall.t,y=shot.y+(endY-shot.y)*stapleWall.t;game.api.damageWall(stapleWall.wall,shot.wobbleOwner?4:8,x,y);game.api.burst(x,y,'#928276',5);continue}
     if(shotBlocked(shot.x,shot.y,endX,endY,shot.r)){
       game.api.burst(endX,endY,'#4b79d8',5);continue;
     }
@@ -521,6 +521,7 @@ function steerBounce(e,dt){
 // Forced motion must respect live barriers just like bouncer path checks.
 function moveEnemySafely(e,dx,dy){
   const x=e.x+dx,y=e.y+dy;
+  if(game.api.isWobbleBoss(e)){if(!game.api.wobbleMoveClear(e,x,y))return false;e.x=x;e.y=y;return true}
   if(e.waveBoss?!game.api.bossMoveClear(e,x,y):!game.api.bouncePathClear(e,x,y,0))return false;
   e.x=x;e.y=y;return true;
 }

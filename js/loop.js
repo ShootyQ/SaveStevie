@@ -131,7 +131,7 @@ function update(dt){
 
     if(game.api.waveFinaleActive())break;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
-    if(game.api.isWobbleBoss(e)){const hit=game.api.nearestWallHit(e);if(hit&&e.freeze<=0&&e.stun<=0)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
+    if(game.api.isWobbleBoss(e)){game.api.keepWobbleDistance(e);const hit=game.api.nearestWallHit(e);if(hit&&e.freeze<=0&&e.stun<=0)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
     if(e.type==='wobble-tooth'&&game.api.updateWobbleTooth(e,dt))continue;
     if(game.api.isStapleBoss(e)){
       if(game.api.bossBrain(e).staple?.hop)continue; // Repositioning leaps cannot collide with ink in midair.

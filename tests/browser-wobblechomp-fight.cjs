@@ -20,8 +20,15 @@ const root=path.resolve(__dirname,'..');
   assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().voices.some(v=>v.kind==='bossRoar')),true);await page.screenshot({path:'/tmp/wobble-fight-roar-'+viewport.width+'.png'});if(viewport.width===360){await page.emulateMedia({reducedMotion:'reduce'});await page.waitForFunction(()=>testGame.api.enemyMotionReduced(),null,{polling:50});assert.equal(await page.evaluate(()=>testGame.api.wobbleIntroPose().zoom),1)}
   await page.evaluate(()=>{testGame.api.update(2.632);testGame.state.stats.rockDamage=0;testGame.state.stats.ink=testGame.state.stats.maxInk=1000;testGame.state.player.hp=testGame.state.player.maxHp=10000;testGame.api.draw()});
   assert.equal(await page.evaluate(()=>testGame.state.enemies.filter(e=>e.waveBoss).length),1);assert.equal(await page.evaluate(()=>testGame.api.bossEntranceActive()),false);assert.equal(await page.evaluate(()=>testGame.api.musicStatus().track),'pop-quiz-panic');
-  const seen=await page.evaluate(()=>{const g=testGame,seen=new Set();for(let i=0;i<3000;i++){g.api.update(.01);const e=g.state.enemies.find(e=>e.waveBoss),s=g.api.wobbleSnapshot(e);if(s.attack)seen.add(s.attack)}g.api.draw();return [...seen].sort()});assert.deepEqual(seen,['beam','punch','roll','spikes','teeth']);
-  assert(Math.abs(await page.evaluate(()=>testGame.api.wobbleSnapshot(testGame.state.enemies.find(e=>e.waveBoss)).bodyWidth)-75.6)<1e-9);const hints=await page.evaluate(()=>{
+  const coverStart=await page.evaluate(()=>{
+   const g=testGame,p=g.state.player,e=g.state.enemies.find(e=>e.waveBoss);g.state.walls=[];p.hp=p.maxHp=75;
+   g.api.createWall([{x:p.x-90,y:p.y-85},{x:p.x+90,y:p.y-85},{x:p.x+90,y:p.y+85},{x:p.x-90,y:p.y+85},{x:p.x-90,y:p.y-85}]);
+   const cover=g.state.walls[0],before=cover.hp;for(let i=0;i<270;i++)g.api.update(.01);g.api.draw();return {before,hp:cover.hp,playerHP:p.hp,end:g.api.wobbleSnapshot(e).punchEnd};
+  });assert.equal(coverStart.playerHP,75,'real phone cover blocks punch');assert.equal(coverStart.hp,coverStart.before-22);assert(coverStart.end,'punch visibly stopped at cover');
+  await page.screenshot({path:'/tmp/wobble-covered-punch-'+viewport.width+'.png'});
+  const protectedHP=await page.evaluate(()=>{const g=testGame;for(let i=0;i<380;i++)g.api.update(.01);const hp=g.state.player.hp;g.state.player.hp=g.state.player.maxHp=10000;return hp});assert.equal(protectedHP,75,'normal-health Stevie survives protected opening and spike fan');
+  const seen=await page.evaluate(()=>{const g=testGame,seen=new Set();for(let i=0;i<3000;i++){g.api.update(.01);const e=g.state.enemies.find(e=>e.waveBoss),s=g.api.wobbleSnapshot(e);if(s.clearance<95-1e-7)throw Error('Boss crowded fort: '+s.clearance);if(s.attack)seen.add(s.attack)}g.api.draw();return [...seen].sort()});assert.deepEqual(seen,['beam','punch','roll','spikes','teeth']);
+  assert(Math.abs(await page.evaluate(()=>testGame.api.wobbleSnapshot(testGame.state.enemies.find(e=>e.waveBoss)).bodyWidth)-54.4)<1e-9);const hints=await page.evaluate(()=>{
    const g=testGame;if(innerWidth===393)g.api.setDevMode(true);g.api.updateUI();const ctx=g.dom.ctx,original=ctx.fillText;let hint;
    ctx.fillText=function(text,x,y,...rest){if(text.startsWith('PHASE 1'))hint={top:y-ctx.measureText(text).actualBoundingBoxAscent,bottom:y,width:ctx.measureText(text).width};return original.call(this,text,x,y,...rest)};
    try{g.api.draw()}finally{ctx.fillText=original}
