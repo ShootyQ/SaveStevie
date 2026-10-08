@@ -22,7 +22,7 @@ const defs=game.catalog.enemyDefs={
     mini:{r:7,hp:12,speed:49,dmg:5,color:'#a56cc1'},
     boss:{r:28,hp:270,speed:18,dmg:27,color:'#962f3d'},
     wobblechomp:{r:22,hp:380,speed:120,dmg:12,color:'#dfbd29',boss:true},
-    'wobble-tooth':{r:10,hp:22,speed:45,dmg:7,color:'#e6d4a7'},
+    'wobble-tooth':{r:10,hp:6,speed:45,dmg:7,color:'#e6d4a7'},
     stapler:{r:30,hp:410,speed:19,dmg:27,color:'#c98a32',boss:true},
     crayon:{r:30,hp:540,speed:17,dmg:29,color:'#9354b9',boss:true},
     eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'}
@@ -536,7 +536,7 @@ function contactStevie(e){
   if(e.hp<=0||e.flight||!game.state.enemies.includes(e))return false;
   const player=game.state.player;
   if(!game.api.touchesRefuge(e))return false;
-  if(e.type==='wobble-tooth')return true;
+  if(e.type==='wobble-tooth')return false; // Its own warned bite handles Stevie; cover still uses wall contact.
   if(e.type==='jamling')return game.api.jamlingContact(e);
   if(game.api.shotBlocked(e.x,e.y,player.x,player.y,0))return false;
   if(e.waveBoss)return game.api.bossContact(e);

@@ -1,6 +1,6 @@
 /* Wave 10, phase one: drawn cuts, actual cover, and boss-owned tooth helpers. */
 DoodleDefender.systems.wobbleBoss=function(game){
- const rig=DoodleDefender.WobblechompRig,pace=1.45,beamPace=1.9,cap=10,toothBiteWarning=1.2;
+ const rig=DoodleDefender.WobblechompRig,pace=1.45,footPace=1,beamPace=1.9,cap=10,toothBiteWarning=1.2;
  let art=null,toothArt=null,loading=false;
  const isWobbleBoss=e=>!!e.waveBoss&&e.type==='wobblechomp';
  function loadWobbleArtwork(){
@@ -14,7 +14,11 @@ DoodleDefender.systems.wobbleBoss=function(game){
  function frame(e,m=state(e).model){const p=rig.pose(m,game.api.enemyMotionReduced()),s=scale(),f=game.api.bossBrain(e).wobble?.facing??-1;return {p,s,f,x:p.roll?p.roll.x+p.entry:570+p.entry,y:p.roll?p.roll.y:410+p.bob}}
  function world(e,q){const a=frame(e);return {x:e.x+(q.x-a.x)*a.s*a.f,y:e.y+(q.y-a.y)*a.s}}
  function clearance(x,y){const q=game.api.refugePoint(x,y);return Math.hypot(x-q.x,y-q.y)}
- function wobblePositionSafe(x,y){return clearance(x,y)>=95}
+ const portraitPhone=()=>game.state.W<500&&game.state.H>=game.state.W;
+ const sideMargin=()=>portraitPhone()?24:60;
+ const keepout=()=>portraitPhone()?Math.min(95,Math.max(60,game.state.W/2-56-sideMargin()-1)):95;
+ function travelClear(a,b){for(let t=0;t<=1;t+=.05)if(!wobblePositionSafe(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t))return false;return true}
+ function wobblePositionSafe(x,y){return clearance(x,y)>=keepout()}
  function wobbleMoveClear(e,x,y){
   if(!wobblePositionSafe(x,y))return false;const ignore=new Set();
   for(const w of game.state.walls){const a=game.api.nearestPointOnWall(e,w),b=game.api.nearestPointOnWall({x,y},w);if(!a||!b)continue;
@@ -23,33 +27,41 @@ DoodleDefender.systems.wobbleBoss=function(game){
   }
   return !game.api.shotBlocked(e.x,e.y,x,y,e.r,ignore);
  }
- function safePoint(angle){
+ function safePoint(angle,rolling=false){
   const {W,H,player:p}=game.state,rx=Math.max(65,W/2-70),ry=Math.max(85,H/2-100);
-  // Narrow portrait pages use a ranged lower rail; short landscape pages a side rail.
+  // Phones alternate between the top and bottom; side lanes are transit/roll routes.
   let x=p.x+Math.cos(angle)*rx,y=p.y+Math.sin(angle)*ry;
-  if(W<440&&H>=W){x=p.x+Math.cos(angle)*rx;y=p.y+Math.max(155,Math.min(235,ry))}
+  if(portraitPhone()){
+   const reach=Math.max(155,Math.min(235,ry));
+   if(rolling){x=p.x+Math.cos(angle)*(W/2-sideMargin());y=p.y+Math.sin(angle)*reach}
+   else{x=p.x+Math.cos(angle)*20;y=p.y+(Math.sin(angle)>=0?reach:-reach)}
+  }
   else if(H<440&&W>H){x=p.x-Math.max(165,Math.min(260,rx));y=p.y+Math.sin(angle)*Math.max(15,H/2-100)}
-  x=game.api.clamp(x,60,W-60);y=game.api.clamp(y,90,Math.max(90,H-60));
+  x=game.api.clamp(x,sideMargin(),W-sideMargin());y=game.api.clamp(y,90,Math.max(90,H-60));
   if(!wobblePositionSafe(x,y)){
    let best=null,score=Infinity;
-   for(let i=0;i<32;i++){const a=i*Math.PI/16,q={x:game.api.clamp(p.x+Math.cos(a)*rx,60,W-60),y:game.api.clamp(p.y+Math.sin(a)*ry,90,Math.max(90,H-60))};
+   for(let i=0;i<32;i++){const a=i*Math.PI/16,q={x:game.api.clamp(p.x+Math.cos(a)*(portraitPhone()?W/2-sideMargin():rx),sideMargin(),W-sideMargin()),y:game.api.clamp(p.y+Math.sin(a)*ry,90,Math.max(90,H-60))};
     if(!wobblePositionSafe(q.x,q.y))continue;const d=Math.hypot(q.x-x,q.y-y);if(d<score){score=d;best=q}}
    if(best)return best;
   }
   return {x,y};
  }
- function keepWobbleDistance(e){if(!wobblePositionSafe(e.x,e.y)||e.x<60||e.x>game.state.W-60||e.y<90||e.y>game.state.H-60){const s=state(e),q=safePoint(s.angle);e.x=q.x;e.y=q.y;if(s.attack)cancel(e,s)}}
- function initWobbleBoss(e){loadWobbleArtwork();const s=state(e),p=safePoint(s.angle);if(!wobblePositionSafe(e.x,e.y)||e.x<60||e.x>game.state.W-60||e.y<90||e.y>game.state.H-60){e.x=p.x;e.y=p.y}}
+ function keepWobbleDistance(e){if(!wobblePositionSafe(e.x,e.y)||e.x<sideMargin()||e.x>game.state.W-sideMargin()||e.y<90||e.y>game.state.H-60){const s=state(e),q=safePoint(s.angle);e.x=q.x;e.y=q.y;if(s.attack)cancel(e,s)}}
+ function initWobbleBoss(e){loadWobbleArtwork();const s=state(e),p=safePoint(s.angle);if(!wobblePositionSafe(e.x,e.y)||e.x<sideMargin()||e.x>game.state.W-sideMargin()||e.y<90||e.y>game.state.H-60){e.x=p.x;e.y=p.y}}
  function routeAroundWalls(e,q,dt){
   const s=state(e);s.routeAge-=dt;
-  if(wobbleMoveClear(e,q.x,q.y)){s.detour=null;return q}
-  if(s.detour&&s.routeAge>0&&Math.hypot(e.x-s.detour.x,e.y-s.detour.y)>8&&wobbleMoveClear(e,s.detour.x,s.detour.y))return s.detour;
+  if(travelClear(e,q)&&wobbleMoveClear(e,q.x,q.y)){s.detour=null;return q}
+  if(s.detour&&s.routeAge>0&&Math.hypot(e.x-s.detour.x,e.y-s.detour.y)>8&&travelClear(e,s.detour)&&wobbleMoveClear(e,s.detour.x,s.detour.y))return s.detour;
   if(!s.detour&&s.routeAge>0)return q;
   // Visibility graph around the corners of drawings; choose the shortest clear detour.
   const nodes=[{x:e.x,y:e.y},q],{W,H}=game.state;
+  const refuge=game.api.refugeBounds();
+  if(portraitPhone())for(const x of [refuge.left-keepout()-1,refuge.right+keepout()+1])for(const y of [refuge.top-keepout()-1,refuge.bottom+keepout()+1]){
+   if(x>=sideMargin()&&x<=W-sideMargin()&&y>=90&&y<=H-60)nodes.push({x,y});
+  }
   for(const w of game.state.walls){const pad=e.r+w.thick/2+8,xs=w.pts.map(p=>p.x),ys=w.pts.map(p=>p.y);
    for(const x of [Math.min(...xs)-pad,Math.max(...xs)+pad])for(const y of [Math.min(...ys)-pad,Math.max(...ys)+pad]){
-    if(nodes.length<82&&x>=60&&x<=W-60&&y>=90&&y<=H-60&&wobblePositionSafe(x,y))nodes.push({x,y});
+    if(nodes.length<82&&x>=sideMargin()&&x<=W-sideMargin()&&y>=90&&y<=H-60&&wobblePositionSafe(x,y))nodes.push({x,y});
    }
   }
   const dist=nodes.map(()=>Infinity),prev=nodes.map(()=>-1),used=new Set();dist[0]=0;
@@ -57,8 +69,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
    if(i<0||!Number.isFinite(dist[i]))break;if(i===1)break;used.add(i);
    for(let j=1;j<nodes.length;j++){if(used.has(j))continue;const a=nodes[i],b=nodes[j],d=dist[i]+Math.hypot(b.x-a.x,b.y-a.y);if(d>=dist[j])continue;
     // Check refuge clearance along the whole segment, not only its destination.
-    let safe=true;for(let t=0;t<=1;t+=.1)if(!wobblePositionSafe(a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t)){safe=false;break}
-    if(safe&&wobbleMoveClear({...e,x:a.x,y:a.y},b.x,b.y)){dist[j]=d;prev[j]=i}
+    if(travelClear(a,b)&&wobbleMoveClear({...e,x:a.x,y:a.y},b.x,b.y)){dist[j]=d;prev[j]=i}
    }
   }
   let i=1;if(prev[i]<0){s.detour=null;s.routeAge=.4;return q}while(prev[i]>0)i=prev[i];s.detour=nodes[i];s.routeAge=.5;return s.detour;
@@ -70,7 +81,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
   // Count real time even on a slow rail or at a waypoint; otherwise pins can last forever.
   if(n>0)for(const offset of [0,.55,-.55,1.1,-1.1,Math.PI/2,-Math.PI/2]){
    const a=Math.atan2(dy,dx)+offset,x=e.x+Math.cos(a)*n,y=e.y+Math.sin(a)*n;
-   if(x<60||x>game.state.W-60||y<90||y>game.state.H-60||!wobblePositionSafe(x,y))continue;
+   if(x<sideMargin()||x>game.state.W-sideMargin()||y<90||y>game.state.H-60||!wobblePositionSafe(x,y))continue;
    if(game.api.moveEnemySafely(e,x-e.x,y-e.y))break;
   }
   const hit=game.api.nearestBossWallForStaple(e);
@@ -87,7 +98,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
   if(!fn(s.model))return false;s.attack=kind;s.target={x:game.state.player.x,y:game.state.player.y};s.punchHit=false;s.punchEnd=null;s.beamHit=0;
   s.facing=game.state.player.x>=e.x?-1:1;
   if(kind==='beam'){s.beamStart={x:game.state.player.x,y:game.state.player.y};s.beamTip={...s.beamStart};s.beamWalls=game.state.walls.filter(w=>w.hp>0&&w.life>0).map(w=>({wall:w,...game.api.wallGeometry(w.pts)})).sort((a,b)=>Math.hypot(a.cx-game.state.player.x,a.cy-game.state.player.y)-Math.hypot(b.cx-game.state.player.x,b.cy-game.state.player.y)).slice(0,6).map(q=>({wall:q.wall,x:q.cx,y:q.cy}));}
-  if(kind==='roll'){s.rollStart=s.angle;s.rollRoute=[];for(let i=0;i<=16;i++)s.rollRoute.push(safePoint(s.angle+i*.22))}
+  if(kind==='roll'){s.rollStart=s.angle;s.rollRoute=[];for(let i=0;i<=16;i++)s.rollRoute.push(safePoint(s.angle+i*.22,true))}
   return true;
  }
  function fire(e,origin,count=5){
@@ -120,9 +131,9 @@ DoodleDefender.systems.wobbleBoss=function(game){
     if(s.blockStun===0){if(s.attack==='punch'){m.punchAge=null;s.attack=null}s.gap=Math.max(s.gap,.35)}continue;
    }
    if(!s.attack){if(!s.cutWindow){s.angle+=step*.4;moveToward(e,safePoint(s.angle),step,110)}s.gap-=step;
-    if(s.gap<=0){const sequence=['punch','spikes','teeth','beam','punch','roll','spikes','beam'];for(let i=0;i<sequence.length;i++){const kind=sequence[s.turn++%sequence.length];if(start(e,s,kind))break}}
+    if(s.gap<=0&&(!portraitPhone()||Math.abs(e.y-game.state.player.y)>=145)){const sequence=['punch','spikes','teeth','beam','punch','roll','spikes','beam'];for(let i=0;i<sequence.length;i++){const kind=sequence[s.turn++%sequence.length];if(start(e,s,kind))break}}
    }
-   rig.update(m,step*(s.attack==='beam'?beamPace:pace));
+   rig.update(m,step*(s.attack==='beam'?beamPace:s.attack==='spikes'?footPace:pace));
    if(s.attack==='punch'&&m.punchAge!==null){
     const age=m.punchAge,cover=game.api.bossShotWallHit({x:e.x,y:e.y,r:12},s.target.x,s.target.y),end=s.punchEnd||(cover?{x:e.x+(s.target.x-e.x)*cover.t,y:e.y+(s.target.y-e.y)*cover.t}:s.target),a=frame(e),tx=a.x+(end.x-e.x)/(a.s*a.f),ty=a.y+(end.y-e.y)/a.s,angle=Math.atan2(ty-a.y,tx-a.x)+Math.PI/2;
     if(age>=.85&&age<2.65){const f=game.api.clamp((age-.85)/.3,0,1);m.angle=angle;m.wrist.x=m.wrist.x*(1-f)+(tx+Math.cos(angle)*27.75-Math.sin(angle)*77.7)*f;m.wrist.y=m.wrist.y*(1-f)+(ty+Math.sin(angle)*27.75+Math.cos(angle)*77.7)*f}
@@ -141,8 +152,8 @@ DoodleDefender.systems.wobbleBoss=function(game){
     while(s.beamHit<s.beamWalls.length&&m.beamAge>=beamPace*(.45+s.beamHit*.18)){const q=s.beamWalls[s.beamHit++];if(game.state.walls.includes(q.wall)){game.state.walls=game.state.walls.filter(w=>w!==q.wall);game.api.burst(q.x,q.y,'#75a999',8);game.api.floatText(q.x,q.y,'BEAMED AWAY!','#28796d')}}
    }
    if(s.attack==='roll'&&m.rollAge!==null){
-    const progress=game.api.clamp((m.rollAge-1.1)/2.35,0,1);s.angle=s.rollStart+progress*3.52;moveToward(e,safePoint(s.angle),step,280);
-   }else if(s.attack==='teeth'||s.attack==='spikes'&&m.spikeAge>1.2||s.attack==='punch'&&s.punchHit){s.angle+=step*.5;moveToward(e,safePoint(s.angle),step,95)}
+    const progress=game.api.clamp((m.rollAge-1.1)/2.35,0,1);s.angle=s.rollStart+progress*3.52;moveToward(e,safePoint(s.angle,true),step,280);
+   }else if(!portraitPhone()&&(s.attack==='teeth'||s.attack==='punch'&&s.punchHit)){s.angle+=step*.5;moveToward(e,safePoint(s.angle),step,95)}
    if(s.attack&&!rig.busy(m)){s.attack=null;s.gap=.35;s.beamWalls=[]}
    if(game.state.player.hp<=0)break;
   }
@@ -157,18 +168,21 @@ DoodleDefender.systems.wobbleBoss=function(game){
    for(const d of s.model.fallenParts.slice(fallen)){const q=world(e,d);s.debris.push({...d,...q,vx:d.vx*a.s*a.f,vy:d.vy*a.s,facing:a.f,floor:Math.min(game.state.H-35,q.y+45)});}
    const name=s.model.lastCut;
    if(name==={punch:'arm',spikes:'leg',beam:'stalk'}[s.attack]){s.attack=null;s.gap=1.6;s.beamWalls=[]}
-   s.cutWindow={part:name,left:1.6};
+   s.cutWindow={part:name,left:name==='leg'?2.2:1.6};
+   if(name==='leg')s.gap=Math.max(s.gap,2.2);
+   if(name==='arm'){s.blockStun=0;s.cutWindow=null;s.gap=.35;s.punchEnd=null;s.trapped=0;s.trapProbe=null;}
    const cuts=s.model.armCuts+s.model.legCuts+s.model.stalkCuts;
    e.hp=cuts===6?0:Math.max(e.maxHp*.04,e.hp-e.maxHp*.16);
-   game.api.damageNumber(e,e.maxHp*.16,'physical',cuts===6);game.api.playSound('pencil');game.api.floatText(e.x,e.y-e.r-18,s.model[{arm:'armCuts',leg:'legCuts',stalk:'stalkCuts'}[name]]===2?'DETACHED!':'CUT · 1 MORE!','#28796d');
+   game.api.damageNumber(e,e.maxHp*.16,'physical',cuts===6);game.api.playSound('pencil');game.api.floatText(e.x,e.y-e.r-18,s.model[{arm:'armCuts',leg:'legCuts',stalk:'stalkCuts'}[name]]===2?'DETACHED!':name==='arm'?'ARM CUT · WAIT FOR NEXT PUNCH!':'CUT · 1 MORE!','#28796d');
    if(cuts===6)game.api.killEnemy(e);return true;
   }return false;
  }
  function updateWobbleTooth(e,dt){
   if(!e.bossOwner||e.bossOwner.hp<=0||!game.state.enemies.includes(e.bossOwner)){game.state.enemies=game.state.enemies.filter(n=>n!==e);return true}
-  if(e.freeze>0||e.stun>0){e.toothWarning=0;return true}
+  if(e.freeze>0||e.stun>0){e.toothWarning=0;return false}
   if(e.wobbleLanding){const l=e.wobbleLanding;l.age+=dt;const t=Math.min(1,l.age/l.duration);e.x=l.startX+(l.x-l.startX)*t;e.y=l.startY+(l.y-l.startY)*t;if(l.age>=l.duration+.5)delete e.wobbleLanding;return true}
   if(game.api.touchesRefuge(e)&&!game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y,0)){
+   if(!e.toothWarning)game.api.animateEnemyAction(e,'bite',game.api.refugePoint(e.x,e.y));
    e.toothWarning=(e.toothWarning||0)+dt;if(e.toothWarning>=toothBiteWarning){game.api.damageStevie(e.dmg*(1-game.state.stats.playerArmor),'Tooth doodle warned bite',e);game.state.enemies=game.state.enemies.filter(n=>n!==e)}return true;
   }
   e.toothWarning=0;return false;
@@ -204,6 +218,6 @@ DoodleDefender.systems.wobbleBoss=function(game){
    const p=rig.pose(s.model,game.api.enemyMotionReduced());for(const name of availableParts(s)){const limb=p.parts[name];if(limb.cuts===2)continue;const a=world(e,limb.joint.a),b=world(e,limb.joint.b);ctx.strokeStyle='#28796d';ctx.lineWidth=3;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc((a.x+b.x)/2,(a.y+b.y)/2,18,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}ctx.restore();
   }ctx.restore();
  }
- function wobbleSnapshot(e){const s=game.api.bossBrain(e).wobble;return s?{attack:s.attack,turn:s.turn,gap:s.gap,pace,bodyWidth:320*scale(),cutSeconds:s.cutWindow?.left??0,clearance:clearance(e.x,e.y),blockStun:s.blockStun,trapped:s.trapped,beamHit:s.beamHit,beamTargets:s.beamWalls.length,beamTip:s.beamTip?{...s.beamTip}:null,scorches:s.scorches.map(q=>({...q})),debris:s.debris.map(q=>({...q})),punchEnd:s.punchEnd?{...s.punchEnd}:null,model:JSON.parse(JSON.stringify(s.model)),parts:Object.fromEntries(Object.entries(rig.pose(s.model,game.api.enemyMotionReduced()).parts).map(([k,v])=>[k,{cuts:v.cuts,joint:{a:world(e,v.joint.a),b:world(e,v.joint.b)}}])),available:availableParts(s),helpers:game.state.enemies.filter(n=>n.bossOwner===e).length}:null}
+ function wobbleSnapshot(e){const s=game.api.bossBrain(e).wobble;return s?{attack:s.attack,turn:s.turn,gap:s.gap,pace,footPace,keepout:keepout(),bodyWidth:320*scale(),cutSeconds:s.cutWindow?.left??0,clearance:clearance(e.x,e.y),blockStun:s.blockStun,trapped:s.trapped,beamHit:s.beamHit,beamTargets:s.beamWalls.length,beamTip:s.beamTip?{...s.beamTip}:null,scorches:s.scorches.map(q=>({...q})),debris:s.debris.map(q=>({...q})),punchEnd:s.punchEnd?{...s.punchEnd}:null,model:JSON.parse(JSON.stringify(s.model)),parts:Object.fromEntries(Object.entries(rig.pose(s.model,game.api.enemyMotionReduced()).parts).map(([k,v])=>[k,{cuts:v.cuts,joint:{a:world(e,v.joint.a),b:world(e,v.joint.b)}}])),available:availableParts(s),helpers:game.state.enemies.filter(n=>n.bossOwner===e).length}:null}
  const api={isWobbleBoss,wobbleMoveClear,wobblePositionSafe,keepWobbleDistance,loadWobbleArtwork,wobbleArtworkReady:()=>!!art&&!!toothArt,initWobbleBoss,updateWobbleBoss,cutWobbleStroke,updateWobbleTooth,wobbleToothHeight,clearWobbleBoss,moveWobbleFields,drawWobbleEnemy,drawWobbleTooth,drawWobbleFields,wobbleSnapshot,wobbleEntrancePoint:()=>safePoint(-2.2)};Object.assign(game.api,api);return api;
 };
