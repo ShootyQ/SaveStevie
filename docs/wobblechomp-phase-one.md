@@ -18,7 +18,7 @@ phases will replace that temporary finish with their transitions.
 - Spikes: raised foot, then five real aimed spikes. Each deals 9 damage;
   cover intercepts them and takes 8 damage. Removing the leg stops these volleys.
 - Teeth: shake, staggered airborne launch of 6–10 doodles, marked landings,
-  bounce/pause, then scurry. Each tooth warns for 0.8 seconds before one 9-damage
+  bounce/pause, then scurry. Each tooth warns for 1.2 seconds before one 9-damage
   bite. Cover, killing, freeze and stun answer the bite. At most ten helpers live.
 - Beam: eye winds up and marks up to two existing drawings, then erases them.
   No player damage or ink stealing. Cutting the stalk cancels its beam.
@@ -27,21 +27,23 @@ phases will replace that temporary finish with their transitions.
   Joints are hidden while tucked. Boss body contact never damages Stevie.
 
 Draw across the **green-ringed joint** and release. Each appendage needs two
-separate paid strokes. The first cut interrupts that part and opens a 0.8-second
+separate paid strokes. The first cut interrupts that part and opens a 1.6-second
 second-cut opportunity; otherwise wait for its next attack. Repeated crossings
 and copied lines count once per released stroke. Existing walls do not cut.
 Only affordable stroke geometry can cut. Ordinary ink damage helps, but cannot
 finish the boss without detaching all three parts. Each cut removes 16% of max HP;
 the sixth finishes phase one. Damaging inks and normal tool upgrades still work.
 
-## First tuning pass
+## Playtest tuning
 
-`js/wobblechomp-boss.js` runs the animation rig at **2.25×** its inspection speed.
-The opening delay is 0.65 seconds; recoveries between attacks are 0.12 seconds.
+`js/wobblechomp-boss.js` runs the animation rig at **1×** its inspection speed.
+The opening delay is 1.4 seconds; recoveries between attacks are 0.65 seconds.
 The chain is punch → spikes → teeth → beam → punch → roll → spikes → beam,
-skipping detached parts. He orbits the fort between attacks (150 px/s), moves
-during recoveries (130 px/s) and rolls at 360 px/s. Projectiles are capped at 32.
-Lower `pace` first if playtests need more reaction time. Tooth bite warning time
+skipping detached parts. He orbits the fort between attacks (85 px/s), moves
+during recoveries (75 px/s) and rolls at 220 px/s. Projectiles are capped at 32.
+The body renders at the same 75.6-pixel width as King Doodle-Doom. Spikes travel
+at 180 px/s, tooth helpers walk at 45 px/s, and the boss holds still during the
+1.6-second second-cut window. Lower `pace` if playtests need more reaction time. Tooth bite warning time
 is separate from animation speed. Real phone testing should assess touch speed.
 
 ## Verification
