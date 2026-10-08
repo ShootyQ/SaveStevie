@@ -22,7 +22,7 @@ phases will replace that temporary finish with their transitions.
   landings scattered across the page at least 95 pixels from the fort,
   bounce/pause, then scurry. Each tooth warns for 1.2 seconds before one 7-damage
   bite. Cover, killing, freeze and stun answer the bite. At most ten helpers live.
-- Beam: marks up to six existing drawings, then starts erasing after 0.45
+- Beam: one laser sweeps between up to six existing drawings, leaving fading cosmetic scorch marks. It starts erasing after 0.45
   seconds, removing another every 0.18 seconds. Earlier cuts save more walls.
   No player damage or ink stealing. Cutting the stalk cancels its beam.
 - Roll: tuck, marked orbit route, fast movement, three spaced spike bursts and
@@ -63,3 +63,9 @@ is separate from animation speed. Real phone testing should assess touch speed.
   desktop, two portrait phone sizes and landscape; frozen/pauseable entrance,
   all five attacks, real mouse/touch paid cuts and normal reward progression.
 - Existing modular preview, menu and animation checks remain separate.
+
+Detached parts use page coordinates: they fall, settle and stay where they land even when he moves, turns or rolls. Resize translates them with the page. Movement tries clear routes around drawing corners before the warned trap breakout.
+
+Scratch Page tests offer **Restart test · same build** from pause, defeat, wave-clear and victory screens. Restart restores the selected starting wave, tool, upgrades and Notebook choice with full health and ink; it stays unranked. Returning to the menu ends the active test, while Settings retains Repeat last test for the session.
+
+`tests/browser-wobblechomp-effects.cjs` checks one rendered laser, scorch marks, fixed fallen parts, pause and pure rendering at four viewports. `tests/browser-test-lab.cjs` exercises same-build restarts from pause, defeat, wave clear and campaign victory.

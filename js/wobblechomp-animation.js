@@ -169,7 +169,8 @@ DoodleDefender.WobblechompRig=(()=>{
   if(m.beamAge===null||m.stalkCuts===2)return null;
   const t=m.beamAge,f=ease((t-.8)/1.3);return {origin:p.parts.stalk.center,target:{x:150,y:mix(300,590,f)},firing:t>=.8&&t<2.1};
  }
- function draw(ctx,image,m,{reduced=false,guide=true,toothImage=null,effects=true}={}){
+ function drawFallenPart(ctx,image,d,reduced=false){const s=specs[d.part];ctx.save();ctx.translate(d.x,d.y);ctx.rotate(reduced?0:d.angle);const a={x:(s.pivot.x-.5)*s.w,y:(s.pivot.y-.5)*s.h};noodle(ctx,a,{x:a.x+30,y:a.y+28},12,13);ctx.restore();tile(ctx,image,s.col,s.row,d.x,d.y,s.w,s.h,reduced?0:d.angle)}
+ function draw(ctx,image,m,{reduced=false,guide=true,toothImage=null,effects=true,debris=true}={}){
   const p=pose(m,reduced);ctx.save();
   for(const limb of Object.values(p.parts))if(limb.cuts<2){
    const s=specs[limb.name];noodle(ctx,limb.joint.b,limb.end,limb.name==='arm'?(limb.cuts?70:35):limb.cuts?25:-10,limb.name==='stalk'?12:16);
@@ -185,7 +186,7 @@ DoodleDefender.WobblechompRig=(()=>{
    if(limb.cuts<2)threads(ctx,limb);
    else{ctx.strokeStyle='#6e592a';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(limb.root.x-8,limb.root.y-8);ctx.lineTo(limb.root.x+5,limb.root.y+5);ctx.moveTo(limb.root.x-7,limb.root.y+7);ctx.lineTo(limb.root.x+5,limb.root.y-7);ctx.stroke()}
   }
-  for(const d of m.fallenParts){const s=specs[d.part];ctx.save();ctx.translate(d.x,d.y);ctx.rotate(reduced?0:d.angle);const a={x:(s.pivot.x-.5)*s.w,y:(s.pivot.y-.5)*s.h};noodle(ctx,a,{x:a.x+30,y:a.y+28},12,13);ctx.restore();tile(ctx,image,s.col,s.row,d.x,d.y,s.w,s.h,reduced?0:d.angle);}
+  if(debris)for(const d of m.fallenParts)drawFallenPart(ctx,image,d,reduced);
   if(effects)for(const s of m.spikes){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.angle);ctx.fillStyle='#fff4d9';ctx.strokeStyle='#282014';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(24,0);ctx.lineTo(-9,-8);ctx.lineTo(-9,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#e77929';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-5,-3);ctx.lineTo(13,0);ctx.stroke();ctx.restore()}
   const beam=effects?beamPose(m,p):null;
   if(beam){
@@ -213,5 +214,5 @@ DoodleDefender.WobblechompRig=(()=>{
   if(guide&&!p.roll)for(const limb of Object.values(p.parts))if(limb.cuts<2){const {a,b}=limb.joint;ctx.strokeStyle='#28796d';ctx.lineWidth=3;ctx.setLineDash([6,5]);ctx.beginPath();ctx.arc((a.x+b.x)/2,(a.y+b.y)/2,36,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
   ctx.restore();
  }
- return {WIDTH,HEIGHT,create,update,punch,shootSpikes,eyeBeam,shakeTeeth,tuckAndRoll,rollPose,toothPose,busy,pose,cutStroke,draw};
+ return {WIDTH,HEIGHT,create,update,punch,shootSpikes,eyeBeam,shakeTeeth,tuckAndRoll,rollPose,toothPose,busy,pose,cutStroke,draw,drawFallenPart};
 })();

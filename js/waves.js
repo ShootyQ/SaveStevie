@@ -181,6 +181,7 @@ function returnToMenu(){
   game.api.resetEnemyWave();
   game.api.resetWaveFinale();
   game.api.closeInfo(false);game.api.finishScrapRun(false,false);game.api.stopSoundEffects();
+  game.api.resetTestLabRun?.();
   game.state.running=false;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
   game.state.drawing=false;game.state.currentWall=null;
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];

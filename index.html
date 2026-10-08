@@ -147,6 +147,7 @@
           <div>HP Bonus <span id="hpBonus">+0</span></div>
         </div>
         <p class="scrap-summary">Notebook scraps earned this run: <b id="waveRunScraps">0</b> · Saved, even if Stevie falls.</p>
+      <button class="secondary paper-slip" id="waveRestartTestBtn" hidden>Restart test · same build ↻</button>
         <button class="paper-slip" id="continueBtn">Next page →</button>
       </div>
     </div>
@@ -161,6 +162,7 @@
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
           <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="victoryNoteHeading"></h3><p id="victoryNoteMessage"></p><small id="victoryNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
         </aside>
+      <button class="secondary paper-slip" id="victoryRestartTestBtn" hidden>Restart test · same build ↻</button>
         <button class="gold notebook-entry" id="victoryNotebookBtn">Spend Notebook Scraps</button>
         <div class="cardactions">
           <button id="endlessBtn">Continue Endless Mode</button>
@@ -180,6 +182,7 @@
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
           <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="deathNoteHeading"></h3><p id="deathNoteMessage"></p><small id="deathNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
         </aside>
+      <button class="secondary paper-slip" id="deathRestartTestBtn" hidden>Restart test · same build ↻</button>
         <div class="cardactions"><button class="gold" id="deathNotebookBtn">Spend Scraps</button><button id="againBtn">Return to main menu</button></div>
       </div>
     </div>
@@ -229,6 +232,7 @@
       <button class="secondary paper-slip" id="pauseSettingsBtn">Settings</button>
       <div class="pause-reference"><button class="secondary paper-slip" id="pauseToolBtn">Your tool</button><button class="secondary paper-slip" id="pauseMonstersBtn">Monster notes</button></div>
       <div class="pause-utilities"><button class="secondary paper-slip" id="clearBtn" title="Erase all walls and reclaim a little ink">Erase walls</button><button class="secondary paper-slip" id="musicBtn" aria-label="Mute music">Mute music</button></div>
+      <button class="secondary paper-slip" id="pauseRestartTestBtn" hidden>Restart test · same build ↻</button>
       <button class="secondary paper-slip" id="returnMenuBtn">Return to main menu</button>
       <p class="option-help paper-slip">Your page stays right here until you resume.</p>
     </div>
@@ -326,6 +330,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>A sweeping laser and faster test retries</h3><p>Wobblechomp tries to route around drawings before breaking a wall trap. His eye uses one fast sweeping laser with fading scorch marks. Detached parts land on the page and stay there. Scratch Page tests now have a same-build restart on pause, defeat and clear screens.</p></article>
       <article class="build-entry"><h3>Wobblechomp rewards quick hands</h3><p>Wobblechomp attacks and moves faster again. Blocking his fist stuns him for three seconds and gives you an arm-cut opening. His quick eye beam erases up to six marked walls one after another: cut the stalk early to save more drawings. Teeth scatter across the page with a safe landing gap around Stevie. Wall traps earn a short warning before he smashes a nearby trapping wall.</p></article>
       <article class="build-entry"><h3>Room to fight Wobblechomp</h3><p>Wobblechomp’s whole puppet is smaller again and stays farther from Stevie’s fort. He fights from the far end of narrow phone pages, with room to draw cover. Walking and rolling no longer chew through your walls, blocked punches visibly stop at the wall, and punches, spikes and tooth bites hit less hard. Punches and spikes also wear down cover more slowly.</p></article>
       <article class="build-entry"><h3>Wobblechomp takes a breath</h3><p>Wobblechomp is now the same body size as King Doodle-Doom. His attacks, movement, spikes and tooth doodles are slower, with longer warnings and a pause between moves. A first cut holds him still for a longer second-cut opening. Tooth bites give you more time to block, and the cut instructions stay below the boss label on phones.</p></article>
