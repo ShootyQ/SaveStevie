@@ -144,3 +144,9 @@ noodle limbs; body-part combinations need no extra complete-monster sprites.
 The fist's painted wrist anchor is at roughly (65%, 92%) within its cell.
 The atlas loads on opening the Scratch Page preview, not during normal combat.
 The tucked body is reserved for a later rolling slice.
+
+The spiky foot and eye now have animated wind-up, kick/beam and recovery poses,
+with their own cut threads, dangling poses and independent falling pieces.
+The foot anchor is (12%, 52%); the eye-stem anchor is (50%, 85%). The renderer
+reuses this atlas for all missing-part combinations; no new image assets are
+needed for the leg/eye animation slice. Spikes and the beam are canvas effects.
