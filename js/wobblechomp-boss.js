@@ -104,10 +104,19 @@ DoodleDefender.systems.wobbleBoss=function(game){
   for(const offset of [0,.55,-.55,1.1,-1.1,Math.PI/2,-Math.PI/2]){const angle=Math.atan2(dy,dx)+offset,x=e.x+Math.cos(angle)*n,y=e.y+Math.sin(angle)*n;if(x<sideMargin()||x>game.state.W-sideMargin()||y<topMargin()||y>game.state.H-60||!wobblePositionSafe(x,y))continue;e.x=x;e.y=y;break}
   s.detour=null;s.trapped=0;s.trapWarning=false;s.trapProbe=null;
  }
+ function stopWobbleAttackSounds(){for(const kind of ['wobbleWindup','wobbleLaser','wobbleRoll'])game.api.stopSoundEffects(kind)}
+ function syncWobbleAttackSounds(e,s){
+  const active=e.hp>0&&e.freeze<=0&&e.stun<=0&&s.blockStun<=0;
+  const laser=active&&s.attack==='beam'&&s.model.beamAge!==null&&s.model.beamAge/beamPace>=.2;
+  const roll=active&&(s.phase===2?s.transition<=0:s.attack==='roll'&&s.model.rollAge>=1.1&&s.model.rollAge<3.45);
+  for(const [kind,on] of [['wobbleLaser',laser],['wobbleRoll',roll]]){if(on)game.api.sustainSound(kind);else game.api.stopSoundEffects(kind)}
+ }
  function start(e,s,kind){
   const fn={punch:rig.punch,spikes:rig.shootSpikes,beam:rig.eyeBeam,teeth:rig.shakeTeeth,roll:rig.tuckAndRoll}[kind];
   if(!fn(s.model))return false;s.attack=kind;s.lastAttack=kind;s.attackSerial++;s.cutWindow=null;s.target={x:game.state.player.x,y:game.state.player.y};s.punchHit=false;s.punchEnd=null;s.beamHit=0;
   s.facing=game.state.player.x>=e.x?-1:1;
+  if(kind==='punch')game.api.playSound('wobbleWindup');
+  if(kind==='teeth')game.api.playSound('wobbleTeeth');
   if(kind==='beam'){s.beamStart={x:game.state.player.x,y:game.state.player.y};s.beamTip={...s.beamStart};s.beamWalls=game.state.walls.filter(w=>w.hp>0&&w.life>0).map(w=>({wall:w,...game.api.wallGeometry(w.pts)})).sort((a,b)=>Math.hypot(a.cx-game.state.player.x,a.cy-game.state.player.y)-Math.hypot(b.cx-game.state.player.x,b.cy-game.state.player.y)).slice(0,6).map(q=>({wall:q.wall,x:q.cx,y:q.cy}));}
   if(kind==='roll'){s.rollStart=s.angle;s.rollRoute=[];for(let i=0;i<=16;i++)s.rollRoute.push(safePoint(s.angle+i*.22,true))}
   return true;
@@ -116,11 +125,12 @@ DoodleDefender.systems.wobbleBoss=function(game){
  function counter(e,part,serial=state(e).attackSerial){
   const s=state(e),kind={arm:'punch',leg:'spikes',stalk:'beam'}[part];
   if(s.phase!==1||e.hp<=0||e.freeze>0||e.stun>0||serial!==s.attackSerial||s.counteredSerial===serial||s.lastAttack!==kind||s.model[part+'Cuts']>=2)return false;
-  s.counteredSerial=serial;s.attack=null;s.blockStun=3;s.cutWindow={part,left:3};s.beamWalls=[];s.model.punchAge=s.model.spikeAge=s.model.beamAge=null;s.model.spikes=[];s.model.walkBlend=0;s.trapped=0;s.trapProbe=null;
+  stopWobbleAttackSounds();s.counteredSerial=serial;s.attack=null;s.blockStun=3;s.cutWindow={part,left:3};s.beamWalls=[];s.model.punchAge=s.model.spikeAge=s.model.beamAge=null;s.model.spikes=[];s.model.walkBlend=0;s.trapped=0;s.trapProbe=null;
   game.api.floatText(e.x,e.y-35,'STUNNED · CUT '+({arm:'ARM',leg:'FOOT',stalk:'EYE'}[part])+'!','#28796d');game.api.playSound('rock');return true;
  }
  function counterWobbleSpike(shot){return shot.cutCounter!=null&&isWobbleBoss(shot.wobbleOwner)&&counter(shot.wobbleOwner,'leg',shot.cutCounter)}
  function fire(e,origin,count=5){
+  game.api.playSound('wobbleSpike');
   const a=Math.atan2(game.state.player.y-origin.y,game.state.player.x-origin.x);
   for(let i=0;i<count&&game.state.enemyShots.length<32;i++){const angle=a+(i-(count-1)/2)*.16;game.state.enemyShots.push({x:origin.x,y:origin.y,vx:Math.cos(angle)*180,vy:Math.sin(angle)*180,r:4,damage:6,life:6,wobbleOwner:e,bossKind:'wobble-spike',cutCounter:safeSpikeCounter(e)})}
  }
@@ -136,11 +146,11 @@ DoodleDefender.systems.wobbleBoss=function(game){
   const origin=s.attack==='roll'?{x:e.x,y:e.y}:world(e,rig.pose(s.model,true).mouth);
   const n=game.api.spawnEnemy(false,origin.x,origin.y,'wobble-tooth');if(!n)return;n.bossOwner=e;n.wobbleLanding={startX:origin.x,startY:origin.y,x:target.x,y:target.y,age:0,duration:game.api.clamp(.5+Math.hypot(target.x-origin.x,target.y-origin.y)/500,.65,1.35),height:s.attack==='roll'?28:65};n.toothWarning=0;n.toothTurn=target.x<p.x?1:-1;
  }
- function cancel(e,s){s.model.punchAge=s.model.spikeAge=s.model.beamAge=s.model.teethAge=s.model.rollAge=null;s.model.teethPlan=[];s.model.spikes=[];s.model.teeth=[];s.model.walkBlend=0;s.rail=null;s.attack=null;s.gap=.8;s.cutWindow=null;s.beamWalls=[];s.blockStun=0;s.trapped=0;s.trapWarning=false;s.trapProbe=null}
+ function cancel(e,s){stopWobbleAttackSounds();s.model.punchAge=s.model.spikeAge=s.model.beamAge=s.model.teethAge=s.model.rollAge=null;s.model.teethPlan=[];s.model.spikes=[];s.model.teeth=[];s.model.walkBlend=0;s.rail=null;s.attack=null;s.gap=.8;s.cutWindow=null;s.beamWalls=[];s.blockStun=0;s.trapped=0;s.trapWarning=false;s.trapProbe=null}
  function wobblePhase(e){return game.api.bossBrain(e).wobble?.phase??1}
  function wobbleInfiniteInk(){return game.state.running&&game.state.player.hp>0&&!game.state.betweenWaves&&!game.state.inUpgrade&&game.state.enemies.some(e=>isWobbleBoss(e)&&e.hp>0&&wobblePhase(e)===2)}
  function updateWobbleBoss(e,dt){
-  const s=state(e);if(e.hp<=0)return;keepWobbleDistance(e);
+  const s=state(e);if(e.hp<=0){stopWobbleAttackSounds();return}keepWobbleDistance(e);
   if(s.phase===1&&(e.freeze>0||e.stun>0)){cancel(e,s);return}
   let remaining=Math.min(dt,5);while(remaining>1e-8){const step=Math.min(.025,remaining);remaining-=step;
    if(s.cutWindow){s.cutWindow.left-=step;if(s.cutWindow.left<=0)s.cutWindow=null}
@@ -160,13 +170,14 @@ DoodleDefender.systems.wobbleBoss=function(game){
    if(s.attack==='punch'&&m.punchAge!==null){
     const age=m.punchAge,cover=game.api.bossShotWallHit({x:e.x,y:e.y,r:12},s.target.x,s.target.y),end=s.punchEnd||(cover?{x:e.x+(s.target.x-e.x)*cover.t,y:e.y+(s.target.y-e.y)*cover.t}:s.target),a=frame(e),tx=a.x+(end.x-e.x)/(a.s*a.f),ty=a.y+(end.y-e.y)/a.s,angle=Math.atan2(ty-a.y,tx-a.x)+Math.PI/2;
     if(age>=.85&&age<2.65){const f=game.api.clamp((age-.85)/.3,0,1);m.angle=angle;m.wrist.x=m.wrist.x*(1-f)+(tx+Math.cos(angle)*27.75-Math.sin(angle)*77.7)*f;m.wrist.y=m.wrist.y*(1-f)+(ty+Math.sin(angle)*27.75+Math.cos(angle)*77.7)*f}
-    if(age>=1.2&&!s.punchHit){s.punchHit=true;const shot={x:e.x,y:e.y,r:12},hit=game.api.bossShotWallHit(shot,s.target.x,s.target.y);
+    if(age>=1.2&&!s.punchHit){game.api.stopSoundEffects('wobbleWindup');game.api.playSound('wobblePunch');s.punchHit=true;const shot={x:e.x,y:e.y,r:12},hit=game.api.bossShotWallHit(shot,s.target.x,s.target.y);
      if(hit){s.punchEnd={x:e.x+(s.target.x-e.x)*hit.t,y:e.y+(s.target.y-e.y)*hit.t};game.api.damageWall(hit.wall,22,s.punchEnd.x,s.punchEnd.y);game.api.floatText(s.punchEnd.x,s.punchEnd.y,'BLOCKED · STUNNED!','#28796d');counter(e,'arm');s.trapped=0;s.trapProbe=null}
      else game.api.damageStevie(12*(1-game.state.stats.playerArmor),'Wobblechomp warned punch',e);
     }
    }
    if(s.blockStun>0)continue;
    if(m.spikes.some(q=>!q.combatLaunched)){fire(e,s.attack==='roll'?{x:e.x,y:e.y}:world(e,rig.pose(m,true).parts.leg.center),s.attack==='roll'?3:5);for(const q of m.spikes)q.combatLaunched=true}
+   if(s.attack==='roll'&&m.teeth.some(t=>!t.combatLaunched))game.api.playSound('wobbleTeeth');
    for(const t of m.teeth)if(!t.combatLaunched){t.combatLaunched=true;spawnTooth(e,t)}
    if(s.attack==='beam'&&m.beamAge!==null){
     const age=m.beamAge/beamPace,i=Math.min(s.beamHit,s.beamWalls.length-1),to=s.beamWalls[i]||{x:s.beamStart.x+100*Math.sin(age*6),y:s.beamStart.y},from=i>0?s.beamWalls[i-1]:s.beamStart;
@@ -180,6 +191,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
    if(s.attack&&!rig.busy(m)){const foot=s.attack==='spikes';s.attack=null;s.gap=foot?1.8:.35;s.beamWalls=[];}
    if(game.state.player.hp<=0)break;
   }
+  syncWobbleAttackSounds(e,s);
  }
  function availableParts(s){return s.phase===1&&s.blockStun>0&&s.cutWindow?[s.cutWindow.part]:[]}
  function cutWobbleStroke(points){
@@ -204,7 +216,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
    s.attack=null;s.gap=.65;s.beamWalls=[];s.blockStun=0;s.cutWindow=null;s.punchEnd=null;s.trapped=0;s.trapProbe=null;
    const cuts=s.model.armCuts+s.model.legCuts+s.model.stalkCuts;
    e.hp=Math.max(e.maxHp*.04,e.hp-e.maxHp*.16);
-   game.api.damageNumber(e,e.maxHp*.16,'physical',cuts===6);game.api.playSound('pencil');game.api.floatText(e.x,e.y-e.r-18,s.model[{arm:'armCuts',leg:'legCuts',stalk:'stalkCuts'}[name]]===2?'DETACHED!':'CUT · COUNTER NEXT ATTACK!','#28796d');
+   game.api.damageNumber(e,e.maxHp*.16,'physical',cuts===6);game.api.playSound('wobbleTear');game.api.floatText(e.x,e.y-e.r-18,s.model[{arm:'armCuts',leg:'legCuts',stalk:'stalkCuts'}[name]]===2?'DETACHED!':'CUT · COUNTER NEXT ATTACK!','#28796d');
    if(name==='leg'&&s.model.legCuts===2)phaseTwo.siphon(e);
    if(cuts===6)phaseTwo.begin(e);return true;
   }return false;
