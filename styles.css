@@ -922,3 +922,16 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 .wobble-controls select{min-height:44px;padding:7px 10px;color:#26343d;background:#fff7df;border:2px solid #26343d;border-radius:8px;font:inherit}
 
 .wobble-portrait{display:block;width:96px;height:96px;overflow:hidden;flex-shrink:0}.monster-card-heading .wobble-portrait img{width:288px;height:192px;max-width:none;object-fit:fill}
+
+/* Post-victory drawing happens on its own little scrap, with generous touch targets. */
+#wobbleRepairOverlay{z-index:45;overflow:auto;align-items:start;background:#182329d9}
+.wobble-repair-paper{width:min(580px,100%);margin:auto;padding:20px;background:#fff9e9;border:2px solid #bba783;border-radius:12px;box-shadow:5px 6px #9d896a;color:#26343a;text-align:center}
+.wobble-repair-paper h2{font:36px "Stevie Pencil",cursive;color:#3261ad;margin:8px}
+.wobble-repair-win{font-size:12px;font-weight:bold;letter-spacing:1px;color:#28796d}
+#wobbleRepairSpeech{font:22px "Stevie Pencil",cursive;line-height:1.25;min-height:2.5em;margin:8px 0}
+#wobbleRepairScene{display:block;width:100%;height:auto}
+#wobbleRepairPad{display:block;width:100%;height:auto;touch-action:none;background:#fffdf5;border:2px dashed #a08a65;border-radius:8px}
+#wobbleRepairHint{font-size:14px;line-height:1.4;margin:10px 0}
+.wobble-repair-paper button{min-height:44px;margin:4px;padding:10px 12px}
+.wobble-repair-actions{display:flex;flex-wrap:wrap;justify-content:center;margin-top:8px}
+@media(max-width:500px){.wobble-repair-paper{padding:12px}.wobble-repair-paper h2{font-size:28px}#wobbleRepairSpeech{font-size:19px}.wobble-repair-paper button{font-size:13px}}

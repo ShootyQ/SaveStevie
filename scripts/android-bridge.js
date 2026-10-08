@@ -12,7 +12,7 @@ if (Capacitor.isNativePlatform()) {
     else window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
   });
   App.addListener('appStateChange', ({ isActive }) => {
-    if (isActive) immerse();
+    if (isActive) { immerse(); window.dispatchEvent(new Event('savestevie:foreground')); }
     else window.dispatchEvent(new Event('savestevie:background'));
   });
 }

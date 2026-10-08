@@ -150,7 +150,7 @@ function killEnemy(e){
   }
   game.api.dropPlaguefire(e);
   game.state.enemies=game.state.enemies.filter(x=>x!==e);
-  game.api.beginWaveFinale(e);
+  if(!game.api.wobbleRepairActive?.())game.api.beginWaveFinale(e);
 }
 
 function nearestEnemy(x,y,maxD){

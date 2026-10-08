@@ -7,7 +7,7 @@ boss stomp/roar recordings are reused.
 Walls survive his entrance. Pausing/backgrounding stops the entrance; reduced
 motion removes the zoom. Scratch Page’s wave-10 boss shortcut starts combat directly.
 
-Detaching the arm, spiky leg and eye stalk starts **phase two**. Four player-directed spike splats now win the encounter and award normal boss rewards. Phase three is still future work.
+Detaching the arm, spiky leg and eye stalk starts **phase two**. Four player-directed spike splats win the encounter and award the boss kill before a friendly repair scene. Phase three is a friendly post-victory repair scene: the player redraws his appendages, they attach, and he walks off happy.
 
 ## Draw and defend
 
@@ -81,3 +81,9 @@ After a 2.2-second tuck warning, Wobblechomp rolls at 175 px/s (145 on narrow pa
 Unlimited strokes cost no ink, do not spend or earn Freehand bank charge, and cannot refund ink through closed loops. New bumpers last at most ten seconds and are capped at forty including copied lines. Death, victory and leaving the run restore normal ink rules. Pause stops the roll and siphon; rendering is pure.
 
 The walking rig follows actual travel distance, with squash, lean, swinging limbs and a stronger hop when the leg is missing. Blocked movement does not advance the stride, and reduced motion suppresses decorative gait. The preview includes a Wonky walk toggle. Ink in the foot and pot uses canvas overlays on the existing atlas; no extra asset download.
+
+## Friendly finale
+
+The fourth spike splat grants the boss kill and victory music once. Combat stops immediately, and the ordinary last-monster pop is replaced by Wobblechomp asking for help. The player can continue directly or draw three parts in separate boxes. First strokes start at the shoulder, hip or stalk-base marker. Strokes are colored yellow with black outlines, closed shapes gain orange spots, and the stalk gets an eye at its tip. Each submitted drawing attaches to the body; all three remain visible during his happy walk away. Normal wave-clear rewards follow departure.
+
+Drawing costs no ink and uses no combat RNG. Each part is bounded to sixteen strokes of four hundred points. Cancelled pointers discard unfinished strokes, and reset/menu/death clears the scene. Pause, hidden tabs and app backgrounding hold the celebration. A keyboard-accessible Stevie doodle button supplies each part, and Tab stays inside the dialog. The friendly scene does not change saved progression or award another kill.

@@ -2,6 +2,7 @@
 DoodleDefender.systems.loop = function createLoopSystem(game) {
 function update(dt){
   game.api.syncSoundEffects();game.api.updateMenuPencil(dt);
+  if(game.api.wobbleRepairActive()){game.api.updateWobbleRepair(dt);return;}
   if(game.api.waveFinaleActive()){if(game.state.player.hp<=0){game.api.resetWaveFinale();game.api.gameOver();return}game.api.updateWaveFinale(dt);game.api.updateUI();return;}
   // The wave-clear portrait celebrates while combat is stopped, but respects
   // manual pause and the build/upgrade/specialization screens.
