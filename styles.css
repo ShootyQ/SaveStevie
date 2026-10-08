@@ -704,6 +704,11 @@ button.paper-slip:focus-visible{outline:3px dashed #3562be;outline-offset:3px}
 #startOverlay #splashOptionsBtn{grid-area:settings}
 #startOverlay .splash-footer{grid-area:footer;justify-self:center;width:auto;max-width:100%;margin:12px 0 0;padding:0;transform:none;line-height:1.15}
 #startOverlay .copyright-notice{font-family:'Stevie Pencil',cursive;font-size:12px;margin:0;color:#d3c9b7}
+/* Android uses light notebook paper, so cover lettering needs dark ink. */
+html.native-app #startOverlay .splash-title{color:#25313a}
+html.native-app #startOverlay .splash-title span{color:#2858a8}
+html.native-app #startOverlay .splash-tagline{color:#46535b}
+html.native-app #startOverlay .copyright-notice{color:#51483b}
 /* Only these two controls remain on the live paper. */
 .bottom{height:52px;flex:0 0 52px;justify-content:flex-end;flex-wrap:nowrap;background:transparent;border:0;box-shadow:none;padding:4px 6px;gap:9px}
 .bottom button{flex:0 0 104px;max-width:140px;min-height:44px;height:44px;flex-direction:row;gap:7px;font-family:'Stevie Pencil',cursive;font-weight:400;font-size:21px;border-width:1px}
