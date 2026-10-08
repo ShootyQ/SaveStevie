@@ -72,11 +72,11 @@ Portrait phones alternate attack positions above and below Stevie, with side rou
 
 Tall desktop pages reserve space below the HUD and all three instruction lines for the complete upright stalk. The same top boundary applies to the entrance, idle movement, rolls, wall routes and resize recovery.
 
-## Phase two: bumper doodles
+## Phase two: doodle rails
 
 The detached spiky foot drains into an ink pot over 1.6 seconds. The pot becomes unlimited only after all six cuts; the ink bar shows ∞ while stored ink remains a finite max-ink value. Existing perks and saved progression stay intact.
 
-After a 2.2-second tuck warning, Wobblechomp rolls at 175 px/s (145 on narrow pages). Draw angled lines to reflect his roll toward the marked fallen spiky foot. A redirected roll remains eligible to score for six seconds; naturally bouncing into the foot does not score. Each bumper is consumed on impact, so each of the four spike hits requires a fresh redirect. Ordinary damage cannot bypass this phase. The fort harmlessly deflects his body; two warned tooth helpers spawn every 4.5 seconds with the existing ten-helper cap.
+After a 2.2-second tuck warning, Wobblechomp rolls at 175 px/s (145 on narrow pages). Draw lines to guide his roll toward the marked fallen spiky foot. He follows the tangent that best matches his incoming movement (stroke order breaks a perpendicular tie), rides around bends with bounded corner offsets, and rolls off the end at normal speed. A redirected roll remains eligible to score for six seconds; naturally bouncing into the foot does not score. Each rail stays solid during the ride and is consumed on exit, spike impact, or an interruption at the page edge/fort. If the rail is erased or expires, he releases immediately. Each of the four spike hits requires another line ride. Ordinary damage cannot bypass this phase. The fort harmlessly deflects his body; two warned tooth helpers spawn every 4.5 seconds with the existing ten-helper cap.
 
 Unlimited strokes cost no ink, do not spend or earn Freehand bank charge, and cannot refund ink through closed loops. New bumpers last at most ten seconds and are capped at forty including copied lines. Death, victory and leaving the run restore normal ink rules. Pause stops the roll and siphon; rendering is pure.
 
