@@ -135,13 +135,18 @@ DoodleDefender.WobblechompRig=(()=>{
   const x=c.x-a.x,y=c.y-a.y,t=(x*ey-y*ex)/den,u=(x*dy-y*dx)/den;
   return t>=0&&t<=1&&u>=0&&u<=1?t:null;
  }
- function cutStroke(m,points,reduced=false,allowedParts=null){
+ function circleCrossing(a,b,center,radius){
+  const dx=b.x-a.x,dy=b.y-a.y,ox=a.x-center.x,oy=a.y-center.y,A=dx*dx+dy*dy;
+  if(A<1e-8)return null;const C=ox*ox+oy*oy-radius*radius;if(C<=0)return 0;
+  const B=2*(ox*dx+oy*dy),D=B*B-4*A*C;if(D<0)return null;const t=(-B-Math.sqrt(D))/(2*A);return t>=0&&t<=1?t:null;
+ }
+ function cutStroke(m,points,reduced=false,allowedParts=null,hitRadii=null){
   if(m.rollAge!==null||!Array.isArray(points)||points.length<2||points.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))return false;
   let length=0;for(let i=1;i<points.length;i++)length+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);if(length<20)return false;
   const p=pose(m,reduced);let chosen=null;
   // First joint crossed wins; one released gesture can cut only one part once.
   for(let i=1;i<points.length&&!chosen;i++){
-   let nearest=Infinity;for(const limb of Object.values(p.parts))if(limb.cuts<2&&(!allowedParts||allowedParts.includes(limb.name))){const t=crossing(points[i-1],points[i],limb.joint.a,limb.joint.b);if(t!==null&&t<nearest){chosen=limb;nearest=t}}
+   let nearest=Infinity;for(const limb of Object.values(p.parts))if(limb.cuts<2&&(!allowedParts||allowedParts.includes(limb.name))){const radius=hitRadii?.[limb.name]||0,center={x:(limb.joint.a.x+limb.joint.b.x)/2,y:(limb.joint.a.y+limb.joint.b.y)/2};const t=radius>0?circleCrossing(points[i-1],points[i],center,radius):crossing(points[i-1],points[i],limb.joint.a,limb.joint.b);if(t!==null&&t<nearest){chosen=limb;nearest=t}}
   }
   if(!chosen)return false;
   const name=chosen.name,key=specs[name].cuts;m[key]++;m.lastCut=name;m.reaction=.8;
