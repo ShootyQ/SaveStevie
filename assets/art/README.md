@@ -150,3 +150,11 @@ with their own cut threads, dangling poses and independent falling pieces.
 The foot anchor is (12%, 52%); the eye-stem anchor is (50%, 85%). The renderer
 reuses this atlas for all missing-part combinations; no new image assets are
 needed for the leg/eye animation slice. Spikes and the beam are canvas effects.
+
+## Wobblechomp tooth doodles
+
+`wobble-tooth.png` is an original generated transparent cream/orange crayon
+tooth creature with uneven eyes and two little root feet. The original PNG is
+preserved unchanged. The Wobblechomp preview loads it on opening, then uses
+transforms for staggered airborne spin, landing squash/bounce, hopping and
+horizontal facing. It is an animation preview helper, not a normal wave enemy.

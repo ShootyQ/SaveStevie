@@ -43,3 +43,23 @@ const single=rig.create(),sweep=[...limbCross(single,'arm'),...limbCross(single,
 assert.ok(rig.cutStroke(single,sweep));assert.equal(single.armCuts+single.legCuts+single.stalkCuts,1,'a long scribble never cuts multiple parts');
 assert.equal(rig.cutStroke(single,[{x:NaN,y:0},{x:0,y:0}]),false);
 console.log('PASS: all six missing-part orders, three settled pieces, attack exclusivity, spike warning/fan, interrupted kick/beam, dangling stalk attack, and one joint per gesture.');
+const toothArt={naturalWidth:1024,naturalHeight:1024},mouth=rig.create();
+assert.ok(rig.shakeTeeth(mouth));assert.equal(rig.punch(mouth),false,'teeth shake owns the attack pose');
+for(let i=0;i<8;i++)rig.update(mouth,.1);assert.equal(mouth.teeth.length,0);assert.equal(mouth.teethPlan.length,8);
+rig.update(mouth,.1);assert.equal(mouth.teeth.length,1,'first tooth visibly launches before the pack');assert.equal(rig.toothPose(mouth.teeth[0]).phase,'flying');
+for(let i=0;i<5;i++)rig.update(mouth,.1);assert.equal(mouth.teeth.length,8);assert.equal(new Set(mouth.teeth.map(t=>t.target.x)).size,8);
+const first=mouth.teeth[0];while(first.age<first.flight+.1)rig.update(mouth,.01);
+assert.equal(rig.toothPose(first).phase,'bouncing');assert.ok(rig.toothPose(first).y<first.target.y,'landing has a visible bounce');
+const landedX=first.x;while(first.age<first.flight+.5)rig.update(mouth,.01);assert.equal(first.x,landedX,'landing pause precedes movement');
+while(first.age<first.flight+.7)rig.update(mouth,.01);assert.equal(rig.toothPose(first).phase,'scurrying');assert.notEqual(first.x,landedX);
+first.x=70;first.vx=-60;rig.update(mouth,.1);assert.ok(first.vx>0,'minion turns around at the edge');
+assert.equal(rig.toothPose(first,true).angle,0);assert.equal(rig.toothPose(first,true).y,first.y,'reduced motion suppresses decorative hopping');
+let beforeTeeth=JSON.stringify(mouth);rig.draw(ctx,image,mouth,{toothImage:toothArt});rig.draw(ctx,image,mouth,{toothImage:toothArt,reduced:true});assert.equal(JSON.stringify(mouth),beforeTeeth,'tooth rendering is pure');
+const amounts=[];for(let batch=0;batch<6;batch++){
+ while(rig.busy(mouth))rig.update(mouth,.1);assert.ok(rig.shakeTeeth(mouth));amounts.push(mouth.teethPlan.length);
+ for(let i=0;i<27;i++){rig.update(mouth,.1);assert.ok(mouth.teeth.length<=20,'repeated packs stay bounded')}
+}
+assert.deepEqual(amounts,[9,10,6,7,8,9]);for(let i=0;i<100;i++)rig.update(mouth,.1);assert.equal(mouth.teeth.length,0,'preview minions fade and expire');
+const toothlessLimbs=rig.create();for(const name of ['arm','leg','stalk']){rig.cutStroke(toothlessLimbs,limbCross(toothlessLimbs,name));rig.cutStroke(toothlessLimbs,limbCross(toothlessLimbs,name));}
+assert.ok(rig.shakeTeeth(toothlessLimbs),'mouth attack works with every appendage missing');
+console.log('PASS: teeth warning, staggered 6–10 launches, flight/bounce/landing pause/scurry, turning, pure drawing, reduced motion, bounded repeats/expiry and missing-part compatibility.');

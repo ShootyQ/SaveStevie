@@ -271,11 +271,11 @@
 <div class="overlay build-overlay" id="wobblePreviewOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="wobblePreviewTitle">
   <div class="cardbox build-box wobble-preview">
     <div class="build-heading"><div><span class="section-kicker">THE SCRATCH PAGE</span><h2 id="wobblePreviewTitle">Wobblechomp</h2></div><button class="secondary" id="closeWobblePreviewBtn">Close</button></div>
-    <p class="wobble-intro">Try his punch, spike kick and sweeping eye beam. Cut any circled joint twice to detach that part.</p>
+    <p class="wobble-intro">Try his punch, spike kick, eye beam and teeth shake. Cut any circled joint twice to detach that part.</p>
     <canvas id="wobbleCanvas" aria-label="Wobblechomp animation preview. Use a mouse or finger to cut across the arm, leg or eye-stalk threads twice."></canvas>
-    <div class="wobble-feedback"><strong id="wobbleCutCount">0 / 2 cuts</strong><span id="wobbleStatus" role="status" aria-live="polite"></span></div>
-    <div class="wobble-controls"><button id="wobblePunchBtn">Punch</button><button id="wobbleSpikesBtn">Spikes</button><button id="wobbleBeamBtn">Eye beam</button><button class="secondary" id="wobblePauseBtn" aria-pressed="false">Pause</button><button class="secondary" id="wobbleResetBtn">Reset</button><label><input id="wobbleAutoPunch" type="checkbox" checked> Cycle attacks</label><label>Speed <select id="wobbleSpeed"><option value="1">Inspect</option><option value="2">Quick · 2×</option></select></label></div>
-    <p class="wobble-preview-note">Animation preview: detach the arm, spiky leg and eye stalk in any order. Your run stays paused; this page spends no ink or scraps.</p>
+    <div class="wobble-feedback"><strong id="wobbleCutCount">0 / 2 cuts</strong><span id="wobbleToothCount"></span><span id="wobbleStatus" role="status" aria-live="polite"></span></div>
+    <div class="wobble-controls"><button id="wobblePunchBtn">Punch</button><button id="wobbleSpikesBtn">Spikes</button><button id="wobbleBeamBtn">Eye beam</button><button id="wobbleTeethBtn">Teeth!</button><button class="secondary" id="wobblePauseBtn" aria-pressed="false">Pause</button><button class="secondary" id="wobbleResetBtn">Reset</button><label><input id="wobbleAutoPunch" type="checkbox" checked> Cycle attacks</label><label>Speed <select id="wobbleSpeed"><option value="1">Inspect</option><option value="2">Quick · 2×</option></select></label></div>
+    <p class="wobble-preview-note">Animation preview: detach his parts or shake out a pack of bouncing teeth. Your run stays paused; this page spends no ink or scraps.</p>
   </div>
 </div>
 <div class="overlay build-overlay" id="statisticsOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="statisticsTitle">
@@ -326,6 +326,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Wobblechomp’s tooth trouble</h3><p>Try Teeth! in his animation preview. His mouth rattles before launching 6–10 wonky tooth doodles toward marked landing spots. They bounce, pause, then scurry and turn around. Quick speed and the automatic attack cycle include the new move.</p></article>
       <article class="build-entry"><h3>Wobblechomp comes apart</h3><p>The animation preview now includes a spike kick and sweeping eye beam. Cut the arm, spiky leg or eye stalk twice to detach it, in any order. Try Quick speed for faster attacks, or cycle through his remaining moves automatically.</p></article>
       <article class="build-entry"><h3>Wobblechomp’s first moves</h3><p>The Scratch Page has an animation preview for Wobblechomp. Watch his distant punch, cut through his shoulder threads twice, and see his arm dangle and fall off. Pause, reset or repeat punches to try it again.</p></article>
       <article class="build-entry"><h3>Staple Snack fights dirty</h3><p>Staple Snack chains attacks: four-burst staple stitches, wall-crushing charges from changing angles, and paper punches followed by a volley from the other side. New ink during every charge warning jams his armor; disabling both nests or crossing his clamp also earns an attack window. His faster Jamling packs keep you busy while the final phase brings eight misfire bursts and a three-burst overload.</p></article>
