@@ -143,7 +143,7 @@ The preview crops cells at draw time and connects the parts with procedural
 noodle limbs; body-part combinations need no extra complete-monster sprites.
 The fist's painted wrist anchor is at roughly (65%, 92%) within its cell.
 The atlas loads on opening the Scratch Page preview, not during normal combat.
-The tucked body is reserved for a later rolling slice.
+The tucked body supplies the rolling core, with its fixed support feet curled inward.
 
 The spiky foot and eye now have animated wind-up, kick/beam and recovery poses,
 with their own cut threads, dangling poses and independent falling pieces.
@@ -158,3 +158,9 @@ tooth creature with uneven eyes and two little root feet. The original PNG is
 preserved unchanged. The Wobblechomp preview loads it on opening, then uses
 transforms for staggered airborne spin, landing squash/bounce, hopping and
 horizontal facing. It is an animation preview helper, not a normal wave enemy.
+
+The tuck-and-roll preview blends to the existing tucked core and transforms
+only attached appendages around it. Missing parts remain separate fallen
+pieces. Rocking, rolling rotation, braking and unfolding use the same atlas,
+with no new images. Removing the spiky leg suppresses rolling spike bursts;
+the tooth doodle is reused for rolling drops and landing animation.

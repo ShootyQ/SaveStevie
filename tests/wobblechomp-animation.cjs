@@ -63,3 +63,30 @@ assert.deepEqual(amounts,[9,10,6,7,8,9]);for(let i=0;i<100;i++)rig.update(mouth,
 const toothlessLimbs=rig.create();for(const name of ['arm','leg','stalk']){rig.cutStroke(toothlessLimbs,limbCross(toothlessLimbs,name));rig.cutStroke(toothlessLimbs,limbCross(toothlessLimbs,name));}
 assert.ok(rig.shakeTeeth(toothlessLimbs),'mouth attack works with every appendage missing');
 console.log('PASS: teeth warning, staggered 6–10 launches, flight/bounce/landing pause/scurry, turning, pure drawing, reduced motion, bounded repeats/expiry and missing-part compatibility.');
+for(let mask=0;mask<8;mask++){
+ const rolling=rig.create();for(const [i,name] of ['arm','leg','stalk'].entries())if(mask&(1<<i)){rig.cutStroke(rolling,limbCross(rolling,name));rig.cutStroke(rolling,limbCross(rolling,name));}
+ const cuts=[rolling.armCuts,rolling.legCuts,rolling.stalkCuts];assert.ok(rig.tuckAndRoll(rolling));assert.equal(rig.shakeTeeth(rolling),false);
+ const phases=new Set();const seenSpikes=new Set();let sawTravel=false,sawTurn=false;
+ for(let step=0;step<95;step++){
+  rig.update(rolling,.05);const r=rig.rollPose(rolling);
+  if(r){phases.add(r.phase);if(r.phase==='rolling'){sawTravel ||= Math.abs(r.x-570)>200;sawTurn ||= r.direction!==rolling.rollDirection}
+   assert.ok(r.x>=160&&r.x<=790);assert.ok(r.y>=390&&r.y<=505);
+   assert.equal(rig.cutStroke(rolling,limbCross(rolling,'arm')),false,'tucked joints are unavailable');
+   assert.equal(rig.rollPose(rolling,true).angle,0);
+   const tiles=[],record=new Proxy({},{get:(_,key)=>key==='drawImage'?(img,...args)=>tiles.push(args):()=>{}}),before=JSON.stringify(rolling);
+   rig.draw(record,image,rolling,{toothImage:toothArt});rig.draw(ctx,image,rolling,{toothImage:toothArt,reduced:true});assert.equal(JSON.stringify(rolling),before);
+   for(const [i,name] of ['arm','leg','stalk'].entries())if(mask&(1<<i)){
+    const col={arm:1,leg:2,stalk:0}[name],row=name==='stalk'?1:0;
+    // Detached pieces still render on the page; attached layer count must not grow.
+    assert.equal(tiles.filter(a=>a.length===8&&a[0]===col*512&&a[1]===row*512).length,1,'missing part stays a single fallen piece');
+   }
+  }
+  for(const spike of rolling.spikes)seenSpikes.add(spike);
+  assert.deepEqual([rolling.armCuts,rolling.legCuts,rolling.stalkCuts],cuts);
+ }
+ assert.ok(sawTravel&&sawTurn);assert.deepEqual([...phases].sort(),['braking','rolling','tucking','unfolding','winding']);
+ assert.equal(rolling.rollAge,null);assert.equal(rolling.rollDrops,3);assert.equal(rolling.teeth.length,3);assert.equal(seenSpikes.size,mask&2?0:9);
+ const previousDirection=rolling.rollDirection;assert.ok(rig.tuckAndRoll(rolling));assert.equal(rolling.rollDirection,-previousDirection,'repeats alternate the first direction');
+}
+const damaged=rig.create();for(const name of ['arm','leg','stalk'])rig.cutStroke(damaged,limbCross(damaged,name));assert.ok(rig.tuckAndRoll(damaged));for(let i=0;i<46;i++)rig.update(damaged,.1);assert.deepEqual([damaged.armCuts,damaged.legCuts,damaged.stalkCuts],[1,1,1],'dangling state survives roll');
+console.log('PASS: all eight roll part combinations, tuck/wind/travel/turn/brake/unfold, hidden-joint rejection, missing-leg spike suppression, three tooth drops, pure/reduced drawing, alternating repeats and persistent dangling parts.');

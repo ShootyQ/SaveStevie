@@ -4,7 +4,7 @@ Open **Settings → Test a wave / boss → Wobblechomp · Animation preview**.
 This is an animation preview; the current wave-10 encounter still uses
 Staple Snack. The preview neither spends ink nor changes combat or saved progress.
 
-Try **Punch**, **Spikes**, **Eye beam**, or **Teeth!**. Spikes lift the foot before launching
+Try **Punch**, **Spikes**, **Eye beam**, **Teeth!**, or **Tuck & roll**. Spikes lift the foot before launching
 five projectiles; the eye coils back and marks its aim before sweeping a beam.
 Draw across any circled joint and lift your finger. One gesture can only make
 one cut to one part, even if it crosses several joints repeatedly. The first cut
@@ -14,8 +14,21 @@ same rig. A missing spiky leg adds a little imbalance to the body’s idle pose.
 
 **Inspect** keeps the original slow animation timing; **Quick · 2×** advances
 all animations twice as fast, including warnings and recovery. **Cycle attacks**
-rotates through punch, spikes, beam and teeth, skipping detached parts. This is a pace
+rotates through punch, spikes, beam, teeth and rolling, skipping detached parts. This is a pace
 preview, not the final combat balance. Attack poses are mutually exclusive.
+
+**Tuck & roll** blends the upright body into its tucked core while folding attached
+parts inward. A marked route and rocking wind-up precede three rolling legs of
+the path: across the page, back the other way, then home to brake and unfold.
+Successive rolls alternate the first direction. Three bursts each emit three
+spikes while the spiky leg is attached; three separate teeth drop along the
+route with short arcs, marked landings and the existing bounce/wait/scurry.
+Removing the leg stops rolling spikes; teeth drops remain available. Missing
+and dangling appendages retain their state when he unfolds. Cut guides hide
+while tucked, and strokes cannot cut hidden joints during this animation.
+Reduced motion keeps translation and the stage changes, with no core spinning,
+wind-up squash/rocking, decorative bounce or speed streaks. Both preview speeds
+and the attack cycle include the new move.
 
 Reset restores the assembled monster. Pointer cancellation does not count as a
 cut. Pause and backgrounding stop the preview; closing returns to Settings.
@@ -48,10 +61,11 @@ loaded alongside the atlas only when opening the preview. No new sounds ship
 with this animation slice. Reduced motion suppresses the rattle, airborne spin,
 landing squash and decorative hops, while keeping launch and travel visible.
 
-The arm, spiky leg and eye stalk are interactive. Rolling,
-drawing erasure, boss damage and combat integration are later work. Spikes
-and beams in this preview are animation effects only. The tucked-body art is
-prepared but has no rolling animation yet.
+The arm, spiky leg and eye stalk are interactive. Drawing erasure, boss damage
+and combat integration are later work. Spikes
+and beams in this preview are animation effects only. Rolling reuses the tucked-body atlas cell; its curled little support feet are
+part of the core, while the removable giant fist, spiky leg and eye remain
+separate layers. This slice adds no new image assets.
 
 ## Checks
 
@@ -62,7 +76,8 @@ prepared but has no rolling animation yet.
 - `npm run build:web`
 
 The browser check covers desktop, two portrait phone sizes and landscape,
-all four attacks, teeth warning/flight/bounce/scurry and bounded repeated packs, repeated crossings, cancellation, all six missing-part orders,
+all five attacks, the roll stages and turns, all eight roll part combinations,
+teeth warning/flight/bounce/scurry and bounded repeated packs, repeated crossings, cancellation, all six missing-part orders,
 falling/settling, quick timing, auto cycling, pause,
 resize, reduced motion, keyboard focus, backgrounding and unchanged combat/save.
 These are Chromium checks; physical Android testing is still useful.
