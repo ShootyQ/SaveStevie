@@ -10,7 +10,7 @@ function update(dt){
 
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
   if(game.api.synergyRevealActive()||game.api.beginSynergyReveal())return;
-  if(game.api.firstBossIntroActive()){game.api.updateFirstBossIntro(dt);game.api.updateUI();return}
+  if(game.api.bossEntranceActive()){game.api.updateBossEntrance(dt);game.api.updateUI();return}
   if(game.state.wave===5&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
   game.api.updateRefuge(dt);
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
@@ -131,6 +131,16 @@ function update(dt){
 
     if(game.api.waveFinaleActive())break;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
+    if(game.api.isStapleBoss(e)){
+      if(e.freeze<=0&&e.stun<=0){
+        const hit=game.api.nearestWallHit(e)||game.api.gravityWallHit(e);
+        if(hit){const dps=game.api.applyInkContact(e,dt,hit.wall);game.api.dealDamage(e,dps*dt,'physical')}
+        if(e.hp<=0)continue;
+        game.api.moveStapleBossIdle(e,dt);
+      }
+      continue;
+    }
+    if(e.type==='jamling'&&game.api.jamlingContact(e,dt))continue;
     if(game.api.contactStevie(e))continue;
     const immobilized=e.stun>0||e.freeze>0;
     game.api.pullGravity(e,dt,immobilized);
