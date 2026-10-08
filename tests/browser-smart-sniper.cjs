@@ -39,7 +39,20 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    e.freeze=1;const before={x:e.x,y:e.y};g.api.update(.1);if(e.x!==before.x||e.y!==before.y)throw Error('Frozen sniper moved');
    g.state.paused=true;const snapshot=JSON.stringify(g.state);g.api.update(.1);if(snapshot!==JSON.stringify(g.state))throw Error('Pause changed combat');
   });
-  assert.deepEqual(errors,[]);console.log('PASS: smart sniper at',viewport.width,JSON.stringify(result));await page.close();
+  await page.evaluate(()=>{
+   const g=testGame;g.api.resetRun();g.state.wave=13;g.api.startWave();const p=g.state.player;
+   const e=g.api.spawnEnemy(false,p.x-120,p.y,'sniper'),other=g.api.spawnEnemy(false,p.x+120,p.y,'sniper'),otherHp=other.hp,playerHp=p.hp;
+   for(let i=0;i<2;i++){
+    g.state.walls=[{pts:[{x:p.x-60,y:p.y-45},{x:p.x-60,y:p.y+45}],thick:8,hp:100,life:100}];
+    g.api.fireSniper(e);g.api.updateEnemyShots(.5);
+    if(!g.state.enemyShots[0]?.reflected||g.state.enemyShots[0].vx>=0)throw Error('Pencil did not turn toward shooter');
+    const before=JSON.stringify(g.state);g.api.draw();if(before!==JSON.stringify(g.state))throw Error('Returned pencil render changed state');
+    g.api.updateEnemyShots(.5);
+    if(g.state.enemies.includes(e)!==(i===0))throw Error('Wave-13 return threshold failed');
+    if(p.hp!==playerHp||other.hp!==otherHp)throw Error('Return damaged wrong target');
+   }
+  });
+  assert.deepEqual(errors,[]);console.log('PASS: smart sniper and owned pencil returns at',viewport.width,JSON.stringify(result));await page.close();
  }
  }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exitCode=1});
