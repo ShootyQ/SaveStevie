@@ -52,11 +52,12 @@ game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
 game.dom.$('resetNotebookBtn').onclick=game.api.resetNotebookProgress;
 window.addEventListener('keydown',game.api.handleInfoKey);
 window.addEventListener('savestevie:background',()=>{
+  if(game.api.wobbleRepairActive()){game.api.stopSoundEffects();return;}
   if(game.state.running&&!game.api.infoOpen()&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec)game.api.openInfo('pause');
   game.api.stopSoundEffects();
 });
 game.dom.canvas.addEventListener('pointerdown',e=>{
-  if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.bossEntranceActive())return;
+  if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return;
   if(!game.api.canStartStroke()){game.api.setMsg('Let your ink refill to 6 before drawing.');return;}
   game.state.drawing=true;game.state.currentWall=[game.api.pointerPos(e)];game.dom.canvas.setPointerCapture(e.pointerId)
 });

@@ -61,7 +61,7 @@ DoodleDefender.WobblePhaseTwo=function(game,{state,rig,spawnTooth,topMargin}){
   s.rollDistance+=Math.hypot(e.x-old.x,e.y-old.y);s.model.ballAngle+=Math.hypot(e.x-old.x,e.y-old.y)/24*(s.rollVX<0?-1:1);s.trail.push({x:e.x,y:e.y,life:.45});s.trail=s.trail.filter(p=>(p.life-=dt)>0).slice(-24);
   const leg=s.debris.find(d=>d.part==='leg');if(leg&&s.hitCooldown<=0&&Math.hypot(e.x-leg.x,e.y-leg.y)<e.r+18){
    release(e,s);const x=e.x-leg.x,y=e.y-leg.y,length=Math.hypot(x,y)||1;let ux=x/length,uy=y/length;if(!x&&!y){ux=-s.rollVX/speed();uy=-s.rollVY/speed()}e.x=leg.x+ux*(e.r+20);e.y=leg.y+uy*(e.r+20);s.rollVX=ux*speed();s.rollVY=uy*speed();s.hitCooldown=1;
-   if(s.armedFor>0){s.phaseHits++;s.armedFor=0;e.hp=Math.max(0,s.phaseHp*(1-s.phaseHits/requiredHits));game.api.damageNumber(e,s.phaseHp/requiredHits,'physical',false);game.api.burst(leg.x,leg.y,'#203b4d',12);game.api.playSound('rock');game.api.floatText(e.x,e.y-35,'SPIKE SPLAT! '+s.phaseHits+'/'+requiredHits,'#28796d');if(e.hp<=0)game.api.killEnemy(e)}
+   if(s.armedFor>0){s.phaseHits++;s.armedFor=0;e.hp=Math.max(0,s.phaseHp*(1-s.phaseHits/requiredHits));game.api.damageNumber(e,s.phaseHp/requiredHits,'physical',false);game.api.burst(leg.x,leg.y,'#203b4d',12);game.api.playSound('rock');game.api.floatText(e.x,e.y-35,'SPIKE SPLAT! '+s.phaseHits+'/'+requiredHits,'#28796d');if(e.hp<=0){game.api.beginWobbleRepair(e);game.api.killEnemy(e)}}
    else game.api.floatText(e.x,e.y-30,'DRAW A RAIL FIRST!','#966425');
   }
  }
