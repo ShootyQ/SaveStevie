@@ -278,7 +278,7 @@
     <p class="wobble-intro">Try his attacks and tuck-and-roll. Cut any circled joint twice to detach that part.</p>
     <canvas id="wobbleCanvas" aria-label="Wobblechomp animation preview. Use a mouse or finger to cut across the arm, leg or eye-stalk threads twice."></canvas>
     <div class="wobble-feedback"><strong id="wobbleCutCount">0 / 2 cuts</strong><span id="wobbleToothCount"></span><span id="wobbleStatus" role="status" aria-live="polite"></span></div>
-    <div class="wobble-controls"><button id="wobblePunchBtn">Punch</button><button id="wobbleSpikesBtn">Spikes</button><button id="wobbleBeamBtn">Eye beam</button><button id="wobbleTeethBtn">Teeth!</button><button id="wobbleRollBtn">Tuck &amp; roll</button><button class="secondary" id="wobblePauseBtn" aria-pressed="false">Pause</button><button class="secondary" id="wobbleResetBtn">Reset</button><label><input id="wobbleAutoPunch" type="checkbox" checked> Cycle attacks</label><label>Speed <select id="wobbleSpeed"><option value="1">Inspect</option><option value="2">Quick · 2×</option></select></label></div>
+    <div class="wobble-controls"><button id="wobbleWalkBtn" class="secondary" aria-pressed="false">Wonky walk</button><button id="wobblePunchBtn">Punch</button><button id="wobbleSpikesBtn">Spikes</button><button id="wobbleBeamBtn">Eye beam</button><button id="wobbleTeethBtn">Teeth!</button><button id="wobbleRollBtn">Tuck &amp; roll</button><button class="secondary" id="wobblePauseBtn" aria-pressed="false">Pause</button><button class="secondary" id="wobbleResetBtn">Reset</button><label><input id="wobbleAutoPunch" type="checkbox" checked> Cycle attacks</label><label>Speed <select id="wobbleSpeed"><option value="1">Inspect</option><option value="2">Quick · 2×</option></select></label></div>
     <p class="wobble-preview-note">Animation preview: cuts, bouncing teeth, and a rolling ball of trouble. Your run stays paused; this page spends no ink or scraps.</p>
   </div>
 </div>
@@ -330,6 +330,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Wobblechomp’s ink pot and bumper battle</h3><p>His spiky foot is filled with ink that pours into a pot when you cut it off. Removing all three parts starts phase two: infinite ink lets you draw bumpers to roll him into the fallen spikes. Four spike splats win this fight. He now walks with a wonky stomp and hops after losing his leg; try the Wonky walk button in his animation preview.</p></article>
       <article class="build-entry"><h3>Wobblechomp’s own soundtrack</h3><p>Wobblechomp Fight V5 now loops during his wave-10 fight, starting after his entrance roar. Scratch Page boss tests use it too. Defeating him still plays Stevie Victory before returning to the chapter music.</p></article>
       <article class="build-entry"><h3>Visible targets for Wobblechomp cuts</h3><p>His entrance and movement stay farther below the HUD and instructions on tall desktop pages. Slashing through the visible green ring now cuts his eye stalk or spiky leg, with room for imperfect aim. The stalk stays exposed briefly after the beam ends, giving you more time to release your drawing.</p></article>
       <article class="build-entry"><h3>Fragile teeth and room on phone pages</h3><p>Wobblechomp’s teeth have much less health and now chew cover while taking ink damage instead of stalling at the fort. Cutting his arm ends the block stun: wait for another punch to cut it again. His foot stays planted longer, with more time for its follow-up cut. On portrait phones he fights from above and below Stevie, using side lanes to travel and roll.</p></article>
@@ -545,6 +546,7 @@
 <script src="js/wave-finale.js"></script>
 <script src="js/renderer.js"></script>
 <script src="js/wobblechomp-animation.js"></script>
+<script src="js/wobblechomp-phase-two.js"></script>
 <script src="js/wobblechomp-boss.js"></script>
 <script src="js/wobblechomp-preview.js"></script>
 <script src="js/loop.js"></script>

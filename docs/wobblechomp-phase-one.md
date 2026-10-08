@@ -1,15 +1,13 @@
-# Wobblechomp: wave 10, phase one
+# Wobblechomp: wave 10, phases one and two
 
 Wave 10 now replaces Staple Snack with Wobblechomp. After the timer and remaining
 monsters clear, combat, ink regeneration and wall aging stop. He stomps in from
-the side, the camera zooms for his roar, then chapter music resumes. Existing
-boss stomp/roar recordings are reused; this fight has no dedicated soundtrack yet.
+the side, the camera zooms for his roar, then Wobblechomp Fight V5 starts. Existing
+boss stomp/roar recordings are reused.
 Walls survive his entrance. Pausing/backgrounding stops the entrance; reduced
 motion removes the zoom. Scratch Page’s wave-10 boss shortcut starts combat directly.
 
-The first playable slice contains **phase one only**. Detaching the arm, spiky
-leg and eye stalk wins the encounter and awards normal boss rewards. Future
-phases will replace that temporary finish with their transitions.
+Detaching the arm, spiky leg and eye stalk starts **phase two**. Four player-directed spike splats now win the encounter and award normal boss rewards. Phase three is still future work.
 
 ## Draw and defend
 
@@ -56,7 +54,7 @@ is separate from animation speed. Real phone testing should assess touch speed.
 
 ## Verification
 
-- `node tests/validate.cjs`: paid/copy/old/unpaid/paused cuts, six-cut victory,
+- `node tests/validate.cjs`: paid/copy/old/unpaid/paused cuts, six-cut handoff, infinite ink without numeric infinity, bounded bumpers and four-hit ricochet victory,
   real punch/spike cover, fan count, beam targets/no ink theft/no player damage,
   tooth launch/warnings/freeze, roll hazards and cleanup, attack cadence and caps.
 - `NODE_PATH=/opt/codex/cua_node/lib/node_modules node tests/browser-wobblechomp-fight.cjs`:
@@ -73,3 +71,13 @@ Scratch Page tests offer **Restart test · same build** from pause, defeat, wave
 Portrait phones alternate attack positions above and below Stevie, with side routes around the fort and side rolls. Attacks wait until he is at least 145 pixels above/below Stevie. The side margin is 24 pixels; keepout stays 95 pixels on roomy phone pages and adapts to the available side-lane width on narrow pages (79 pixels on a 320-pixel canvas). Desktop movement is unchanged.
 
 Tall desktop pages reserve space below the HUD and all three instruction lines for the complete upright stalk. The same top boundary applies to the entrance, idle movement, rolls, wall routes and resize recovery.
+
+## Phase two: bumper doodles
+
+The detached spiky foot drains into an ink pot over 1.6 seconds. The pot becomes unlimited only after all six cuts; the ink bar shows ∞ while stored ink remains a finite max-ink value. Existing perks and saved progression stay intact.
+
+After a 2.2-second tuck warning, Wobblechomp rolls at 175 px/s (145 on narrow pages). Draw angled lines to reflect his roll toward the marked fallen spiky foot. A redirected roll remains eligible to score for six seconds; naturally bouncing into the foot does not score. Each bumper is consumed on impact, so each of the four spike hits requires a fresh redirect. Ordinary damage cannot bypass this phase. The fort harmlessly deflects his body; two warned tooth helpers spawn every 4.5 seconds with the existing ten-helper cap.
+
+Unlimited strokes cost no ink, do not spend or earn Freehand bank charge, and cannot refund ink through closed loops. New bumpers last at most ten seconds and are capped at forty including copied lines. Death, victory and leaving the run restore normal ink rules. Pause stops the roll and siphon; rendering is pure.
+
+The walking rig follows actual travel distance, with squash, lean, swinging limbs and a stronger hop when the leg is missing. Blocked movement does not advance the stride, and reduced motion suppresses decorative gait. The preview includes a Wonky walk toggle. Ink in the foot and pot uses canvas overlays on the existing atlas; no extra asset download.

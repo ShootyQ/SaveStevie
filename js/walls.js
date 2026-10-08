@@ -202,7 +202,7 @@ function repairTouchedWalls(points){
   }
 }
 
-function canStartStroke(){const s=game.state.stats;return (s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6;}
+function canStartStroke(){const s=game.state.stats;return game.api.wobbleInfiniteInk?.()||(s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6;}
 
 function createWall(points){
   if(points.length<2)return;
@@ -210,8 +210,9 @@ function createWall(points){
   for(let i=1;i<points.length;i++)length+=game.api.dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
   if(length<8)return;
 
-  const firstStrokeFree=game.state.stats.firstFree&&!game.state.stats.firstStrokeUsed;
-  const bank=game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0;
+  const infinite=game.api.wobbleInfiniteInk?.();
+  const firstStrokeFree=infinite||game.state.stats.firstFree&&!game.state.stats.firstStrokeUsed;
+  const bank=!infinite&&game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0;
   const available=Math.max(0,game.state.stats.ink)+bank;
   // Every paid stroke costs at least six ink. Never manufacture a two-point
   // wall when the available ink cannot pay for those points.
@@ -232,7 +233,7 @@ function createWall(points){
   const bankUsed=firstStrokeFree?0:Math.min(cost,bank);
   const actualPaid=firstStrokeFree?0:Math.max(0,cost-bankUsed);
   game.state.stats.freehandBank-=bankUsed;
-  game.state.stats.ink=Math.max(0,game.state.stats.ink-actualPaid);
+  game.state.stats.ink=infinite?game.state.stats.maxInk:Math.max(0,game.state.stats.ink-actualPaid);
   game.api.playSound('pencil');
   game.state.stats.strokeCount++;
   game.state.stats.firstStrokeUsed=true;
@@ -256,8 +257,8 @@ function createWall(points){
   // long strokes cost more ink but can take much more punishment.
   const lengthFactor=game.api.clamp(length/180,.35,2.4);
   const hp=game.state.stats.wallHp*lengthFactor*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);
-  const life=game.state.stats.wallLife;
-  const base={pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
+  const life=infinite?Math.min(10,game.state.stats.wallLife):game.state.stats.wallLife;
+  const base={...(infinite?{wobbleBumper:true}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
   game.state.walls.push(base);
 
   if(game.state.stats.doubleLine||game.state.stats.tripleLine){
@@ -271,9 +272,10 @@ function createWall(points){
         const m=Math.hypot(n.x,n.y)||1;
         return{x:p.x+n.x/m*off,y:p.y+n.y/m*off};
       });
-      game.state.walls.push({pts:shifted,hp:hp*game.catalog.balance.copyDurability,maxHp:hp*game.catalog.balance.copyDurability,thick:base.thick,life,maxLife:life,closed:false,intersections:0});
+      game.state.walls.push({...(infinite?{wobbleBumper:true}:{}),pts:shifted,hp:hp*game.catalog.balance.copyDurability,maxHp:hp*game.catalog.balance.copyDurability,thick:base.thick,life,maxLife:life,closed:false,intersections:0});
     }
   }
+  if(infinite){const bumpers=game.state.walls.filter(w=>w.wobbleBumper);if(bumpers.length>40){const remove=new Set(bumpers.slice(0,bumpers.length-40));game.state.walls=game.state.walls.filter(w=>!remove.has(w))}}
   game.api.cutWobbleStroke(base.pts);
   if(base.closed)rewardClosedLoop(base,actualPaid);
   game.api.updateUI();

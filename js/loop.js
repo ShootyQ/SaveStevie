@@ -27,7 +27,7 @@ function update(dt){
   if(game.api.waveFinaleActive())return;
   game.api.updateBossDamageBudgets(dt);
   game.api.updateSustain(dt);
-  game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.inkRegen*dt);
+  game.state.stats.ink=game.api.wobbleInfiniteInk()?game.state.stats.maxInk:Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.inkRegen*dt);
 
   // Ink slowly fades even when nobody is touching it.
   // It remains solid for most of its life, then visibly ghosts out before disappearing.

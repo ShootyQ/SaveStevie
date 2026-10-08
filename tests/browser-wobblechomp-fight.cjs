@@ -60,11 +60,19 @@ const root=path.resolve(__dirname,'..');
    for(const p of points)assert(p.x>=0&&p.x<=viewport.width&&p.y>=0&&p.y<=viewport.height,'joint reachable on '+viewport.width+': '+JSON.stringify(points));
    if(touch){await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[points[0]]});await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[points[1]]});await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]})}
    else{await page.mouse.move(points[0].x,points[0].y);await page.mouse.down();await page.mouse.move(points[1].x,points[1].y,{steps:5});await page.mouse.up()}
-   if(part==='stalk'&&cut===1)assert.equal(await page.evaluate(()=>testGame.api.bossFightResolved()),true);
+   if(part==='stalk'&&cut===1){assert.equal(await page.evaluate(()=>testGame.api.wobblePhase(testGame.state.enemies.find(e=>e.waveBoss))),2);assert.equal(await page.evaluate(()=>testGame.api.bossFightResolved()),false)}
    else assert.equal(await page.evaluate(part=>testGame.api.wobbleSnapshot(testGame.state.enemies.find(e=>e.waveBoss)).model[part+'Cuts'],part),cut+1);
    await page.evaluate(()=>testGame.api.draw());
   }
+  await page.screenshot({path:'/tmp/wobble-phase-two-'+viewport.width+'.png'});
+  const fixture=await page.evaluate(()=>{const g=testGame,e=g.state.enemies.find(e=>e.waveBoss),s=g.api.bossBrain(e).wobble;g.api.updateWobbleBoss(e,2.3);g.state.walls=[];g.state.enemies=[e];g.state.enemyShots=[];const y=g.state.player.y+(g.state.H>=440?160:25),leg=s.debris.find(d=>d.part==='leg');Object.assign(leg,{x:Math.min(210,g.state.W*.56),y,floor:y,settled:true});Object.assign(e,{x:100,y,freeze:0,stun:0});s.rollVX=-(g.state.W<500?145:175);s.rollVY=0;s.hitCooldown=0;s.armedFor=0;g.state.stats.ink=0;g.api.draw();const r=g.dom.canvas.getBoundingClientRect();return [{x:r.left+40,y:r.top+y-45},{x:r.left+40,y:r.top+y+45}]});
+  for(let hit=1;hit<=4;hit++){
+   if(touch){await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[fixture[0]]});await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[fixture[1]]});await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]})}
+   else{await page.mouse.move(fixture[0].x,fixture[0].y);await page.mouse.down();await page.mouse.move(fixture[1].x,fixture[1].y,{steps:5});await page.mouse.up()}
+   const result=await page.evaluate(hit=>{const g=testGame,e=g.state.enemies.find(e=>e.waveBoss),s=g.api.bossBrain(e).wobble;for(let i=0;i<400&&s.phaseHits<hit;i++)g.api.update(.01);g.api.draw();return {hits:s.phaseHits,resolved:g.api.bossFightResolved(),infinite:g.api.wobbleInfiniteInk(),ink:g.state.stats.ink}},hit);
+   assert.equal(result.hits,hit,'mouse/touch bumper scores a spike hit');assert.equal(result.resolved,hit===4);assert.equal(result.infinite,hit!==4);assert(Number.isFinite(result.ink));
+  }
   await page.evaluate(()=>testGame.api.update(.01));assert.equal(await page.evaluate(()=>testGame.state.betweenWaves),true);assert.equal(await page.evaluate(()=>testGame.state.enemies.length),0);assert.equal(await page.evaluate(()=>testGame.state.enemyShots.length),0);
-  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' entrance/pause, five readable real attacks, reachable mouse/touch cuts, missing parts and clean wave reward');await page.close();
+  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' entrance/pause, five readable real attacks, reachable mouse/touch cuts, ink siphon, four mouse/touch ricochets and clean wave reward');await page.close();
  }}finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

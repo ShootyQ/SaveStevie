@@ -1,6 +1,7 @@
 /* Modular animation preview, isolated from combat and saved notebook progress. */
 DoodleDefender.systems.wobblePreview=function(game){
  const $=game.dom.$,rig=DoodleDefender.WobblechompRig,canvas=$('wobbleCanvas'),ctx=canvas.getContext('2d');
+ let walkDemo=false;
  let model=rig.create(),image=null,toothImage=null,ready=false,loading=false,opened=false,paused=false,frame=null,last=null,nextPunch=.8,nextAttack=0,stroke=null,pointer=null,strokeLife=0,view=null;
  const media=window.matchMedia?.('(prefers-reduced-motion: reduce)'),reduced=()=>!!media?.matches;
  const attacks=[{button:'wobblePunchBtn',cuts:'armCuts',run:rig.punch},{button:'wobbleSpikesBtn',cuts:'legCuts',run:rig.shootSpikes},{button:'wobbleBeamBtn',cuts:'stalkCuts',run:rig.eyeBeam},{button:'wobbleTeethBtn',run:rig.shakeTeeth},{button:'wobbleRollBtn',run:rig.tuckAndRoll}];
@@ -29,16 +30,17 @@ DoodleDefender.systems.wobblePreview=function(game){
   toothImage=new Image();toothImage.onload=done;toothImage.onerror=fail;toothImage.src='assets/art/wobble-tooth.png'+suffix;
  }
  function sync(){
-  $('wobbleToothCount').textContent=model.teeth.length?'Teeth: '+model.teeth.length:'';
+  $('wobbleWalkBtn').disabled=!ready||paused||rig.busy(model);$('wobbleWalkBtn').setAttribute?.('aria-pressed',String(walkDemo));
+ $('wobbleToothCount').textContent=model.teeth.length?'Teeth: '+model.teeth.length:'';
   for(const a of attacks)$(a.button).disabled=!ready||paused||(a.cuts&&model[a.cuts]===2)||rig.busy(model);
   $('wobblePauseBtn').textContent=paused?'Resume':'Pause';$('wobblePauseBtn').setAttribute?.('aria-pressed',String(paused));
   $('wobbleCutCount').textContent=limbs.every(a=>model[a.cuts]===2)?'All parts detached!':'Arm '+model.armCuts+'/2 · Leg '+model.legCuts+'/2 · Eye '+model.stalkCuts+'/2';
  }
  function advance(dt){
   if(!opened||paused||document.hidden||!ready)return;
-  const speed=$('wobbleSpeed').value==='2'?2:1;dt=Math.min(.05,Math.max(0,dt))*speed;rig.update(model,dt);
+  const speed=$('wobbleSpeed').value==='2'?2:1;dt=Math.min(.05,Math.max(0,dt))*speed;rig.update(model,dt);if(walkDemo&&!rig.busy(model))rig.stepWalk(model,90*dt,dt);
   if(strokeLife>0){strokeLife-=dt;if(strokeLife<=0)stroke=null}
-  if($('wobbleAutoPunch').checked&&!rig.busy(model)){
+  if(!walkDemo&&$('wobbleAutoPunch').checked&&!rig.busy(model)){
    nextPunch-=dt;if(nextPunch<=0){for(let n=0;n<attacks.length;n++){const i=(nextAttack+n)%attacks.length;if(attacks[i].run(model)){nextAttack=(i+1)%attacks.length;break}}nextPunch=.8}
   }
   sync();render();
@@ -47,7 +49,7 @@ DoodleDefender.systems.wobblePreview=function(game){
  function clearPointer(){const id=pointer;pointer=null;if(id!==null&&canvas.hasPointerCapture?.(id))canvas.releasePointerCapture(id);stroke=null;strokeLife=0}
  function open(){
   if(opened)return;if($('optionsOverlay').style.display!=='grid')game.api.openOptions();
-  opened=true;paused=false;model=rig.create();nextPunch=.8;nextAttack=0;last=null;clearPointer();$('optionsOverlay').inert=true;$('wobblePreviewOverlay').style.display='grid';
+  opened=true;walkDemo=false;paused=false;model=rig.create();nextPunch=.8;nextAttack=0;last=null;clearPointer();$('optionsOverlay').inert=true;$('wobblePreviewOverlay').style.display='grid';
   load();resize();sync();if(ready)status(instructions);$('closeWobblePreviewBtn').focus?.();frame=requestAnimationFrame(tick);
  }
  function close(){
@@ -64,10 +66,11 @@ DoodleDefender.systems.wobblePreview=function(game){
  canvas.addEventListener('pointercancel',()=>{clearPointer();render()});
  canvas.addEventListener('lostpointercapture',()=>{if(pointer!==null){clearPointer();render()}});
  $('openWobblePreviewBtn').onclick=open;$('closeWobblePreviewBtn').onclick=close;
- for(const a of attacks)$(a.button).onclick=()=>{if(!paused&&ready&&a.run(model)){nextPunch=.8;if(a.run===rig.shakeTeeth)status('Watch the teeth launch, bounce and scurry.');if(a.run===rig.tuckAndRoll)status('Tuck, wind up, roll! Watch for spikes and dropped teeth.');sync();render()}};
+ for(const a of attacks)$(a.button).onclick=()=>{if(!paused&&ready&&a.run(model)){walkDemo=false;nextPunch=.8;if(a.run===rig.shakeTeeth)status('Watch the teeth launch, bounce and scurry.');if(a.run===rig.tuckAndRoll)status('Tuck, wind up, roll! Watch for spikes and dropped teeth.');sync();render()}};
+ $('wobbleWalkBtn').onclick=()=>{if(!paused&&ready&&!rig.busy(model)){walkDemo=!walkDemo;status(walkDemo?'A wonky stomp! Cut off the leg to see his little hop.':instructions);sync();render()}};
  $('wobbleSpeed').onchange=()=>{last=null;clearPointer();render()};
  $('wobblePauseBtn').onclick=()=>{paused=!paused;last=null;clearPointer();sync();render()};
- $('wobbleResetBtn').onclick=()=>{model=rig.create();paused=false;nextPunch=.8;nextAttack=0;last=null;clearPointer();status(instructions);sync();render()};
+ $('wobbleResetBtn').onclick=()=>{model=rig.create();walkDemo=false;paused=false;nextPunch=.8;nextAttack=0;last=null;clearPointer();status(instructions);sync();render()};
  document.addEventListener?.('keydown',e=>{
   if(!opened)return;
   if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close()}
