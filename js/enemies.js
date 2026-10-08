@@ -21,6 +21,8 @@ const defs=game.catalog.enemyDefs={
     jamling:{r:10,hp:26,speed:26,dmg:5,color:'#928276'},
     mini:{r:7,hp:12,speed:49,dmg:5,color:'#a56cc1'},
     boss:{r:28,hp:270,speed:18,dmg:27,color:'#962f3d'},
+    wobblechomp:{r:38,hp:380,speed:120,dmg:14,color:'#dfbd29',boss:true},
+    'wobble-tooth':{r:10,hp:22,speed:62,dmg:9,color:'#e6d4a7'},
     stapler:{r:30,hp:410,speed:19,dmg:27,color:'#c98a32',boss:true},
     crayon:{r:30,hp:540,speed:17,dmg:29,color:'#9354b9',boss:true},
     eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'}
@@ -50,7 +52,7 @@ function enemyType(){
 
 function bossTypeForWave(wave=game.state.wave){
   if(wave===20&&!game.state.endless)return 'eraser';
-  if(wave===10)return 'stapler';
+  if(wave===10)return 'wobblechomp';
   if(wave===15)return 'crayon';
   return 'boss';
 }
@@ -124,7 +126,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
   game.state.enemies.push(enemy);game.api.discoverMonster(type);
-  if(forceBoss){const cinematic=firstBossIntroActive();bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss')}
+  if(forceBoss){const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isWobbleBoss(enemy))game.api.initWobbleBoss(enemy)}
   return enemy;
 }
 
@@ -134,7 +136,7 @@ function killEnemy(e){
   game.state.kills++;game.state.waveKills++;game.state.score+=10;
   game.api.awardKillScraps(e);
   game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
-  if(e.waveBoss){if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
+  if(e.waveBoss){if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
   game.api.burst(e.x,e.y,e.color,12);
 
   if(e.type==='eraser') game.state.finalBossDefeated=true;
@@ -227,6 +229,7 @@ function fireSniper(e){
 function updateEnemyShots(dt){
   const remaining=[];
   for(const shot of game.state.enemyShots){
+    if(shot.wobbleOwner&&(shot.wobbleOwner.hp<=0||!game.state.enemies.includes(shot.wobbleOwner)))continue;
     if(shot.stapleOwner&&(shot.stapleOwner.hp<=0||!game.state.enemies.includes(shot.stapleOwner)))continue;
     if(shot.owner){if(game.api.updateFirstBossShot(shot,dt))remaining.push(shot);continue}
     const step=Math.min(dt,Math.max(0,shot.life)),dx=shot.vx*step,dy=shot.vy*step;
@@ -238,7 +241,7 @@ function updateEnemyShots(dt){
     // Test cover only up to the first player impact; walls behind Stevie cannot
     // retroactively absorb a shot that already reached him.
     const endX=shot.x+dx*(hitTime??1),endY=shot.y+dy*(hitTime??1);shot.life-=dt;
-    const stapleWall=shot.stapleOwner?game.api.bossShotWallHit(shot,endX,endY):null;
+    const stapleWall=(shot.stapleOwner||shot.wobbleOwner)?game.api.bossShotWallHit(shot,endX,endY):null;
     if(stapleWall){const x=shot.x+(endX-shot.x)*stapleWall.t,y=shot.y+(endY-shot.y)*stapleWall.t;game.api.damageWall(stapleWall.wall,8,x,y);game.api.burst(x,y,'#928276',5);continue}
     if(shotBlocked(shot.x,shot.y,endX,endY,shot.r)){
       game.api.burst(endX,endY,'#4b79d8',5);continue;
@@ -283,10 +286,24 @@ function bossSpawnPoint(){
  return {side,x:side==='left'?-pad:side==='right'?W+pad:game.api.clamp(player.x,40,W-40),y:side==='top'?-pad:side==='bottom'?H+pad:game.api.clamp(player.y,40,H-40)};
 }
 function bossArrivalSnapshot(){return arrival?{...arrival}:null}
-function refreshBossArrival(){if(arrival){if(arrival.stapleIntro){Object.assign(arrival,game.api.stapleEntrancePoint())}else if(arrival.intro){const {W,H,player}=game.state;arrival.startX=arrival.side==='left'?-80:W+80;arrival.targetX=arrival.side==='left'?Math.max(50,W*.2):W-Math.max(50,W*.2);arrival.y=game.api.clamp(player.y-120,60,H-60)}else arrival={...bossSpawnPoint(),left:arrival.left}}}
-function bossEntranceActive(){return firstBossIntroActive()||!!arrival?.stapleIntro}
+function refreshBossArrival(){if(arrival){if(arrival.wobbleIntro){const p=game.api.wobbleEntrancePoint();arrival.targetX=p.x;arrival.y=p.y;arrival.startX=arrival.side==='left'?-110:game.state.W+110}else if(arrival.stapleIntro){Object.assign(arrival,game.api.stapleEntrancePoint())}else if(arrival.intro){const {W,H,player}=game.state;arrival.startX=arrival.side==='left'?-80:W+80;arrival.targetX=arrival.side==='left'?Math.max(50,W*.2):W-Math.max(50,W*.2);arrival.y=game.api.clamp(player.y-120,60,H-60)}else arrival={...bossSpawnPoint(),left:arrival.left}}}
+function bossEntranceActive(){return firstBossIntroActive()||!!arrival?.wobbleIntro||!!arrival?.stapleIntro}
 function stapleIntroPose(){if(!arrival?.stapleIntro)return null;const a=arrival,t=game.api.clamp((a.age-.6)/1.3,0,1);return {x:a.x,y:a.y,age:a.age,scale:.25+.75*t,zoom:game.api.enemyMotionReduced()?1:1+.3*Math.sin(a.age/3.3*Math.PI),angle:game.api.enemyMotionReduced()?0:Math.sin(a.age*9)*(1-t)*.2,stage:a.age<.6?'punch':a.age<1.9?'crawl':'snap'}}
-function updateBossEntrance(dt){if(firstBossIntroActive()){updateFirstBossIntro(dt);return}if(!arrival?.stapleIntro||document.hidden)return;const a=arrival,before=a.age;a.age=Math.min(3.3,a.age+dt);a.left=3.3-a.age;for(const at of [1.9,2.55])if(before<at&&a.age>=at)game.api.playSound('rock');if(a.age>=3.3){const x=a.x,y=a.y;game.api.spawnEnemy(true,x,y);game.api.suspendMusic(false);game.api.setMsg('Staple Snack · Block charges, jam nests, watch for bent staples!')}}
+function updateBossEntrance(dt){if(arrival?.wobbleIntro){updateWobbleIntro(dt);return}if(firstBossIntroActive()){updateFirstBossIntro(dt);return}if(!arrival?.stapleIntro||document.hidden)return;const a=arrival,before=a.age;a.age=Math.min(3.3,a.age+dt);a.left=3.3-a.age;for(const at of [1.9,2.55])if(before<at&&a.age>=at)game.api.playSound('rock');if(a.age>=3.3){const x=a.x,y=a.y;game.api.spawnEnemy(true,x,y);game.api.suspendMusic(false);game.api.setMsg('Staple Snack · Block charges, jam nests, watch for bent staples!')}}
+function wobbleIntroPose(){
+ if(!arrival?.wobbleIntro)return null;const a=arrival,t=game.api.clamp(a.age/3.375,0,1),reduced=game.api.enemyMotionReduced();
+ return {x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.age<3.375?'stomp':'roar',zoom:reduced?1:1+.55*t*Math.min(1,Math.max(0,(6.132-a.age)/.5))};
+}
+function beginWobbleIntro(){
+ game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);game.api.loadWobbleArtwork();
+ arrival={wobbleIntro:true,side:game.state.player.x>=game.state.W/2?'left':'right',age:0,left:6.132};refreshBossArrival();bossPhase='entrance';game.api.playSound('bossStomp');game.api.setMsg('Pencils down… Wobblechomp is stomping in!');
+}
+function updateWobbleIntro(dt){
+ if(!arrival?.wobbleIntro||document.hidden)return;const a=arrival,before=a.age;a.age=Math.min(6.132,a.age+dt);a.left=6.132-a.age;
+ if(before<3.375&&a.age>=3.375){game.api.stopSoundEffects('bossStomp');game.api.playSound('bossRoar');game.api.setMsg('Wobblechomp: WATCH ME FALL APART!')}
+ if(a.age<6.132){const kind=a.age<3.375?'bossStomp':'bossRoar';if(!game.api.soundEffectsSnapshot().voices.some(v=>v.kind===kind))game.api.playSound(kind,false,a.age-(kind==='bossRoar'?3.375:0))}
+ if(a.age>=6.132){game.api.stopSoundEffects('bossRoar');game.api.spawnEnemy(true,a.targetX,a.y);game.api.suspendMusic(false);game.api.setMsg('Cut green threads twice per part! Block punches and spikes; rebuild after eye beams.')}
+}
 function firstBossIntroActive(){return !!arrival?.intro}
 function firstBossIntroPose(){
  if(!firstBossIntroActive())return null;
@@ -311,10 +328,12 @@ function updateFirstBossIntro(dt){
  }
 }
 function updateBossArrival(dt){
+ if(arrival?.wobbleIntro){updateWobbleIntro(dt);return}
  if(arrival?.stapleIntro){updateBossEntrance(dt);return}
  if(firstBossIntroActive()){updateFirstBossIntro(dt);return}
  if(bossSpawned||game.state.enemies.some(e=>e.hp>0||e.flight))return;
  if(!arrival&&game.state.wave===5){beginFirstBossIntro();return}
+ if(!arrival&&game.state.wave===10&&game.api.bossTypeForWave()==='wobblechomp'){beginWobbleIntro();return}
  if(!arrival&&game.state.wave===10){const p=game.api.stapleEntrancePoint();game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);arrival={...p,stapleIntro:true,age:0,left:3.3};bossPhase='entrance';game.api.playSound('bossEnter');game.api.setMsg('Something is chewing through the notebook…');return}
  if(!arrival){arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
  arrival.left=Math.max(0,arrival.left-dt);
@@ -516,6 +535,7 @@ function contactStevie(e){
   if(e.hp<=0||e.flight||!game.state.enemies.includes(e))return false;
   const player=game.state.player;
   if(!game.api.touchesRefuge(e))return false;
+  if(e.type==='wobble-tooth')return true;
   if(e.type==='jamling')return game.api.jamlingContact(e);
   if(game.api.shotBlocked(e.x,e.y,player.x,player.y,0))return false;
   if(e.waveBoss)return game.api.bossContact(e);
@@ -535,7 +555,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

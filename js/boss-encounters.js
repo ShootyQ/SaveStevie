@@ -13,7 +13,7 @@ function resetBossEncounters(){brains=new WeakMap();marks=[];clock=0}
 function inside(e,w){let yes=false;const pts=w.pts;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a.y>e.y)!==(b.y>e.y)&&e.x<(b.x-a.x)*(e.y-a.y)/(b.y-a.y)+a.x)yes=!yes}return yes}
 function nearestBossWall(e,range=150){let best=null;for(const w of game.state.walls){const p=game.api.nearestPointOnWall(e,w);if(!p)continue;const d=Math.hypot(p.x-e.x,p.y-e.y);if(d<range){range=d;best={wall:w,...p}}}return best}
 function updateBossDamageBudgets(dt){for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e),rate=Math.max(30,e.maxHp*.045);b.damageBudget=Math.min(rate*.5,b.damageBudget+rate*dt)}}
-function limitBossDamage(e,amount,kind){if(!e.waveBoss||(kind==='reflected'&&isFirstBoss(e)))return amount;const b=bossBrain(e),guard=isFirstBoss(e)&&!b.enclosed&&b.recovery<=0?.25:1,actual=Math.min(amount,b.damageBudget*guard);b.damageBudget-=actual/guard;return actual}
+function limitBossDamage(e,amount,kind){if(game.api.isWobbleBoss(e))amount=Math.min(amount,Math.max(0,e.hp-e.maxHp*.04));if(!e.waveBoss||(kind==='reflected'&&isFirstBoss(e)))return amount;const b=bossBrain(e),guard=isFirstBoss(e)&&!b.enclosed&&b.recovery<=0?.25:1,actual=Math.min(amount,b.damageBudget*guard);b.damageBudget-=actual/guard;return actual}
 function pushThroughBossStrokes(e,dt){
  for(const w of [...game.state.walls]){if(w.hp<=0)continue;const p=game.api.nearestPointOnWall(e,w);
   if(p&&Math.hypot(p.x-e.x,p.y-e.y)<e.r*.8+w.thick/2){
@@ -23,9 +23,10 @@ function pushThroughBossStrokes(e,dt){
   }
  }
 }
-function bossDamageMultiplier(e){if(!e.waveBoss)return 1;if(game.api.isStapleBoss(e))return game.api.stapleDamageMultiplier(e);const b=bossBrain(e);return b.enclosed||b.recovery>0?1.35:isFirstBoss(e)?.25:1}
+function bossDamageMultiplier(e){if(!e.waveBoss)return 1;if(game.api.isWobbleBoss(e))return .35;if(game.api.isStapleBoss(e))return game.api.stapleDamageMultiplier(e);const b=bossBrain(e);return b.enclosed||b.recovery>0?1.35:isFirstBoss(e)?.25:1}
 function bossWallHit(e){if(!e.waveBoss)return null;const hit=nearestBossWall(e,e.r+20);return hit&&Math.hypot(hit.x-e.x,hit.y-e.y)<=e.r+hit.wall.thick/2+3?{wall:hit.wall,seg:1}:null}
 function bossContact(e){
+ if(game.api.isWobbleBoss(e))return true;
  if(game.api.isStapleBoss(e))return game.api.stapleContact(e);
  const b=bossBrain(e),p=game.state.player;if(e.type==='crayon'&&(b.contactWarning||0)<1.3)return true;if(b.contactCd<=0){game.api.damageStevie(10*(1-game.state.stats.playerArmor),game.api.monsterName(e.type)+' contact',e);b.contactCd=1.2}
  const angle=Math.atan2(e.y-p.y,e.x-p.x),distance=e.r+Math.hypot(game.api.refugeBounds().halfWidth,game.api.refugeBounds().halfHeight)+6;
@@ -185,6 +186,7 @@ function execute(e,b,c){
  b.cd=isFirstBoss(e)?(c.kind==='paper-lob'?firstBossTuning(e).paperCooldown:firstBossTuning(e).cooldown):earlyBoss(e)?(furious?2.5:3.5):(furious?3.2:4.5);b.turn++;b.cast=null;e.bossWindup=0;
 }
 function updateBossEncounter(e,dt){
+ if(game.api.isWobbleBoss(e)){game.api.updateWobbleBoss(e,dt);return}
  if(game.api.isStapleBoss(e)){game.api.updateStapleBoss(e,dt);return}
  const b=bossBrain(e);if(e.type==='crayon')b.contactWarning=game.api.touchesRefuge(e)&&!game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y,0)&&e.freeze<=0&&e.stun<=0?(b.contactWarning||0)+dt:0;if(b.action){b.action.age+=dt;if(b.action.age>.65)b.action=null}b.contactCd=Math.max(0,b.contactCd-dt);b.recovery=Math.max(0,b.recovery-dt);
  b.enclosed=game.state.walls.some(w=>{if(!w.closed||w.hp<=0||w.life<=0||!inside(e,w))return false;const p=game.api.nearestPointOnWall(e,w);return p&&Math.hypot(p.x-e.x,p.y-e.y)>e.r+w.thick/2+8});
@@ -272,8 +274,8 @@ function updateBossFields(dt){clock+=dt;for(const e of game.state.enemies)if(e.w
   }
  }marks=marks.filter(m=>m.age<m.life);
 }
-function moveBossFields(dx,dy){moveFirstBossShots(dx,dy);for(const m of marks){m.x+=dx;m.y+=dy;m.originX+=dx;m.originY+=dy}for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e);if(game.api.isStapleBoss(e))game.api.moveStapleBoss(e,dx,dy);for(const p of [b.cast,b.target])if(p&&p!==game.state.player){p.x+=dx;p.y+=dy;for(const q of p.targets||[]){q.x+=dx;q.y+=dy}if(p.landing){p.landing.x+=dx;p.landing.y+=dy}}if(b.chargeX!==undefined){b.chargeX+=dx;b.chargeY+=dy}}}
-function bossEncounterSnapshot(){return {marks:marks.map(m=>({x:m.x,y:m.y,age:m.age,kind:m.kind})),bosses:game.state.enemies.filter(e=>e.waveBoss).map(e=>{const b=bossBrain(e);return {type:e.type,staple:game.api.isStapleBoss(e)?game.api.stapleSnapshot(e):null,pickup:b.pickup?{x:b.pickup.friend.x,y:b.pickup.friend.y,left:b.pickup.left}:null,enclosed:b.enclosed,cast:b.cast?{kind:b.cast.kind,x:b.cast.x,y:b.cast.y,left:b.cast.left,targets:b.cast.targets?.map(p=>({...p})),landing:b.cast.landing?{...b.cast.landing}:undefined}:null,recovery:b.recovery,charge:b.charge,action:b.action?{...b.action}:null}})}}
+function moveBossFields(dx,dy){game.api.moveWobbleFields(dx,dy);moveFirstBossShots(dx,dy);for(const m of marks){m.x+=dx;m.y+=dy;m.originX+=dx;m.originY+=dy}for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e);if(game.api.isStapleBoss(e))game.api.moveStapleBoss(e,dx,dy);for(const p of [b.cast,b.target])if(p&&p!==game.state.player){p.x+=dx;p.y+=dy;for(const q of p.targets||[]){q.x+=dx;q.y+=dy}if(p.landing){p.landing.x+=dx;p.landing.y+=dy}}if(b.chargeX!==undefined){b.chargeX+=dx;b.chargeY+=dy}}}
+function bossEncounterSnapshot(){return {marks:marks.map(m=>({x:m.x,y:m.y,age:m.age,kind:m.kind})),bosses:game.state.enemies.filter(e=>e.waveBoss).map(e=>{const b=bossBrain(e);return {type:e.type,wobble:game.api.isWobbleBoss(e)?game.api.wobbleSnapshot(e):null,staple:game.api.isStapleBoss(e)?game.api.stapleSnapshot(e):null,pickup:b.pickup?{x:b.pickup.friend.x,y:b.pickup.friend.y,left:b.pickup.left}:null,enclosed:b.enclosed,cast:b.cast?{kind:b.cast.kind,x:b.cast.x,y:b.cast.y,left:b.cast.left,targets:b.cast.targets?.map(p=>({...p})),landing:b.cast.landing?{...b.cast.landing}:undefined}:null,recovery:b.recovery,charge:b.charge,action:b.action?{...b.action}:null}})}}
 function drawLobTarget(ctx,x,y,progress){
  ctx.save();ctx.translate(x,y);ctx.strokeStyle='#b07535';ctx.fillStyle='rgba(190,122,48,.13)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,46,0,Math.PI*2);ctx.fill();ctx.setLineDash([5,4]);ctx.stroke();ctx.setLineDash([]);
  ctx.beginPath();ctx.arc(0,0,34,-Math.PI/2,-Math.PI/2+Math.PI*2*progress);ctx.stroke();ctx.beginPath();ctx.moveTo(-9,-9);ctx.lineTo(9,9);ctx.moveTo(9,-9);ctx.lineTo(-9,9);ctx.stroke();ctx.restore();

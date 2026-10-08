@@ -11,7 +11,7 @@ function update(dt){
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
   if(game.api.synergyRevealActive()||game.api.beginSynergyReveal())return;
   if(game.api.bossEntranceActive()){game.api.updateBossEntrance(dt);game.api.updateUI();return}
-  if(game.state.wave===5&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
+  if((game.state.wave===5||game.state.wave===10)&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
   game.api.updateRefuge(dt);
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
   game.state.waveElapsed+=dt;
@@ -131,6 +131,8 @@ function update(dt){
 
     if(game.api.waveFinaleActive())break;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
+    if(game.api.isWobbleBoss(e)){const hit=game.api.nearestWallHit(e);if(hit&&e.freeze<=0&&e.stun<=0)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
+    if(e.type==='wobble-tooth'&&game.api.updateWobbleTooth(e,dt))continue;
     if(game.api.isStapleBoss(e)){
       if(game.api.bossBrain(e).staple?.hop)continue; // Repositioning leaps cannot collide with ink in midair.
       if(e.freeze<=0&&e.stun<=0){

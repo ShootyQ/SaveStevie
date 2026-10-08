@@ -274,6 +274,7 @@ function createWall(points){
       game.state.walls.push({pts:shifted,hp:hp*game.catalog.balance.copyDurability,maxHp:hp*game.catalog.balance.copyDurability,thick:base.thick,life,maxLife:life,closed:false,intersections:0});
     }
   }
+  game.api.cutWobbleStroke(base.pts);
   if(base.closed)rewardClosedLoop(base,actualPaid);
   game.api.updateUI();
 }

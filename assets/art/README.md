@@ -142,7 +142,8 @@ body, fist, spiky foot. Bottom row: stalk eye, tucked body, startled body.
 The preview crops cells at draw time and connects the parts with procedural
 noodle limbs; body-part combinations need no extra complete-monster sprites.
 The fist's painted wrist anchor is at roughly (65%, 92%) within its cell.
-The atlas loads on opening the Scratch Page preview, not during normal combat.
+The atlas loads on opening the Scratch Page preview or starting Wobblechomp’s
+wave-10 entrance; ordinary waves do not load it.
 The tucked body supplies the rolling core, with its fixed support feet curled inward.
 
 The spiky foot and eye now have animated wind-up, kick/beam and recovery poses,
@@ -157,7 +158,8 @@ needed for the leg/eye animation slice. Spikes and the beam are canvas effects.
 tooth creature with uneven eyes and two little root feet. The original PNG is
 preserved unchanged. The Wobblechomp preview loads it on opening, then uses
 transforms for staggered airborne spin, landing squash/bounce, hopping and
-horizontal facing. It is an animation preview helper, not a normal wave enemy.
+horizontal facing. It also supplies Wobblechomp’s boss-owned combat helpers, with flight spin,
+landing squash/bounce, scurrying and left/right facing.
 
 The tuck-and-roll preview blends to the existing tucked core and transforms
 only attached appendages around it. Missing parts remain separate fallen

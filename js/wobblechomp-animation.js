@@ -135,13 +135,13 @@ DoodleDefender.WobblechompRig=(()=>{
   const x=c.x-a.x,y=c.y-a.y,t=(x*ey-y*ex)/den,u=(x*dy-y*dx)/den;
   return t>=0&&t<=1&&u>=0&&u<=1?t:null;
  }
- function cutStroke(m,points,reduced=false){
+ function cutStroke(m,points,reduced=false,allowedParts=null){
   if(m.rollAge!==null||!Array.isArray(points)||points.length<2||points.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))return false;
   let length=0;for(let i=1;i<points.length;i++)length+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);if(length<20)return false;
   const p=pose(m,reduced);let chosen=null;
   // First joint crossed wins; one released gesture can cut only one part once.
   for(let i=1;i<points.length&&!chosen;i++){
-   let nearest=Infinity;for(const limb of Object.values(p.parts))if(limb.cuts<2){const t=crossing(points[i-1],points[i],limb.joint.a,limb.joint.b);if(t!==null&&t<nearest){chosen=limb;nearest=t}}
+   let nearest=Infinity;for(const limb of Object.values(p.parts))if(limb.cuts<2&&(!allowedParts||allowedParts.includes(limb.name))){const t=crossing(points[i-1],points[i],limb.joint.a,limb.joint.b);if(t!==null&&t<nearest){chosen=limb;nearest=t}}
   }
   if(!chosen)return false;
   const name=chosen.name,key=specs[name].cuts;m[key]++;m.lastCut=name;m.reaction=.8;
@@ -169,7 +169,7 @@ DoodleDefender.WobblechompRig=(()=>{
   if(m.beamAge===null||m.stalkCuts===2)return null;
   const t=m.beamAge,f=ease((t-.8)/1.3);return {origin:p.parts.stalk.center,target:{x:150,y:mix(300,590,f)},firing:t>=.8&&t<2.1};
  }
- function draw(ctx,image,m,{reduced=false,guide=true,toothImage=null}={}){
+ function draw(ctx,image,m,{reduced=false,guide=true,toothImage=null,effects=true}={}){
   const p=pose(m,reduced);ctx.save();
   for(const limb of Object.values(p.parts))if(limb.cuts<2){
    const s=specs[limb.name];noodle(ctx,limb.joint.b,limb.end,limb.name==='arm'?(limb.cuts?70:35):limb.cuts?25:-10,limb.name==='stalk'?12:16);
@@ -186,14 +186,14 @@ DoodleDefender.WobblechompRig=(()=>{
    else{ctx.strokeStyle='#6e592a';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(limb.root.x-8,limb.root.y-8);ctx.lineTo(limb.root.x+5,limb.root.y+5);ctx.moveTo(limb.root.x-7,limb.root.y+7);ctx.lineTo(limb.root.x+5,limb.root.y-7);ctx.stroke()}
   }
   for(const d of m.fallenParts){const s=specs[d.part];ctx.save();ctx.translate(d.x,d.y);ctx.rotate(reduced?0:d.angle);const a={x:(s.pivot.x-.5)*s.w,y:(s.pivot.y-.5)*s.h};noodle(ctx,a,{x:a.x+30,y:a.y+28},12,13);ctx.restore();tile(ctx,image,s.col,s.row,d.x,d.y,s.w,s.h,reduced?0:d.angle);}
-  for(const s of m.spikes){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.angle);ctx.fillStyle='#fff4d9';ctx.strokeStyle='#282014';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(24,0);ctx.lineTo(-9,-8);ctx.lineTo(-9,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#e77929';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-5,-3);ctx.lineTo(13,0);ctx.stroke();ctx.restore()}
-  const beam=beamPose(m,p);
+  if(effects)for(const s of m.spikes){ctx.save();ctx.translate(s.x,s.y);ctx.rotate(s.angle);ctx.fillStyle='#fff4d9';ctx.strokeStyle='#282014';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(24,0);ctx.lineTo(-9,-8);ctx.lineTo(-9,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#e77929';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-5,-3);ctx.lineTo(13,0);ctx.stroke();ctx.restore()}
+  const beam=effects?beamPose(m,p):null;
   if(beam){
    const line=()=>{ctx.beginPath();ctx.moveTo(beam.origin.x,beam.origin.y);ctx.lineTo(beam.target.x,beam.target.y);ctx.stroke()};
    if(beam.firing){ctx.lineCap='round';ctx.strokeStyle='#247c75';ctx.lineWidth=15;line();ctx.strokeStyle='#b6ef87';ctx.lineWidth=9;line();ctx.strokeStyle='#fffbe5';ctx.lineWidth=3;line()}
    else if(m.beamAge<.8){ctx.setLineDash([8,8]);ctx.strokeStyle='#9b632d';ctx.lineWidth=3;line();ctx.setLineDash([]);ctx.strokeStyle='#9b632d';ctx.lineWidth=3;ctx.beginPath();ctx.arc(beam.origin.x,beam.origin.y,30,0,Math.PI*2);ctx.stroke()}
   }
-  if(m.teethAge!==null){
+  if(effects&&m.teethAge!==null){
    ctx.strokeStyle='#9b632d';ctx.lineWidth=3;
    for(const target of m.teethPlan){const tooth=m.teeth.find(t=>t.index===m.teethPlan.indexOf(target)&&t.life>1);if(target.launched&&(!tooth||tooth.age>=tooth.flight))continue;
     ctx.setLineDash([5,4]);ctx.beginPath();ctx.ellipse(target.x,target.y+30,30,10,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
@@ -203,11 +203,11 @@ DoodleDefender.WobblechompRig=(()=>{
   if(toothImage)for(const t of m.teeth){
    const q=toothPose(t,reduced);ctx.save();ctx.globalAlpha=Math.min(1,t.life/.35);ctx.translate(q.x,q.y);ctx.rotate(q.angle);ctx.scale(q.scaleX*(t.vx>0?-1:1),q.scaleY);ctx.drawImage(toothImage,-37,-37,74,74);ctx.restore();
   }
-  if(p.roll){const r=p.roll;
+  if(effects&&p.roll){const r=p.roll;
    if(r.phase==='tucking'||r.phase==='winding'){ctx.strokeStyle='#9b632d';ctx.lineWidth=3;ctx.setLineDash([10,8]);ctx.beginPath();ctx.moveTo(160,500);ctx.lineTo(790,500);ctx.stroke();ctx.setLineDash([]);const tip=m.rollDirection<0?160:790,dir=m.rollDirection;ctx.beginPath();ctx.moveTo(tip-dir*22,484);ctx.lineTo(tip,500);ctx.lineTo(tip-dir*22,516);ctx.stroke()}
    if(r.phase==='rolling'&&!reduced){ctx.strokeStyle='#8c7655';ctx.lineWidth=3;for(let i=0;i<3;i++){const x=r.x-r.direction*(125+i*12);ctx.beginPath();ctx.moveTo(x,r.y-20+i*22);ctx.lineTo(x-r.direction*35,r.y-20+i*22);ctx.stroke()}}
   }
-  for(const t of m.teeth)if(t.source==='roll'&&t.age<t.flight){ctx.strokeStyle='#9b632d';ctx.lineWidth=3;ctx.setLineDash([5,4]);ctx.beginPath();ctx.ellipse(t.target.x,t.target.y+30,30,10,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
+  if(effects)for(const t of m.teeth)if(t.source==='roll'&&t.age<t.flight){ctx.strokeStyle='#9b632d';ctx.lineWidth=3;ctx.setLineDash([5,4]);ctx.beginPath();ctx.ellipse(t.target.x,t.target.y+30,30,10,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
   if(m.impact>0){ctx.strokeStyle='#bd7233';ctx.lineWidth=3;for(let i=0;i<7;i++){const a=i*Math.PI*2/7;ctx.beginPath();ctx.moveTo(110+Math.cos(a)*18,505+Math.sin(a)*18);ctx.lineTo(110+Math.cos(a)*(30+m.impact*35),505+Math.sin(a)*(30+m.impact*35));ctx.stroke()}}
   for(const mark of m.marks){ctx.strokeStyle='#358174';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(mark.x-20,mark.y+22);ctx.lineTo(mark.x+20,mark.y-22);ctx.stroke()}
   if(guide&&!p.roll)for(const limb of Object.values(p.parts))if(limb.cuts<2){const {a,b}=limb.joint;ctx.strokeStyle='#28796d';ctx.lineWidth=3;ctx.setLineDash([6,5]);ctx.beginPath();ctx.arc((a.x+b.x)/2,(a.y+b.y)/2,36,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
