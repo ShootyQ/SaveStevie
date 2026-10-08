@@ -1720,7 +1720,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 {
  let plays=0;const env=load(true,{audio:{play(){plays++;return Promise.resolve()},pause(){}}}),g=env.sandbox.testGame;g.api.resetRun();
  for(const wave of [5,10,15,20,25]){
-  g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,20,20);g.api.killEnemy(boss);
+  g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,20,20);if(wave===10){assert.equal(g.api.musicStatus().track,'wobblechomp');assert(env.node('gameMusic').src.includes('wobblechomp-fight.mp3'));assert.equal(env.node('gameMusic').loop,true)}g.api.killEnemy(boss);
   assert.equal(g.api.musicStatus().track,'victory');assert.equal(env.node('gameMusic').loop,false);const count=plays;
   g.api.killEnemy(boss);assert.equal(plays,count,'duplicate kill cannot replay victory');
   env.node('gameMusic').listeners.ended();assert.equal(g.api.musicStatus().track,g.api.chapterForWave().id);assert.equal(env.node('gameMusic').loop,true);
@@ -2011,6 +2011,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 // Wobblechomp phase one uses released paid strokes and actual cover, not preview effects.
 {
  const env=load(true),g=env.sandbox.testGame,rig=env.sandbox.DoodleDefender.WobblechompRig;
+ assert(fs.statSync(path.join(root,'assets/audio/wobblechomp-fight.mp3')).size>1000000);
  function setup(){g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.enemies=[];g.state.player.hp=g.state.player.maxHp=10000;g.state.stats.ink=g.state.stats.maxInk=1000;return g.api.spawnEnemy(true,100,200)}
  function prepare(e,kind){const s=g.api.bossBrain(e).wobble;s.model=rig.create();s.model.time=1;s.blockStun=0;s.trapped=0;s.attack=null;s.gap=0;s.turn={punch:0,spikes:1,teeth:2,beam:3,roll:5}[kind];g.api.updateWobbleBoss(e,.001);return s}
  function stroke(e,part){const j=g.api.wobbleSnapshot(e).parts[part].joint,a=j.a,b=j.b,x=(a.x+b.x)/2,y=(a.y+b.y)/2,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);return [{x:x-dy/l*24,y:y+dx/l*24},{x:x+dy/l*24,y:y-dx/l*24}]}
