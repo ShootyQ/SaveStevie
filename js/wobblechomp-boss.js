@@ -97,6 +97,13 @@ DoodleDefender.systems.wobbleBoss=function(game){
   if(s.trapped>=.25&&!s.trapWarning){s.trapWarning=true;game.api.floatText(e.x,e.y-e.r-15,'MAKE ROOM!','#966425')}
   if(s.trapped>=.65){game.api.damageWall(hit.wall,Math.max(hit.wall.hp,hit.wall.maxHp),hit.x,hit.y);game.api.playSound('rock');s.trapped=0;s.trapWarning=false;s.trapProbe=null}
  }
+ // The phase-one ball follows its warned route through ink. Refuge clearance
+ // and page bounds still apply; walking continues to route around cover.
+ function rollThroughWalls(e,q,dt){
+  const s=state(e),dx=q.x-e.x,dy=q.y-e.y,d=Math.hypot(dx,dy),n=Math.min(d,280*dt);if(!d)return;
+  for(const offset of [0,.55,-.55,1.1,-1.1,Math.PI/2,-Math.PI/2]){const angle=Math.atan2(dy,dx)+offset,x=e.x+Math.cos(angle)*n,y=e.y+Math.sin(angle)*n;if(x<sideMargin()||x>game.state.W-sideMargin()||y<topMargin()||y>game.state.H-60||!wobblePositionSafe(x,y))continue;e.x=x;e.y=y;break}
+  s.detour=null;s.trapped=0;s.trapWarning=false;s.trapProbe=null;
+ }
  function start(e,s,kind){
   const fn={punch:rig.punch,spikes:rig.shootSpikes,beam:rig.eyeBeam,teeth:rig.shakeTeeth,roll:rig.tuckAndRoll}[kind];
   if(!fn(s.model))return false;s.attack=kind;s.target={x:game.state.player.x,y:game.state.player.y};s.punchHit=false;s.punchEnd=null;s.beamHit=0;
@@ -160,7 +167,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
     while(s.beamHit<s.beamWalls.length&&m.beamAge>=beamPace*(.45+s.beamHit*.18)){const q=s.beamWalls[s.beamHit++];if(game.state.walls.includes(q.wall)){game.state.walls=game.state.walls.filter(w=>w!==q.wall);game.api.burst(q.x,q.y,'#75a999',8);game.api.floatText(q.x,q.y,'BEAMED AWAY!','#28796d')}}
    }
    if(s.attack==='roll'&&m.rollAge!==null){
-    const progress=game.api.clamp((m.rollAge-1.1)/2.35,0,1);s.angle=s.rollStart+progress*3.52;moveToward(e,safePoint(s.angle,true),step,280);
+    const progress=game.api.clamp((m.rollAge-1.1)/2.35,0,1);s.angle=s.rollStart+progress*3.52;rollThroughWalls(e,safePoint(s.angle,true),step);
    }else if(!portraitPhone()&&(s.attack==='teeth'||s.attack==='punch'&&s.punchHit)){s.angle+=step*.5;moveToward(e,safePoint(s.angle),step,95)}
    if(s.attack&&!rig.busy(m)){const eye=s.attack==='beam'&&m.stalkCuts<2;s.attack=null;s.gap=eye?1.2:.35;s.beamWalls=[];if(eye)s.cutWindow={part:'stalk',left:1.2}}
    if(game.state.player.hp<=0)break;
@@ -172,9 +179,9 @@ DoodleDefender.systems.wobbleBoss=function(game){
   if(!Array.isArray(points)||points.length<2||points.some(q=>!q||!Number.isFinite(q.x)||!Number.isFinite(q.y)))return false;
   let length=0;for(let i=1;i<points.length;i++)length+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);
   for(const e of game.state.enemies){if(!isWobbleBoss(e)||e.hp<=0||e.freeze>0||e.stun>0)continue;const s=state(e);if(s.phase===2||s.model.rollAge!==null)continue;
-   const a=frame(e),local=points.map(q=>({x:a.x+(q.x-e.x)/(a.s*a.f),y:a.y+(q.y-e.y)/a.s})),allowed=availableParts(s).filter(name=>name==='arm'||length>=12);
+   const a=frame(e),local=points.map(q=>({x:a.x+(q.x-e.x)/(a.s*a.f),y:a.y+(q.y-e.y)/a.s})),allowed=length>=12?availableParts(s):[];
    const fallen=s.model.fallenParts.length;
-   if(!rig.cutStroke(s.model,local,game.api.enemyMotionReduced(),allowed,{leg:cutRadius/a.s,stalk:cutRadius/a.s}))continue;
+   if(!rig.cutStroke(s.model,local,game.api.enemyMotionReduced(),allowed,{arm:cutRadius/a.s,leg:cutRadius/a.s,stalk:cutRadius/a.s}))continue;
    for(const d of s.model.fallenParts.slice(fallen)){const q=world(e,d);s.debris.push({...d,...q,vx:d.vx*a.s*a.f,vy:d.vy*a.s,facing:a.f,floor:Math.min(game.state.H-35,q.y+45)});}
    const name=s.model.lastCut;
    if(name==={punch:'arm',spikes:'leg',beam:'stalk'}[s.attack]){s.attack=null;s.gap=1.6;s.beamWalls=[]}
@@ -223,13 +230,13 @@ DoodleDefender.systems.wobbleBoss=function(game){
    const hintY=hintTop();
    if(s.phase===2){phaseTwo.draw(e,s,hintY);continue}
    ctx.save();ctx.lineWidth=2;ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillStyle='#385c4a';ctx.fillText('PHASE 1 · CUT THROUGH THE GREEN RINGS',game.state.W/2,hintY);ctx.font='bold 11px sans-serif';ctx.fillText('Arm '+s.model.armCuts+'/2 · Leg '+s.model.legCuts+'/2 · Eye '+s.model.stalkCuts+'/2',game.state.W/2,hintY+16);
-   ctx.fillStyle='#966425';ctx.fillText(s.blockStun>0?(s.model.armCuts<2?'BLOCKED · STUNNED · CUT THE ARM!':'BLOCKED · STUNNED · REBUILD!'):s.cutWindow&&s.model[{arm:'armCuts',leg:'legCuts',stalk:'stalkCuts'}[s.cutWindow.part]]===1?({arm:'ARM',leg:'LEG',stalk:'EYE'}[s.cutWindow.part]+' DANGLING · CUT AGAIN!'):({punch:'PUNCH · BLOCK OR CUT THE ARM',spikes:'SPIKES · BLOCK OR CUT THE LEG',teeth:'TEETH · BLOCK THE WARNED BITES',beam:'BEAM · CUT THE EYE RING TO SAVE WALLS',roll:'ROLL · BLOCK THE SPIKES'}[s.attack]||(s.cutWindow?.part==='stalk'?'EYE EXPOSED · SLASH THE GREEN RING!':'WATCH FOR A GREEN RING')),game.state.W/2,hintY+32);
+   ctx.fillStyle='#966425';ctx.fillText(s.blockStun>0?(s.model.armCuts<2?'BLOCKED · STUNNED · CUT THE ARM!':'BLOCKED · STUNNED · REBUILD!'):s.cutWindow&&s.model[{arm:'armCuts',leg:'legCuts',stalk:'stalkCuts'}[s.cutWindow.part]]===1?({arm:'ARM',leg:'LEG',stalk:'EYE'}[s.cutWindow.part]+' DANGLING · CUT AGAIN!'):({punch:(s.model.armCuts===1?'PUNCH · CUT ARM RING TO DETACH!':'PUNCH · BLOCK OR CUT THE ARM RING'),spikes:'SPIKES · BLOCK OR CUT THE LEG',teeth:'TEETH · BLOCK THE WARNED BITES',beam:'BEAM · CUT THE EYE RING TO SAVE WALLS',roll:'ROLL · BLOCK THE SPIKES'}[s.attack]||(s.cutWindow?.part==='stalk'?'EYE EXPOSED · SLASH THE GREEN RING!':'WATCH FOR A GREEN RING')),game.state.W/2,hintY+32);
    if(s.blockStun>0){ctx.strokeStyle='#966425';ctx.lineWidth=2;for(let i=0;i<3;i++){const a=i*Math.PI*2/3+(game.api.enemyMotionReduced()?0:s.model.time*2),x=e.x+Math.cos(a)*23,y=e.y-e.r-14+Math.sin(a)*6;ctx.beginPath();ctx.moveTo(x-4,y);ctx.lineTo(x+4,y);ctx.moveTo(x,y-4);ctx.lineTo(x,y+4);ctx.stroke()}}
    if(s.trapWarning){const q=game.api.nearestBossWallForStaple(e);if(q){ctx.strokeStyle='#b34936';ctx.lineWidth=3;ctx.beginPath();q.wall.pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke()}}
    if(s.attack==='punch'&&!s.punchHit){ctx.strokeStyle='#b34936';ctx.setLineDash([6,5]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(s.target.x,s.target.y);ctx.stroke();ctx.setLineDash([])}
    if(s.attack==='beam'&&s.beamTip){const eye=world(e,rig.pose(s.model,game.api.enemyMotionReduced()).parts.stalk.center),firing=s.model.beamAge/beamPace>=.2;ctx.strokeStyle='#28796d';ctx.lineWidth=firing?5:2;ctx.setLineDash(firing?[]:[6,5]);ctx.beginPath();ctx.moveTo(eye.x,eye.y);ctx.lineTo(s.beamTip.x,s.beamTip.y);ctx.stroke();ctx.setLineDash([]);}
    if(s.attack==='roll'&&s.model.rollAge<1.1){ctx.strokeStyle='#b34936';ctx.lineWidth=e.r*1.5;ctx.globalAlpha=.12;ctx.beginPath();s.rollRoute.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.globalAlpha=1;ctx.lineWidth=2;ctx.setLineDash([6,5]);ctx.stroke();ctx.setLineDash([])}
-   const p=rig.pose(s.model,game.api.enemyMotionReduced());for(const name of availableParts(s)){const limb=p.parts[name];if(limb.cuts===2)continue;const a=world(e,limb.joint.a),b=world(e,limb.joint.b);ctx.strokeStyle='#28796d';ctx.lineWidth=3;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc((a.x+b.x)/2,(a.y+b.y)/2,cutRadius,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}ctx.restore();
+   const p=rig.pose(s.model,game.api.enemyMotionReduced());for(const name of availableParts(s)){const limb=p.parts[name];if(limb.cuts===2)continue;const a=world(e,limb.joint.a),b=world(e,limb.joint.b);ctx.strokeStyle='#28796d';ctx.lineWidth=3;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc((a.x+b.x)/2,(a.y+b.y)/2,cutRadius,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);if(name==='arm'){ctx.font='bold 10px sans-serif';ctx.fillStyle='#28796d';ctx.fillText(s.model.armCuts===1?'CUT 2/2':'CUT 1/2',(a.x+b.x)/2,(a.y+b.y)/2-cutRadius-4)}}ctx.restore();
   }ctx.restore();
  }
  function wobbleSnapshot(e){const s=game.api.bossBrain(e).wobble;return s?{phase:s.phase,phaseHits:s.phaseHits,transition:s.transition??0,inkPot:s.inkPot?{...s.inkPot}:null,rolling:s.phase===2?{vx:s.rollVX??0,vy:s.rollVY??0,armedFor:s.armedFor,bounces:s.bounces,riding:!!s.rail,railPoints:s.rail?s.rail.points.slice(s.rail.index).map(q=>({...q})):[]}:null,attack:s.attack,turn:s.turn,gap:s.gap,pace,footPace,cutRadius,topMargin:topMargin(),keepout:keepout(),bodyWidth:320*scale(),cutSeconds:s.cutWindow?.left??0,clearance:clearance(e.x,e.y),blockStun:s.blockStun,trapped:s.trapped,beamHit:s.beamHit,beamTargets:s.beamWalls.length,beamTip:s.beamTip?{...s.beamTip}:null,scorches:s.scorches.map(q=>({...q})),debris:s.debris.map(q=>({...q})),punchEnd:s.punchEnd?{...s.punchEnd}:null,model:JSON.parse(JSON.stringify(s.model)),parts:Object.fromEntries(Object.entries(rig.pose(s.model,game.api.enemyMotionReduced()).parts).map(([k,v])=>[k,{cuts:v.cuts,joint:{a:world(e,v.joint.a),b:world(e,v.joint.b)}}])),available:availableParts(s),helpers:game.state.enemies.filter(n=>n.bossOwner===e).length}:null}

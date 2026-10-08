@@ -55,7 +55,7 @@ const root=path.resolve(__dirname,'..');
     for(let i=0;i<2500;i++){s=g.api.wobbleSnapshot(e);if(s.available.includes(part)&&s.model.rollAge===null)break;g.api.update(.01)}
     if(!s.available.includes(part))throw Error('No opening for '+part);
     const j=s.parts[part].joint,a=j.a,b=j.b,x=(a.x+b.x)/2,y=(a.y+b.y)/2,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy),r=g.dom.canvas.getBoundingClientRect();g.api.draw();
-    return (part==='arm'?[{x:x-dy/l*24,y:y+dx/l*24},{x:x+dy/l*24,y:y-dx/l*24}]:[{x:x-dx/l*20-dy/l*10,y:y-dy/l*20+dx/l*10},{x:x+dx/l*20-dy/l*10,y:y+dy/l*20+dx/l*10}]).map(p=>({x:r.left+p.x,y:r.top+p.y}));
+    return ([{x:x-dx/l*20-dy/l*10,y:y-dy/l*20+dx/l*10},{x:x+dx/l*20-dy/l*10,y:y+dy/l*20+dx/l*10}]).map(p=>({x:r.left+p.x,y:r.top+p.y}));
    },part);
    for(const p of points)assert(p.x>=0&&p.x<=viewport.width&&p.y>=0&&p.y<=viewport.height,'joint reachable on '+viewport.width+': '+JSON.stringify(points));
    if(touch){await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[points[0]]});await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[points[1]]});await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]})}
