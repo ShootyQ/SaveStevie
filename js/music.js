@@ -5,6 +5,7 @@ const tracks=game.catalog.musicTracks={
   splash:{name:'Save Stevie Splash',file:'save-stevie-splash.mp3'},
   victory:{name:'Stevie Victory',file:'stevie-victory.wav'},
   'first-boss':{name:'King Doodle-Doom',file:'first-boss.mp3'},
+  wobblechomp:{name:'Wobblechomp Fight V5',file:'wobblechomp-fight.mp3'},
   'margin-mischief':{name:'Save Stevie',file:'save-stevie.mp3'},
   'pop-quiz-panic':{name:'Pop Quiz Panic',file:'pop-quiz-panic.mp3'},
   'crayon-catastrophe':{name:'Crayon Catastrophe',file:'crayon-catastrophe.mp3'},

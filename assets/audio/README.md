@@ -59,3 +59,7 @@ shockwave clears drawn walls without explosions or rewards, and the boss
 battle starts with the new music. Pause freezes the sequence; interrupted
 entrance sounds resume at their current position. Reduced motion removes
 zooming and hopping. Returning to the menu or restarting cancels the entrance.
+
+## Wobblechomp fight
+
+`wobblechomp-fight.mp3` is the user-supplied **Wobblechomp Fight V5.mp3**, copied unchanged with its embedded artwork (179.040 seconds; 4,439,484 bytes). It loops during Wobblechomp’s wave-10 fight, including Scratch Page boss tests. The normal entrance keeps music suspended for the stomp and roar; the song starts when combat begins. Boss defeat switches to Stevie Victory, then the chapter music resumes. Saved mute, music volume, visibility handling and build-versioned asset paths apply as usual.
