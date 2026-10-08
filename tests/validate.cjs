@@ -206,7 +206,7 @@ console.log('PASS: 60-second arrival counts '+JSON.stringify(pressureCounts));
 pg.state.wave=20;pg.api.startWave();pg.state.timeLeft=51;const surgeGap=pg.api.spawnGap();pg.state.timeLeft=57;
 assert.ok(surgeGap<pg.api.spawnGap(),'short surge increases frequency');
 assert.equal(pg.api.enemySpeedScale(),1.28);
-for(const [wave,type] of [[8,'wardling'],[9,'sprinter'],[10,'brood'],[11,'bulwark'],[13,'medic'],[15,'sapper']]){
+for(const [wave,type] of [[9,'wardling'],[3,'sprinter'],[10,'brood'],[11,'bulwark'],[13,'medic'],[15,'sapper']]){
   const pick=pg.api.pick;let pool;
   pg.api.pick=list=>{pool=list;return list[0]};pg.state.wave=wave-1;pg.api.enemyType();assert.ok(!pool.includes(type));
   pg.state.wave=wave;pg.api.enemyType();assert.ok(pool.includes(type));pg.api.pick=pick;
@@ -355,7 +355,7 @@ assert.ok(rg.state.floaters.some(f=>f.text?.startsWith('SHOT')),'ranged damage i
 rg.state.walls=[{pts:[{x:rg.state.player.x-70,y:rg.state.player.y-80},{x:rg.state.player.x-70,y:rg.state.player.y+80}],thick:8}];
 assert.equal(rg.api.shotBlocked(sniper.x,sniper.y,rg.state.player.x,rg.state.player.y),true,'walls interrupt line of sight');
 rg.api.fireSniper(sniper);const protectedHp=rg.state.player.hp;rg.api.updateEnemyShots(1);
-assert.equal(rg.state.player.hp,protectedHp,'swept shot cannot tunnel through a wall');assert.equal(rg.state.enemyShots.length,0);
+assert.equal(rg.state.player.hp,protectedHp,'swept shot cannot tunnel through a wall');assert.equal(rg.state.enemyShots.length,1);assert.equal(rg.state.enemyShots[0].reflected,true);rg.state.enemyShots=[];
 sniper.shootCd=.01;rg.api.update(.02);assert.equal(rg.state.enemyShots.length,0,'blocked sniper does not fire through cover');
 rg.state.walls=[];rg.state.enemyShots=[{x:rg.state.player.x-100,y:rg.state.player.y+60,vx:150,vy:0,r:3,damage:7,life:2}];
 rg.api.updateEnemyShots(1);assert.equal(rg.state.player.hp,protectedHp,'near miss does no damage');
@@ -526,7 +526,7 @@ assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
 assert.equal(g.catalog.monsters.length,25);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,25);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],3:['fast'],5:['bouncer','tank','boss'],7:['flanker','splitter','mini'],8:['wardling'],9:['sniper','sprinter'],10:['wobblechomp','wobble-tooth','brood'],11:['bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],2:['fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -2103,4 +2103,54 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
   for(let k=0;k<800;k++)g.api.updateWobbleBoss(e,.01);assert(pair.some(w=>!g.state.walls.includes(w)),'two separate walls cannot permanently pin the boss');assert(g.api.wobbleSnapshot(e).clearance>=95);
  }
  console.log('PASS: Wobblechomp six-cut phase-two handoff, finite unlimited ink, bounded bumpers, straight/bent rails, both travel directions, erased-line release, four rail-guided hits, freeze/resize/pause/pure rendering and victory progression; paid cuts, copies, old walls, cover, single spike fan, beam-only erasure, fragile tooth wall chewing/ink/freeze, single arm cut per punch, planted longer foot cut window, top-bottom portrait routes, roll cleanup, wall detours, fixed fallen parts, desktop HUD headroom, full-ring slash detection, post-beam exposure, sweeping beam/scorch lifetime, readable pacing and bounded finite phone combat.');
+}
+
+// Each wave has a real introduction; normal newcomers cannot be missed by RNG.
+{
+ const env=load(true),g=env.sandbox.testGame;
+ for(let wave=1;wave<=10;wave++){
+  g.api.resetRun();g.state.wave=wave;g.api.startWave();g.api.closeInfo();g.state.paused=false;
+  const entries=g.catalog.monsters.filter(m=>m.wave===wave&&!['mini','stapler','jamling','wobble-tooth'].includes(m.type));
+  assert.ok(entries.length,'new monster on wave '+wave);
+  const normal=entries.filter(m=>!['boss','wobblechomp'].includes(m.type));
+  for(const m of normal){g.state.spawnTimer=0;g.api.spawnWaveEnemies(0);assert.ok(g.state.enemies.some(e=>e.type===m.type),'guaranteed '+m.type);}
+ }
+ g.api.resetRun();g.state.wave=9;g.api.startWave();g.api.closeInfo();g.state.paused=false;
+ const dash=g.api.spawnEnemy(false,100,100,'sprinter');dash.dashTime=0;
+ const base=g.api.enemyMoveScale(dash);g.api.updateEnemyBehavior(dash,16);dash.dashTime=0;
+ assert.ok(Math.abs(g.api.enemyMoveScale(dash)/base-1.8)<1e-8,'Dash accelerates to capped pace');
+ g.api.updateEnemyBehavior(dash,100);dash.dashTime=0;assert.ok(Math.abs(g.api.enemyMoveScale(dash)/base-1.8)<1e-8,'speed remains capped');
+ for(const wave of [12,13,18,19,20]){
+  g.state.wave=wave;g.state.enemies=[];g.state.enemyShots=[];g.state.walls=[];
+  const e=g.api.spawnEnemy(false,100,200,'sniper'),need=wave<=12?1:wave<=18?2:3;
+  g.state.player.x=400;g.state.player.y=200;
+  const hp=g.state.player.hp;
+  for(let i=0;i<need;i++){
+   g.state.walls=[{pts:[{x:200,y:140},{x:200,y:260}],hp:100,maxHp:100,thick:8,life:100}];
+   g.api.fireSniper(e);g.api.updateEnemyShots(.8);
+   assert.equal(g.state.enemyShots.length,1);assert.equal(g.state.enemyShots[0].reflected,true);
+   assert.equal(g.state.walls[0].hp,100,'ordinary return preserves wall');
+   g.api.updateEnemyShots(1);
+   assert.equal(g.state.player.hp,hp,'returned shot never hurts Stevie');
+   assert.equal(g.state.enemies.includes(e),i<need-1,'return count on wave '+wave);
+  }
+ }
+ g.state.enemies=[];g.state.walls=[];g.state.enemyShots=[];
+ const dead=g.api.spawnEnemy(false,100,200,'sniper');g.api.fireSniper(dead);g.api.killEnemy(dead);g.api.updateEnemyShots(1);assert.equal(g.state.enemyShots.length,0,'shots cleaned up with their shooter');
+ // A persistent cooldown must not cancel any of the three escape attempts.
+ g.api.resetRun();g.state.wave=4;g.api.startWave();g.api.closeInfo();g.state.paused=false;g.state.spawnTimer=999;
+ const wall={pts:[{x:300,y:100},{x:300,y:600}],hp:1000,maxHp:1000,thick:8,life:100,maxLife:100};g.state.walls=[wall];g.state.player.x=500;g.state.player.y=350;
+ const boing=g.api.spawnEnemy(false,287,350,'bouncer');
+ for(let i=0;i<3;i++){
+  boing.x=287;boing.y=350;boing.bounceTime=0;boing.attackCd=.35;
+  g.api.update(.03);assert.equal(boing.bounces,2-i);assert.equal(wall.hp,1000,'no chewing before three bounces');
+  const x=boing.x,y=boing.y;g.api.update(.03);assert.ok(Math.hypot(boing.x-x,boing.y-y)>0,'actual bounce motion');
+  assert.ok(g.api.pointSegDist(boing.x,boing.y,300,100,300,600)>=boing.r+4,'bounce respects wall');
+ }
+ boing.x=287;boing.y=350;boing.bounceTime=0;boing.attackCd=0;g.api.update(.03);assert.ok(wall.hp<1000,'chews after third escape attempt');
+ g.state.enemies=[];wall.hp=1000;wall.pts=[{x:300,y:250},{x:300,y:400}];
+ const escape=g.api.spawnEnemy(false,287,350,'bouncer');
+ for(let i=0;i<160&&escape.x<325;i++)g.api.update(.03);
+ assert.ok(escape.x>=325,'Boingus routes around the end of an open wall');assert.equal(wall.hp,1000,'successful escape leaves wall intact');
+ console.log('PASS: guaranteed wave introductions, capped Dash acceleration, Pew-Pew return thresholds and ownership, and three moving Boingus ricochets before chewing.');
 }

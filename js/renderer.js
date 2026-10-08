@@ -624,7 +624,8 @@ function draw(){
     }
     // Normal enemy shots are Pew-Pew's pencils. Keep the nib on the unchanged
     // collision point; the shaft trails behind it just like the old arrow.
-    ctx.fillStyle='#efc84c';ctx.strokeStyle='#29343b';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-6,-3);ctx.lineTo(-25,-3);ctx.lineTo(-25,3);ctx.lineTo(-6,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#e4bb8c';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-6,-3);ctx.lineTo(-6,3);ctx.closePath();ctx.fill();ctx.fillStyle='#29343b';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-2,-1);ctx.lineTo(-2,1);ctx.closePath();ctx.fill();ctx.fillStyle='#db8c91';ctx.fillRect(-28,-3,3,6);ctx.strokeRect(-28,-3,3,6);ctx.strokeStyle='#aa852d';ctx.beginPath();ctx.moveTo(-23,0);ctx.lineTo(-7,0);ctx.stroke();ctx.restore();continue;
+    if(shot.reflected){ctx.strokeStyle='#278f82';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(-36,0);ctx.lineTo(-29,0);ctx.stroke()}
+    ctx.fillStyle=shot.reflected?'#7dc7a0':'#efc84c';ctx.strokeStyle='#29343b';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-6,-3);ctx.lineTo(-25,-3);ctx.lineTo(-25,3);ctx.lineTo(-6,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#e4bb8c';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-6,-3);ctx.lineTo(-6,3);ctx.closePath();ctx.fill();ctx.fillStyle='#29343b';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-2,-1);ctx.lineTo(-2,1);ctx.closePath();ctx.fill();ctx.fillStyle='#db8c91';ctx.fillRect(-28,-3,3,6);ctx.strokeRect(-28,-3,3,6);ctx.strokeStyle='#aa852d';ctx.beginPath();ctx.moveTo(-23,0);ctx.lineTo(-7,0);ctx.stroke();ctx.restore();continue;
 
   }
 

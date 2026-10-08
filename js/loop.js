@@ -174,7 +174,7 @@ function update(dt){
     const playerDist=game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y);
     const hit=game.api.nearestWallHit(e)||game.api.gravityWallHit(e)||game.api.bossWallHit(e);
     if(hit){
-      if(!immobilized&&e.type==='bouncer'&&e.bounces>0&&e.attackCd<=0){
+      if(!immobilized&&e.type==='bouncer'&&e.bounces>0){
         const i=hit.seg,a=hit.wall.pts[i-1],b=hit.wall.pts[i];
         let tx=b.x-a.x,ty=b.y-a.y,tm=Math.hypot(tx,ty)||1;
         tx/=tm;ty/=tm;
@@ -182,10 +182,15 @@ function update(dt){
         const incomingX=dx/d,incomingY=dy/d;
         if(incomingX*nx+incomingY*ny>0){nx=-nx;ny=-ny}
         // Blend reflection with a little tangent motion so it actually searches for another route.
-        const tangentDir=Math.random()<.5?-1:1;
+        const first=hit.wall.pts[0],last=hit.wall.pts[hit.wall.pts.length-1];
+        const da=Math.hypot(e.x-first.x,e.y-first.y)+Math.hypot(first.x-targetX,first.y-targetY),db=Math.hypot(e.x-last.x,e.y-last.y)+Math.hypot(last.x-targetX,last.y-targetY);
+        const tangentDir=da<db?-1:1;
         e.bounceVX=(nx*.78+tx*.62*tangentDir)*e.speed*1.45;
         e.bounceVY=(ny*.78+ty*.62*tangentDir)*e.speed*1.45;
-        e.bounceTime=.72;
+        const end=tangentDir<0?first:last,pad=e.r+hit.wall.thick/2+8;
+        e.bounceGoal={x:end.x+nx*pad+tx*tangentDir*pad,y:end.y+ny*pad+ty*tangentDir*pad};
+        e.bounceTime=Math.min(3.2,.35+Math.hypot(e.bounceGoal.x-e.x,e.bounceGoal.y-e.y)/(e.speed*1.45));
+        e.bounceKick=.2;
         e.bounces--;
         e.attackCd=.35;
         game.api.animateEnemyAction(e,'bounce');
