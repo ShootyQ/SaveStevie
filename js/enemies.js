@@ -260,7 +260,7 @@ function updateEnemyShots(dt){
       game.api.playSound('rock');remaining.push(shot);continue;
     }
     const stapleWall=(shot.stapleOwner||shot.wobbleOwner)?game.api.bossShotWallHit(shot,endX,endY):null;
-    if(stapleWall){const x=shot.x+(endX-shot.x)*stapleWall.t,y=shot.y+(endY-shot.y)*stapleWall.t;game.api.damageWall(stapleWall.wall,shot.wobbleOwner?4:8,x,y);game.api.burst(x,y,'#928276',5);continue}
+    if(stapleWall){const x=shot.x+(endX-shot.x)*stapleWall.t,y=shot.y+(endY-shot.y)*stapleWall.t;game.api.damageWall(stapleWall.wall,shot.wobbleOwner?4:8,x,y);game.api.burst(x,y,'#928276',5);if(shot.wobbleOwner)game.api.counterWobbleSpike(shot);continue}
     if(shotBlocked(shot.x,shot.y,endX,endY,shot.r)){
       game.api.burst(endX,endY,'#4b79d8',5);continue;
     }

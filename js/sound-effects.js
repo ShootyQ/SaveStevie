@@ -10,6 +10,13 @@ const groups={
  fire:{files:['fire-crackle'],gain:.2,gap:.85,cap:1,priority:1,duration:.6},
  frost:{files:['frost-crackle'],gain:.3,gap:.6,cap:1,priority:2,duration:.8},
  poison:{files:['poison-bubble-1','poison-bubble-2','poison-bubble-3','poison-bubble-4'],offsets:[2.9,5.7,1.7,.5],gain:.5,gap:.85,cap:1,priority:1,duration:.6},
+ wobbleWindup:{files:['wobble-windup'],gain:.4,gap:0,cap:1,priority:3,rate:2},
+ wobblePunch:{files:['wobble-punch'],gain:.5,gap:.08,cap:1,priority:4},
+ wobbleSpike:{files:['wobble-spike'],gain:.35,gap:.12,cap:1,priority:3},
+ wobbleTeeth:{files:['wobble-teeth'],gain:.35,gap:.3,cap:1,priority:3},
+ wobbleLaser:{files:['wobble-laser'],gain:.28,gap:0,cap:1,priority:3,loop:true},
+ wobbleRoll:{files:['wobble-roll'],gain:.28,gap:0,cap:1,priority:2,loop:true},
+ wobbleTear:{files:['wobble-tear'],gain:.5,gap:.1,cap:1,priority:4},
  bossEnter:{files:['boss-enter'],gain:.45,gap:2,cap:1,priority:3},
  bossStomp:{files:['first-boss-stomp'],gain:.6,gap:0,cap:1,priority:4},
  bossRoar:{files:['first-boss-roar'],gain:.6,gap:0,cap:1,priority:4}
@@ -43,15 +50,16 @@ function playSound(kind,menu=false,seek=0){
  if(voices.filter(v=>v.kind===kind).length>=g.cap){dropped++;return false}
  if(voices.length>=maxVoices){const candidate=voices.find(v=>groups[v.kind].priority<g.priority);if(!candidate){dropped++;return false}stopVoice(candidate)}
  const name=available[(variants[kind]||0)%available.length];variants[kind]=(variants[kind]||0)+1;
- try{const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffers.get(name);if(kind==='rock'&&source.playbackRate)source.playbackRate.value=(variants[kind]%2)?.97:1.03;const offset=Math.min(seek||g.offsets?.[g.files.indexOf(name)]||0,Math.max(0,source.buffer.duration-.1)),duration=Math.min(kind==='scribble'?.28:g.duration??Infinity,source.buffer.duration-offset);
-  const level=g.gain*(menu?.55:1);gain.gain.setValueAtTime(level,now);gain.gain.setValueAtTime(level,now+Math.max(0,duration-.025));gain.gain.linearRampToValueAtTime(0,now+duration);source.connect(gain);gain.connect(master);
-  const voice={source,gain,kind,name,stopped:false};voices.push(voice);source.onended=()=>{voice.stopped=true;source.disconnect?.();gain.disconnect?.();voices=voices.filter(v=>v!==voice)};source.start(0,offset,duration);last[kind]=now;played++;return true;
+ try{const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffers.get(name);if(source.playbackRate)source.playbackRate.value=g.rate||(kind==='rock'?((variants[kind]%2)?.97:1.03):1);source.loop=!!g.loop;const offset=Math.min(seek||g.offsets?.[g.files.indexOf(name)]||0,Math.max(0,source.buffer.duration-.1)),duration=Math.min(kind==='scribble'?.28:g.duration??Infinity,source.buffer.duration-offset);
+  const level=g.gain*(menu?.55:1);gain.gain.setValueAtTime(level,now);if(!g.loop){const seconds=duration/(g.rate||1);gain.gain.setValueAtTime(level,now+Math.max(0,seconds-.025));gain.gain.linearRampToValueAtTime(0,now+seconds);}source.connect(gain);gain.connect(master);
+  const voice={source,gain,kind,name,stopped:false};voices.push(voice);source.onended=()=>{voice.stopped=true;source.disconnect?.();gain.disconnect?.();voices=voices.filter(v=>v!==voice)};if(g.loop)source.start(0,offset);else source.start(0,offset,duration);last[kind]=now;played++;return true;
  }catch{stopSoundEffects(kind);return false}
 }
+function sustainSound(kind){if(!groups[kind]?.loop)return false;return voices.some(v=>v.kind===kind)||playSound(kind)}
 function syncSoundEffects(){if(!combatActive()){for(const v of [...voices])if(v.kind!=='scribble'||!menuActive())stopVoice(v)}}
 function resetSoundEffects(){stopSoundEffects();last={}}
 function soundEffectsSnapshot(){return {supported:!!(window.AudioContext||window.webkitAudioContext),unlocked:context?.state==='running',ready,failed,played,dropped,maxVoices,voices:voices.map(v=>({kind:v.kind,name:v.name})),volume:game.api.audioSettings().effectsVolume}}
 document.addEventListener?.('pointerdown',unlockSoundEffects,{capture:true});document.addEventListener?.('keydown',unlockSoundEffects,{capture:true});
 document.addEventListener?.('visibilitychange',()=>{if(document.hidden){stopSoundEffects();context?.suspend?.()?.catch?.(()=>{})}else if(context)unlockSoundEffects()});
-const api={unlockSoundEffects,playMenuScribble,playSound,stopSoundEffects,applyEffectsVolume,syncSoundEffects,resetSoundEffects,soundEffectsSnapshot};Object.assign(game.api,api);return api;
+const api={unlockSoundEffects,playMenuScribble,playSound,sustainSound,stopSoundEffects,applyEffectsVolume,syncSoundEffects,resetSoundEffects,soundEffectsSnapshot};Object.assign(game.api,api);return api;
 };
