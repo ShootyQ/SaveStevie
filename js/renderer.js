@@ -595,7 +595,7 @@ function draw(){
   game.api.drawBossEncounters();game.api.drawWobbleFields();
   for(const n of game.state.enemies)if(n.type==='jamling'&&n.jamWarning>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b34936';ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,n.r+5,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.jamWarning/1.3));ctx.stroke();ctx.restore()}
   for(const shot of game.state.enemyShots){
-    if(shot.wobbleOwner){const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));if(!motionReduced){ctx.strokeStyle='rgba(173,110,40,.35)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-5,0);ctx.stroke()}ctx.fillStyle='#edb538';ctx.strokeStyle='#3b3024';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(8,0);ctx.lineTo(-5,-4);ctx.lineTo(-3,0);ctx.lineTo(-5,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();continue}
+    if(shot.wobbleOwner){const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));if(!motionReduced){ctx.strokeStyle='rgba(173,110,40,.35)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-5,0);ctx.stroke()}ctx.fillStyle='#edb538';ctx.strokeStyle='#3b3024';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-13,-4);ctx.lineTo(-11,0);ctx.lineTo(-13,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();continue}
     if(shot.owner){game.api.drawFirstBossShot(shot);continue}
     const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));
     const image=doodles.arrow;
