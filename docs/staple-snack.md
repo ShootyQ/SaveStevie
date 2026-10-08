@@ -18,12 +18,20 @@ it breaks the wall. Cover-destroying casts clear old staple shots. Nests pause f
 misfires or jam explosion are active. No passive Staple Snack body contact damage:
 only a warned, unblocked rush can damage the fort.
 
+The boss circles the fort at 2.3 times his base walking speed between casts and
+during recovery. Cooldown and recovery run together rather than creating two
+consecutive waits. Casts hold position to preserve their locked warning lines.
+If cover blocks his orbit, he tries the reverse arc or an outward step.
+
 ## Jamling helpers
 
 Misshapen silver/rust staple tangles hop toward the fort and chew walls slowly.
-Staple Snack calls one every ten seconds in phase 1, two every eight seconds in
-later phases, plus a small group with nests/jam. Living boss-owned helpers are
-capped at six. They spawn outside the fort with a one-second stun. Contact has a
+Staple Snack spits out one after a fan and two after a paper punch, nest deployment
+or jam explosion. Nests also eject one after every second volley. There is no
+independent summon timer. Each helper flies from its source for one second toward
+a marked landing outside the fort, then waits 0.7 seconds before moving. Living
+helpers and airborne deployments together are capped at six. Phase changes cancel
+airborne deployments; boss death clears them. Contact has a
 1.3-second visible snap windup; cover interrupts it. Defeating the boss clears his
 helpers and shots. They never join the ordinary random wave pool.
 

@@ -1920,3 +1920,24 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  }
  console.log('PASS: Staple Snack walks around the fort, preserving defensive room for future attack origins across three aspect ratios.');
 }
+
+// Helpers must visibly depart from an attack source before joining combat.
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();
+ const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);
+ g.api.updateBossEncounter(e,0);b.cd=0;g.api.updateBossEncounter(e,.01);
+ assert.equal(b.cast.kind,'fan');g.api.updateBossEncounter(e,1.4);
+ assert.equal(g.state.enemies.filter(n=>n.bossOwner===e).length,0,'no instant helper spawn');
+ const flight=g.api.stapleSnapshot(e).deployments[0];assert.equal(flight.x,e.x);assert.equal(flight.y,e.y);
+ assert.ok(Math.hypot(flight.tx-p.x,flight.ty-p.y)>=125);
+ g.api.updateBossEncounter(e,.5);assert.equal(g.state.enemies.filter(n=>n.bossOwner===e).length,0,'flight precedes activation');
+ const x=e.x,y=e.y;assert.ok(b.recovery>0);g.api.moveStapleBossIdle(e,.1);assert.ok(Math.hypot(e.x-x,e.y-y)>5,'recoil includes active repositioning');
+ g.api.updateBossEncounter(e,.51);assert.equal(g.state.enemies.filter(n=>n.bossOwner===e).length,1);
+ assert.ok(g.state.enemies.find(n=>n.bossOwner===e).stun>=.7,'landing gives defensive grace');
+ b.cd=999;for(let i=0;i<200;i++)g.api.updateBossEncounter(e,.1);
+ assert.equal(g.state.enemies.filter(n=>n.bossOwner===e).length,1,'waiting has no unrelated summon timer');
+ b.cd=0;b.staple.turn=0;g.api.updateBossEncounter(e,.01);g.api.updateBossEncounter(e,1.4);
+ assert.ok(g.api.stapleSnapshot(e).deployments.length);e.hp=e.maxHp*.5;g.api.updateBossEncounter(e,.01);
+ assert.equal(g.api.stapleSnapshot(e).deployments.length,0,'phase grace cancels airborne helpers');
+ console.log('PASS: attack-linked helper origin, visible flight before spawn, safe landing/stun, recovery movement, no independent summon timer and phase cancellation.');
+}

@@ -780,7 +780,7 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { enemyFacing, enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { drawStapleHelper:()=>drawDoodleEnemy({type:'jamling',r:10,hp:1,maxHp:1},1,false), enemyFacing, enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 updateMenuPencil(0);
 return api;

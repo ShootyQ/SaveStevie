@@ -20,10 +20,19 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.evaluate(()=>{const g=testGame;g.state.paused=true;const age=g.api.stapleIntroPose().age;g.api.update(.4);if(g.api.stapleIntroPose().age!==age)throw Error('entrance advanced during pause');g.state.paused=false;g.api.update(1.3)});
   assert.equal(await page.evaluate(()=>testGame.state.enemies.filter(e=>e.waveBoss).length),1);
   const liveFight=await page.evaluate(()=>{
-   const g=testGame;let helpers=0;
-   for(let i=0;i<240;i++){g.api.update(1/30);helpers=Math.max(helpers,g.state.enemies.filter(n=>n.type==='jamling').length)}
-   g.api.draw();return {helpers,finite:g.state.enemies.every(n=>Number.isFinite(n.x)&&Number.isFinite(n.y)),running:g.state.running};
+   const g=testGame,e=g.state.enemies.find(n=>n.waveBoss);let helpers=0,travel=0,idleTravel=0,flights=0;const attacks=new Set();
+   // Observe a full phase without ending it through incidental damage/death.
+   e.hp=e.maxHp=100000;g.state.player.hp=g.state.player.maxHp=100000;g.api.updateBossEncounter(e,0);
+   for(let i=0;i<900;i++){
+    const x=e.x,y=e.y,previous=g.api.stapleSnapshot(e).attack;g.api.update(1/30);travel+=Math.hypot(e.x-x,e.y-y);
+    if(!previous&&!g.api.stapleSnapshot(e).attack)idleTravel+=Math.hypot(e.x-x,e.y-y);
+    const s=g.api.stapleSnapshot(e);if(s.attack)attacks.add(s.attack);flights=Math.max(flights,s.deployments.length);
+    helpers=Math.max(helpers,g.state.enemies.filter(n=>n.type==='jamling').length);
+   }
+   g.api.draw();return {helpers,travel,idleTravel,flights,attacks:[...attacks],finite:g.state.enemies.every(n=>Number.isFinite(n.x)&&Number.isFinite(n.y)),running:g.state.running};
   });assert.ok(liveFight.helpers>0&&liveFight.helpers<=6&&liveFight.finite&&liveFight.running);
+  assert.ok(liveFight.idleTravel>250,JSON.stringify(liveFight));assert.ok(liveFight.travel>400,JSON.stringify(liveFight));assert.ok(liveFight.flights>0);for(const move of ['fan','rush','punch'])assert.ok(liveFight.attacks.includes(move),JSON.stringify(liveFight));
+  console.log('Phase-one '+viewport.width+': '+Math.round(liveFight.idleTravel)+'px between attacks; fan, rush, punch and visible helper flights observed.');
   const moves=[['fan','rush','punch'],['zipper','drag','nests'],['barrage','snap','jam']];
   for(let phase=1;phase<=3;phase++)for(let index=0;index<3;index++){
    const result=await page.evaluate(({phase,index})=>{
@@ -41,6 +50,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
     const state=JSON.stringify(g.api.bossEncounterSnapshot());g.state.paused=true;g.api.update(.5);const paused=state===JSON.stringify(g.api.bossEncounterSnapshot());g.state.paused=false;
     return {paused,finite:g.state.enemies.every(n=>Number.isFinite(n.x)&&Number.isFinite(n.y))};
    });assert.ok(action.paused&&action.finite);
+   if(phase===1&&index===0)await page.screenshot({path:'/tmp/staple-jam-spit-'+viewport.width+'.png'});
   }
   const minion=await page.evaluate(()=>{
    const g=testGame;g.state.enemies=[];g.state.enemyShots=[];const e=g.api.spawnEnemy(false,g.state.player.x-75,g.state.player.y-65,'jamling');g.api.updateEnemyAnimations(0);g.api.draw();

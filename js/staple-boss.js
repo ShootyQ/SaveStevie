@@ -4,21 +4,34 @@ const phases=[['fan','rush','punch'],['zipper','drag','nests'],['barrage','snap'
 const names={fan:'STAPLE FAN · DRAW COVER',rush:'RICOCHET RUSH · BLOCK THE ROUTE',punch:'PAPER PUNCH · REBUILD AFTER',zipper:'ZIPPER · DRAW BEHIND IT',drag:'CLAMP · CROSS THE HELD WALL TO RELEASE',nests:'STAPLE NESTS · DRAW THROUGH TO JAM',barrage:'MISFIRE · LONG WALLS ON BOTH LANES',snap:'TRIPLE SNAP · THREE WARNINGS',jam:'JAM EXPLOSION · DRAW COVER'};
 function isStapleBoss(e){return !!e.waveBoss&&e.type==='stapler'}
 function phaseFor(e){return e.hp/e.maxHp>.7?1:e.hp/e.maxHp>.35?2:3}
-function state(e){const b=game.api.bossBrain(e);if(!b.staple)b.staple={phase:phaseFor(e),transition:0,turn:0,pins:[],nests:[],helperCd:2,helperSerial:0,rush:null,drag:null,zipper:null,barrage:null,snaps:0,click:0};return b.staple}
+function state(e){const b=game.api.bossBrain(e);if(!b.staple)b.staple={phase:phaseFor(e),transition:0,turn:0,pins:[],nests:[],deployments:[],helperSerial:0,rush:null,drag:null,zipper:null,barrage:null,snaps:0,click:0};return b.staple}
 function live(e){return e.hp>0&&game.state.enemies.includes(e)}
 function safePoint(angle,radius=155){
  const {player:p,W,H}=game.state;
  for(let i=0;i<16;i++){const a=angle+i*Math.PI/8,x=game.api.clamp(p.x+Math.cos(a)*radius,45,W-45),y=game.api.clamp(p.y+Math.sin(a)*radius,Math.min(105,H*.3),H-45);if(Math.hypot(x-p.x,y-p.y)>=125)return {x,y}}
  return {x:45,y:Math.min(105,H*.3)};
 }
-function adds(e,count=2){
- const s=state(e),room=6-game.state.enemies.filter(n=>n.bossOwner===e&&n.hp>0).length;
- for(let i=0;i<Math.min(count,room);i++){const p=safePoint((s.helperSerial++)*2.4,175),n=game.api.spawnEnemy(false,p.x,p.y,'jamling');if(n){n.bossOwner=e;n.stun=1;n.jamWarning=0}}
+function adds(e,count=2,source=e){
+ const s=state(e),room=6-s.deployments.length-game.state.enemies.filter(n=>n.bossOwner===e&&n.hp>0).length;
+ for(let i=0;i<Math.min(count,room);i++){
+  const angle=Math.atan2(source.y-game.state.player.y,source.x-game.state.player.x)+(s.helperSerial++%2?1:-1)*.45;
+  const p=safePoint(angle,Math.max(145,Math.hypot(source.x-game.state.player.x,source.y-game.state.player.y)-30));
+  s.deployments.push({x:source.x,y:source.y,tx:p.x,ty:p.y,age:0,duration:1});
+ }
+ if(room>0){game.api.floatText(source.x,source.y-30,'JAM SPIT!','#966425');game.api.playSound('rock')}
+}
+function updateDeployments(e,dt){
+ const s=state(e);
+ s.deployments=s.deployments.filter(q=>{
+  q.age+=dt;if(q.age<q.duration)return true;
+  const n=game.api.spawnEnemy(false,q.tx,q.ty,'jamling');if(n){n.bossOwner=e;n.stun=.7;n.jamWarning=0;game.api.burst(q.tx,q.ty,'#928276',8)}
+  return false;
+ });
 }
 function clearStapleBoss(e){
  game.state.enemyShots=game.state.enemyShots.filter(s=>s.stapleOwner!==e);
  game.state.enemies=game.state.enemies.filter(n=>n.bossOwner!==e);
- const s=game.api.bossBrain(e).staple;if(s){s.pins=[];s.nests=[];s.rush=s.drag=s.zipper=s.barrage=null}
+ const s=game.api.bossBrain(e).staple;if(s){s.pins=[];s.nests=[];s.deployments=[];s.rush=s.drag=s.zipper=s.barrage=null}
 }
 function shoot(e,x,y,tx,ty,count=1,spread=.2){
  const angle=Math.atan2(ty-y,tx-x);
@@ -55,12 +68,12 @@ function cast(e,kind,extra={}){
 function finish(e,recovery=1.6){const b=game.api.bossBrain(e);b.cast=null;e.bossWindup=0;b.recovery=recovery;b.cd=2.2;game.api.animateEnemyAction(e,'slam')}
 function execute(e,c){
  const b=game.api.bossBrain(e),s=state(e);b.action={kind:c.kind,age:0};b.cast=null;e.bossWindup=0;
- if(c.kind==='fan'){shoot(e,c.originX,c.originY,c.x,c.y,3,.35);finish(e,.6)}
+ if(c.kind==='fan'){shoot(e,c.originX,c.originY,c.x,c.y,3,.35);adds(e,1);finish(e,.6)}
  else if(c.kind==='rush'||c.kind==='snap'){
   s.rush={route:c.route||[{x:c.x,y:c.y}],index:0,left:4,kind:c.kind};b.charge=4;
  }else if(c.kind==='punch'){
   for(const w of [...game.state.walls]){const q=game.api.nearestPointOnWall(c,w);if(q&&Math.hypot(q.x-c.x,q.y-c.y)<52)game.api.damageWall(w,w.hp+1,q.x,q.y)}
-  game.api.burst(c.x,c.y,'#bd9557',20);finish(e,2.2);
+  game.api.burst(c.x,c.y,'#bd9557',20);adds(e,2);finish(e,2.2);
  }else if(c.kind==='zipper'){s.zipper={x:c.zx,y:c.zy,vx:c.vx,vy:c.vy,age:0,travel:Math.hypot(c.x-c.zx,c.y-c.zy)+70};finish(e,2)}
  else if(c.kind==='drag'){
   if(c.wall&&game.state.walls.includes(c.wall)){s.drag={wall:c.wall,original:c.wall.pts.map(p=>({...p})),age:0,direction:s.turn%2?1:-1,others:new Set(game.state.walls)};b.cd=4;b.recovery=4}else finish(e,2);
@@ -101,7 +114,7 @@ function updatePressure(e,dt){
   // Nests are the only persistent damaging channel, and pause their clocks
   // during cover-destroying moves. Never combine a wipe with a surprise volley.
   if(s.drag||s.zipper||s.barrage||['punch','zipper','drag','jam','barrage'].includes(b.cast?.kind)||b.recovery>1.6)continue;
-  if(n.warning>0){n.warning-=dt;if(n.warning<=0){shoot(e,n.x,n.y,n.tx,n.ty,1);n.shots++;n.cd=3.5;if(n.shots%2===0)adds(e,1)}}
+  if(n.warning>0){n.warning-=dt;if(n.warning<=0){shoot(e,n.x,n.y,n.tx,n.ty,1);n.shots++;n.cd=3.5;if(n.shots%2===0)adds(e,1,n)}}
   else if((n.cd-=dt)<=0){n.warning=1.2;n.tx=p.x;n.ty=p.y}
  }
  s.nests=s.nests.filter(n=>n.life>0);
@@ -121,29 +134,37 @@ function updatePressure(e,dt){
 function updateStapleBoss(e,dt){
  const b=game.api.bossBrain(e),s=state(e);if(!live(e))return;
  const phase=phaseFor(e);
- if(phase!==s.phase){s.phase=phase;s.turn=0;s.transition=2.8;s.rush=s.drag=s.zipper=s.barrage=null;s.nests=[];s.pins=[];s.snaps=0;b.cast=null;b.charge=0;b.recovery=0;e.bossWindup=0;game.state.enemyShots=game.state.enemyShots.filter(q=>q.stapleOwner!==e);for(const n of game.state.enemies)if(n.bossOwner===e)n.stun=Math.max(n.stun,2.8);game.api.setMsg('Staple Snack · Phase '+phase+' · Rebuild while he jams!');game.api.playSound('bossEnter')}
+ if(phase!==s.phase){s.phase=phase;s.turn=0;s.transition=2.8;s.rush=s.drag=s.zipper=s.barrage=null;s.nests=[];s.pins=[];s.deployments=[];s.snaps=0;b.cast=null;b.charge=0;b.recovery=0;e.bossWindup=0;game.state.enemyShots=game.state.enemyShots.filter(q=>q.stapleOwner!==e);for(const n of game.state.enemies)if(n.bossOwner===e)n.stun=Math.max(n.stun,2.8);game.api.setMsg('Staple Snack · Phase '+phase+' · Rebuild while he jams!');game.api.playSound('bossEnter')}
  if(s.transition>0){s.transition=Math.max(0,s.transition-dt);b.cd=2.2;return}
  if(e.freeze>0||e.stun>0){b.cast=null;e.bossWindup=0;s.rush=null;s.snaps=0;s.barrage=null;s.drag=null;s.zipper=null;b.charge=0;b.cd=Math.max(b.cd,1.5);return}
  b.recovery=Math.max(0,b.recovery-dt);if(b.action){b.action.age+=dt;if(b.action.age>.65)b.action=null}
- s.helperCd-=dt;if(s.helperCd<=0){adds(e,s.phase===1?1:2);s.helperCd=s.phase===1?10:8}
+ updateDeployments(e,dt);
  updatePressure(e,dt);
  if(s.rush){updateRush(e,dt);return}
  if(b.cast){b.cast.left-=dt;e.bossWindup=Math.max(0,b.cast.left);const progress=1-b.cast.left/b.cast.duration,click=Math.floor(progress*3);if(click>s.click){s.click=click;game.api.playSound('rock')}if(b.cast.left<=0)execute(e,b.cast);return}
- if(s.drag||s.zipper||s.barrage||b.recovery>0)return;
- b.cd-=dt;if(b.cd>0)return;
+ b.cd=Math.max(0,b.cd-dt);
+ if(s.drag||s.zipper||s.barrage||b.recovery>0||b.cd>0)return;
  const kind=phases[s.phase-1][s.turn++%3];if(kind==='snap')s.snaps=2;cast(e,kind);
 }
-function stapleTarget(e){const b=game.api.bossBrain(e),s=state(e);if(b.cast||b.recovery>0||s.transition>0||s.rush||s.drag||s.zipper||s.barrage)return e;return safePoint(s.turn*.9,175)}
+function stapleTarget(e){
+ const b=game.api.bossBrain(e),s=state(e);
+ if(b.cast||s.transition>0||s.rush||s.drag||s.zipper||s.barrage||e.freeze>0||e.stun>0)return e;
+ const p=game.state.player,angle=Math.atan2(e.y-p.y,e.x-p.x);
+ return safePoint(angle+.4,175);
+}
 function moveStapleBossIdle(e,dt){
  const target=stapleTarget(e);if(target===e)return false;
- const p=game.state.player,s=state(e),distance=Math.hypot(e.x-p.x,e.y-p.y),angle=Math.atan2(e.y-p.y,e.x-p.x);
- let q=target;
- // The boss may only cross the fort on a warned charge. Walk around it between
- // attacks so a later projectile never launches from inside Stevie's collider.
- if(game.api.pointSegDist(p.x,p.y,e.x,e.y,q.x,q.y)<125)q=safePoint(angle+(s.turn%2?1:-1)*.3,Math.max(145,distance));
- const dx=q.x-e.x,dy=q.y-e.y,d=Math.hypot(dx,dy)||1,travel=Math.min(d,e.speed*dt),nx=e.x+dx/d*travel,ny=e.y+dy/d*travel;
- if(Math.hypot(nx-p.x,ny-p.y)<Math.min(120,distance))return false;
- return game.api.moveEnemySafely(e,nx-e.x,ny-e.y);
+ const p=game.state.player,distance=Math.hypot(e.x-p.x,e.y-p.y),angle=Math.atan2(e.y-p.y,e.x-p.x);
+ // Short orbit steps keep the fort clear. Try the reverse arc or an outward
+ // step when cover blocks him, rather than standing against the same wall.
+ const candidates=[target,safePoint(angle-.4,175),safePoint(angle+.2,Math.max(175,distance+45))];
+ for(const q of candidates){
+  const dx=q.x-e.x,dy=q.y-e.y,d=Math.hypot(dx,dy);if(d<2)continue;
+  const travel=Math.min(d,e.speed*2.3*dt),nx=e.x+dx/d*travel,ny=e.y+dy/d*travel;
+  if(Math.hypot(nx-p.x,ny-p.y)<Math.min(125,distance))continue;
+  if(game.api.moveEnemySafely(e,nx-e.x,ny-e.y))return true;
+ }
+ return false;
 }
 function stapleContact(e){return true} // Only an explicitly warned rush can hurt Stevie.
 function jamlingContact(e,dt=0){
@@ -153,8 +174,8 @@ function jamlingContact(e,dt=0){
  if(e.jamWarning>=1.3){game.api.damageStevie(e.dmg*(1-game.state.stats.playerArmor),'Jammed staple warned snap',e);e.hp=0;game.api.killEnemy(e)}
  return true;
 }
-function stapleSnapshot(e){const b=game.api.bossBrain(e),s=b.staple;return s?{phase:s.phase,transition:s.transition,attack:b.cast?.kind||s.rush?.kind||null,pins:s.pins.map(p=>({...p})),nests:s.nests.map(n=>({...n})),drag:!!s.drag,zipper:s.zipper?{...s.zipper}:null,barrage:!!s.barrage,adds:game.state.enemies.filter(n=>n.bossOwner===e).length}:null}
-function moveStapleBoss(e,dx,dy){const b=game.api.bossBrain(e),s=b.staple;if(!s)return;for(const q of [...s.pins,...s.nests,...(b.cast?.origins||[]),...(b.cast?.route||[]),...(s.rush?.route||[]),...(s.barrage?.origins||[])]){q.x+=dx;q.y+=dy;if(q.tx!==undefined){q.tx+=dx;q.ty+=dy}}if(s.zipper){s.zipper.x+=dx;s.zipper.y+=dy}if(s.drag)for(const q of s.drag.original){q.x+=dx;q.y+=dy}if(s.barrage){s.barrage.x+=dx;s.barrage.y+=dy}if(b.cast){b.cast.originX+=dx;b.cast.originY+=dy;if(b.cast.zx!==undefined){b.cast.zx+=dx;b.cast.zy+=dy}}}
+function stapleSnapshot(e){const b=game.api.bossBrain(e),s=b.staple;return s?{phase:s.phase,transition:s.transition,attack:b.cast?.kind||s.rush?.kind||null,pins:s.pins.map(p=>({...p})),nests:s.nests.map(n=>({...n})),drag:!!s.drag,zipper:s.zipper?{...s.zipper}:null,barrage:!!s.barrage,deployments:s.deployments.map(q=>({...q})),adds:game.state.enemies.filter(n=>n.bossOwner===e).length}:null}
+function moveStapleBoss(e,dx,dy){const b=game.api.bossBrain(e),s=b.staple;if(!s)return;for(const q of [...s.pins,...s.nests,...s.deployments,...(b.cast?.origins||[]),...(b.cast?.route||[]),...(s.rush?.route||[]),...(s.barrage?.origins||[])]){q.x+=dx;q.y+=dy;if(q.tx!==undefined){q.tx+=dx;q.ty+=dy}}if(s.zipper){s.zipper.x+=dx;s.zipper.y+=dy}if(s.drag)for(const q of s.drag.original){q.x+=dx;q.y+=dy}if(s.barrage){s.barrage.x+=dx;s.barrage.y+=dy}if(b.cast){b.cast.originX+=dx;b.cast.originY+=dy;if(b.cast.zx!==undefined){b.cast.zx+=dx;b.cast.zy+=dy}}}
 function drawStapleBoss(e){
  const ctx=game.dom.ctx,b=game.api.bossBrain(e),s=b.staple;if(!s)return;const reduced=game.api.enemyMotionReduced();
  ctx.save();ctx.strokeStyle='#966425';ctx.fillStyle='#754918';ctx.lineWidth=2;ctx.font='bold 11px sans-serif';ctx.textAlign='center';
@@ -162,6 +183,11 @@ function drawStapleBoss(e){
  const pad=Math.min(game.state.W/2,ctx.measureText(label).width/2+8);
  ctx.fillText(label,game.api.clamp(e.x,pad,game.state.W-pad),Math.max(85,e.y-e.r-24));
  const staple=(x,y,r=9)=>{ctx.beginPath();ctx.moveTo(x-r,y+7);ctx.lineTo(x-r,y-6);ctx.lineTo(x+r,y-6);ctx.lineTo(x+r,y+7);ctx.stroke()};
+ for(const q of s.deployments){
+  const t=Math.min(1,q.age/q.duration),x=q.x+(q.tx-q.x)*t,y=q.y+(q.ty-q.y)*t-(reduced?0:Math.sin(t*Math.PI)*45);
+  ctx.save();ctx.strokeStyle='#928276';ctx.setLineDash([3,4]);ctx.beginPath();ctx.arc(q.tx,q.ty,15,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+  ctx.translate(x,y);if(!reduced)ctx.rotate(t*Math.PI*2);if(!game.api.drawStapleHelper()){staple(-3,0,8);staple(3,4,8);staple(0,-5,6)}ctx.restore();
+ }
  for(const p of s.pins)staple(p.x,p.y,7);
  for(const n of s.nests){ctx.fillStyle='#e7d1a9';ctx.beginPath();ctx.arc(n.x,n.y,18,0,Math.PI*2);ctx.fill();staple(n.x,n.y);staple(n.x-3,n.y+4);if(n.warning>0){ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(n.x,n.y);ctx.lineTo(n.tx,n.ty);ctx.stroke();ctx.setLineDash([])}ctx.fillStyle='#754918';ctx.fillText('DRAW TO JAM',game.api.clamp(n.x,48,game.state.W-48),n.y+32)}
  if(s.zipper){staple(s.zipper.x,s.zipper.y,18);ctx.beginPath();ctx.arc(s.zipper.x,s.zipper.y,22,0,Math.PI*2);ctx.stroke()}
