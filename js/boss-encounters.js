@@ -23,7 +23,7 @@ function pushThroughBossStrokes(e,dt){
   }
  }
 }
-function bossDamageMultiplier(e){if(!e.waveBoss)return 1;const b=bossBrain(e);return b.enclosed||b.recovery>0?1.35:isFirstBoss(e)?.25:1}
+function bossDamageMultiplier(e){if(!e.waveBoss)return 1;if(game.api.isStapleBoss(e))return game.api.stapleDamageMultiplier(e);const b=bossBrain(e);return b.enclosed||b.recovery>0?1.35:isFirstBoss(e)?.25:1}
 function bossWallHit(e){if(!e.waveBoss)return null;const hit=nearestBossWall(e,e.r+20);return hit&&Math.hypot(hit.x-e.x,hit.y-e.y)<=e.r+hit.wall.thick/2+3?{wall:hit.wall,seg:1}:null}
 function bossContact(e){
  if(game.api.isStapleBoss(e))return game.api.stapleContact(e);

@@ -1860,9 +1860,16 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
   g.api.updateBossEncounter(e,1.1); // Finish the warning, not the actual attack.
   if(kind==='nests'){assert.equal(b.staple.nests.length,2);for(const n of b.staple.nests)draw(g,n.x,n.y,0,1,40);g.api.updateBossEncounter(e,.02);assert.equal(b.staple.nests.length,0,'drawing through nests jams both')}
   if(kind==='drag'){assert.ok(b.staple.drag);const w=b.staple.drag.wall,q=w.pts[0],z=w.pts.at(-1);draw(g,(q.x+z.x)/2,(q.y+z.y)/2,z.x-q.x,z.y-q.y,24);g.api.updateBossEncounter(e,.02);assert.equal(b.staple.drag,null,'new crossing stroke releases clamp');assert.ok(b.recovery>2)}
-  let lastCast=b.cast;
-  for(let i=0;i<150;i++){
-   if(kind==='snap'&&b.cast&&b.cast!==lastCast){lastCast=b.cast;routeWall()}
+  let lastCast=b.cast,lastBurst=0,lastBarrage=0;
+  const cover=(q,length=32)=>{const p=g.state.player,dx=p.x-q.x,dy=p.y-q.y,d=Math.hypot(dx,dy)||1;draw(g,p.x-dx/d*90,p.y-dy/d*90,dx,dy,length)};
+  for(let i=0;i<200;i++){
+   if(b.cast&&b.cast!==lastCast){
+    lastCast=b.cast;
+    if(['rush','snap'].includes(b.cast.kind))routeWall();
+    if(['fan','jam'].includes(b.cast.kind))cover({x:b.cast.originX,y:b.cast.originY});
+   }
+   if(b.staple.volley&&b.staple.volley.turn!==lastBurst){lastBurst=b.staple.volley.turn;cover({x:b.staple.volley.originX,y:b.staple.volley.originY})}
+   if(b.staple.barrage&&b.staple.barrage.turn!==lastBarrage){lastBarrage=b.staple.barrage.turn;cover(b.staple.barrage.origins[(lastBarrage-1)%2])}
    b.cd=999;g.api.updateBossEncounter(e,.04);g.api.updateEnemyShots(.04);
   }
   assert.equal(g.state.player.hp,hp,'ordinary walls prevent '+kind+' at '+width+'x'+height);
@@ -1931,13 +1938,68 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const flight=g.api.stapleSnapshot(e).deployments[0];assert.equal(flight.x,e.x);assert.equal(flight.y,e.y);
  assert.ok(Math.hypot(flight.tx-p.x,flight.ty-p.y)>=125);
  g.api.updateBossEncounter(e,.5);assert.equal(g.state.enemies.filter(n=>n.bossOwner===e).length,0,'flight precedes activation');
- const x=e.x,y=e.y;assert.ok(b.recovery>0);g.api.moveStapleBossIdle(e,.1);assert.ok(Math.hypot(e.x-x,e.y-y)>5,'recoil includes active repositioning');
- g.api.updateBossEncounter(e,.51);assert.equal(g.state.enemies.filter(n=>n.bossOwner===e).length,1);
+ assert.ok(b.staple.volley,'fan remains an active burst sequence');assert.equal(b.recovery,0,'firing does not expose armor');
+ g.api.updateBossEncounter(e,.51);assert.equal(g.state.enemies.filter(n=>n.bossOwner===e).length,2);
  assert.ok(g.state.enemies.find(n=>n.bossOwner===e).stun>=.7,'landing gives defensive grace');
- b.cd=999;for(let i=0;i<200;i++)g.api.updateBossEncounter(e,.1);
- assert.equal(g.state.enemies.filter(n=>n.bossOwner===e).length,1,'waiting has no unrelated summon timer');
+ for(let i=0;i<200;i++){b.cd=999;g.api.updateBossEncounter(e,.1)}
+ assert.equal(g.state.enemies.filter(n=>n.bossOwner===e).length,2,'waiting has no unrelated summon timer');
  b.cd=0;b.staple.turn=0;g.api.updateBossEncounter(e,.01);g.api.updateBossEncounter(e,1.4);
  assert.ok(g.api.stapleSnapshot(e).deployments.length);e.hp=e.maxHp*.5;g.api.updateBossEncounter(e,.01);
  assert.equal(g.api.stapleSnapshot(e).deployments.length,0,'phase grace cancels airborne helpers');
- console.log('PASS: attack-linked helper origin, visible flight before spawn, safe landing/stun, recovery movement, no independent summon timer and phase cancellation.');
+ console.log('PASS: attack-linked helper origin, visible flight before spawn, safe landing/stun, sustained fire without free exposure, no independent summon timer and phase cancellation.');
+}
+
+// Difficulty regression: old cover buys one hit; active counters earn armor breaks.
+{
+ const setup=(phase,index,width=800,height=700)=>{
+  const env=load(true),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun();g.state.wave=10;g.api.startWave();
+  const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);e.hp=e.maxHp*(phase===1?.9:.25);g.api.updateBossEncounter(e,0);b.cd=0;b.staple.turn=index;return {g,e,b};
+ };
+ const stroke=(g,x,y,dx,dy,length=32)=>{const d=Math.hypot(dx,dy)||1,before=g.state.stats.ink,count=g.state.walls.length;g.api.createWall([{x:x-dy/d*length/2,y:y+dx/d*length/2},{x:x+dy/d*length/2,y:y-dx/d*length/2}]);assert.equal(g.state.walls.length,count+1);assert.ok(g.state.stats.ink<before);};
+ for(const [width,height] of [[800,700],[360,640],[851,300]]){
+  {
+   const {g,e,b}=setup(1,0,width,height),p=g.state.player;stroke(g,p.x-90,p.y,1,0);g.api.updateBossEncounter(e,.01);g.api.updateBossEncounter(e,1.2);
+   for(let i=0;i<110;i++){b.cd=999;g.api.updateBossEncounter(e,.04);g.api.updateEnemyShots(.04)}
+   assert.ok(p.hp<40,'one unattended wall cannot solve four staple bursts');assert.equal(b.recovery,0,'passive cover earns no free armor break');
+  }
+  {
+   const {g,e,b}=setup(1,1,width,height),p=g.state.player,hp=p.hp;stroke(g,p.x-90,p.y,1,0);g.api.updateBossEncounter(e,.01);g.api.updateBossEncounter(e,1.1);g.api.updateBossEncounter(e,.2);
+   assert.equal(g.state.walls.length,0,'rush crushes old cover');assert.ok(b.staple.hop&&b.staple.snaps===0,'blocking first snap does not end the double rush');
+   for(let i=0;i<100;i++){b.cd=999;g.api.updateBossEncounter(e,.04)}assert.ok(p.hp<hp,'unanswered second angle deals real damage');assert.equal(b.recovery,0);
+  }
+  for(const phase of [1,3]){
+   const {g,e,b}=setup(phase,1,width,height),hp=g.state.player.hp,bossHp=e.hp;let lastCast=null,casts=0,exposed=false,inkRecovered=false;const origins=[];
+   g.api.updateBossEncounter(e,.01);
+   for(let i=0;i<160;i++){
+    if(b.cast&&b.cast!==lastCast){lastCast=b.cast;casts++;origins.push({x:e.x,y:e.y});const dx=b.cast.x-e.x,dy=b.cast.y-e.y,d=Math.hypot(dx,dy)||1;stroke(g,e.x+dx/d*45,e.y+dy/d*45,dx,dy)}
+    const inkBefore=g.state.stats.ink;b.cd=999;g.api.updateBossEncounter(e,.04);if(g.state.stats.ink>inkBefore)inkRecovered=true;if(b.recovery>0){exposed=true;assert.equal(g.api.bossDamageMultiplier(e),1.8)}
+   }
+   assert.equal(casts,phase===1?2:3);assert.equal(g.state.player.hp,hp,'paid fresh counters avoid every snap');assert.ok(exposed&&e.hp<bossHp,'active jams deal damage and expose armor');assert.ok(inkRecovered&&g.state.stats.ink<=g.state.stats.maxInk,'successful counters recycle ink within its cap');assert.ok(Math.hypot(origins[1].x-origins[0].x,origins[1].y-origins[0].y)>80,'next snap attacks from a different angle');
+  }
+ }
+ // Cancel ongoing multi-stage patterns safely, including pending helpers.
+ const {g,e,b}=setup(1,0);g.api.updateBossEncounter(e,.01);g.api.updateBossEncounter(e,1.2);assert.ok(b.staple.volley);
+ const state=JSON.stringify(g.api.stapleSnapshot(e));g.state.paused=true;g.api.update(.5);g.api.draw();assert.equal(JSON.stringify(g.api.stapleSnapshot(e)),state);g.state.paused=false;
+ e.freeze=1;g.api.updateBossEncounter(e,.01);assert.equal(b.staple.volley,null);e.freeze=0;e.hp=e.maxHp*.5;g.api.updateBossEncounter(e,.01);assert.equal(b.staple.turn,2,'phase two opens with nests before cover attacks');assert.equal(b.staple.deployments.length,0);
+ console.log('PASS: unattended cover fails sustained fire and the second charge; paid fresh ink counters every double/triple snap, earns armor-break damage, changes attack angles and preserves pause/freeze/phase cancellation at three aspect ratios.');
+}
+
+// Mid-leap interruptions must never leave a future attack origin inside the fort.
+{
+ for(const interrupt of ['freeze','phase']){
+  const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);
+  g.api.updateBossEncounter(e,0);b.staple.hop={x:p.x-145,y:p.y,tx:p.x+145,ty:p.y,age:.3,duration:.65,next:'fan'};g.api.updateBossEncounter(e,.01);assert.ok(Math.hypot(e.x-p.x,e.y-p.y)<30,'leap can cross the fort harmlessly');
+  if(interrupt==='freeze')e.freeze=1;else e.hp=e.maxHp*.5;
+  g.api.updateBossEncounter(e,.01);assert.equal(b.staple.hop,null);assert.ok(Math.hypot(e.x-p.x,e.y-p.y)>=125,'interruption lands outside defensive room');assert.equal(b.cast,null);
+ }
+ console.log('PASS: freeze and phase interruptions finish harmless leaps outside the fort before future warnings.');
+}
+
+// Fresh reinforcement must win when the jaws meet old and new cover together.
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);
+ const pts=[{x:e.x+45,y:e.y-16},{x:e.x+45,y:e.y+16}];g.api.createWall(pts);const old=g.state.walls[0];g.api.updateBossEncounter(e,0);b.cd=0;b.staple.turn=1;g.api.updateBossEncounter(e,.01);
+ g.api.createWall(pts);const fresh=g.state.walls.at(-1);g.api.updateBossEncounter(e,1.1);g.api.updateBossEncounter(e,.1);
+ assert.equal(b.staple.parries,1,'fresh ink laid over old cover counts as an active counter');assert.ok(!g.state.walls.includes(fresh)&&g.state.walls.includes(old));assert.ok(b.staple.hop,'reinforcement still leaves the next snap to answer');
+ console.log('PASS: reinforcing existing cover with a paid new stroke earns the jam without cancelling the next charge.');
 }
