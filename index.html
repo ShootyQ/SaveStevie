@@ -257,7 +257,7 @@
       <section id="testLabPanel" class="test-lab" hidden aria-labelledby="testLabTitle">
         <h3 id="testLabTitle">The scratch page</h3>
         <button type="button" class="secondary" id="openWobblePreviewBtn">Wobblechomp · Animation preview</button><p class="option-help">Jump straight into a fight with your own build. Test runs save no scraps or records. Starting a test replaces your current run; already banked scraps stay saved.</p>
-        <div class="test-presets" aria-label="Boss shortcuts"><button type="button" data-test-wave="5">King · 5</button><button type="button" data-test-wave="10">Stapler · 10</button><button type="button" data-test-wave="15">Crayon · 15</button><button type="button" data-test-wave="20">Eraser · 20</button></div>
+        <div class="test-presets" aria-label="Boss shortcuts"><button type="button" data-test-wave="5">King · 5</button><button type="button" data-test-wave="10">Wobblechomp · 10</button><button type="button" data-test-wave="15">Crayon · 15</button><button type="button" data-test-wave="20">Eraser · 20</button></div>
         <div class="test-fields"><label>Wave<input id="testWave" type="number" min="1" max="200" step="1" value="5"></label><label>Start at<select id="testPhase"><option value="wave">Full wave</option><option value="boss">Boss only</option></select></label><label>Drawing tool<select id="testTool"><option value="0">Pencil · 2 slots</option><option value="3">Mechanical pencil · 2 slots</option><option value="6">Simple pen · 3 slots</option><option value="10">Scented Sharpie · 4 slots</option></select></label></div>
         <label class="monster-setting"><input id="testNotebook" type="checkbox"> Include my permanent Notebook stat bonuses</label>
         <h4>Starting upgrades</h4><p class="option-help">Add an upgrade, choose its rarity, and set how many copies to take. Slot limits, caps and one-time unlocks apply.</p>
@@ -326,6 +326,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Wobblechomp’s first fight</h3><p>Wave 10 now brings Wobblechomp stomping in with a close-up roar. His fast phase-one fight chains punches, spikes, tooth packs, drawing-erasing eye beams and rolling attacks. Cut each green-ringed joint with two separate strokes to detach it; removing all three parts wins this first phase-one version. Block punches and spikes with cover, and rebuild walls after his beam. Tooth bites have a warning ring. Try Wobblechomp · 10 on the Scratch Page.</p></article>
       <article class="build-entry"><h3>Wobblechomp tucks and rolls</h3><p>Try Tuck &amp; roll in the animation preview. He folds into a ball, winds up along a marked path, rolls back and forth with spike bursts and dropped teeth, then brakes and unfolds. Missing parts stay missing; losing the spiky leg stops the rolling spikes. Quick speed and the attack cycle include the new move.</p></article>
       <article class="build-entry"><h3>Wobblechomp’s tooth trouble</h3><p>Try Teeth! in his animation preview. His mouth rattles before launching 6–10 wonky tooth doodles toward marked landing spots. They bounce, pause, then scurry and turn around. Quick speed and the automatic attack cycle include the new move.</p></article>
       <article class="build-entry"><h3>Wobblechomp comes apart</h3><p>The animation preview now includes a spike kick and sweeping eye beam. Cut the arm, spiky leg or eye stalk twice to detach it, in any order. Try Quick speed for faster attacks, or cycle through his remaining moves automatically.</p></article>
@@ -533,6 +534,7 @@
 <script src="js/wave-finale.js"></script>
 <script src="js/renderer.js"></script>
 <script src="js/wobblechomp-animation.js"></script>
+<script src="js/wobblechomp-boss.js"></script>
 <script src="js/wobblechomp-preview.js"></script>
 <script src="js/loop.js"></script>
 <script src="js/input.js"></script>

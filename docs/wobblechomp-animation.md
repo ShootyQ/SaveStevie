@@ -1,8 +1,9 @@
 # Wobblechomp animation preview
 
 Open **Settings → Test a wave / boss → Wobblechomp · Animation preview**.
-This is an animation preview; the current wave-10 encounter still uses
-Staple Snack. The preview neither spends ink nor changes combat or saved progress.
+This remains an isolated animation preview. Wave 10 now uses the fast
+Wobblechomp phase-one fight described in [wobblechomp-phase-one.md](wobblechomp-phase-one.md).
+The preview neither spends ink nor changes combat or saved progress.
 
 Try **Punch**, **Spikes**, **Eye beam**, **Teeth!**, or **Tuck & roll**. Spikes lift the foot before launching
 five projectiles; the eye coils back and marks its aim before sweeping a beam.
@@ -61,8 +62,8 @@ loaded alongside the atlas only when opening the preview. No new sounds ship
 with this animation slice. Reduced motion suppresses the rattle, airborne spin,
 landing squash and decorative hops, while keeping launch and travel visible.
 
-The arm, spiky leg and eye stalk are interactive. Drawing erasure, boss damage
-and combat integration are later work. Spikes
+The arm, spiky leg and eye stalk are interactive. The real fight now uses
+paid cuts, wall erasure, damage and tooth helpers. Spikes
 and beams in this preview are animation effects only. Rolling reuses the tucked-body atlas cell; its curled little support feet are
 part of the core, while the removable giant fist, spiky leg and eye remain
 separate layers. This slice adds no new image assets.

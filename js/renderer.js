@@ -542,7 +542,7 @@ function drawToolStroke(points,thick,opacity,color){
 function draw(){
   drawWaveStevie();
   game.dom.ctx.clearRect(0,0,game.state.W,game.state.H);game.dom.ctx.save();
-  const intro=game.api.firstBossIntroPose(),entry=game.api.stapleIntroPose(),focus=intro||entry;
+  const intro=game.api.firstBossIntroPose(),entry=game.api.stapleIntroPose(),focus=intro||game.api.wobbleIntroPose()||entry;
   const camera=focus?{zoom:focus.zoom,x:game.api.clamp(focus.x,game.state.W/(2*focus.zoom),game.state.W-game.state.W/(2*focus.zoom)),y:game.api.clamp(focus.y,game.state.H/(2*focus.zoom),game.state.H-game.state.H/(2*focus.zoom))}:game.api.waveFinaleCamera();game.dom.ctx.translate(game.state.W/2,game.state.H/2);game.dom.ctx.scale(camera.zoom,camera.zoom);game.dom.ctx.translate(-camera.x,-camera.y);
   game.dom.ctx.strokeStyle='rgba(212,76,76,.35)';game.dom.ctx.lineWidth=2;
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
@@ -592,9 +592,10 @@ function draw(){
     ctx.setLineDash([5,7]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();
     ctx.setLineDash([]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();
   }
-  game.api.drawBossEncounters();
+  game.api.drawBossEncounters();game.api.drawWobbleFields();
   for(const n of game.state.enemies)if(n.type==='jamling'&&n.jamWarning>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b34936';ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,n.r+5,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.jamWarning/1.3));ctx.stroke();ctx.restore()}
   for(const shot of game.state.enemyShots){
+    if(shot.wobbleOwner){const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));if(!motionReduced){ctx.strokeStyle='rgba(173,110,40,.35)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-5,0);ctx.stroke()}ctx.fillStyle='#edb538';ctx.strokeStyle='#3b3024';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(8,0);ctx.lineTo(-5,-4);ctx.lineTo(-3,0);ctx.lineTo(-5,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();continue}
     if(shot.owner){game.api.drawFirstBossShot(shot);continue}
     const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));
     const image=doodles.arrow;
@@ -659,10 +660,12 @@ function draw(){
     }
     if(e.feastRush>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#cf8738';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();}
     const hpRatio=game.api.clamp(e.hp/e.maxHp,0,1);
-    game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y-game.api.enemyFlightHeight(e)-(game.api.isStapleBoss(e)&&!motionReduced?game.api.stapleHopHeight(e):0));
+    game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y-game.api.enemyFlightHeight(e)-game.api.wobbleToothHeight(e)-(game.api.isStapleBoss(e)&&!motionReduced?game.api.stapleHopHeight(e):0));
     if(e.flight&&!motionReduced){const t=e.flight.age/e.flight.duration;game.dom.ctx.rotate(e.flight.spin*Math.sin(t*Math.PI)*.8);const scale=1+Math.sin(t*Math.PI)*.16;game.dom.ctx.scale(scale,scale);}
 
-    if(e.type==='eraser'){
+    if(e.type==='wobblechomp'){game.api.drawWobbleEnemy(e);drawEnemyHealthBar(e,hpRatio);}
+    else if(e.type==='wobble-tooth'){game.api.drawWobbleTooth(e);drawEnemyHealthBar(e,hpRatio);}
+    else if(e.type==='eraser'){
       if(doodles.eraser){
         if(!motionReduced&&e.freeze<=0&&e.stun<=0)game.dom.ctx.rotate(Math.sin(motionTime/.35)*.08);
       }else game.dom.ctx.rotate(Math.sin(performance.now()/350)*.08);
@@ -768,6 +771,8 @@ function draw(){
     if(intro.stage==='smash'){ctx.strokeStyle='#b17635';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,40+(intro.age-6.132)*game.state.W*3,0,Math.PI*2);ctx.stroke()}
     ctx.restore();
   }
+  const wobbleIntro=game.api.wobbleIntroPose();
+  if(wobbleIntro){const ctx=game.dom.ctx,m=DoodleDefender.WobblechompRig.create();m.time=wobbleIntro.age+1;m.reaction=wobbleIntro.stage==='roar'?1:0;ctx.save();ctx.translate(wobbleIntro.x,wobbleIntro.y);game.api.drawWobbleEnemy({x:wobbleIntro.x,y:wobbleIntro.y},m);if(wobbleIntro.stage==='roar'){ctx.fillStyle='#966425';ctx.font='bold 22px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillText('WOBBLECHOMP!',0,-85)}ctx.restore();}
   const stapleIntro=game.api.stapleIntroPose();
   if(stapleIntro){
     const ctx=game.dom.ctx;ctx.save();ctx.translate(stapleIntro.x,stapleIntro.y);ctx.strokeStyle='#7d5834';ctx.fillStyle='#453c32';ctx.lineWidth=3;

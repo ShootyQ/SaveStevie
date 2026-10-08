@@ -2,6 +2,8 @@ const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('p
 const root=path.resolve(__dirname,'..');
 function environment(){const nodes=new Map(),calls=[];let seed=123456;const math=Object.create(Math);math.random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const ctx=new Proxy({measureText:t=>({width:String(t).length*6})},{get(o,k){if(k in o)return o[k];return (...a)=>{calls.push([k,...a]);if(k==='createLinearGradient'||k==='createRadialGradient')return {addColorStop(){}};};}});function node(id){if(!nodes.has(id))nodes.set(id,{style:{},dataset:{},textContent:'',innerHTML:'',children:[],listeners:{},appendChild(n){this.children.push(n);},addEventListener(k,f){this.listeners[k]=f;},getBoundingClientRect(){return {left:0,top:0,width:800,height:700};},getContext(){return ctx;},setPointerCapture(){}});return nodes.get(id);}const sandbox={console,performance:{now:()=>1234},Math:math,Set,document:{getElementById:node,createElement:()=>node('created'+nodes.size),querySelectorAll:()=>[]},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:f=>{sandbox.frame=f;},setTimeout:()=>1,clearTimeout(){}};sandbox.window=sandbox;sandbox.addEventListener=()=>{};vm.createContext(sandbox);return {sandbox,node,calls};}
 function load(refactored,options={}){const env=environment();if(options.storage)env.sandbox.localStorage=options.storage;if(options.audio)Object.assign(env.node('gameMusic'),options.audio);if(options.documentEvents)env.sandbox.document.addEventListener=(key,fn)=>{const previous=options.documentEvents[key];options.documentEvents[key]=(...args)=>{previous?.(...args);fn(...args)}};const pendingImages=[];if(options.images)env.sandbox.Image=class{constructor(){this.naturalWidth=200;this.naturalHeight=180}set src(value){this.url=value;pendingImages.push(()=>this.onload?.())}get src(){return this.url}};if(options.reduced)env.sandbox.matchMedia=()=>({matches:true,addEventListener(){}});if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}for(const ready of pendingImages)ready();if(!options.finale)env.sandbox.testGame.api.setWaveFinaleEnabled(false);if(!options.synergyReveal)env.sandbox.testGame.api.setSynergyRevealsEnabled(false);if(!options.intros)env.sandbox.testGame.api.setMonsterIntrosEnabled(false);env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
+// Retain explicit regression fixtures for the retired stapler's combat system.
+function loadLegacyStaple(options={}){const env=load(true,options),g=env.sandbox.testGame,original=g.api.bossTypeForWave;g.api.bossTypeForWave=(wave=g.state.wave)=>wave===10?'stapler':original(wave);return env;}
 const a=load(false),b=load(true);let checks=0;
 // Keep the old starting kit only in the legacy parity fixture. New-run balance
 // and permanent perks are checked separately below.
@@ -522,9 +524,9 @@ const storage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>{saved.set
 const env=load(true,{intros:true,storage}),g=env.sandbox.testGame;
 assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
-assert.equal(g.catalog.monsters.length,23);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,23);
+assert.equal(g.catalog.monsters.length,25);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,25);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],3:['fast'],5:['bouncer','tank','boss'],7:['flanker','splitter','mini'],8:['wardling'],9:['sniper','sprinter'],10:['stapler','jamling','brood'],11:['bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],3:['fast'],5:['bouncer','tank','boss'],7:['flanker','splitter','mini'],8:['wardling'],9:['sniper','sprinter'],10:['wobblechomp','wobble-tooth','brood'],11:['bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -544,14 +546,14 @@ g.api.resetRun();env.node('hideMonsterIntros').checked=true;g.api.continueMonste
 assert.equal(saved.get('saveStevieMonsterIntros'),'off');assert.equal(g.api.monsterIntrosEnabled(),false);assert.equal(saved.get('doodleDefenderBestV4'),'14');
 g.api.resetRun();assert.equal(g.api.infoOpen(),false,'disabled setting survives new runs');g.state.wave=20;g.api.startWave();assert.equal(g.api.infoOpen(),false);
 const reloaded=load(true,{intros:true,storage});assert.equal(reloaded.sandbox.testGame.api.monsterIntrosEnabled(),false,'disabled setting survives page reload');
-g.state.paused=false;for(const m of g.catalog.monsters)g.api.discoverMonster(m.type);g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,23);
+g.state.paused=false;for(const m of g.catalog.monsters)g.api.discoverMonster(m.type);g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,25);
 const before=JSON.stringify(g.state);g.api.update(.2);assert.equal(JSON.stringify(g.state),before);
 g.api.closeCompendium();assert.equal(g.state.paused,false);g.state.paused=true;g.api.openCompendium();g.api.closeCompendium();assert.equal(g.state.paused,true);
 g.api.setMonsterIntrosEnabled(true);assert.equal(saved.get('saveStevieMonsterIntros'),'on');g.api.resetRun();assert.equal(g.api.infoOpen(),true,'setting can be re-enabled');
 g.api.resetRun();assert.equal(g.state.paused,true,'reset replaces an open introduction safely');g.api.handleInfoKey({key:'Escape',preventDefault(){}});assert.equal(g.state.paused,false,'Escape explicitly continues the introduction');
 const blocked={getItem(k){if(k==='saveStevieAudioV1')throw Error('blocked');return null},setItem(k){if(k==='saveStevieAudioV1')throw Error('blocked')}};const fallback=load(true,{intros:true,storage:{getItem:key=>key==='doodleDefenderBestV4'?null:blocked.getItem(),setItem:blocked.setItem}}).sandbox.testGame;
 fallback.api.setMonsterIntrosEnabled(false);fallback.api.resetRun();assert.equal(fallback.state.paused,false,'blocked preference storage does not prevent gameplay');
-console.log('PASS: all 22 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
+console.log('PASS: all 25 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
 }
 
 
@@ -616,7 +618,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 // A mixed-status crowd must reuse its tinted sprites instead of allocating each frame.
 {
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
-const types=g.catalog.monsters.map(m=>m.type).filter(type=>type!=='basil');
+const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['basil','wobblechomp','wobble-tooth'].includes(type));
 for(let i=0;i<76;i++){
  const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][Math.floor(i/types.length)%4];
  e.burn=mask&1?2:0;e.poison=mask&2?2:0;e.freeze=mask&4?2:0;e.charged=mask&8?2:0;e.gravitySlow=mask&16?.4:0;
@@ -674,9 +676,9 @@ console.log('PASS: Notebook earnings, immediate banking, duplicate/contact prote
 
 {
 const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
-for(const [wave,type] of [[5,'boss'],[10,'stapler'],[15,'crayon'],[20,'eraser']]){g.state.wave=wave;g.api.startWave();const e=g.api.spawnEnemy(true,100,200);assert.equal(e.type,type);}
+for(const [wave,type] of [[5,'boss'],[10,'wobblechomp'],[15,'crayon'],[20,'eraser']]){g.state.wave=wave;g.api.startWave();const e=g.api.spawnEnemy(true,100,200);assert.equal(e.type,type);}
 g.state.endless=true;assert.equal(g.api.bossTypeForWave(20),'boss');g.state.endless=false;
-g.state.wave=10;g.api.startWave();const s=g.api.spawnEnemy(true,100,200),wall={pts:[{x:150,y:50},{x:150,y:350}],hp:100,maxHp:100,thick:8};g.state.walls=[wall];s.waveBoss=false;s.bossCd=0; // Original non-encounter action compatibility.
+g.state.wave=10;g.api.startWave();const s=g.api.spawnEnemy(false,100,200,'stapler'),wall={pts:[{x:150,y:50},{x:150,y:350}],hp:100,maxHp:100,thick:8};g.state.walls=[wall];s.waveBoss=false;s.bossCd=0; // Original non-encounter action compatibility.
 assert.deepEqual(g.api.nearestPointOnWall(s,wall),{x:150,y:200},'target actual segment, not distant endpoints');
 const hp=g.state.player.hp;g.api.updateBossAbility(s,.1);assert.equal(s.bossWindup,1.2);assert.equal(wall.hp,100,'wind-up causes no immediate hit');
 const snapshot=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),snapshot,'warning rendering stays pure');
@@ -740,7 +742,7 @@ for(const wave of [5,10,15]){
 }
 g.api.resetRun();g.state.wave=5;g.api.startWave();const early=g.api.spawnEnemy(true,100,100);g.api.killEnemy(early);g.api.waveComplete();assert.equal(g.state.betweenWaves,true,'defeating the boss clears the encounter without waiting');
 g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.betweenWaves,true);
-g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.update(.016);assert.equal(g.api.bossWavePhase(),'entrance');g.api.update(3.3);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'boss follows arrival warning');g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'required boss never duplicates');
+g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.update(.016);assert.equal(g.api.bossWavePhase(),'entrance');g.api.update(6.132);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'boss follows arrival warning');g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'required boss never duplicates');
 const contactBoss=g.state.enemies.find(e=>e.waveBoss);contactBoss.x=g.state.player.x;contactBoss.y=g.state.player.y;g.api.contactStevie(contactBoss);assert.ok(g.state.enemies.includes(contactBoss),'boss contact cannot remove the encounter');g.api.killEnemy(contactBoss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);
 g.api.resetRun();g.state.stats.killHeal=g.state.stats.refund=g.state.stats.repairOnKill=100;g.state.player.hp=20;g.state.stats.ink=0;g.state.walls=[{hp:10,maxHp:100},{hp:10,maxHp:100}];
 for(let i=0;i<4;i++)g.api.killEnemy(g.api.spawnEnemy(false,0,0,'grunt'));
@@ -1173,7 +1175,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
 }
 
 {
- const env=load(true),g=env.sandbox.testGame;
+ const env=loadLegacyStaple(),g=env.sandbox.testGame;
  const setup=wave=>{g.api.resetRun();g.state.wave=wave;g.api.startWave();g.state.spawnTimer=9999;g.api.spawnEnemy(true,200,200);return g.state.enemies[0]};
  for(const wave of [5,10,15,20]){const e=setup(wave);assert.equal(g.state.enemies.length,1);assert.equal(e.waveBoss,true);for(let i=0;i<60;i++)g.api.spawnWaveEnemies(.1);assert.equal(g.state.enemies.length,wave===5?3:1,'only King Doodle gets a slow helper stream');}
  const king=setup(5);king.x=250;king.y=250;const wall={pts:[{x:160,y:160},{x:340,y:160},{x:340,y:340},{x:160,y:340},{x:160,y:160}],closed:true,thick:8,hp:1000,maxHp:1000,life:300};g.state.walls=[wall];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),1.35);const hp=king.hp;g.api.dealDamage(king,10);assert.ok(Math.abs(king.hp-(hp-13.5))<1e-8);g.state.walls=[];g.api.updateBossEncounter(king,.01);assert.equal(g.api.bossDamageMultiplier(king),.25);
@@ -1282,7 +1284,7 @@ for(const child of [...g.state.enemies])g.api.killEnemy(child);
 g.api.update(.02);assert.equal(g.state.betweenWaves,true);const score=g.state.score;g.api.update(.02);assert.equal(g.state.score,score,'clear pays once');
 g.api.resetRun();g.state.timeLeft=0;g.state.player.hp=0;g.api.update(.02);assert.equal(g.state.betweenWaves,false,'death takes priority over cleanup clear');
 for(const wave of [5,10,15,20,25]){
- g.api.resetRun();g.state.endless=wave>20;g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;g.api.update(.01);assert.equal(g.api.bossWavePhase(),[5,10].includes(g.state.wave)?'entrance':'warning');g.api.update(g.state.wave===5?6.582:g.state.wave===10?3.3:2.4);
+ g.api.resetRun();g.state.endless=wave>20;g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;g.api.update(.01);assert.equal(g.api.bossWavePhase(),[5,10].includes(g.state.wave)?'entrance':'warning');g.api.update(g.state.wave===5?6.582:g.state.wave===10?6.132:2.4);
  const boss=g.state.enemies.find(e=>e.waveBoss);assert.ok(boss);boss.freeze=999;boss.x=-100;boss.y=-100;
  const time=g.state.timeLeft;for(let i=0;i<70;i++)g.api.update(1);
  assert.equal(g.state.timeLeft,time);assert.equal(g.state.betweenWaves,false);assert.ok(g.state.waveElapsed>60);
@@ -1293,7 +1295,7 @@ console.log('PASS: zero-time cleanup, stopped arrivals, split children, pause, d
 
 {
 const env=load(true),g=env.sandbox.testGame;
-for(const [wave,hp,speed] of [[5,1242,144.612],[10,1402.2,40.28],[15,1512,18.53],[20,3800,25.76]]){
+for(const [wave,hp,speed] of [[5,1242,144.612],[10,1299.6,254.4],[15,1512,18.53],[20,3800,25.76]]){
  g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,250,250);
  assert.ok(Math.abs(boss.maxHp-hp)<1e-8,'boss HP '+wave);assert.ok(Math.abs(boss.speed-speed)<1e-8,'boss speed '+wave);
  const ordinary=g.api.spawnEnemy(false,100,100,'grunt');assert.equal(ordinary.maxHp,20*g.api.enemyHpScale());
@@ -1843,7 +1845,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 {
  const phaseMoves=[['fan','rush','punch'],['zipper','drag','nests'],['barrage','snap','jam']];
  const setup=(phase,index,width=800,height=700)=>{
-  const env=load(true),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun({skipNotebook:true});g.state.wave=10;g.api.startWave();g.state.timeLeft=0;
+  const env=loadLegacyStaple(),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun({skipNotebook:true});g.state.wave=10;g.api.startWave();g.state.timeLeft=0;
   const e=g.api.spawnEnemy(true,g.state.player.x-145,g.state.player.y);e.hp=e.maxHp*[.9,.5,.25][phase-1];const b=g.api.bossBrain(e);g.api.updateBossEncounter(e,0);b.cd=0;b.staple.turn=index;
   return {env,g,e,b};
  };
@@ -1888,7 +1890,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 
 // Helpers and Count Crayon expose a defensive response before contact/rune damage.
 {
- const g=load(true).sandbox.testGame;g.api.resetRun();const p=g.state.player,e=g.api.spawnEnemy(false,p.x-65,p.y,'jamling');const hp=p.hp;
+ const g=loadLegacyStaple().sandbox.testGame;g.api.resetRun();const p=g.state.player,e=g.api.spawnEnemy(false,p.x-65,p.y,'jamling');const hp=p.hp;
  assert.equal(g.api.jamlingContact(e,.8),true);assert.equal(p.hp,hp);g.api.createWall([{x:p.x-60,y:p.y-15},{x:p.x-60,y:p.y+15}]);g.api.jamlingContact(e,.6);assert.equal(p.hp,hp,'plain paid cover interrupts a minion snap');assert.equal(e.jamWarning,0);
  g.state.walls=[];g.api.jamlingContact(e,1.31);assert.equal(p.hp,hp-5);assert.ok(!g.state.enemies.includes(e));
  g.api.resetRun();g.state.wave=15;g.api.startWave();const c=g.api.spawnEnemy(true,p.x-170,p.y),b=g.api.bossBrain(c);b.cd=0;g.api.updateBossEncounter(c,.01);g.api.updateBossEncounter(c,1.2);
@@ -1899,7 +1901,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 
 // Wave 10's cinematic freezes the game without destroying the player's cover.
 {
- const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.createWall([{x:100,y:200},{x:160,y:200}]);g.api.update(.01);assert.ok(g.api.bossEntranceActive());assert.equal(g.api.firstBossIntroActive(),false);
+ const env=loadLegacyStaple(),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.createWall([{x:100,y:200},{x:160,y:200}]);g.api.update(.01);assert.ok(g.api.bossEntranceActive());assert.equal(g.api.firstBossIntroActive(),false);
  const hp=g.state.player.hp,ink=g.state.stats.ink,walls=JSON.stringify(g.state.walls);g.api.update(.5);assert.equal(g.state.player.hp,hp);assert.equal(g.state.stats.ink,ink);assert.equal(JSON.stringify(g.state.walls),walls);assert.equal(g.state.enemies.length,0);
  g.state.paused=true;const age=g.api.stapleIntroPose().age;g.api.update(1);assert.equal(g.api.stapleIntroPose().age,age);g.state.paused=false;
  const state=JSON.stringify(g.state),arrival=JSON.stringify(g.api.bossArrivalSnapshot());g.api.draw();assert.equal(JSON.stringify(g.state),state);assert.equal(JSON.stringify(g.api.bossArrivalSnapshot()),arrival);
@@ -1909,7 +1911,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 
 // Cover removal cannot race a nest shot; shots really spend wall durability.
 {
- const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);e.hp=e.maxHp*.5;g.api.updateBossEncounter(e,0);
+ const g=loadLegacyStaple().sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);e.hp=e.maxHp*.5;g.api.updateBossEncounter(e,0);
  b.staple.nests=[{x:p.x+140,y:p.y,life:18,age:0,cd:0,warning:1,tx:p.x,ty:p.y,shots:0}];g.state.enemyShots=[{stapleOwner:e,x:p.x+130,y:p.y,vx:-145,vy:0,life:2,r:4,damage:7,bossKind:'staple'}];b.staple.turn=0;b.cd=0;
  g.api.updateBossEncounter(e,.01);assert.equal(b.cast.kind,'zipper');assert.equal(g.state.enemyShots.length,0,'wipe warning clears old shots');const left=b.staple.nests[0].warning;g.api.updateBossEncounter(e,.4);assert.equal(b.staple.nests[0].warning,left,'nest warning pauses during cover-removal warning');
  b.cast=null;b.cd=999;b.staple.nests=[];g.api.createWall([{x:p.x+70,y:p.y-60},{x:p.x+70,y:p.y+60}]);const wall=g.state.walls.at(-1),hp=wall.hp,playerHp=p.hp;g.state.enemyShots=[{stapleOwner:e,x:p.x+130,y:p.y,vx:-145,vy:0,life:2,r:4,damage:7,bossKind:'staple'}];g.api.updateEnemyShots(1);assert.equal(wall.hp,hp-8);assert.equal(p.hp,playerHp,'wall absorbs shot while losing durability');
@@ -1922,7 +1924,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 // Idle repositioning must never create an attack origin inside the fort.
 {
  for(const [width,height] of [[800,700],[360,640],[851,300]]){
-  const env=load(true),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun();g.state.wave=10;g.api.startWave();const q=g.api.stapleEntrancePoint(),e=g.api.spawnEnemy(true,q.x,q.y),b=g.api.bossBrain(e);g.api.updateBossEncounter(e,0);b.cd=999;
+  const env=loadLegacyStaple(),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun();g.state.wave=10;g.api.startWave();const q=g.api.stapleEntrancePoint(),e=g.api.spawnEnemy(true,q.x,q.y),b=g.api.bossBrain(e);g.api.updateBossEncounter(e,0);b.cd=999;
   for(let turn=0;turn<12;turn++){b.staple.turn=turn;for(let i=0;i<150;i++){g.api.moveStapleBossIdle(e,.03);assert.ok(Math.hypot(e.x-g.state.player.x,e.y-g.state.player.y)>=120,'safe attack origin '+width+'x'+height)}}
  }
  console.log('PASS: Staple Snack walks around the fort, preserving defensive room for future attack origins across three aspect ratios.');
@@ -1930,7 +1932,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 
 // Helpers must visibly depart from an attack source before joining combat.
 {
- const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();
+ const g=loadLegacyStaple().sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();
  const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);
  g.api.updateBossEncounter(e,0);b.cd=0;g.api.updateBossEncounter(e,.01);
  assert.equal(b.cast.kind,'fan');g.api.updateBossEncounter(e,1.4);
@@ -1952,7 +1954,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 // Difficulty regression: old cover buys one hit; active counters earn armor breaks.
 {
  const setup=(phase,index,width=800,height=700)=>{
-  const env=load(true),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun();g.state.wave=10;g.api.startWave();
+  const env=loadLegacyStaple(),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun();g.state.wave=10;g.api.startWave();
   const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);e.hp=e.maxHp*(phase===1?.9:.25);g.api.updateBossEncounter(e,0);b.cd=0;b.staple.turn=index;return {g,e,b};
  };
  const stroke=(g,x,y,dx,dy,length=32)=>{const d=Math.hypot(dx,dy)||1,before=g.state.stats.ink,count=g.state.walls.length;g.api.createWall([{x:x-dy/d*length/2,y:y+dx/d*length/2},{x:x+dy/d*length/2,y:y-dx/d*length/2}]);assert.equal(g.state.walls.length,count+1);assert.ok(g.state.stats.ink<before);};
@@ -1987,7 +1989,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 // Mid-leap interruptions must never leave a future attack origin inside the fort.
 {
  for(const interrupt of ['freeze','phase']){
-  const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);
+  const g=loadLegacyStaple().sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);
   g.api.updateBossEncounter(e,0);b.staple.hop={x:p.x-145,y:p.y,tx:p.x+145,ty:p.y,age:.3,duration:.65,next:'fan'};g.api.updateBossEncounter(e,.01);assert.ok(Math.hypot(e.x-p.x,e.y-p.y)<30,'leap can cross the fort harmlessly');
   if(interrupt==='freeze')e.freeze=1;else e.hp=e.maxHp*.5;
   g.api.updateBossEncounter(e,.01);assert.equal(b.staple.hop,null);assert.ok(Math.hypot(e.x-p.x,e.y-p.y)>=125,'interruption lands outside defensive room');assert.equal(b.cast,null);
@@ -1997,9 +1999,31 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 
 // Fresh reinforcement must win when the jaws meet old and new cover together.
 {
- const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);
+ const g=loadLegacyStaple().sandbox.testGame;g.api.resetRun();g.state.wave=10;g.api.startWave();const p=g.state.player,e=g.api.spawnEnemy(true,p.x-145,p.y),b=g.api.bossBrain(e);
  const pts=[{x:e.x+45,y:e.y-16},{x:e.x+45,y:e.y+16}];g.api.createWall(pts);const old=g.state.walls[0];g.api.updateBossEncounter(e,0);b.cd=0;b.staple.turn=1;g.api.updateBossEncounter(e,.01);
  g.api.createWall(pts);const fresh=g.state.walls.at(-1);g.api.updateBossEncounter(e,1.1);g.api.updateBossEncounter(e,.1);
  assert.equal(b.staple.parries,1,'fresh ink laid over old cover counts as an active counter');assert.ok(!g.state.walls.includes(fresh)&&g.state.walls.includes(old));assert.ok(b.staple.hop,'reinforcement still leaves the next snap to answer');
  console.log('PASS: reinforcing existing cover with a paid new stroke earns the jam without cancelling the next charge.');
+}
+
+// Wobblechomp phase one uses released paid strokes and actual cover, not preview effects.
+{
+ const env=load(true),g=env.sandbox.testGame,rig=env.sandbox.DoodleDefender.WobblechompRig;
+ function setup(){g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.enemies=[];g.state.player.hp=g.state.player.maxHp=10000;g.state.stats.ink=g.state.stats.maxInk=1000;return g.api.spawnEnemy(true,100,200)}
+ function prepare(e,kind){const s=g.api.bossBrain(e).wobble;s.model=rig.create();s.model.time=1;s.attack=null;s.gap=0;s.turn={punch:0,spikes:1,teeth:2,beam:3,roll:5}[kind];g.api.updateWobbleBoss(e,.001);return s}
+ function stroke(e,part){const j=g.api.wobbleSnapshot(e).parts[part].joint,a=j.a,b=j.b,x=(a.x+b.x)/2,y=(a.y+b.y)/2,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);return [{x:x-dy/l*24,y:y+dx/l*24},{x:x+dy/l*24,y:y-dx/l*24}]}
+ let e=setup();prepare(e,'punch');const cut=stroke(e,'arm'),ink=g.state.stats.ink;
+ g.state.paused=true;g.api.createWall(cut);assert.equal(g.api.wobbleSnapshot(e).model.armCuts,0,'paused strokes cannot cut');g.state.paused=false;g.state.stats.ink=0;g.api.createWall(cut);assert.equal(g.api.wobbleSnapshot(e).model.armCuts,0,'unpaid strokes cannot cut');
+ g.state.stats.ink=ink;g.state.stats.doubleLine=true;g.api.createWall([...cut,...cut]);assert.equal(g.api.wobbleSnapshot(e).model.armCuts,1,'scribbles and copies cut once');assert(g.state.stats.ink<ink);g.api.updateWobbleBoss(e,.02);assert.equal(g.api.wobbleSnapshot(e).model.armCuts,1,'old walls never recut');g.api.createWall(stroke(e,'arm'));assert.equal(g.api.wobbleSnapshot(e).model.armCuts,2);
+ for(const [part,kind] of [['leg','spikes'],['stalk','beam']]){const s=g.api.bossBrain(e).wobble;s.gap=0;s.turn=kind==='spikes'?1:3;g.api.updateWobbleBoss(e,.01);g.api.createWall(stroke(e,part));g.api.createWall(stroke(e,part))}
+ assert(!g.state.enemies.includes(e),'six cuts defeat this phase-one release');assert.equal(g.state.enemyShots.length,0);assert.equal(g.api.bossFightResolved(),true);g.api.update(.01);assert.equal(g.state.betweenWaves,true,'normal boss reward progression');
+ e=setup();let s=prepare(e,'punch');const p=g.state.player,mid={x:(e.x+p.x)/2,y:(e.y+p.y)/2},dx=p.x-e.x,dy=p.y-e.y,len=Math.hypot(dx,dy);
+ g.api.createWall([{x:mid.x-dy/len*65,y:mid.y+dx/len*65},{x:mid.x+dy/len*65,y:mid.y-dx/len*65}]);const hp=p.hp,w=g.state.walls[0],whp=w.hp;g.api.updateWobbleBoss(e,.6);assert.equal(p.hp,hp,'wall absorbs warned punch');assert(w.hp<whp);g.state.walls=[];prepare(e,'punch');g.api.updateWobbleBoss(e,.6);assert(p.hp<hp,'unanswered punch lands');
+ e=setup();prepare(e,'spikes');g.api.updateWobbleBoss(e,.45);assert.equal(g.state.enemyShots.length,5,'one actual five-spike fan');g.api.updateWobbleBoss(e,.05);assert.equal(g.state.enemyShots.length,5,'fan not multiplied per preview spike');
+ g.state.walls=[];const shot=g.state.enemyShots[0];Object.assign(shot,{x:p.x-100,y:p.y,vx:245,vy:0});g.state.enemyShots=[shot];g.api.createWall([{x:p.x-40,y:p.y-30},{x:p.x-40,y:p.y+30}]);const covered=p.hp;g.api.updateEnemyShots(.5);assert.equal(p.hp,covered);assert.equal(g.state.enemyShots.length,0,'swept spike intercepted');
+ e=setup();for(let i=0;i<3;i++)g.api.createWall([{x:50+i*70,y:350},{x:70+i*70,y:350}]);prepare(e,'beam');const beamInk=g.state.stats.ink,beamHP=p.hp;g.api.updateWobbleBoss(e,.8);assert.equal(g.state.walls.length,1,'only two selected drawings erased');assert.equal(g.state.stats.ink,beamInk,'beam does not steal ink');assert.equal(p.hp,beamHP,'beam never hurts Stevie');
+ e=setup();prepare(e,'teeth');g.api.updateWobbleBoss(e,.65);let teeth=g.state.enemies.filter(n=>n.bossOwner===e);assert.equal(teeth.length,8);assert(teeth.every(n=>n.wobbleLanding),'teeth launch from mouth before moving');const tooth=teeth[0];g.api.updateWobbleTooth(tooth,1.2);assert(!tooth.wobbleLanding);tooth.x=p.x;tooth.y=p.y;const biteHP=p.hp;g.api.updateWobbleTooth(tooth,.79);assert.equal(p.hp,biteHP,'bite visibly warned');tooth.freeze=1;g.api.updateWobbleTooth(tooth,1);assert.equal(tooth.toothWarning,0);assert.equal(p.hp,biteHP);tooth.freeze=0;g.api.updateWobbleTooth(tooth,.81);assert.equal(p.hp,biteHP-9);assert(!g.state.enemies.includes(tooth));
+ e=setup();prepare(e,'roll');g.api.updateWobbleBoss(e,.8);assert(g.state.enemyShots.length>0);assert(g.state.enemies.some(n=>n.bossOwner===e));assert.equal(g.api.cutWobbleStroke(stroke(e,'arm')),false,'hidden rolling joints cannot be cut');e.x=p.x;e.y=p.y;const contactHP=p.hp;g.api.contactStevie(e);assert.equal(p.hp,contactHP,'boss body itself has no unavoidable damage');g.api.killEnemy(e);assert.equal(g.state.enemies.length,0,'boss cleanup removes tooth pack');assert.equal(g.state.enemyShots.length,0);
+ for(const [W,H] of [[1280,900],[393,851],[360,640],[851,393]]){e=setup();g.state.W=W;g.state.H=H;p.x=W/2;p.y=H/2;g.api.initWobbleBoss(e);const seen=new Set();for(let i=0;i<1500;i++){g.api.updateWobbleBoss(e,.01);const q=g.api.wobbleSnapshot(e);if(q.attack)seen.add(q.attack);assert(Number.isFinite(e.x)&&Number.isFinite(e.y));assert(g.state.enemyShots.length<=32);assert(q.helpers<=10)}assert.equal(seen.size,5,'all five moves within fifteen seconds');const before=JSON.stringify(g.api.wobbleSnapshot(e));g.api.draw();assert.equal(JSON.stringify(g.api.wobbleSnapshot(e)),before,'render stays pure')}
+ console.log('PASS: Wobblechomp paid cuts, copies, pause, old walls, victory progression, cover, single spike fan, beam-only erasure, tooth launch/warn/freeze, roll cleanup, fast pacing and bounded finite phone combat.');
 }
