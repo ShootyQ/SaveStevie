@@ -1,9 +1,10 @@
 /* Modular animation preview, isolated from combat and saved notebook progress. */
 DoodleDefender.systems.wobblePreview=function(game){
  const $=game.dom.$,rig=DoodleDefender.WobblechompRig,canvas=$('wobbleCanvas'),ctx=canvas.getContext('2d');
- let model=rig.create(),image=null,ready=false,loading=false,opened=false,paused=false,frame=null,last=null,nextPunch=.8,nextAttack=0,stroke=null,pointer=null,strokeLife=0,view=null;
+ let model=rig.create(),image=null,toothImage=null,ready=false,loading=false,opened=false,paused=false,frame=null,last=null,nextPunch=.8,nextAttack=0,stroke=null,pointer=null,strokeLife=0,view=null;
  const media=window.matchMedia?.('(prefers-reduced-motion: reduce)'),reduced=()=>!!media?.matches;
- const attacks=[{button:'wobblePunchBtn',cuts:'armCuts',run:rig.punch},{button:'wobbleSpikesBtn',cuts:'legCuts',run:rig.shootSpikes},{button:'wobbleBeamBtn',cuts:'stalkCuts',run:rig.eyeBeam}];
+ const attacks=[{button:'wobblePunchBtn',cuts:'armCuts',run:rig.punch},{button:'wobbleSpikesBtn',cuts:'legCuts',run:rig.shootSpikes},{button:'wobbleBeamBtn',cuts:'stalkCuts',run:rig.eyeBeam},{button:'wobbleTeethBtn',run:rig.shakeTeeth}];
+ const limbs=attacks.filter(a=>a.cuts);
  const instructions='Cut any circled joint twice. Try the attacks at both speeds.';
  function status(text){$('wobbleStatus').textContent=text}
  function resize(){
@@ -14,20 +15,24 @@ DoodleDefender.systems.wobblePreview=function(game){
  function render(){
   if(!opened||!view)return;ctx.setTransform(view.dpr,0,0,view.dpr,0,0);ctx.clearRect(0,0,view.width,view.height);
   ctx.save();ctx.translate(view.x,view.y);ctx.scale(view.scale,view.scale);
-  if(ready)rig.draw(ctx,image,model,{reduced:reduced(),guide:true});
+  if(ready)rig.draw(ctx,image,model,{reduced:reduced(),guide:true,toothImage});
   if(stroke&&stroke.length){ctx.strokeStyle='#3562be';ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();stroke.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke()}
   ctx.restore();
  }
  function load(){
-  if(ready||loading)return;loading=true;image=new Image();status('Opening Wobblechomp’s notebook…');
-  image.onload=()=>{loading=false;ready=true;if(opened){status(instructions);render();sync()}};
-  image.onerror=()=>{loading=false;status('Artwork could not load. Close and reopen to try again.');sync()};
-  const version=document.documentElement?.dataset?.build;image.src='assets/art/wobblechomp-parts.png'+(version?'?v='+encodeURIComponent(version):'');
+  if(ready||loading)return;loading=true;status('Opening Wobblechomp’s notebook…');
+  const version=document.documentElement?.dataset?.build,suffix=version?'?v='+encodeURIComponent(version):'';
+  let remaining=2,failed=false;
+  const done=()=>{if(failed)return;if(--remaining===0){loading=false;ready=true;if(opened){status(instructions);render();sync()}}};
+  const fail=()=>{if(failed)return;failed=true;loading=false;status('Artwork could not load. Close and reopen to try again.');sync()};
+  image=new Image();image.onload=done;image.onerror=fail;image.src='assets/art/wobblechomp-parts.png'+suffix;
+  toothImage=new Image();toothImage.onload=done;toothImage.onerror=fail;toothImage.src='assets/art/wobble-tooth.png'+suffix;
  }
  function sync(){
-  for(const a of attacks)$(a.button).disabled=!ready||paused||model[a.cuts]===2||rig.busy(model);
+  $('wobbleToothCount').textContent=model.teeth.length?'Teeth: '+model.teeth.length:'';
+  for(const a of attacks)$(a.button).disabled=!ready||paused||(a.cuts&&model[a.cuts]===2)||rig.busy(model);
   $('wobblePauseBtn').textContent=paused?'Resume':'Pause';$('wobblePauseBtn').setAttribute?.('aria-pressed',String(paused));
-  $('wobbleCutCount').textContent=attacks.every(a=>model[a.cuts]===2)?'All parts detached!':'Arm '+model.armCuts+'/2 · Leg '+model.legCuts+'/2 · Eye '+model.stalkCuts+'/2';
+  $('wobbleCutCount').textContent=limbs.every(a=>model[a.cuts]===2)?'All parts detached!':'Arm '+model.armCuts+'/2 · Leg '+model.legCuts+'/2 · Eye '+model.stalkCuts+'/2';
  }
  function advance(dt){
   if(!opened||paused||document.hidden||!ready)return;
@@ -53,13 +58,13 @@ DoodleDefender.systems.wobblePreview=function(game){
  canvas.addEventListener('pointermove',e=>{if(e.pointerId!==pointer||!stroke)return;const p=point(e),q=stroke.at(-1);if(Math.hypot(p.x-q.x,p.y-q.y)>2&&stroke.length<1024)stroke.push(p);render()});
  canvas.addEventListener('pointerup',e=>{
   if(e.pointerId!==pointer||!stroke)return;stroke.push(point(e));
-  if(rig.cutStroke(model,stroke,reduced())){const part=model.lastCut,name={arm:'Arm',leg:'Spiky leg',stalk:'Eye stalk'}[part],cuts=model[{arm:'armCuts',leg:'legCuts',stalk:'stalkCuts'}[part]];status(attacks.every(a=>model[a.cuts]===2)?'All three parts detached! Reset to try again.':cuts===1?name+' is hanging by a thread!':name+' detached! Try the remaining parts.')}else if(attacks.some(a=>model[a.cuts]<2))status('Cross the threads inside a green circle, then lift your finger.');
+  if(rig.cutStroke(model,stroke,reduced())){const part=model.lastCut,name={arm:'Arm',leg:'Spiky leg',stalk:'Eye stalk'}[part],cuts=model[{arm:'armCuts',leg:'legCuts',stalk:'stalkCuts'}[part]];status(limbs.every(a=>model[a.cuts]===2)?'All three parts detached! Reset to try again.':cuts===1?name+' is hanging by a thread!':name+' detached! Try the remaining parts.')}else if(limbs.some(a=>model[a.cuts]<2))status('Cross the threads inside a green circle, then lift your finger.');
   const id=pointer;pointer=null;if(canvas.hasPointerCapture?.(id))canvas.releasePointerCapture(id);strokeLife=.6;sync();render();
  });
  canvas.addEventListener('pointercancel',()=>{clearPointer();render()});
  canvas.addEventListener('lostpointercapture',()=>{if(pointer!==null){clearPointer();render()}});
  $('openWobblePreviewBtn').onclick=open;$('closeWobblePreviewBtn').onclick=close;
- for(const a of attacks)$(a.button).onclick=()=>{if(!paused&&ready&&a.run(model)){nextPunch=.8;sync();render()}};
+ for(const a of attacks)$(a.button).onclick=()=>{if(!paused&&ready&&a.run(model)){nextPunch=.8;if(a.run===rig.shakeTeeth)status('Watch the teeth launch, bounce and scurry.');sync();render()}};
  $('wobbleSpeed').onchange=()=>{last=null;clearPointer();render()};
  $('wobblePauseBtn').onclick=()=>{paused=!paused;last=null;clearPointer();sync();render()};
  $('wobbleResetBtn').onclick=()=>{model=rig.create();paused=false;nextPunch=.8;nextAttack=0;last=null;clearPointer();status(instructions);sync();render()};

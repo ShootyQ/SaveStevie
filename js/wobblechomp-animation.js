@@ -8,10 +8,23 @@ DoodleDefender.WobblechompRig=(()=>{
  };
  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),mix=(a,b,t)=>a+(b-a)*t;
  const ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t)};
- function create(){return {time:0,punchAge:null,spikeAge:null,beamAge:null,armCuts:0,legCuts:0,stalkCuts:0,reaction:0,impact:0,wrist:{x:310,y:365},angle:-.35,debris:null,fallenParts:[],spikes:[],marks:[],lastCut:null}}
- const busy=m=>m.punchAge!==null||m.spikeAge!==null||m.beamAge!==null;
+ function create(){return {time:0,punchAge:null,spikeAge:null,beamAge:null,teethAge:null,teethVolley:2,teethPlan:[],teeth:[],armCuts:0,legCuts:0,stalkCuts:0,reaction:0,impact:0,wrist:{x:310,y:365},angle:-.35,debris:null,fallenParts:[],spikes:[],marks:[],lastCut:null}}
+ const busy=m=>m.punchAge!==null||m.spikeAge!==null||m.beamAge!==null||m.teethAge!==null;
  function attack(m,part,key){if(m[specs[part].cuts]===2||busy(m))return false;m[key]=0;return true}
  const punch=m=>attack(m,'arm','punchAge'),shootSpikes=m=>attack(m,'leg','spikeAge'),eyeBeam=m=>attack(m,'stalk','beamAge');
+ function shakeTeeth(m){
+  if(busy(m))return false;m.teethAge=0;
+  const spots=[[110,555],[220,625],[325,550],[435,615],[815,580],[895,640],[745,635],[145,650],[860,535],[360,660]],count=6+(m.teethVolley++%5);
+  m.teethPlan=spots.slice(0,count).map(([x,y],i)=>({x,y,at:.85+i*.065,launched:false}));return true;
+ }
+ function toothPose(t,reduced=false){
+  const landed=t.age-t.flight;
+  if(landed<0){const f=clamp(t.age/t.flight,0,1);return {x:mix(t.start.x,t.target.x,f),y:mix(t.start.y,t.target.y,f)-Math.sin(f*Math.PI)*125,angle:reduced?0:(t.index%2?1:-1)*f*3,scaleX:mix(.45,1,ease(f*3)),scaleY:mix(.45,1,ease(f*3)),phase:'flying'}}
+  const bouncing=landed<.3,waiting=landed<.55,hop=reduced?0:bouncing?Math.sin(landed/.3*Math.PI)*24:waiting?0:Math.abs(Math.sin((landed-.55)*10+t.index))*7;
+  const squash=!reduced&&landed<.09;
+  return {x:t.x,y:t.y-hop,angle:reduced?0:waiting?0:Math.sin(landed*10+t.index)*.08,scaleX:squash?1.2:1,scaleY:squash?.8:1,phase:bouncing?'bouncing':waiting?'waiting':'scurrying'};
+ }
+
  function update(m,dt){
   dt=clamp(dt,0,.1);m.time+=dt;m.reaction=Math.max(0,m.reaction-dt);m.impact=Math.max(0,m.impact-dt);
   for(const mark of m.marks)mark.life-=dt;m.marks=m.marks.filter(mark=>mark.life>0);
@@ -33,6 +46,20 @@ DoodleDefender.WobblechompRig=(()=>{
    if(t>=2.1)m.spikeAge=null;
   }
   if(m.beamAge!==null){m.beamAge+=dt;if(m.beamAge>=2.8)m.beamAge=null}
+  if(m.teethAge!==null){
+   const before=m.teethAge,t=m.teethAge+=dt;
+   for(let i=0;i<m.teethPlan.length;i++){const target=m.teethPlan[i];if(!target.launched&&t>=target.at){
+    if(i===0)for(const old of m.teeth)old.life=Math.min(old.life,.35);
+    target.launched=true;const mouth=pose(m,true).mouth;
+    m.teeth.push({index:i,age:before-target.at,flight:.65+(i%3)*.08,start:{...mouth},target:{x:target.x,y:target.y},x:target.x,y:target.y,vx:(i%2?1:-1)*(55+i*7),life:7});
+   }}
+   if(t>=2.6){m.teethAge=null;m.teethPlan=[]}
+  }
+  for(const t of m.teeth){
+   t.age+=dt;t.life-=dt;
+   if(t.age>=t.flight+.55){t.x+=t.vx*dt;if(t.x<70||t.x>930){t.x=clamp(t.x,70,930);t.vx*=-1}}
+  }
+  m.teeth=m.teeth.filter(t=>t.life>0);
   for(const s of m.spikes){s.life-=dt;s.x+=s.vx*dt;s.y+=s.vy*dt}m.spikes=m.spikes.filter(s=>s.life>0&&s.x>-40);
   for(const d of m.fallenParts)if(!d.settled){
    let left=dt;while(left>0){const step=Math.min(left,1/120);left-=step;d.vy+=650*step;d.x+=d.vx*step;d.y+=d.vy*step;d.angle+=d.spin*step;
@@ -48,7 +75,8 @@ DoodleDefender.WobblechompRig=(()=>{
  }
  function pose(m,reduced=false){
   const entry=(1-ease(m.time/.9))*70,bob=reduced?0:Math.sin(m.time*3)*(m.legCuts===2?5:3);
-  const at=(x,y)=>({x:x+entry,y:y+bob});
+  const shake=!reduced&&m.teethAge!==null&&m.teethAge<.85?Math.sin(m.teethAge*48)*6:0;
+  const at=(x,y)=>({x:x+entry+shake,y:y+bob});
   let legX=721,legY=m.legCuts?567:522,legAngle=m.legCuts ? .2 : 0;
   if(m.spikeAge!==null){const t=m.spikeAge;
    const lift=t<.95?ease(t/.95):t<1.3?1:1-ease((t-1.3)/.8);
@@ -59,7 +87,7 @@ DoodleDefender.WobblechompRig=(()=>{
   if(!reduced){legAngle+=Math.sin(m.time*2.5)*.04;eyeAngle+=Math.sin(m.time*2)*.06}
   const parts={arm:part(at(466,418),at(m.wrist.x,m.wrist.y),m.angle,'arm',m.armCuts),leg:part(at(675,495),at(legX,legY),legAngle,'leg',m.legCuts),stalk:part(at(646,311),at(eyeX,eyeY),eyeAngle,'stalk',m.stalkCuts)};
   const arm=parts.arm;
-  return {entry,bob,parts,root:arm.root,wrist:arm.end,joint:arm.joint,bodyAngle:reduced?0:Math.sin(m.time*2)*.025+(m.legCuts===2?-.07:0),angle:arm.angle};
+  return {entry:entry+shake,bob,mouth:at(570,428),parts,root:arm.root,wrist:arm.end,joint:arm.joint,bodyAngle:reduced?0:Math.sin(m.time*2)*.025+(m.legCuts===2?-.07:0)+(m.teethAge!==null&&m.teethAge<.85?Math.sin(m.teethAge*38)*.04:0),angle:arm.angle};
  }
  function crossing(a,b,c,d){
   const dx=b.x-a.x,dy=b.y-a.y,ex=d.x-c.x,ey=d.y-c.y,den=dx*ey-dy*ex;
@@ -101,13 +129,13 @@ DoodleDefender.WobblechompRig=(()=>{
   if(m.beamAge===null||m.stalkCuts===2)return null;
   const t=m.beamAge,f=ease((t-.8)/1.3);return {origin:p.parts.stalk.center,target:{x:150,y:mix(300,590,f)},firing:t>=.8&&t<2.1};
  }
- function draw(ctx,image,m,{reduced=false,guide=true}={}){
+ function draw(ctx,image,m,{reduced=false,guide=true,toothImage=null}={}){
   const p=pose(m,reduced);ctx.save();
   for(const limb of Object.values(p.parts))if(limb.cuts<2){
    const s=specs[limb.name];noodle(ctx,limb.joint.b,limb.end,limb.name==='arm'?(limb.cuts?70:35):limb.cuts?25:-10,limb.name==='stalk'?12:16);
    tile(ctx,image,s.col,s.row,limb.end.x,limb.end.y,s.w,s.h,limb.angle,s.pivot);
   }
-  tile(ctx,image,m.reaction>0?2:0,m.reaction>0?1:0,570+p.entry,410+p.bob,320,320,p.bodyAngle);
+  tile(ctx,image,(m.reaction>0||m.teethAge!==null&&m.teethAge>=.72&&m.teethAge<1.9)?2:0,(m.reaction>0||m.teethAge!==null&&m.teethAge>=.72&&m.teethAge<1.9)?1:0,570+p.entry,410+p.bob,320,320,p.bodyAngle);
   for(const limb of Object.values(p.parts)){
    if(limb.cuts<2)threads(ctx,limb);
    else{ctx.strokeStyle='#6e592a';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(limb.root.x-8,limb.root.y-8);ctx.lineTo(limb.root.x+5,limb.root.y+5);ctx.moveTo(limb.root.x-7,limb.root.y+7);ctx.lineTo(limb.root.x+5,limb.root.y-7);ctx.stroke()}
@@ -120,10 +148,20 @@ DoodleDefender.WobblechompRig=(()=>{
    if(beam.firing){ctx.lineCap='round';ctx.strokeStyle='#247c75';ctx.lineWidth=15;line();ctx.strokeStyle='#b6ef87';ctx.lineWidth=9;line();ctx.strokeStyle='#fffbe5';ctx.lineWidth=3;line()}
    else if(m.beamAge<.8){ctx.setLineDash([8,8]);ctx.strokeStyle='#9b632d';ctx.lineWidth=3;line();ctx.setLineDash([]);ctx.strokeStyle='#9b632d';ctx.lineWidth=3;ctx.beginPath();ctx.arc(beam.origin.x,beam.origin.y,30,0,Math.PI*2);ctx.stroke()}
   }
+  if(m.teethAge!==null){
+   ctx.strokeStyle='#9b632d';ctx.lineWidth=3;
+   for(const target of m.teethPlan){const tooth=m.teeth.find(t=>t.index===m.teethPlan.indexOf(target)&&t.life>1);if(target.launched&&(!tooth||tooth.age>=tooth.flight))continue;
+    ctx.setLineDash([5,4]);ctx.beginPath();ctx.ellipse(target.x,target.y+30,30,10,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
+   }
+   if(m.teethAge<.85&&!reduced){for(const sign of [-1,1]){ctx.beginPath();ctx.moveTo(p.mouth.x+sign*42,p.mouth.y-8);ctx.lineTo(p.mouth.x+sign*56,p.mouth.y-16);ctx.moveTo(p.mouth.x+sign*48,p.mouth.y+10);ctx.lineTo(p.mouth.x+sign*63,p.mouth.y+15);ctx.stroke()}}
+  }
+  if(toothImage)for(const t of m.teeth){
+   const q=toothPose(t,reduced);ctx.save();ctx.globalAlpha=Math.min(1,t.life/.35);ctx.translate(q.x,q.y);ctx.rotate(q.angle);ctx.scale(q.scaleX*(t.vx>0?-1:1),q.scaleY);ctx.drawImage(toothImage,-37,-37,74,74);ctx.restore();
+  }
   if(m.impact>0){ctx.strokeStyle='#bd7233';ctx.lineWidth=3;for(let i=0;i<7;i++){const a=i*Math.PI*2/7;ctx.beginPath();ctx.moveTo(110+Math.cos(a)*18,505+Math.sin(a)*18);ctx.lineTo(110+Math.cos(a)*(30+m.impact*35),505+Math.sin(a)*(30+m.impact*35));ctx.stroke()}}
   for(const mark of m.marks){ctx.strokeStyle='#358174';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(mark.x-20,mark.y+22);ctx.lineTo(mark.x+20,mark.y-22);ctx.stroke()}
   if(guide)for(const limb of Object.values(p.parts))if(limb.cuts<2){const {a,b}=limb.joint;ctx.strokeStyle='#28796d';ctx.lineWidth=3;ctx.setLineDash([6,5]);ctx.beginPath();ctx.arc((a.x+b.x)/2,(a.y+b.y)/2,36,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
   ctx.restore();
  }
- return {WIDTH,HEIGHT,create,update,punch,shootSpikes,eyeBeam,busy,pose,cutStroke,draw};
+ return {WIDTH,HEIGHT,create,update,punch,shootSpikes,eyeBeam,shakeTeeth,toothPose,busy,pose,cutStroke,draw};
 })();
