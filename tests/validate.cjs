@@ -1247,7 +1247,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
   createBufferSource(){const s={connect(){},disconnect(){},start(...args){this.args=args},stop(){this.onended?.()}};sources.push(s);return s}
  };
  env.sandbox.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(4)});
- g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,20);
+ g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,27);
  const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('sound must not use combat RNG')};
  assert.equal(g.api.playSound('scribble'),true);assert.equal(sources[0].args[2],.28);assert.equal(g.api.playSound('scribble'),false);
  sources[0].onended();ctx.currentTime=.3;assert.equal(g.api.playSound('scribble'),true);assert.equal(g.api.soundEffectsSnapshot().voices[0].name,'scribble-2');
@@ -1260,7 +1260,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  assert.equal(sources.at(-1).args[1],2.9,'bubble grain starts at an audible burst');
  assert.deepEqual(bubbles,['poison-bubble-1','poison-bubble-2','poison-bubble-3','poison-bubble-4','poison-bubble-1']);g.api.stopSoundEffects();
  for(const kind of ['fire','frost','bossEnter']){ctx.currentTime+=3;assert.equal(g.api.playSound(kind),true);g.api.stopSoundEffects()}
- env.sandbox.Math.random=random;console.log('PASS: twenty decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
+ env.sandbox.Math.random=random;console.log('PASS: twenty-seven decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
 })().catch(error=>{console.error(error);process.exitCode=1});
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();const triple=g.catalog.upgrades.find(u=>u.name==='Triple Stroke');assert.equal(triple.exclusiveRarity,'legendary');

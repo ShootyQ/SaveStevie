@@ -49,7 +49,7 @@ DoodleDefender.WobblePhaseTwo=function(game,{state,rig,spawnTooth,topMargin}){
  function update(e,s,dt){
   if(s.transition>0){rig.update(s.model,dt*1.45);s.transition=Math.max(0,s.transition-dt);if(!s.transition)launch(e,s);return}
   if(e.freeze>0||e.stun>0)return;s.model.time+=dt;s.hitCooldown=Math.max(0,s.hitCooldown-dt);s.armedFor=Math.max(0,s.armedFor-dt);s.toothClock-=dt;
-  if(s.toothClock<=0){s.toothClock=4.5;for(let i=0;i<2;i++)spawnTooth(e,{})}
+  if(s.toothClock<=0){game.api.playSound('wobbleTeeth');s.toothClock=4.5;for(let i=0;i<2;i++)spawnTooth(e,{})}
   const old={x:e.x,y:e.y};
   if(!s.rail||!advanceRail(e,s,dt)){
    const nx=e.x+s.rollVX*dt,ny=e.y+s.rollVY*dt,hit=game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},nx,ny);

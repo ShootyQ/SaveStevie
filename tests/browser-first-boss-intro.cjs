@@ -15,7 +15,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   });
   await page.goto('http://127.0.0.1:8001/');await page.waitForFunction(()=>testGame.api.artworkReady(),null,{polling:50});await page.click('#startBtn');
   await page.evaluate(async()=>{const g=testGame;g.api.setAudioVolume('musicVolume',.2);g.api.startSplashMusic();await g.api.unlockSoundEffects();g.state.wave=5;g.api.startWave();g.state.timeLeft=0;g.state.spawnTimer=999;g.api.createWall([{x:40,y:200},{x:200,y:200}]);g.api.update(.01);g.api.draw()});
-  assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().ready),20);assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().failed),0);
+  assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().ready),27);assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().failed),0);
   await page.evaluate(()=>{testGame.api.toggleMusic();testGame.api.toggleMusic()});
   assert.equal(await page.locator('#gameMusic').evaluate(a=>a.paused),true);
   assert.equal(await page.evaluate(()=>testGame.api.firstBossIntroActive()),true);
