@@ -23,8 +23,8 @@ const root=path.resolve(__dirname,'..');
   const coverStart=await page.evaluate(()=>{
    const g=testGame,p=g.state.player,e=g.state.enemies.find(e=>e.waveBoss);g.state.walls=[];p.hp=p.maxHp=75;
    g.api.createWall([{x:p.x-90,y:p.y-85},{x:p.x+90,y:p.y-85},{x:p.x+90,y:p.y+85},{x:p.x-90,y:p.y+85},{x:p.x-90,y:p.y-85}]);
-   const cover=g.state.walls[0],before=cover.hp;for(let i=0;i<270;i++)g.api.update(.01);g.api.draw();return {before,hp:cover.hp,playerHP:p.hp,end:g.api.wobbleSnapshot(e).punchEnd};
-  });assert.equal(coverStart.playerHP,75,'real phone cover blocks punch');assert.equal(coverStart.hp,coverStart.before-22);assert(coverStart.end,'punch visibly stopped at cover');
+   const cover=g.state.walls[0],before=cover.hp;for(let i=0;i<270;i++)g.api.update(.01);g.api.draw();return {before,hp:cover.hp,playerHP:p.hp,end:g.api.wobbleSnapshot(e).punchEnd,stun:g.api.wobbleSnapshot(e).blockStun};
+  });assert.equal(coverStart.playerHP,75,'real phone cover blocks punch');assert.equal(coverStart.hp,coverStart.before-22);assert(coverStart.end,'punch visibly stopped at cover');assert(coverStart.stun>2,'real cover earns a three-second stun');
   await page.screenshot({path:'/tmp/wobble-covered-punch-'+viewport.width+'.png'});
   const protectedHP=await page.evaluate(()=>{const g=testGame;for(let i=0;i<380;i++)g.api.update(.01);const hp=g.state.player.hp;g.state.player.hp=g.state.player.maxHp=10000;return hp});assert.equal(protectedHP,75,'normal-health Stevie survives protected opening and spike fan');
   const seen=await page.evaluate(()=>{const g=testGame,seen=new Set();for(let i=0;i<3000;i++){g.api.update(.01);const e=g.state.enemies.find(e=>e.waveBoss),s=g.api.wobbleSnapshot(e);if(s.clearance<95-1e-7)throw Error('Boss crowded fort: '+s.clearance);if(s.attack)seen.add(s.attack)}g.api.draw();return [...seen].sort()});assert.deepEqual(seen,['beam','punch','roll','spikes','teeth']);
@@ -37,6 +37,11 @@ const root=path.resolve(__dirname,'..');
   await page.screenshot({path:'/tmp/wobble-fight-action-'+viewport.width+'.png'});
   await page.click('#pauseBtn');const paused=await page.evaluate(()=>JSON.stringify(testGame.api.bossEncounterSnapshot()));await page.evaluate(()=>testGame.api.update(3));assert.equal(await page.evaluate(()=>JSON.stringify(testGame.api.bossEncounterSnapshot())),paused);await page.click('#resumeBtn');
   const beforeResize=await page.evaluate(()=>testGame.api.wobbleSnapshot(testGame.state.enemies.find(e=>e.waveBoss)).model);await page.setViewportSize({width:740,height:420});await page.evaluate(()=>testGame.api.resize());await page.setViewportSize(viewport);await page.evaluate(()=>testGame.api.resize());assert.deepEqual(await page.evaluate(()=>testGame.api.wobbleSnapshot(testGame.state.enemies.find(e=>e.waveBoss)).model),beforeResize,'resize preserves the animation and cuts');
+  const escaped=await page.evaluate(()=>{
+   const g=testGame,e=g.state.enemies.find(e=>e.waveBoss),s=g.api.bossBrain(e).wobble;g.state.enemies=[e];g.state.enemyShots=[];g.state.walls=[];s.model=DoodleDefender.WobblechompRig.create();s.model.time=1;s.attack=null;s.blockStun=0;s.cutWindow=null;s.trapped=0;s.trapProbe=null;s.gap=999;
+   g.state.stats.ink=1000;g.api.createWall([{x:e.x-30,y:90},{x:e.x-30,y:g.state.H-60}]);g.api.createWall([{x:e.x+30,y:90},{x:e.x+30,y:g.state.H-60}]);const pair=[...g.state.walls];for(let k=0;k<800;k++)g.api.update(.01);
+   const escaped=pair.some(w=>!g.state.walls.includes(w));s.gap=0;s.turn=0;g.api.draw();return escaped;
+  });assert(escaped,'two live walls cannot permanently cheese the boss');
   // Natural attack openings; pointer input itself creates the paid walls and cuts.
   for(const part of ['arm','leg','stalk'])for(let cut=0;cut<2;cut++){
    const points=await page.evaluate(part=>{
