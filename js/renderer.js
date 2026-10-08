@@ -216,6 +216,8 @@ function updateEnemyAnimations(dt){
       }
     }else if(e.type==='stapler'){
       const brain=e.waveBoss?game.api.bossBrain(e):null;
+      if(brain?.staple?.rush){m.cue='dash';p.angle+=m.facing*.2;p.sx+=.18;p.sy-=.16}
+      if(brain?.staple?.hop){const t=brain.staple.hop.age/brain.staple.hop.duration;p.angle+=m.facing*Math.sin(t*Math.PI)*.25;p.sx+=Math.sin(t*Math.PI)*.12;p.sy-=Math.sin(t*Math.PI)*.1}
       if(brain?.staple?.transition>0){p.angle+=Math.sin(motionTime*15)*.09;p.sx+=.1;p.sy-=.08}
       if(brain?.recovery>0){p.angle-=.15;p.sy+=.08}
       if(e.bossWindup>0){
@@ -657,7 +659,7 @@ function draw(){
     }
     if(e.feastRush>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#cf8738';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();}
     const hpRatio=game.api.clamp(e.hp/e.maxHp,0,1);
-    game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y-game.api.enemyFlightHeight(e));
+    game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y-game.api.enemyFlightHeight(e)-(game.api.isStapleBoss(e)&&!motionReduced?game.api.stapleHopHeight(e):0));
     if(e.flight&&!motionReduced){const t=e.flight.age/e.flight.duration;game.dom.ctx.rotate(e.flight.spin*Math.sin(t*Math.PI)*.8);const scale=1+Math.sin(t*Math.PI)*.16;game.dom.ctx.scale(scale,scale);}
 
     if(e.type==='eraser'){

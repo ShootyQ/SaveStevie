@@ -132,6 +132,7 @@ function update(dt){
     if(game.api.waveFinaleActive())break;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.isStapleBoss(e)){
+      if(game.api.bossBrain(e).staple?.hop)continue; // Repositioning leaps cannot collide with ink in midair.
       if(e.freeze<=0&&e.stun<=0){
         const hit=game.api.nearestWallHit(e)||game.api.gravityWallHit(e);
         if(hit){const dps=game.api.applyInkContact(e,dt,hit.wall);game.api.dealDamage(e,dps*dt,'physical')}

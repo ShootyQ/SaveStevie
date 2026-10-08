@@ -19,6 +19,23 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.screenshot({path:'/tmp/staple-entry-'+viewport.width+'.png'});
   await page.evaluate(()=>{const g=testGame;g.state.paused=true;const age=g.api.stapleIntroPose().age;g.api.update(.4);if(g.api.stapleIntroPose().age!==age)throw Error('entrance advanced during pause');g.state.paused=false;g.api.update(1.3)});
   assert.equal(await page.evaluate(()=>testGame.state.enemies.filter(e=>e.waveBoss).length),1);
+  const pressure=await page.evaluate(()=>{
+   const g=testGame;let counterFailures=0;
+   const setup=()=>{g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;const q=g.api.stapleEntrancePoint(),e=g.api.spawnEnemy(true,q.x,q.y),b=g.api.bossBrain(e);g.api.updateBossEncounter(e,0);b.cd=0;return {e,b}};
+   const stroke=(x,y,dx,dy)=>{const d=Math.hypot(dx,dy)||1,count=g.state.walls.length;g.api.createWall([{x:x-dy/d*16,y:y+dx/d*16},{x:x+dy/d*16,y:y-dx/d*16}]);if(g.state.walls.length!==count+1)counterFailures++};
+   const cover=(q)=>{const p=g.state.player,dx=p.x-q.x,dy=p.y-q.y,d=Math.hypot(dx,dy)||1,hit=g.api.bossShotWallHit(q,p.x,p.y);if(!hit||hit.wall.hp<22.5)stroke(p.x-dx/d*90,p.y-dy/d*90,dx,dy)};
+   let {e,b}=setup();cover(e);
+   for(let i=0;i<240&&g.state.running;i++)g.api.update(1/30);
+   const passiveHp=g.state.player.hp;
+   ({e,b}=setup());let lastCast=null,lastVolley=null,lastBurst=0,lastPhase=1;
+   for(let i=0;i<600&&g.state.running;i++){
+    if(b.cast&&b.cast!==lastCast){lastCast=b.cast;const c=b.cast;if(['rush','snap'].includes(c.kind)){const dx=c.x-e.x,dy=c.y-e.y,d=Math.hypot(dx,dy)||1;stroke(e.x+dx/d*45,e.y+dy/d*45,dx,dy)}else if(c.kind==='fan'||c.kind==='jam')cover({x:c.originX,y:c.originY})}
+    const v=b.staple.volley;if(v&&(v!==lastVolley||v.turn!==lastBurst)){lastVolley=v;lastBurst=v.turn;cover({x:v.originX,y:v.originY})}
+    for(const n of g.state.enemies)if(n.bossOwner===e&&n.hp>0&&Math.hypot(n.x-g.state.player.x,n.y-g.state.player.y)<100&&!g.api.shotBlocked(n.x,n.y,g.state.player.x,g.state.player.y,0)){const p=g.state.player,dx=p.x-n.x,dy=p.y-n.y,d=Math.hypot(dx,dy)||1;stroke(n.x+dx/d*12,n.y+dy/d*12,dx,dy)}
+    g.api.update(1/30);lastPhase=g.api.stapleSnapshot(e).phase;
+   }
+   const result={passiveHp,activeHp:g.state.player.hp,running:g.state.running,strokes:g.state.stats.strokeCount,ink:g.state.stats.ink,counterFailures,lastPhase};setup();return result;
+  });assert.ok(pressure.passiveHp<40,JSON.stringify(pressure));assert.ok(pressure.running&&pressure.activeHp>=60&&pressure.counterFailures===0,JSON.stringify(pressure));console.log('Pressure '+viewport.width+': '+JSON.stringify(pressure));
   const liveFight=await page.evaluate(()=>{
    const g=testGame,e=g.state.enemies.find(n=>n.waveBoss);let helpers=0,travel=0,idleTravel=0,flights=0;const attacks=new Set();
    // Observe a full phase without ending it through incidental damage/death.
