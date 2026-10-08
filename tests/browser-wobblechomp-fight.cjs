@@ -50,13 +50,22 @@ const root=path.resolve(__dirname,'..');
   });assert(escaped,'two live walls cannot permanently cheese the boss');
   // Natural attack openings; pointer input itself creates the paid walls and cuts.
   for(const part of ['arm','leg','stalk'])for(let cut=0;cut<2;cut++){
-   const points=await page.evaluate(part=>{
+   let points=await page.evaluate(part=>{
     const g=testGame,e=g.state.enemies.find(e=>e.waveBoss);let s;
-    for(let i=0;i<2500;i++){s=g.api.wobbleSnapshot(e);if(s.available.includes(part)&&s.model.rollAge===null)break;g.api.update(.01)}
+    for(let i=0;i<2500;i++){s=g.api.wobbleSnapshot(e);if(s.available.includes(part)&&s.model.rollAge===null)break;
+     if(part==='stalk'&&s.attack==='beam'&&s.model.beamAge/1.9>=.2&&s.beamTip){const a=s.beamOrigin,b=s.beamTip,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1,x=(a.x+b.x)/2,y=(a.y+b.y)/2;window.beamCounterPoints=[{x:x-dy/l*22,y:y+dx/l*22},{x:x+dy/l*22,y:y-dx/l*22}];return {counter:window.beamCounterPoints.map(p=>{const r=g.dom.canvas.getBoundingClientRect();return {x:r.left+p.x,y:r.top+p.y}})}}
+     if(part!=='stalk'&&!g.state.walls.length){const p=g.state.player;g.api.createWall([{x:p.x-80,y:p.y-80},{x:p.x+80,y:p.y-80},{x:p.x+80,y:p.y+80},{x:p.x-80,y:p.y+80},{x:p.x-80,y:p.y-80}])}
+     g.api.update(.01)}
     if(!s.available.includes(part))throw Error('No opening for '+part);
     const j=s.parts[part].joint,a=j.a,b=j.b,x=(a.x+b.x)/2,y=(a.y+b.y)/2,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy),r=g.dom.canvas.getBoundingClientRect();g.api.draw();
     return ([{x:x-dx/l*20-dy/l*10,y:y-dy/l*20+dx/l*10},{x:x+dx/l*20-dy/l*10,y:y+dy/l*20+dx/l*10}]).map(p=>({x:r.left+p.x,y:r.top+p.y}));
    },part);
+   if(points.counter){
+    const q=points.counter;
+    if(touch){await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[q[0]]});await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[q[1]]});await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]})}else{await page.mouse.move(q[0].x,q[0].y);await page.mouse.down();await page.mouse.move(q[1].x,q[1].y,{steps:5});await page.mouse.up()}
+    assert.equal(await page.evaluate(()=>testGame.api.wobbleSnapshot(testGame.state.enemies.find(e=>e.waveBoss)).model.stalkCuts),cut,'beam counter itself does not cut');
+    points=await page.evaluate(()=>{const g=testGame,e=g.state.enemies.find(e=>e.waveBoss),s=g.api.wobbleSnapshot(e);if(!s.available.includes('stalk'))throw Error('Paid laser cross did not stun eye');const j=s.parts.stalk.joint,x=(j.a.x+j.b.x)/2,y=(j.a.y+j.b.y)/2,r=g.dom.canvas.getBoundingClientRect();return [{x:r.left+x-22,y:r.top+y},{x:r.left+x+22,y:r.top+y}]});
+   }
    for(const p of points)assert(p.x>=0&&p.x<=viewport.width&&p.y>=0&&p.y<=viewport.height,'joint reachable on '+viewport.width+': '+JSON.stringify(points));
    if(touch){await touch.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[points[0]]});await touch.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[points[1]]});await touch.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]})}
    else{await page.mouse.move(points[0].x,points[0].y);await page.mouse.down();await page.mouse.move(points[1].x,points[1].y,{steps:5});await page.mouse.up()}

@@ -242,7 +242,7 @@ function updateEnemyShots(dt){
     // retroactively absorb a shot that already reached him.
     const endX=shot.x+dx*(hitTime??1),endY=shot.y+dy*(hitTime??1);shot.life-=dt;
     const stapleWall=(shot.stapleOwner||shot.wobbleOwner)?game.api.bossShotWallHit(shot,endX,endY):null;
-    if(stapleWall){const x=shot.x+(endX-shot.x)*stapleWall.t,y=shot.y+(endY-shot.y)*stapleWall.t;game.api.damageWall(stapleWall.wall,shot.wobbleOwner?4:8,x,y);game.api.burst(x,y,'#928276',5);continue}
+    if(stapleWall){const x=shot.x+(endX-shot.x)*stapleWall.t,y=shot.y+(endY-shot.y)*stapleWall.t;game.api.damageWall(stapleWall.wall,shot.wobbleOwner?4:8,x,y);game.api.burst(x,y,'#928276',5);if(shot.wobbleOwner)game.api.counterWobbleSpike(shot);continue}
     if(shotBlocked(shot.x,shot.y,endX,endY,shot.r)){
       game.api.burst(endX,endY,'#4b79d8',5);continue;
     }
