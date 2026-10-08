@@ -1,4 +1,4 @@
-// Real desktop/touch combat: entrance, fast attacks, six paid cuts and reward progression.
+// Real desktop/touch combat: entrance, paced attacks, six paid cuts and reward progression.
 const {chromium}=require('playwright'),assert=require('assert'),fs=require('fs'),path=require('path');
 const root=path.resolve(__dirname,'..');
 (async()=>{
@@ -11,7 +11,7 @@ const root=path.resolve(__dirname,'..');
    if(name==='game.js')body=body.toString().replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');
    return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.wav')?'audio/wav':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
   });
-  await page.goto('http://127.0.0.1:8001/');if(touch)await page.evaluate(()=>document.documentElement.classList.add('native-app'));await page.click('#startBtn');await page.evaluate(()=>testGame.api.unlockSoundEffects());
+  await page.goto('http://127.0.0.1:8001/');if(touch&&viewport.width===360)await page.evaluate(()=>document.documentElement.classList.add('native-app'));await page.click('#startBtn');await page.evaluate(()=>testGame.api.unlockSoundEffects());
   await page.evaluate(()=>{const g=testGame;g.api.setWaveFinaleEnabled(false);g.api.setSynergyRevealsEnabled(false);g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.createWall([{x:30,y:220},{x:90,y:220}]);g.state.stats.ink=40;g.api.update(.01);g.api.draw()});
   await page.waitForFunction(()=>testGame.api.wobbleArtworkReady(),null,{polling:50});
   assert.equal(await page.evaluate(()=>testGame.api.wobbleIntroPose().stage),'stomp');assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().voices.some(v=>v.kind==='bossStomp')),true);assert.equal(await page.locator('#gameMusic').evaluate(a=>a.paused),true);
@@ -20,7 +20,13 @@ const root=path.resolve(__dirname,'..');
   assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().voices.some(v=>v.kind==='bossRoar')),true);await page.screenshot({path:'/tmp/wobble-fight-roar-'+viewport.width+'.png'});if(viewport.width===360){await page.emulateMedia({reducedMotion:'reduce'});await page.waitForFunction(()=>testGame.api.enemyMotionReduced(),null,{polling:50});assert.equal(await page.evaluate(()=>testGame.api.wobbleIntroPose().zoom),1)}
   await page.evaluate(()=>{testGame.api.update(2.632);testGame.state.stats.rockDamage=0;testGame.state.stats.ink=testGame.state.stats.maxInk=1000;testGame.state.player.hp=testGame.state.player.maxHp=10000;testGame.api.draw()});
   assert.equal(await page.evaluate(()=>testGame.state.enemies.filter(e=>e.waveBoss).length),1);assert.equal(await page.evaluate(()=>testGame.api.bossEntranceActive()),false);assert.equal(await page.evaluate(()=>testGame.api.musicStatus().track),'pop-quiz-panic');
-  const seen=await page.evaluate(()=>{const g=testGame,seen=new Set();for(let i=0;i<1500;i++){g.api.update(.01);const e=g.state.enemies.find(e=>e.waveBoss),s=g.api.wobbleSnapshot(e);if(s.attack)seen.add(s.attack)}g.api.draw();return [...seen].sort()});assert.deepEqual(seen,['beam','punch','roll','spikes','teeth']);
+  const seen=await page.evaluate(()=>{const g=testGame,seen=new Set();for(let i=0;i<3000;i++){g.api.update(.01);const e=g.state.enemies.find(e=>e.waveBoss),s=g.api.wobbleSnapshot(e);if(s.attack)seen.add(s.attack)}g.api.draw();return [...seen].sort()});assert.deepEqual(seen,['beam','punch','roll','spikes','teeth']);
+  assert(Math.abs(await page.evaluate(()=>testGame.api.wobbleSnapshot(testGame.state.enemies.find(e=>e.waveBoss)).bodyWidth)-75.6)<1e-9);const hints=await page.evaluate(()=>{
+   const g=testGame;if(innerWidth===393)g.api.setDevMode(true);g.api.updateUI();const ctx=g.dom.ctx,original=ctx.fillText;let hint;
+   ctx.fillText=function(text,x,y,...rest){if(text.startsWith('PHASE 1'))hint={top:y-ctx.measureText(text).actualBoundingBoxAscent,bottom:y,width:ctx.measureText(text).width};return original.call(this,text,x,y,...rest)};
+   try{g.api.draw()}finally{ctx.fillText=original}
+   const rect=document.getElementById('bossOvertime').getBoundingClientRect(),canvas=g.dom.canvas.getBoundingClientRect();return {hint,labelBottom:rect.bottom-canvas.top,canvasWidth:canvas.width};
+  });assert(hints.hint.top>hints.labelBottom,'instructions below boss label, including dev banner');assert(hints.hint.width<hints.canvasWidth,'instructions fit phone width');
   await page.screenshot({path:'/tmp/wobble-fight-action-'+viewport.width+'.png'});
   await page.click('#pauseBtn');const paused=await page.evaluate(()=>JSON.stringify(testGame.api.bossEncounterSnapshot()));await page.evaluate(()=>testGame.api.update(3));assert.equal(await page.evaluate(()=>JSON.stringify(testGame.api.bossEncounterSnapshot())),paused);await page.click('#resumeBtn');
   const beforeResize=await page.evaluate(()=>testGame.api.wobbleSnapshot(testGame.state.enemies.find(e=>e.waveBoss)).model);await page.setViewportSize({width:740,height:420});await page.evaluate(()=>testGame.api.resize());await page.setViewportSize(viewport);await page.evaluate(()=>testGame.api.resize());assert.deepEqual(await page.evaluate(()=>testGame.api.wobbleSnapshot(testGame.state.enemies.find(e=>e.waveBoss)).model),beforeResize,'resize preserves the animation and cuts');
@@ -41,6 +47,6 @@ const root=path.resolve(__dirname,'..');
    await page.evaluate(()=>testGame.api.draw());
   }
   await page.evaluate(()=>testGame.api.update(.01));assert.equal(await page.evaluate(()=>testGame.state.betweenWaves),true);assert.equal(await page.evaluate(()=>testGame.state.enemies.length),0);assert.equal(await page.evaluate(()=>testGame.state.enemyShots.length),0);
-  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' entrance/pause, five fast real attacks, reachable mouse/touch cuts, missing parts and clean wave reward');await page.close();
+  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' entrance/pause, five readable real attacks, reachable mouse/touch cuts, missing parts and clean wave reward');await page.close();
  }}finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});

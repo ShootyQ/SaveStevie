@@ -21,8 +21,8 @@ const defs=game.catalog.enemyDefs={
     jamling:{r:10,hp:26,speed:26,dmg:5,color:'#928276'},
     mini:{r:7,hp:12,speed:49,dmg:5,color:'#a56cc1'},
     boss:{r:28,hp:270,speed:18,dmg:27,color:'#962f3d'},
-    wobblechomp:{r:38,hp:380,speed:120,dmg:14,color:'#dfbd29',boss:true},
-    'wobble-tooth':{r:10,hp:22,speed:62,dmg:9,color:'#e6d4a7'},
+    wobblechomp:{r:28,hp:380,speed:120,dmg:14,color:'#dfbd29',boss:true},
+    'wobble-tooth':{r:10,hp:22,speed:45,dmg:9,color:'#e6d4a7'},
     stapler:{r:30,hp:410,speed:19,dmg:27,color:'#c98a32',boss:true},
     crayon:{r:30,hp:540,speed:17,dmg:29,color:'#9354b9',boss:true},
     eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'}
