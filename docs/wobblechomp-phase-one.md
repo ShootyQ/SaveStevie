@@ -25,9 +25,9 @@ Detaching the arm, spiky leg and eye stalk starts **phase two**. Four player-dir
   No player damage or ink stealing. Cutting the stalk cancels its beam. It remains cuttable for 1.2 seconds after the beam ends, with the boss held still.
 - Roll: tuck, marked orbit route, fast movement, three spaced spike bursts and
   three tooth drops. No leg means no rolling spikes; teeth remain available.
-  Joints are hidden while tucked. Boss body contact never damages Stevie.
+  Joints are hidden while tucked. The phase-one rolling body passes through walls without consuming them; its projectiles can still be blocked. Walking continues to avoid walls, and phase-two rolls ride drawings. Boss body contact never damages Stevie.
 
-Slash through the **visible green ring** on the stalk or spiky leg and release. Their full 18-pixel ring is a cut target, rather than only the tiny joint line. Arm cuts still cross its joint. A paid eye/foot slash must be at least 12 pixels long; arm stroke requirements are unchanged. Each appendage needs two
+Slash through the **visible green ring** on the stalk or spiky leg and release. Their full 18-pixel ring is a cut target, rather than only the tiny joint line. Arm cuts accept the same full ring, including the second cut on a later punch. Every paid cut slash must be at least 12 pixels long. Each appendage needs two
 separate paid strokes. The first cut interrupts that part and opens a 1.6-second
 second-cut opportunity (2.2 seconds for the leg); the arm instead needs a second punch. Repeated crossings
 and copied lines count once per released stroke. Existing walls do not cut.
