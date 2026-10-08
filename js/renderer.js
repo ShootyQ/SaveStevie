@@ -7,7 +7,7 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['basil','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const doodleNames=['basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{
@@ -141,7 +141,7 @@ function enemySpriteFrame(e){
 }
 // Native profile direction: Staple Snack's open jaws point left; the other
 // profile monsters point right. Front-facing silhouettes keep their artwork.
-const profileDirections={fast:1,sprinter:1,flanker:1,mini:1,basil:1,sniper:1,stapler:-1};
+const profileDirections={fast:1,sprinter:1,flanker:1,mini:1,basil:1,jamling:1,sniper:1,stapler:-1};
 function enemyFacing(e){
   const m=enemyMotion.get(e);
   if(e.type==='sniper')return game.state.player.x<e.x?-1:1;
@@ -187,6 +187,7 @@ function updateEnemyAnimations(dt){
     if(e.freeze>0||e.stun>0)continue;
     // Distinct silhouettes reuse the existing art. These offsets never touch
     // enemy coordinates, attack timers, damage, or the combat random stream.
+    if(e.type==='jamling'){if(moving){p.y-=Math.abs(step)*2;p.angle+=step*.16;p.sx+=step*.08;p.sy-=step*.08}if(e.jamWarning>0){p.sx+=e.jamWarning*.18;p.sy-=e.jamWarning*.14;p.angle+=Math.sin(motionTime*15)*.05}}
     if(moving&&e.type==='flanker'){p.angle+=m.facing*.12;p.y-=Math.abs(step)*1.6;p.sx+=step*.06;p.sy-=step*.04}
     if(moving&&(e.type==='fast'||e.type==='mini')){p.angle+=m.facing*.09;p.sx+=step*.05;p.sy-=step*.05;}
     if(moving&&e.type==='grunt'&&!doodles['grunt-frame-0']){p.sx+=step*.035;p.sy-=step*.035;}
@@ -214,6 +215,9 @@ function updateEnemyAnimations(dt){
         p.y+=charge*2;p.sx+=charge*.16;p.sy-=charge*.18;p.angle-=m.facing*charge*.1;
       }
     }else if(e.type==='stapler'){
+      const brain=e.waveBoss?game.api.bossBrain(e):null;
+      if(brain?.staple?.transition>0){p.angle+=Math.sin(motionTime*15)*.09;p.sx+=.1;p.sy-=.08}
+      if(brain?.recovery>0){p.angle-=.15;p.sy+=.08}
       if(e.bossWindup>0){
         const ready=1-e.bossWindup/1.2;m.cue='slam-ready';m.cueProgress=ready;p.y-=ready*4;p.angle-=ready*.16;p.sy+=ready*.1;
       }else if(m.action==='slam'&&m.actionAge<.32){
@@ -308,6 +312,7 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   if(profileDirections[e.type]&&!name.startsWith('fast-frame-')&&enemyFacing(e)!==profileDirections[e.type])ctx.scale(-1,1);
   // Damage never fades the body: health belongs in the separate bar.
   ctx.drawImage(tintedDoodle(name,colors),left,top,width,height);
+  if(e.waveBoss&&e.type==='stapler'&&e.hp/e.maxHp<=.35){ctx.strokeStyle='#4b3228';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,-e.r);ctx.lineTo(2,-e.r+12);ctx.lineTo(-4,-e.r+18);ctx.lineTo(8,-e.r+30);ctx.stroke()}
   ctx.restore();
   if(showHealth)drawEnemyHealthBar(e,hpRatio,colors);
   return true;
@@ -535,8 +540,8 @@ function drawToolStroke(points,thick,opacity,color){
 function draw(){
   drawWaveStevie();
   game.dom.ctx.clearRect(0,0,game.state.W,game.state.H);game.dom.ctx.save();
-  const intro=game.api.firstBossIntroPose();
-  const camera=intro?{zoom:intro.zoom,x:game.api.clamp(intro.x,game.state.W/(2*intro.zoom),game.state.W-game.state.W/(2*intro.zoom)),y:game.api.clamp(intro.y,game.state.H/(2*intro.zoom),game.state.H-game.state.H/(2*intro.zoom))}:game.api.waveFinaleCamera();game.dom.ctx.translate(game.state.W/2,game.state.H/2);game.dom.ctx.scale(camera.zoom,camera.zoom);game.dom.ctx.translate(-camera.x,-camera.y);
+  const intro=game.api.firstBossIntroPose(),entry=game.api.stapleIntroPose(),focus=intro||entry;
+  const camera=focus?{zoom:focus.zoom,x:game.api.clamp(focus.x,game.state.W/(2*focus.zoom),game.state.W-game.state.W/(2*focus.zoom)),y:game.api.clamp(focus.y,game.state.H/(2*focus.zoom),game.state.H-game.state.H/(2*focus.zoom))}:game.api.waveFinaleCamera();game.dom.ctx.translate(game.state.W/2,game.state.H/2);game.dom.ctx.scale(camera.zoom,camera.zoom);game.dom.ctx.translate(-camera.x,-camera.y);
   game.dom.ctx.strokeStyle='rgba(212,76,76,.35)';game.dom.ctx.lineWidth=2;
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
 
@@ -586,6 +591,7 @@ function draw(){
     ctx.setLineDash([]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();
   }
   game.api.drawBossEncounters();
+  for(const n of game.state.enemies)if(n.type==='jamling'&&n.jamWarning>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b34936';ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,n.r+5,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.jamWarning/1.3));ctx.stroke();ctx.restore()}
   for(const shot of game.state.enemyShots){
     if(shot.owner){game.api.drawFirstBossShot(shot);continue}
     const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));
@@ -759,6 +765,14 @@ function draw(){
     if(intro.stage==='roar'){ctx.fillStyle='#962f3d';ctx.font='bold 23px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillText('ROOOAR!',0,-65)}
     if(intro.stage==='smash'){ctx.strokeStyle='#b17635';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,40+(intro.age-6.132)*game.state.W*3,0,Math.PI*2);ctx.stroke()}
     ctx.restore();
+  }
+  const stapleIntro=game.api.stapleIntroPose();
+  if(stapleIntro){
+    const ctx=game.dom.ctx;ctx.save();ctx.translate(stapleIntro.x,stapleIntro.y);ctx.strokeStyle='#7d5834';ctx.fillStyle='#453c32';ctx.lineWidth=3;
+    ctx.beginPath();ctx.ellipse(0,12,43,14,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle='#9c8b73';
+    for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(i*20-10,5);ctx.lineTo(i*20-10,-14);ctx.lineTo(i*20+10,-14);ctx.lineTo(i*20+10,5);ctx.stroke()}
+    if(stapleIntro.stage!=='punch'){ctx.save();ctx.scale(stapleIntro.scale,stapleIntro.scale);ctx.rotate(stapleIntro.angle);drawDoodleEnemy({type:'stapler',r:30,x:stapleIntro.x,y:stapleIntro.y,hp:1,maxHp:1,freeze:0,stun:0},1,false);ctx.restore()}
+    if(stapleIntro.stage==='snap'){ctx.font='bold 22px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillStyle='#995c29';ctx.fillText(stapleIntro.age<2.55?'CLACK!':'CLACK CLACK!',0,-60)}ctx.restore();
   }
   game.api.drawWaveFinale(drawDoodleEnemy);game.dom.ctx.restore();
   if(game.state.paused){

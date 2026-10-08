@@ -79,7 +79,7 @@ function synergyRevealActive(){return !!synergyCurrent}
 function resetSynergyReveals(){synergyQueue=[];synergySeen.clear();synergyCurrent=null;game.dom.$('synergySplash').style.display='none'}
 function setSynergyRevealsEnabled(enabled){synergyRevealsEnabled=!!enabled;if(!enabled){synergyQueue=[];synergyCurrent=null;game.dom.$('synergySplash').style.display='none'}}
 function beginSynergyReveal(){
-  if(game.state.paused||!synergyRevealsEnabled||synergyCurrent||game.api.firstBossIntroActive())return false;
+  if(game.state.paused||!synergyRevealsEnabled||synergyCurrent||game.api.bossEntranceActive())return false;
   // Active effects are the source of truth. Recover an unacknowledged reveal
   // even if its transient notification was cleared before combat resumed.
   for(const d of game.catalog.synergyDefs)if(game.state.synergies.has(d.name)&&!synergySeen.has(d.name)&&!synergyQueue.some(q=>q.name===d.name))synergyQueue.push({name:d.name,desc:d.desc,major:!!d.major});

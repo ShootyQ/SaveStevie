@@ -126,3 +126,10 @@ Sprinter, flanker, mini, Basil and Staple Snack now mirror to horizontal travel
 (or a bite/slam target), alongside the existing fast runner and aiming sniper.
 Vertical motion preserves facing; frozen/stunned monsters hold it. Flankers
 have an extra running lean and bounce. Reduced motion retains facing.
+
+## Jamling
+
+`jamling.png` is an original generated transparent colored-pencil creature made
+from bent silver/orange staples, based on the Staple Snack and mini art style.
+Renderer hopping, twisting legs and warning squash animate the single pose.
+It is a boss-owned helper, never a random wave spawn.
