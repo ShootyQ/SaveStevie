@@ -6,7 +6,7 @@ DoodleDefender.WobblePhaseTwo=function(game,{state,rig,spawnTooth,topMargin}){
  function updateSiphon(s,dt){if(!s.inkPot)return;s.inkPot.age+=dt;s.inkPot.fill=Math.min(1,s.inkPot.age/1.6);const leg=s.debris.find(d=>d.part==='leg');if(leg)leg.inkLevel=1-s.inkPot.fill;}
  function begin(e){const s=state(e);if(s.phase===2)return;s.phase=2;s.phaseHits=0;s.phaseHp=e.maxHp;s.transition=2.2;s.rollDistance=0;s.armedFor=0;s.hitCooldown=0;s.toothClock=4.5;s.bounces=0;s.trail=[];s.attack='roll';s.cutWindow=null;s.blockStun=0;s.detour=null;s.trapped=0;s.trapWarning=false;s.model.walkBlend=0;s.model.punchAge=s.model.spikeAge=s.model.beamAge=s.model.teethAge=null;s.model.rollAge=0;s.model.phaseTwoRoll=false;s.model.teethPlan=[];s.model.teeth=[];s.model.spikes=[];
   game.state.enemyShots=game.state.enemyShots.filter(q=>q.wobbleOwner!==e);game.state.enemies=game.state.enemies.filter(n=>n.bossOwner!==e);e.hp=e.maxHp;siphon(e);game.state.stats.ink=game.state.stats.maxInk;
-  game.api.floatText(e.x,e.y-45,'PHASE 2 · DOODLE RAILS!','#28796d');game.api.setMsg('Infinite ink! Draw lines toward the fallen spikes. He rides along each line and rolls off its end.');game.api.updateUI();
+  game.api.floatText(e.x,e.y-45,'PHASE 2 · DOODLE RAILS!','#28796d');game.api.setMsg('Infinite ink! Draw lines toward the fallen spikes. He rolls away from the shorter end, rides the longer side, and rolls off the end.');game.api.updateUI();
  }
  // Resize can move a fallen target off the page. Keep the foot reachable without
  // restarting the roll or cancelling its animation.
@@ -30,7 +30,9 @@ DoodleDefender.WobblePhaseTwo=function(game,{state,rig,spawnTooth,topMargin}){
   if(pts.length<2)return false;
   let best=null;
   for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),t=game.api.clamp(((contact.x-a.x)*dx+(contact.y-a.y)*dy)/(len*len),0,1),x=a.x+dx*t,y=a.y+dy*t,d=Math.hypot(contact.x-x,contact.y-y);if(!best||d<best.d)best={i,x,y,d,tx:dx/len,ty:dy/len}}
-  const dir=s.rollVX*best.tx+s.rollVY*best.ty<-.001?-1:1,pad=e.r+wall.thick/2+1,side=(contact.x-best.x)*(-best.ty)+(contact.y-best.y)*best.tx<0?-1:1;
+  let before=0,after=0;
+  for(let i=0;i<pts.length-1;i++){const len=Math.hypot(pts[i+1].x-pts[i].x,pts[i+1].y-pts[i].y);if(i<best.i)before+=len;else if(i>best.i)after+=len;else{before+=Math.hypot(best.x-pts[i].x,best.y-pts[i].y);after+=Math.hypot(pts[i+1].x-best.x,pts[i+1].y-best.y)}}
+  const dir=Math.abs(after-before)<.01?(s.rollVX*best.tx+s.rollVY*best.ty<0?-1:1):after>before?1:-1,pad=e.r+wall.thick/2+1,side=(contact.x-best.x)*(-best.ty)+(contact.y-best.y)*best.tx<0?-1:1;
   const normal=i=>{const a=pts[i],b=pts[i+1],len=Math.hypot(b.x-a.x,b.y-a.y);return {x:-(b.y-a.y)/len*side,y:(b.x-a.x)/len*side}};
   const offset=i=>{const p=pts[i],a=normal(Math.max(0,i-1)),b=normal(Math.min(pts.length-2,i)),x=a.x+b.x,y=a.y+b.y,len=Math.hypot(x,y);if(len<.01)return {x:p.x+b.x*pad,y:p.y+b.y*pad};const ux=x/len,uy=y/len,reach=Math.min(pad*2,pad/Math.max(.5,ux*b.x+uy*b.y));return {x:p.x+ux*reach,y:p.y+uy*reach}};
   const n=normal(best.i),points=[{x:best.x+n.x*pad,y:best.y+n.y*pad}];for(let i=dir>0?best.i+1:best.i;i>=0&&i<pts.length;i+=dir)points.push(offset(i));
@@ -66,7 +68,7 @@ DoodleDefender.WobblePhaseTwo=function(game,{state,rig,spawnTooth,topMargin}){
   }
  }
  function draw(e,s,hintY){const ctx=game.dom.ctx,leg=s.debris.find(d=>d.part==='leg');
-  ctx.save();ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillStyle='#385c4a';ctx.fillText('PHASE 2 · ROLL HIM INTO THE SPIKY FOOT',game.state.W/2,hintY);ctx.font='bold 11px sans-serif';ctx.fillText('Spike splats '+s.phaseHits+'/'+requiredHits+' · INFINITE INK',game.state.W/2,hintY+16);ctx.fillStyle='#966425';ctx.fillText(s.transition>0?'INK SIPHON · GET YOUR RAILS READY!':'DRAW A RAIL TOWARD THE FALLEN SPIKES',game.state.W/2,hintY+32);
+  ctx.save();ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillStyle='#385c4a';ctx.fillText('PHASE 2 · ROLL HIM INTO THE SPIKY FOOT',game.state.W/2,hintY);ctx.font='bold 11px sans-serif';ctx.fillText('Spike splats '+s.phaseHits+'/'+requiredHits+' · INFINITE INK',game.state.W/2,hintY+16);ctx.fillStyle='#966425';ctx.fillText(s.transition>0?'INK SIPHON · GET YOUR RAILS READY!':'SHORT END BEHIND HIM · LONG END TOWARD SPIKES',game.state.W/2,hintY+32);
   if(leg){ctx.strokeStyle='#28796d';ctx.lineWidth=3;ctx.setLineDash([4,3]);ctx.beginPath();ctx.arc(leg.x,leg.y,21,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.font='bold 10px sans-serif';ctx.fillStyle='#28796d';ctx.fillText('ROLL HIM HERE',leg.x,leg.y+33)}
   if(s.transition<=0&&s.rollVX!==undefined){ctx.strokeStyle=s.armedFor>0?'#28796d':'#966425';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(e.x+s.rollVX*.6,e.y+s.rollVY*.6);ctx.stroke();ctx.setLineDash([])}
   if(!game.api.enemyMotionReduced())for(const p of s.trail){ctx.globalAlpha=p.life*.12;ctx.fillStyle='#966425';ctx.beginPath();ctx.arc(p.x,p.y,16,0,Math.PI*2);ctx.fill()}ctx.restore();
