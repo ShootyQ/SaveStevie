@@ -7,12 +7,12 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const doodleNames=['basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{
     doodles[name]=image;
-    const sheet=name==='grunt-animations'?{type:'grunt',rows:4,count:16}:name==='fast-animations'?{type:'fast',rows:2,count:8}:null;
+    const sheet=name==='grunt-animations'?{type:'grunt',rows:4,count:16}:name==='fast-animations'?{type:'fast',rows:2,count:8}:name==='sniper-animations'?{type:'sniper',rows:3,count:12}:null;
     if(sheet){
       // Crop equal cells once at load; draw/tint cached frames without allocations.
       for(let i=0;i<sheet.count;i++){
@@ -108,7 +108,7 @@ function motionFor(e){
   let m=enemyMotion.get(e);
   if(!m){
     const heavy=['tank','brute','bulwark','boss','stapler','crayon','eraser'].includes(e.type);
-    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='basil'?3.2:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,walkAge:0,gruntFrame:0,runDistance:0,fastFrame:0,action:null,readyUntil:-1,sprite:null,facing:game.state.player.x<e.x?-1:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
+    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='basil'?3.2:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,walkAge:0,gruntFrame:0,runDistance:0,fastFrame:0,sniperFrame:8,action:null,readyUntil:-1,sprite:null,facing:game.state.player.x<e.x?-1:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
   }
   return m;
 }
@@ -135,6 +135,7 @@ function prepareSapperStrike(e){if(!motionReduced)motionFor(e).readyUntil=motion
 function enemyActionCue(e){return motionReduced?null:(enemyMotion.get(e)?.cue||null)}
 function enemyActionFrame(e){return motionReduced?null:(enemyMotion.get(e)?.sprite||null)}
 function enemySpriteFrame(e){
+  if(e.type==='sniper'&&doodles['sniper-frame-0'])return 'sniper-frame-'+(motionReduced?8:(enemyMotion.get(e)?.sniperFrame??8));
   if(e.type==='fast'&&doodles['fast-frame-0']){const m=enemyMotion.get(e),facing=m?.facing??(game.state.player.x<e.x?-1:1);return 'fast-frame-'+((facing<0?4:0)+(motionReduced?0:(m?.fastFrame||0)))}
   if(e.type==='grunt'&&doodles['grunt-frame-0'])return 'grunt-frame-'+(motionReduced?0:(enemyMotion.get(e)?.gruntFrame||0));
   return null;
@@ -144,7 +145,7 @@ function enemySpriteFrame(e){
 const profileDirections={fast:1,sprinter:1,flanker:1,mini:1,basil:1,jamling:1,sniper:1,stapler:-1};
 function enemyFacing(e){
   const m=enemyMotion.get(e);
-  if(e.type==='sniper')return game.state.player.x<e.x?-1:1;
+  if(e.type==='sniper'&&(m?.action==='fire'&&m.actionAge<.3||e.shootCd<=.6&&game.api.sniperCanAim(e)))return game.state.player.x<e.x?-1:1;
   if(m?.actionAge<.3&&['bite','slam'].includes(m.action))return m.actionFacing;
   return m?.facing??(game.state.player.x<e.x?-1:1);
 }
@@ -167,6 +168,10 @@ function updateEnemyAnimations(dt){
       else if(moving){m.runDistance=(m.runDistance+Math.min(distance,e.r*2))%(e.r*3);m.fastFrame=Math.floor(m.runDistance/(e.r*3)*4)}
       else m.fastFrame=0;
     }
+    if(e.type==='sniper'&&e.freeze<=0&&e.stun<=0){
+      if(moving)m.runDistance=(m.runDistance+Math.min(distance,e.r*2))%48;
+      m.sniperFrame=m.action==='fire'&&m.actionAge<.3?(m.actionAge<.09?6:7):e.shootCd<=.6&&game.api.sniperCanAim(e)?(e.shootCd<.25?5:4):moving?Math.floor(m.runDistance/12):8;
+    }
     if(moving)m.phase=(m.phase+Math.min(distance,e.r)* (heavy?.16:.27))%(Math.PI*2);
     const step=moving?Math.sin(m.phase):0,hop=moving?Math.abs(step)*m.hop:0;
     const hit=m.hitAge<.14?Math.sin(m.hitAge/.14*Math.PI)*.12:0;
@@ -187,6 +192,12 @@ function updateEnemyAnimations(dt){
     if(e.freeze>0||e.stun>0)continue;
     // Distinct silhouettes reuse the existing art. These offsets never touch
     // enemy coordinates, attack timers, damage, or the combat random stream.
+    if(e.type==='sniper'){
+      const facing=enemyFacing(e);
+      if(m.action==='fire'&&m.actionAge<.3){const recoil=Math.sin(m.actionAge/.3*Math.PI);p.x-=facing*recoil*3;p.angle-=facing*recoil*.12;p.sx+=recoil*.1;p.sy-=recoil*.08}
+      else if(e.shootCd<=.6&&game.api.sniperCanAim(e)){const aim=game.api.clamp(1-e.shootCd/.6,0,1);p.x-=facing*aim*2;p.angle-=facing*aim*.08;p.sx+=aim*.07;p.sy-=aim*.05}
+      else if(moving){p.angle+=m.facing*.08;p.y-=Math.abs(step)*1.2}
+    }
     if(e.type==='jamling'){if(moving){p.y-=Math.abs(step)*2;p.angle+=step*.16;p.sx+=step*.08;p.sy-=step*.08}if(e.jamWarning>0){p.sx+=e.jamWarning*.18;p.sy-=e.jamWarning*.14;p.angle+=Math.sin(motionTime*15)*.05}}
     if(moving&&e.type==='flanker'){p.angle+=m.facing*.12;p.y-=Math.abs(step)*1.6;p.sx+=step*.06;p.sy-=step*.04}
     if(moving&&(e.type==='fast'||e.type==='mini')){p.angle+=m.facing*.09;p.sx+=step*.05;p.sy-=step*.05;}
@@ -304,8 +315,8 @@ function tintedDoodle(name,colors){
 }
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const action=enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
-  const framed=/^(grunt|fast)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
-  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(name.startsWith('fast-frame-')?4:framed?3.25:e.type==='sniper'?3.4:2.7),height=width*base.naturalHeight/base.naturalWidth;
+  const framed=/^(grunt|fast|sniper)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:framed?3.25:e.type==='sniper'?3.4:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
@@ -598,7 +609,6 @@ function draw(){
     if(shot.wobbleOwner){const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));if(!motionReduced){ctx.strokeStyle='rgba(173,110,40,.35)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-5,0);ctx.stroke()}ctx.fillStyle='#edb538';ctx.strokeStyle='#3b3024';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-13,-4);ctx.lineTo(-11,0);ctx.lineTo(-13,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();continue}
     if(shot.owner){game.api.drawFirstBossShot(shot);continue}
     const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));
-    const image=doodles.arrow;
     // The front tip stays on the projectile collision point; the visible shaft
     // trails behind it, so the arrow cannot disappear before its tip arrives.
     if(shot.bossKind){
@@ -612,13 +622,10 @@ function draw(){
       }else{ctx.beginPath();ctx.arc(-4,0,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ce8fbc';ctx.beginPath();ctx.arc(-5,-1,1.3,0,Math.PI*2);ctx.fill()}
       ctx.restore();continue;
     }
-    if(image){const width=30,height=width*image.naturalHeight/image.naturalWidth;ctx.drawImage(image,-width,-height/2,width,height)}
-    else{
-      ctx.strokeStyle='#fff8e9';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-27,0);ctx.lineTo(-5,0);ctx.stroke();
-      ctx.strokeStyle='#24323a';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#d95050';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-10,-5);ctx.lineTo(-10,5);ctx.closePath();ctx.fill();ctx.stroke();
-      ctx.strokeStyle='#3562be';ctx.beginPath();ctx.moveTo(-25,-5);ctx.lineTo(-20,0);ctx.lineTo(-25,5);ctx.stroke();
-    }
-    ctx.restore();
+    // Normal enemy shots are Pew-Pew's pencils. Keep the nib on the unchanged
+    // collision point; the shaft trails behind it just like the old arrow.
+    ctx.fillStyle='#efc84c';ctx.strokeStyle='#29343b';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-6,-3);ctx.lineTo(-25,-3);ctx.lineTo(-25,3);ctx.lineTo(-6,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#e4bb8c';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-6,-3);ctx.lineTo(-6,3);ctx.closePath();ctx.fill();ctx.fillStyle='#29343b';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-2,-1);ctx.lineTo(-2,1);ctx.closePath();ctx.fill();ctx.fillStyle='#db8c91';ctx.fillRect(-28,-3,3,6);ctx.strokeRect(-28,-3,3,6);ctx.strokeStyle='#aa852d';ctx.beginPath();ctx.moveTo(-23,0);ctx.lineTo(-7,0);ctx.stroke();ctx.restore();continue;
+
   }
 
   game.api.drawRefuge(doodles['paper-fort'],motionReduced);

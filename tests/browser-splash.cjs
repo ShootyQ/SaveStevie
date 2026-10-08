@@ -28,6 +28,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    },time);
    assert.ok(error<1,'pencil tip meets ink at '+time+'ms ('+error+'px)');
   }
+  const pewFrames=await page.evaluate(()=>{const e=document.querySelector('.splash-sniper-frames'),frames=[];for(const time of [2500,4000,4800,5600]){for(const a of e.getAnimations()){a.pause();a.currentTime=time}frames.push(getComputedStyle(e).transform)}return frames});assert.equal(new Set(pewFrames).size,4,'menu idle, pencil flip, catch and wink poses');assert.equal(await page.locator('.splash-sniper').evaluate(e=>getComputedStyle(e).overflow),'hidden');
   const controls=await page.locator('#startBtn').boundingBox();
   // Freeze a real CSS animation at its throw pose, without advancing the game.
   await page.evaluate(()=>document.querySelectorAll('.splash-art *').forEach(e=>e.getAnimations().forEach(a=>{a.pause();a.currentTime=4000})));

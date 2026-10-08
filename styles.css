@@ -338,7 +338,9 @@ button:disabled{opacity:.5;cursor:default}
 .splash-art .splash-stevie{position:absolute;aspect-ratio:128 / 136;overflow:hidden;pointer-events:none;animation:splashStevieSway 3s ease-in-out infinite}
 .splash-art .splash-stevie-frames{width:400%;max-width:none;left:0;top:0;animation:splashStevieFrames 6s step-end infinite}
 .splash-grunt{transform-origin:50% 85%;animation:splashGruntWiggle 2.6s ease-in-out infinite}
-.splash-sniper{transform-origin:50% 80%;animation:splashSniperReact 6s ease-in-out infinite}
+.splash-sniper{position:absolute;aspect-ratio:1 / 1;overflow:hidden;pointer-events:none;transform-origin:50% 80%;animation:splashSniperReact 8s ease-in-out infinite}
+.splash-art .splash-sniper-frames{width:400%;max-width:none;left:0;top:0;transform:translate(0,-66.666667%);animation:splashPewFrames 8s step-end infinite}
+@keyframes splashPewFrames{0%,3%,12%{transform:translate(0,0)}6%,15%{transform:translate(-25%,0)}9%,18%{transform:translate(-50%,0)}21%{transform:translate(-75%,0)}24%,82%,100%{transform:translate(0,-66.666667%)}48%{transform:translate(-25%,-66.666667%)}58%{transform:translate(-50%,-66.666667%)}68%{transform:translate(-75%,-66.666667%)}}
 .splash-splitter{transform-origin:50% 90%;animation:splashSplitterBounce 1.8s ease-in-out infinite}
 .splash-pencil{transform-box:view-box}
 .splash-fire{transform-origin:50% 100%;animation:splashFireFlicker .9s ease-in-out infinite}
@@ -354,7 +356,7 @@ button:disabled{opacity:.5;cursor:default}
 @keyframes splashStevieSway{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-2px) rotate(1deg)}}
 @keyframes splashGruntWiggle{0%,100%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(-3deg) translateY(-3px)}}
 @keyframes splashSplitterBounce{0%,100%{transform:rotate(-5deg) scale(1.03,.97)}45%{transform:translateY(-6px) rotate(3deg) scale(.97,1.03)}}
-@keyframes splashSniperReact{0%,55%,80%,100%{transform:rotate(7deg)}65%{transform:rotate(3deg)}73%{transform:translateX(3px) rotate(12deg)}76%{transform:rotate(4deg)}}
+@keyframes splashSniperReact{0%,24%,100%{transform:rotate(7deg)}12%{transform:translateX(-5px) rotate(3deg)}48%{transform:translateY(-3px) rotate(-3deg)}58%{transform:translateY(2px) rotate(12deg)}68%,82%{transform:rotate(4deg)}}
 @keyframes splashFireFlicker{0%,100%{transform:rotate(-25deg) scale(.96,1)}50%{transform:rotate(-19deg) scale(1.05,1.08)}}
 @keyframes splashRockToss{0%,64%{opacity:0;transform:translate(0,0)}65%{opacity:1;transform:translate(0,0)}69%{opacity:1;transform:translate(700%,-1000%) rotate(160deg)}73%{opacity:1;transform:translate(1350%,-400%) rotate(300deg)}74%,100%{opacity:0;transform:translate(1350%,-400%) rotate(300deg)}}
 @keyframes splashNoteWiggle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(-5deg)}}
