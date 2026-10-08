@@ -916,3 +916,5 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 .wobble-preview .wobble-preview-note{text-align:left;font-size:12px;line-height:1.4;color:#51483b;margin:12px 0 0}
 @media(max-width:480px){#wobbleCanvas{height:260px}.wobble-preview{padding:14px}.wobble-preview .build-heading h2{font-size:32px}.wobble-controls{gap:8px}.wobble-controls label{width:100%}}
 @media(max-height:500px){#wobbleCanvas{height:260px}.wobble-preview{padding:12px}}
+
+.wobble-controls select{min-height:44px;padding:7px 10px;color:#26343d;background:#fff7df;border:2px solid #26343d;border-radius:8px;font:inherit}
