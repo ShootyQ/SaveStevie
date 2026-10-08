@@ -1095,7 +1095,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
   const g=load(true).sandbox.testGame;g.api.resetRun();g.state.timeLeft=300;g.state.spawnTimer=9999;g.state.player.hp=20;
   if(effect!=='none')g.state.inks[effect]=1;
   const wall={pts:[{x:100,y:200},{x:700,y:200}],thick:8,hp:1e6,maxHp:1e6,life:300,maxLife:300,closed:false,intersections:0};g.state.walls=[wall];
-  const e=g.api.spawnEnemy(false,400,100,'tank');e.speed=30;e.hp=e.maxHp=10000;
+  const e=g.api.spawnEnemy(false,400,100,'grunt');e.speed=30;e.hp=e.maxHp=10000;
   for(let i=0;i<600;i++)g.api.update(.025);
   results[effect]={damage:Number((10000-e.hp).toFixed(2)),wallDamage:1e6-wall.hp,healing:Number((g.state.player.hp-20).toFixed(2))};
  }
@@ -2172,4 +2172,26 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  for(let i=0;i<160&&escape.x<325;i++)g.api.update(.03);
  assert.ok(escape.x>=325,'Boingus routes around the end of an open wall');assert.equal(wall.hp,1000,'successful escape leaves wall intact');
  console.log('PASS: guaranteed wave introductions, capped Dash acceleration, Pew-Pew return thresholds and ownership, and three moving Boingus ricochets before chewing.');
+}
+
+// Chonks spends earned walking momentum on a warned, interruptible wall hit.
+{
+ function encounter(distance=250,layered=false){
+  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.W=800;g.state.H=700;g.state.player.x=700;g.state.player.y=350;g.state.spawnTimer=9999;g.state.timeLeft=300;g.state.stats.rockDamage=0;
+  const e=g.api.spawnEnemy(false,50,350,'tank');e.hp=e.maxHp=10000;
+  const wall=x=>({pts:[{x,y:200},{x,y:500}],thick:8,hp:1000,maxHp:1000,life:1000,maxLife:1000}),w=wall(50+distance);g.state.walls=[w];if(layered)g.state.walls.push(wall(75+distance));
+  let steps=0;while(e.chonks.phase==='walk'&&steps++<1500)g.api.update(.02);assert.equal(e.chonks.phase,'windup');return {env,g,e,w};
+ }
+ const early=encounter(45),late=encounter(),double=encounter(250,true);
+ assert(early.e.chonks.bumpDamage<22,'early interception yields weak bump');assert.equal(late.e.chonks.bumpDamage,52.5,'long approach reaches maximum wall damage');
+ for(const {g,e,w} of [early,late,double]){
+  const before=w.hp,position={x:e.x,y:e.y};g.api.update(.6);assert.equal(w.hp,before,'windup warns before damage');g.api.update(.06);assert.equal(w.hp,before-e.chonks.bumpDamage,'one exact momentum-scaled impact');assert.equal(e.chonks.momentum,0,'bump spends momentum');assert.equal(e.chonks.phase,'recover');
+  const hp=e.hp;g.api.update(.5);assert.deepEqual({x:e.x,y:e.y},position,'seated recovery stops movement');assert.equal(w.hp,before-e.chonks.bumpDamage,'no repeated recovery hits');assert(e.hp<hp,'wall ink works during recovery');
+ }
+ assert.equal(early.e.chonks.recoveryTotal,1.4);assert.equal(double.e.chonks.recoveryTotal,2.8,'second layer earns longer flop');assert.equal(double.g.state.walls[1].hp,1000,'bump only damages first wall');
+ const {g,e,w}=encounter();const hp=w.hp;e.freeze=1;const enemyHp=e.hp,momentum=e.chonks.momentum;g.api.update(.2);assert.equal(e.chonks.phase,'walk');assert(e.chonks.momentum<momentum);assert(e.hp<enemyHp,'frozen Chonks still takes wall damage');assert.equal(w.hp,hp,'freeze cancels pending bump');
+ e.freeze=0;g.api.update(.02);assert.equal(e.chonks.phase,'windup');e.stun=1;g.api.update(.1);assert.equal(e.chonks.phase,'walk');assert.equal(w.hp,hp,'stun cancels pending bump');e.stun=0;g.api.update(.02);g.state.walls=[];g.api.update(.1);assert.equal(w.hp,hp,'erased target cannot take a stale hit');assert.equal(e.chonks.phase,'walk');
+ const stopped=encounter(45);stopped.g.state.paused=true;const snapshot=JSON.stringify(stopped.g.state);stopped.g.api.update(1);assert.equal(JSON.stringify(stopped.g.state),snapshot,'pause freezes warning and momentum');
+ const render=JSON.stringify(late.g.state);late.g.api.draw();assert.equal(JSON.stringify(late.g.state),render,'animation rendering never changes combat');
+ console.log('PASS: Chonks earned/capped momentum, weak early interception, warned single hits, layered-wall flop, vulnerable recovery, freeze/stun/erase interruption, pause and pure rendering.');
 }

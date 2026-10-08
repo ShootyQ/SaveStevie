@@ -207,6 +207,12 @@ function updateEnemyAnimations(dt){
       if(brain.recovery>0){p.angle-=.24;p.sx+=.1;p.sy-=.14;p.y+=4;p.x+=Math.sin(brain.recovery*9)*1.5}
       else if(brain.cast){const ready=1-brain.cast.left/(brain.cast.duration||1.2);p.sx+=ready*.08;p.sy-=ready*.08;p.angle+=Math.sin(ready*Math.PI)*.07}
     }
+    if(e.type==='tank'&&e.chonks){
+      const c=e.chonks,face=c.facing;
+      if(c.phase==='windup'){const t=1-c.windup/.65;m.cue='belly-ready';m.cueProgress=t;p.x-=face*t*3;p.sx+=t*.18;p.sy-=t*.18;p.y+=t*3;p.angle-=face*t*.12}
+      else if(c.phase==='recover'){const t=1-c.recovery/c.recoveryTotal,stand=game.api.clamp((t-.65)/.35,0,1),flop=Math.sin(Math.min(1,t/.2)*Math.PI);m.cue='belly-recover';m.cueProgress=t;p.x-=face*flop*4;p.y+=(1-stand)*5;p.angle+=face*((1-stand)*.22+flop*.3);p.sx+=(1-stand)*.17;p.sy-=(1-stand)*.22;if(m.action==='belly-bump'&&m.actionAge<.14){const bump=Math.sin(m.actionAge/.14*Math.PI);p.x+=face*bump*6;p.sx+=bump*.12;p.sy-=bump*.06}}
+      else if(moving){m.cue='waddle';p.angle+=step*.13;p.x+=Math.sin(m.phase-.7)*1.8;p.y-=Math.abs(step)*1.5;p.sx+=Math.sin(m.phase-1)*(.04+c.momentum*.05);p.sy-=Math.sin(m.phase-1)*.04}
+    }
     if(e.type==='basil'){
       if(moving){p.angle+=step*.07;p.sx+=step*.06;p.sy-=step*.06}
       if(m.action==='bite'&&m.actionAge<.3){const feast=Math.sin(m.actionAge/.3*Math.PI);m.cue='bite';m.cueProgress=feast;p.x=m.actionFacing*feast*4;p.angle-=m.actionFacing*feast*.15;p.sx+=feast*.14;p.sy-=feast*.12}
@@ -324,11 +330,29 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const foot=top+height;ctx.translate(0,foot);ctx.scale(pose.sx,pose.sy);ctx.translate(0,-foot);
   if(profileDirections[e.type]&&!name.startsWith('fast-frame-')&&enemyFacing(e)!==profileDirections[e.type])ctx.scale(-1,1);
   // Damage never fades the body: health belongs in the separate bar.
-  ctx.drawImage(tintedDoodle(name,colors),left,top,width,height);
+  if(e.type==='tank'&&e.chonks&&!motionReduced)drawChonksBody(ctx,tintedDoodle(name,colors),e,left,top,width,height);
+  else ctx.drawImage(tintedDoodle(name,colors),left,top,width,height);
   if(e.waveBoss&&e.type==='stapler'&&e.hp/e.maxHp<=.35){ctx.strokeStyle='#4b3228';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,-e.r);ctx.lineTo(2,-e.r+12);ctx.lineTo(-4,-e.r+18);ctx.lineTo(8,-e.r+30);ctx.stroke()}
   ctx.restore();
   if(showHealth)drawEnemyHealthBar(e,hpRatio,colors);
+  if(e.type==='tank'&&e.chonks)drawChonksWarning(e);
   return true;
+}
+// Separate feet from the same doodle so the heavy waddle has real alternating steps.
+function drawChonksBody(ctx,image,e,left,top,width,height){
+ const m=enemyMotion.get(e),c=e.chonks,phase=m?.phase||0,walking=c.phase==='walk'&&m?.cue==='waddle',recover=c.phase==='recover';
+ const iw=image.naturalWidth||image.width,ih=image.naturalHeight||image.height;
+ for(let i=0;i<2;i++){const step=Math.sin(phase+i*Math.PI),lift=walking?Math.max(0,step)*3:recover?Math.sin(c.recovery*8+i)*1.5:0,shift=walking?step*1.6:recover?(i?2:-2):0;
+  ctx.drawImage(image,i*iw/2,ih*.8,iw/2,ih*.2,left+i*width/2+shift,top+height*.8-lift,width/2,height*.2);
+ }
+ ctx.drawImage(image,0,0,iw,ih*.88,left,top,width,height*.88);
+ if(walking){ctx.save();ctx.globalAlpha=.16;ctx.fillStyle='#a98b67';for(let i=0;i<2;i++){ctx.beginPath();ctx.ellipse(left+width*(i?.78:.22)-c.facing*4,top+height+1,2+Math.abs(Math.sin(phase))*2,1,0,0,Math.PI*2);ctx.fill()}ctx.restore()}
+}
+function drawChonksWarning(e){
+ const ctx=game.dom.ctx,c=e.chonks;ctx.save();
+ if(c.phase==='windup'){ctx.strokeStyle='#b16a23';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,e.r+7,-Math.PI/2,-Math.PI/2+Math.PI*2*(1-c.windup/.65));ctx.stroke();ctx.font='bold 9px sans-serif';ctx.textAlign='center';ctx.fillStyle='#85501e';ctx.fillText('BELLY BUMP',0,-e.r-22)}
+ else if(c.phase==='walk'&&c.momentum>.05){ctx.fillStyle='#e0bd80';ctx.fillRect(-12,e.r+7,24,3);ctx.fillStyle=c.momentum>.7?'#b6532c':'#a87633';ctx.fillRect(-12,e.r+7,24*c.momentum,3)}
+ ctx.restore();
 }
 function drawEnemyHealthBar(e,hpRatio,colors=enemyStatusColors(e)){
   const ctx=game.dom.ctx;
