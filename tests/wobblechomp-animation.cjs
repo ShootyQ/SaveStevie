@@ -1,0 +1,17 @@
+const assert=require('assert'),fs=require('fs'),vm=require('vm'),path=require('path');
+const sandbox={DoodleDefender:{}};vm.createContext(sandbox);vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/wobblechomp-animation.js'),'utf8'),sandbox);
+const rig=sandbox.DoodleDefender.WobblechompRig,model=rig.create();
+const cross=()=>{const {a,b}=rig.pose(model).joint,x=(a.x+b.x)/2,y=(a.y+b.y)/2;return [{x,y:y-70},{x,y:y+70}]};
+const snapshot=()=>JSON.stringify(model);
+assert.equal(rig.cutStroke(model,[{x:100,y:100},{x:100,y:200}]),false);
+assert.equal(rig.cutStroke(model,[cross()[0],cross()[0]]),false);
+assert.ok(rig.punch(model));assert.equal(rig.punch(model),false);
+const rest=model.wrist.x;for(let i=0;i<28;i++)rig.update(model,.05);assert.ok(model.wrist.x<rest-100,'punch reaches away from the body');
+const gesture=cross();gesture.push(gesture[0],gesture[1]);assert.ok(rig.cutStroke(model,gesture));assert.equal(model.armCuts,1,'one scribbling gesture counts only once');assert.equal(model.punchAge,null,'cut interrupts the punch');
+for(let i=0;i<40;i++)rig.update(model,.05);assert.ok(model.wrist.y>470,'first cut leaves a dangling arm');assert.equal(model.debris,null);
+assert.ok(rig.punch(model),'damaged arm can still struggle through a punch');for(let i=0;i<22;i++)rig.update(model,.05);
+assert.ok(rig.cutStroke(model,cross()));assert.equal(model.armCuts,2);assert.ok(model.debris);assert.equal(rig.punch(model),false);assert.equal(rig.cutStroke(model,cross()),false);
+for(let i=0;i<300;i++)rig.update(model,1/60);assert.ok(model.debris.settled,'detached fist falls, bounces and settles');assert.ok(model.debris.x>=95&&model.debris.x<=890);assert.equal(model.debris.y,590);
+const ctx=new Proxy({},{get:()=>()=>{}}),image={naturalWidth:1536,naturalHeight:1024},before=snapshot();rig.draw(ctx,image,model);rig.draw(ctx,image,model,{reduced:true});assert.equal(snapshot(),before,'rendering never advances animation');
+assert.equal(rig.pose(model,true).bob,0);assert.equal(rig.pose(model,true).bodyAngle,0);assert.equal(rig.create().armCuts,0);
+console.log('PASS: distant punch, missed/tap strokes, one cut per gesture, persistent dangling arm, interrupted punch, second-cut debris physics, settled bounds, pure drawing, reset and reduced motion.');
