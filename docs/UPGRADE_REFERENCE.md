@@ -1,10 +1,10 @@
-# Save Stevie upgrade reference — Alpha 0.1.9
+# Save Stevie upgrade reference — Alpha 0.1.11
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
 Catalog descriptions and requirements are exported from game code; mechanics and review notes are maintained alongside them. Suggestions are proposals, not shipped changes.
 
-Quick Sketch was retired and replaced by Doodle Stitch following player feedback. Other review candidates are hypotheses, not pick-rate data.
+Fresh Pencil was retired; legacy paid ranks receive a one-time scrap refund. Every Drawing Tool rank adds +8 base wall HP. Quick Sketch was retired and replaced by Doodle Stitch following player feedback. Other review candidates are hypotheses, not pick-rate data.
 
 About one in three campaigns reserves at most one Legendary offer after waves 1–19. Runs ending early may never see their offer; this is not a guarantee every third run.
 
@@ -101,11 +101,10 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Perk | Current effect | Ranks | Costs per rank |
 | --- | --- | --- | --- |
 | Starter Eraser | Stevie’s free first purchase. Adds 5 percentage points to ink recovery when erasing; applies to every new run. | 1 | 0 |
-| Your Drawing Tool | Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Pens unlock a third effect slot; Sharpies unlock a fourth. | 10 | 5, 8, 12, 16, 20, 24, 30, 36, 44, 55 |
+| Your Drawing Tool | Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Every rank has its own artwork and adds +8 base wall HP. Pens unlock a third effect slot; Sharpies unlock a fourth. | 10 | 5, 8, 12, 16, 20, 24, 30, 36, 44, 55 |
 | Bigger Starting Tank | +20 starting/max ink per rank. | 5 | 5, 12, 24, 40, 60 |
 | Refill Practice | +1 starting ink regeneration per second per rank. Stacks with run upgrades. | 3 | 5, 12, 24 |
 | Extra Credit | Start every run with four reward choices instead of three. Boss rewards already have four. | 1 | 25 |
-| Fresh Pencil | +8 starting wall HP per rank. | 4 | 5, 12, 24, 40 |
 | Lunchbox Band-Aids | +8 starting/max Stevie HP per rank. | 4 | 5, 12, 24, 40 |
 | Pocket Pebbles | Start throwing rocks: 3 damage per rank. Higher ranks throw a little faster. | 3 | 5, 12, 24 |
 | Lunch Money | +1 starting reroll per rank. Each cleared wave still supplies a free reroll. | 2 | 5, 12 |
@@ -117,7 +116,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | --- | --- |
 | Drawing | A valid segment becomes a working wall while dragging. Paid strokes cost at least 6 ink; default cost is 0.31 ink/pixel. HP = base wall HP × length/180, with loop/intersection bonuses. Growth preserves existing damage and lifetime. |
 | Erasing | PC: right-drag. Touch: hold Erase with one thumb while the other finger rubs; Settings supports tap-to-toggle and left-side controls. Healthy paid wall sections recover 25% ink, or 30% with Starter Eraser; damage reduces recovery. Only Rubble Ruff can be erased as an enemy. |
-| Paper wear and tunnels | About 7 seconds of local active eraser rubbing tears a hole. Holes persist for the run, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page. |
+| Paper wear and tunnels | About 7 seconds of local active eraser rubbing tears a hole. Holes persist for the run, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. One 30% entry decision per hole encounter, with no approach-alignment requirement. Bosses never enter. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page. |
 | Erase combat | Erase small hostile pencils/spikes, sacrificing return damage. Erasing paid electric ink between surviving wall ends discharges up to 12 + 2 × Electric Ink level damage, limited to 0.8 × removed paid ink, with a 0.8-second wall cooldown retained by fragments. Erase Chonks’s windup support or Boingus’s fresh rebound support to stun for 1.4 seconds; each monster has a 6-second stumble cooldown. |
 | Closed shapes | A stroke with more than six points and endpoints less than 22 pixels apart is a closed loop. Closed Loop/Fortress Geometry add durability and paid completion utility; related synergies add effects. |
 | Stevie throws rocks | Unlocked through rock upgrades or Pocket Pebbles. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies. |

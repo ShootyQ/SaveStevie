@@ -669,8 +669,8 @@ assert.ok(Number(stored.get('doodleDefenderBestV4'))>=15,'existing best never er
 const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:2000,lifetimeScraps:2000,levels:{}}):null,setItem(){}};
 const rich=load(true,{storage:richStore}).sandbox.testGame;
 for(const p of rich.catalog.notebookPerks){for(let rank=0;rank<p.max;rank++)assert.equal(rich.api.buyNotebookPerk(p.id),true);assert.equal(rich.api.buyNotebookPerk(p.id),false,'rank cap')}
-assert.equal(rich.api.notebookSnapshot().scraps,1242,'all rank prices charged exactly');
-rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,8);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);rich.api.rollCards();assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,97,107,9,1.3,2,8]);
+assert.equal(rich.api.notebookSnapshot().scraps,1323,'all rank prices charged exactly');
+rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,8);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);rich.api.rollCards();assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,145,107,9,1.3,2,8]);
 rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.3,'rock unlock preserves faster starter throws');assert.equal(rich.state.stats.rockDamage,13);
 const dirty=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:-5,lifetimeScraps:'oops',levels:{inkTank:999,health:-2,rocks:1.5,luck:'4'}}):null,setItem(){}}}).sandbox.testGame;
 assert.equal(dirty.api.notebookSnapshot().scraps,0);dirty.api.resetRun();assert.equal(dirty.state.stats.maxInk,260);assert.equal(dirty.state.player.maxHp,75);assert.equal(dirty.state.stats.rockDamage,0);assert.equal(dirty.state.stats.luck,0);
@@ -836,7 +836,7 @@ console.log('PASS: five soundtrack loops, intro autoplay with manual retry, chap
  for(const [rank,name,slots] of [[0,'Pencil',2],[3,'Mechanical Pencil',2],[6,'Simple Pen',3],[10,'Scented Sharpie',4]]){
   const store={getItem:k=>k===key?JSON.stringify({version:1,scraps:10,levels:{tool:rank,inkTank:2,pencil:1}}):null,setItem(){}};
   const tool=load(true,{storage:store}).sandbox.testGame;tool.api.resetRun();
-  assert.equal(tool.state.tool.name,name);assert.equal(tool.state.tool.slots,slots);assert.equal(tool.state.stats.maxInk,200);assert.equal(tool.state.stats.wallHp,73);
+  assert.equal(tool.state.tool.name,name);assert.equal(tool.state.tool.slots,slots);assert.equal(tool.state.stats.maxInk,200);assert.equal(tool.state.stats.wallHp,65+rank*8);
   assert.equal(tool.api.buyNotebookPerk('tool'),false,'cannot buy while playing');
   for(const effect of tool.catalog.upgrades.filter(u=>u.cat==='ink').slice(0,slots))tool.api.chooseUpgrade(effect);
   assert.equal(tool.api.equippedEffects().length,slots,'all unlocked slots can be filled');
@@ -1053,7 +1053,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  g.api.getUpgrade=get;g.api.resetRun();assert.equal(g.api.devRunActive(),false);g.api.awardScraps(1);assert.equal(g.api.notebookSnapshot().scraps,43,'new normal run earns progress');
  g.api.setDevMode(true);assert.equal(g.api.devRunActive(),true,'enabling mid-run marks the whole remaining run');g.api.setDevMode(false);g.api.awardScraps(10);assert.equal(g.api.notebookSnapshot().scraps,43);g.state.wave=60;g.api.gameOver();assert.equal(g.state.best,1);
  const reload=load(true,{storage}).sandbox.testGame;assert.equal(reload.api.devModeEnabled(),false,'reload defaults to normal rewards');
- for(const [rank,slots] of [[0,2],[3,2],[6,3],[10,4]]){g.state.tool={rank,slots,name:'Test'};g.api.renderTool('buildTool');const html=env.node('buildTool').innerHTML;assert.match(html,/tool-tiers.png/);assert.equal((html.match(/class="tool-socket"/g)||[]).length,slots);assert.ok(!html.includes('undefined%'));}
+ for(const [rank,slots] of [[0,2],[3,2],[6,3],[10,4]]){g.state.tool={rank,slots,name:'Test'};g.api.renderTool('buildTool');const html=env.node('buildTool').innerHTML;assert.match(html,/tool-ranks.png/);assert.equal((html.match(/class="tool-socket"/g)||[]).length,slots);assert.ok(!html.includes('undefined%'));}
  console.log('PASS: deterministic selected rarity rewards, full-slot replacement/cancel, unchanged normal RNG, session-only dev mode, persistent unranked runs, protected scraps/records, restored normal progress and all tool socket tiers.');
 }
 
@@ -2340,6 +2340,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 
 {
  const env=load(true),g=env.sandbox.testGame;
+ env.sandbox.Math.random=()=>0;
  const fresh=()=>{g.api.resetRun({skipIntro:true,skipNotebook:true});g.state.enemies=[];g.state.spawnTimer=9999;g.state.timeLeft=300;g.state.stats.ink=g.state.stats.maxInk=1000;};
  const rub=(x,y,seconds)=>{for(let i=0;i<Math.round(seconds/.05);i++){g.api.queuePaperRub({x,y},{x:x+10,y},20);g.api.updatePaper(.05);}};
  fresh();g.api.queuePaperRub({x:100,y:180},{x:100,y:180});g.api.updatePaper(8);assert.equal(g.state.paper.holes.length,0,'stationary eraser never wears paper');
@@ -2348,14 +2349,14 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.state.paused=true;rub(240,220,8);assert.equal(g.state.paper.holes.length,1);g.state.paused=false;rub(240,220,7);assert.equal(g.state.paper.holes.length,2);
  const holes=JSON.stringify(g.state.paper.holes);g.state.wave=2;g.api.startWave({skipIntro:true});assert.equal(JSON.stringify(g.state.paper.holes),holes,'holes persist across waves');
  const enemy=()=>{const e=g.api.spawnEnemy(false,100,180,'grunt');e.x=100;e.y=180;e.hp=e.maxHp=100;return e;};
- let e=enemy();e.burn=3;e.poison=2;e.charged=2;assert(g.api.updatePaperEnemy(e,.05));assert.equal(e.paperTunnel.exit.x,240);assert.equal(e.burn,0);assert.equal(e.poison,0);
+ let e=enemy();e.burn=3;e.poison=2;e.charged=2;assert(g.api.updatePaperEnemy(e,.05));assert.equal(e.paperTunnel.exit.x,240);assert.equal(e.burn,0);assert.equal(e.poison,0);g.api.updatePaperEnemy(e,.5);
  const hp=e.hp,x=e.x;g.api.dealDamage(e,30,'physical');g.api.dealDamage(e,30,'electric');assert.equal(e.hp,hp,'surface physical and elemental damage blocked');assert.equal(g.api.moveEnemySafely(e,50,0),false);assert.equal(e.x,x);assert.equal(g.api.launchEnemy(e,200,200),false);assert.equal(g.api.applyInkContact(e,.1),0);
  g.state.projectiles=[{x:e.x,y:e.y,target:e,speed:290,damage:9,life:1.2}];g.state.synergies.add('Hot Rocks');g.state.synergies.add('Snowball Fight');g.api.updateProjectiles(.01);assert.equal(e.hp,hp-9,'real rocks hit underground');assert.equal(e.burn,0,'rock effects remain on surface');assert.equal(e.freeze,0);g.state.synergies.clear();const lightningHp=e.hp;g.state.inks.electric=1;g.api.chainLightning(e,1);assert.equal(e.hp,lightningHp);assert.equal(e.stun,0);const sniper=g.api.spawnEnemy(false,e.x,e.y,'sniper');sniper.paperTunnel=e.paperTunnel;g.state.enemyShots=[{x:sniper.x,y:sniper.y,r:3,life:1,sniperOwner:sniper,reflected:true}];g.api.updateEnemyShots(.1);assert.equal(sniper.returnHits||0,0,'surface returns do not count through the paper');g.state.enemies=g.state.enemies.filter(n=>n!==sniper);
  e.x=170;e.y=190;
  for(let i=0;i<39;i++){g.api.queuePaperRub({x:e.x-5,y:e.y},{x:e.x+10,y:e.y});g.api.updatePaper(.05);g.api.updatePaperEnemy(e,.05);}
  assert.equal(e.paperTunnel.phase,'travel','less than two seconds cannot force emergence');g.api.queuePaperRub({x:e.x-5,y:e.y},{x:e.x+10,y:e.y});g.api.updatePaper(.05);assert.equal(e.paperTunnel.phase,'emerge');const warning=e.paperTunnel.warning;g.state.paused=true;g.api.update(.3);assert.equal(e.paperTunnel.warning,warning);g.state.paused=false;
  for(let i=0;i<15;i++)g.api.updatePaperEnemy(e,.05);assert.equal(e.paperTunnel,undefined);assert(e.stun>1);assert.equal(g.api.updatePaperEnemy(e,.01),false,'emerged monster cannot immediately burrow again');
- e=enemy();g.api.updatePaperEnemy(e,.05);for(let i=0;i<300&&e.paperTunnel?.phase==='travel';i++)g.api.updatePaperEnemy(e,.05);assert.equal(e.paperTunnel.phase,'emerge');assert.equal(e.x,240);assert.equal(e.y,220,'committed natural exit');
+ e=enemy();g.api.updatePaperEnemy(e,.05);g.api.updatePaperEnemy(e,.5);for(let i=0;i<300&&e.paperTunnel?.phase==='travel';i++)g.api.updatePaperEnemy(e,.05);assert.equal(e.paperTunnel.phase,'emerge');assert.equal(e.x,240);assert.equal(e.y,220,'committed natural exit');
  const wrong=enemy();wrong.x=240;wrong.y=220;assert.equal(g.api.updatePaperEnemy(wrong,.05),false,'no shortcut toward a farther hole');wrong.waveBoss=true;wrong.x=100;wrong.y=180;assert.equal(g.api.updatePaperEnemy(wrong,.05),false,'boss never burrows');
  const snapshot=JSON.stringify(g.state);const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('paper rendering consumed RNG')};g.api.drawPaper();g.api.drawPaperBump(e);g.api.drawSparkGaps();env.sandbox.Math.random=random;assert.equal(JSON.stringify(g.state),snapshot,'paper rendering pure');
  g.api.movePaper(20,10);assert.equal(e.paperTunnel.exit.x,260);assert.equal(g.state.paper.holes[0].x,120);g.api.resetRun({skipIntro:true});assert.equal(g.state.paper.holes.length,0);assert.equal(g.state.paper.patches.length,0,'new run clears all wear');
@@ -2370,4 +2371,39 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
   g.api.eraseWallPath({x:100,y:175},{x:100,y:185},20);assert.equal(n.stun,0,'draw/erase spam does not repeat a stumble');
  }
  console.log('PASS: timed local paper wear, stationary/pause/fort guards, persistent spaced holes, closer-exit commitment, underground surface immunity and real rocks, two-second forced and warned natural emergence, reentry cooldown, pure/reduced rendering and resize/reset; projectile erasing, paid electric gaps/fragment cooldown and committed Chonks/Boingus stumbles.');
+}
+
+{
+ const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.enemies=[];g.state.spawnTimer=9999;g.state.timeLeft=300;
+ g.state.paper.holes=[{id:1,x:100,y:180,r:22},{id:2,x:240,y:220,r:22}];
+ let rolls=0;env.sandbox.Math.random=()=>{rolls++;return .3};const e=g.api.spawnEnemy(false,100,180,'grunt');rolls=0;
+ for(let i=0;i<120;i++)assert.equal(g.api.updatePaperEnemy(e,.016),false);assert.equal(rolls,1,'30% boundary declines once, never every frame');assert(!e.paperTunnel);
+ e.x=155;g.api.updatePaperEnemy(e,.1);e.x=100;env.sandbox.Math.random=()=>{rolls++;return .299};assert(g.api.updatePaperEnemy(e,.1));assert.equal(rolls,2,'leaving and returning starts a new encounter');assert.equal(e.paperTunnel.phase,'enter');assert.equal(e.paperTunnel.exit.x,240,'off-angle closer exit allowed');
+ const timer=e.paperTunnel.entryTimer;g.state.paused=true;g.api.update(.2);assert.equal(e.paperTunnel.entryTimer,timer);g.state.paused=false;
+ // Every catalogue boss, even one without the waveBoss marker, stays above paper.
+ for(const type of ['boss','stapler','crayon','eraser','wobblechomp']){const b=g.api.spawnEnemy(false,100,180,type);const before=rolls;assert.equal(g.api.updatePaperEnemy(b,.1),false,type);assert.equal(rolls,before,'boss does not even roll');}
+ const noExit=g.api.spawnEnemy(false,240,220,'grunt'),before=rolls;assert.equal(g.api.updatePaperEnemy(noExit,.1),false);assert.equal(rolls,before,'farther exits never roll');
+ const poses=[];g.state.enemies=[];
+ for(const type of ['grunt','scrubber','fast','sprinter','bouncer']){
+  const n=g.api.spawnEnemy(false,100,180,type);n.paperTunnel={phase:'enter',entryTimer:.25,age:.25,exit:{x:240,y:220}};
+  const pose=g.api.paperTransitionPose(n);poses.push(JSON.stringify(pose));const state=JSON.stringify(g.state);g.api.drawPaperBump(n);assert.equal(JSON.stringify(g.state),state,'entry rendering pure');assert(pose.visible>0&&pose.visible<1);
+  n.paperTunnel.phase='emerge';n.paperTunnel.warning=.2;const out=g.api.paperTransitionPose(n);assert(out.visible>0&&out.visible<1);g.api.drawPaperBump(n);
+ }
+ assert(new Set(poses).size>=4,'distinct tumble, wriggle, dive and spring poses');
+ const reduced=load(true,{images:true,reduced:true}).sandbox.testGame;const n={type:'bouncer',r:12,paperTunnel:{phase:'enter',entryTimer:.25}};const pose=reduced.api.paperTransitionPose(n);assert.equal(pose.angle,0);assert.equal(pose.sx,1);assert.equal(pose.sy,1);assert(pose.reduced);
+ console.log('PASS: one 30% decision per encounter, leaving/reentering rearm, off-angle closer exits, all boss exclusions without RNG, paused entry and distinct pure early-monster entry/emergence poses with reduced motion.');
+}
+
+{
+ const key='saveStevieNotebookV1',saved=new Map([[key,JSON.stringify({version:1,scraps:100,lifetimeScraps:500,scrapTutorialDone:true,levels:{tool:5,pencil:4,inkTank:2,starterEraser:1}})],['doodleDefenderBestV4','17']]);
+ const storage={getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v))};let g=load(true,{storage}).sandbox.testGame;
+ assert.equal(g.api.notebookSnapshot().scraps,181,'refund actual old rank costs 5+12+24+40');assert.equal(g.api.notebookSnapshot().lifetimeScraps,500);assert.equal(g.api.notebookSnapshot().version,2);assert(!('pencil' in g.api.notebookSnapshot().levels));assert(!g.catalog.notebookPerks.some(p=>p.id==='pencil'));assert.equal(g.api.buyNotebookPerk('pencil'),false);assert.equal(saved.get('doodleDefenderBestV4'),'17');
+ g=load(true,{storage}).sandbox.testGame;assert.equal(g.api.notebookSnapshot().scraps,181,'reload cannot refund twice');g.api.renderNotebook();assert.match(g.dom.$('notebookLoadout').textContent,/105 wall HP/);assert.equal(g.api.buyNotebookPerk('tool'),true);assert.equal(g.api.notebookSnapshot().scraps,157);g.api.resetRun();assert.equal(g.state.stats.wallHp,113);assert.equal(g.state.tool.slots,3);g.api.createWall([{x:100,y:180},{x:280,y:180}]);assert.equal(g.state.walls[0].maxHp,113);g.api.resetRun();assert.equal(g.state.stats.wallHp,113,'new runs do not duplicate HP');
+ for(let rank=0;rank<=10;rank++){
+  const env=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:2,scraps:0,lifetimeScraps:500,levels:{tool:rank}}):null,setItem(){}}}),game=env.sandbox.testGame;game.api.resetRun();assert.equal(game.state.stats.wallHp,65+rank*8);assert.equal(game.state.tool.slots,rank===10?4:rank>=6?3:2);
+  const art=game.api.toolIllustration(rank);assert.match(art,new RegExp('data-tool-rank="'+rank+'"'));assert.match(art,/tool-ranks.png/);assert.equal((art.match(/class="tool-socket"/g)||[]).length,game.state.tool.slots);
+ }
+ const blocked=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:100,lifetimeScraps:500,levels:{pencil:4}}):null,setItem(){throw Error('blocked')}}}).sandbox.testGame;assert.equal(blocked.api.notebookSnapshot().scraps,181);assert(blocked.api.notebookSnapshot().storageIssue);
+ const noRepeat=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:2,scraps:100,levels:{pencil:4}}):null,setItem(){}}}).sandbox.testGame;assert.equal(noRepeat.api.notebookSnapshot().scraps,100,'new save ignores removed perk');
+ console.log('PASS: eleven ranked tool artworks/slots, +8 HP at every rank and real wall creation/reset, retired Fresh Pencil, one-time exact refund/persisted migration, protected lifetime/best/perks and blocked storage.');
 }

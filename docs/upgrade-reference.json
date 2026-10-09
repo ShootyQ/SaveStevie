@@ -1,5 +1,5 @@
 {
-  "version": "0.1.9",
+  "version": "0.1.11",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -7,7 +7,7 @@
   },
   "notes": [
     "Catalog descriptions and requirements are exported from game code; mechanics and review notes are maintained alongside them. Suggestions are proposals, not shipped changes.",
-    "Quick Sketch was retired and replaced by Doodle Stitch following player feedback. Other review candidates are hypotheses, not pick-rate data.",
+    "Fresh Pencil was retired; legacy paid ranks receive a one-time scrap refund. Every Drawing Tool rank adds +8 base wall HP. Quick Sketch was retired and replaced by Doodle Stitch following player feedback. Other review candidates are hypotheses, not pick-rate data.",
     "About one in three campaigns reserves at most one Legendary offer after waves 1–19. Runs ending early may never see their offer; this is not a guarantee every third run.",
     "One-time upgrades award one unlock regardless of rarity; stackable upgrades generally award 1/2/3/4 levels, subject to caps.",
     "Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-upgrade-workbook.py (requires openpyxl)."
@@ -877,7 +877,7 @@
     },
     {
       "name": "Your Drawing Tool",
-      "effect": "Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Pens unlock a third effect slot; Sharpies unlock a fourth.",
+      "effect": "Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Every rank has its own artwork and adds +8 base wall HP. Pens unlock a third effect slot; Sharpies unlock a fourth.",
       "maxRanks": 10,
       "costs": [
         5,
@@ -891,8 +891,8 @@
         44,
         55
       ],
-      "rankOne": "Pencil · 2 effect slots",
-      "atMax": "Scented Sharpie · 4 effect slots",
+      "rankOne": "Pencil · 2 effect slots · +8 base wall HP",
+      "atMax": "Scented Sharpie · 4 effect slots · +80 base wall HP",
       "source": "js/notebook.js"
     },
     {
@@ -932,20 +932,6 @@
       ],
       "rankOne": "4 reward choices from the first wave",
       "atMax": "4 reward choices from the first wave",
-      "source": "js/notebook.js"
-    },
-    {
-      "name": "Fresh Pencil",
-      "effect": "+8 starting wall HP per rank.",
-      "maxRanks": 4,
-      "costs": [
-        5,
-        12,
-        24,
-        40
-      ],
-      "rankOne": "+8 base wall HP",
-      "atMax": "+32 base wall HP",
       "source": "js/notebook.js"
     },
     {
@@ -1015,7 +1001,7 @@
     },
     {
       "name": "Paper wear and tunnels",
-      "effect": "About 7 seconds of local active eraser rubbing tears a hole. Holes persist for the run, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page.",
+      "effect": "About 7 seconds of local active eraser rubbing tears a hole. Holes persist for the run, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. One 30% entry decision per hole encounter, with no approach-alignment requirement. Bosses never enter. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page.",
       "source": "js/paper.js"
     },
     {

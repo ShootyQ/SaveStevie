@@ -962,3 +962,16 @@ html.native-app .bottom #eraserBtn{flex:0 1 108px;font-size:21px}
 button,button *,.bottom,.bottom *{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 html.native-app body{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
 html.native-app input,html.native-app textarea{user-select:text;-webkit-user-select:text}
+
+/* Every permanent tool rank has its own atlas cell. */
+.tool-rank-art{aspect-ratio:2/1;overflow:hidden}
+.tool-rank-art .instrument-art{position:absolute;width:300%;height:400%;max-width:none;object-fit:fill;transform:translate(calc(-1 * var(--rank-x)),calc(-1 * var(--rank-y)))}
+.tool-rank-art .tool-socket{left:var(--socket-x);top:var(--socket-y);width:11%;border:2px solid #26333d;border-radius:50%;background:#fff3d8;box-shadow:1px 2px 0 #26333d44}
+.tool-rank-art .socket-plus{color:#6b735b;font-size:clamp(10px,2.5vw,23px)}
+.tool-rank-art .socket-level{font-size:9px;right:-4px;bottom:-5px}
+.tool-rank-comparison{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.tool-rank-comparison:has(>div:only-child){grid-template-columns:1fr}
+.tool-rank-comparison>div>span{font-weight:700;font-size:13px;color:#3d5560}
+.tool-rank-comparison .instrument-hero{width:100%;margin:4px 0 0}
+.tool-rank-art .socket-plus{line-height:1}
+.tool-rank-comparison .socket-plus{font-size:11px;line-height:1}
