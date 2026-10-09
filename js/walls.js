@@ -47,7 +47,7 @@ function eraserIntervals(p,q,a,b,r){
  for(const cut of cuts){const last=merged.at(-1);if(last&&cut[0]<=last[1]+1e-8)last[1]=Math.max(last[1],cut[1]);else merged.push(cut);}
  return merged;
 }
-function eraseWallPath(a,b,r=20){
+function eraseWallPath(a,b,r=20,options={}){
  if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
  if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
  let changed=false,recovered=0;const result=[];
@@ -75,9 +75,14 @@ function eraseWallPath(a,b,r=20){
    if(length<2||total<=0)continue;
    const fraction=length/total;kept+=fraction;result.push({...wall,pts,hp:wall.hp*fraction,maxHp:wall.maxHp*fraction,eraseInk:(wall.eraseInk||0)*fraction,closed:false});
   }
-  if(wall.eraseInk>0&&wall.maxHp>0)recovered+=wall.eraseInk*Math.max(0,1-kept)*game.api.clamp(wall.hp/wall.maxHp,0,1)*game.api.clamp(game.state.stats.eraseRefund??.25,0,.6);
+  if(!options.enemy&&wall.eraseInk>0&&wall.maxHp>0)recovered+=wall.eraseInk*Math.max(0,1-kept)*game.api.clamp(wall.hp/wall.maxHp,0,1)*game.api.clamp(game.state.stats.eraseRefund??.25,0,.6);
  }
  if(changed){game.state.walls=result;game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+recovered);game.api.updateUI();}
+ if(!options.enemy){
+  for(const e of [...game.state.enemies])if(e.type==='scrubber'&&e.hp>0&&game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<=r+e.r*.7){
+   game.api.dealDamage(e,e.hp,'erase');game.api.killEnemy(e);changed=true;
+  }
+ }
  return changed;
 }
 

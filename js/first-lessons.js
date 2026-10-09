@@ -25,7 +25,7 @@ DoodleDefender.systems.firstLessons=function(game){
  }
  function renderLesson(){
   practiced=false;pointer=null;last=null;held=false;modifier=null;removed=new Set();points=[];const practice=step===1;
-  let heading,body;if(kind==='draw')[heading,body]=drawSteps[step];else{heading=step===0?'A little room for corrections.':'Your turn: rub out a gap.';body=(step===0?'Erasing opens routes and recovers 25% of the paid ink in a healthy section. Damaged walls return less. Free lines and extra copies return nothing. Upgrades can improve recovery. ':'')+eraseInstruction();}
+  let heading,body;if(kind==='draw')[heading,body]=drawSteps[step];else{heading=step===0?'A little room for corrections.':'Your turn: rub out a gap.';body=(step===0?'Erasing opens routes and recovers 25% of the paid ink in a healthy section. Damaged walls return less. Free lines and extra copies return nothing. Upgrades can improve recovery. Wave 2 also brings Rubble Ruff: he erases our walls, but you can rub over HIM to wipe him out! ':'')+eraseInstruction();}
   game.dom.$('lessonTitle').textContent=heading;game.dom.$('lessonText').textContent=body;game.dom.$('lessonProgress').textContent='Stevie’s tips · Wave '+game.state.wave+' · '+(step+1)+' / '+(kind==='draw'?5:2);
   game.dom.$('lessonPractice').hidden=!practice;game.dom.$('lessonExample').hidden=!practice;game.dom.$('lessonErase').hidden=kind!=='erase';game.dom.$('lessonFeedback').textContent=kind==='draw'?'Draw a wall here. This is a safe practice page.':'Rub out the middle of this practice wall.';
   game.dom.$('lessonNext').disabled=practice;game.dom.$('lessonNext').textContent=step===(kind==='draw'?4:1)?'Let’s play!':'Next →';
