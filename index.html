@@ -79,7 +79,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <aside id="scrapGuideCover" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>Psst! You earned scraps! They stay in my Notebook even when the monsters get me. Let’s see how they make our next adventure stronger.</p><div class="cardactions"><button id="scrapGuideShow">Show me →</button><button class="secondary" id="scrapGuideSkip">Got it</button></div></div></aside><div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.2</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <aside id="scrapGuideCover" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>Psst! You earned scraps! They stay in my Notebook even when the monsters get me. Come with me to the Notebook! I saved a free Starter Eraser for your first purchase. Let’s claim it before our next adventure.</p><div class="cardactions"><button id="scrapGuideShow">Show me →</button><button class="secondary" id="scrapGuideSkip">Let’s go</button></div></div></aside><div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.3</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -186,6 +186,14 @@
         <div class="cardactions"><button class="gold" id="deathNotebookBtn">Spend Scraps</button><button id="againBtn">Return to main menu</button></div>
       </div>
     </div>
+<div id="lessonOverlay" class="overlay build-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="lessonTitle">
+ <div class="cardbox build-box lesson-box">
+  <div class="lesson-heading"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="72" height="72"><div><span id="lessonProgress" class="section-kicker"></span><h2 id="lessonTitle" tabindex="-1"></h2></div></div>
+  <p id="lessonText"></p>
+  <div id="lessonPractice" hidden><canvas id="lessonCanvas" width="420" height="150" aria-label="Safe practice paper for drawing or erasing"></canvas><button id="lessonErase" class="secondary">Erase</button><p id="lessonFeedback" role="status"></p></div>
+  <div class="cardactions"><button id="lessonNext">Next →</button><button id="lessonExample" class="secondary" hidden>Use Stevie’s example</button><button id="lessonSkip" class="secondary">Skip this lesson</button></div>
+ </div>
+</div>
   </div>
 
   <nav class="bottom" aria-label="Game controls">
@@ -214,7 +222,7 @@
   <div class="cardbox build-box notebook-hub">
     <div class="build-heading"><h2 class="paper-slip" id="hubTitle">My notebook</h2><button class="paper-slip" id="closeHubBtn">Back</button></div>
     <p class="hub-note">Saved scraps: <span id="splashScraps">0</span></p>
-    <aside id="scrapGuideHub" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>This is our Notebook! Choose Spend scraps below. That’s where we keep the upgrades that last between adventures.</p><div class="cardactions"><button class="secondary" id="scrapGuideHubSkip">Got it</button></div></div></aside><nav class="hub-pages" aria-label="Notebook pages">
+    <aside id="scrapGuideHub" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>This is our Notebook! Choose Spend scraps below. That’s where we keep the upgrades that last between adventures.</p><div class="cardactions"><button class="secondary" id="scrapGuideHubSkip">Spend scraps →</button></div></div></aside><nav class="hub-pages" aria-label="Notebook pages">
       <button class="paper-slip" id="hubMonstersBtn">Monster notes</button>
       <button class="paper-slip" id="hubToolBtn">My pencil</button>
       <button class="paper-slip" id="hubNotebookBtn">Spend scraps</button>
@@ -256,7 +264,7 @@
       <input id="effectsVolume" type="range" min="0" max="100" step="1" value="70">
       <p class="option-help">Adjust pencil scribbles, impacts and electric zaps. Set this to zero to mute effects without muting music.</p>
     </section>
-    <section class="option-section"><h3>How you play</h3><label class="monster-setting"><input id="eraserToggle" type="checkbox"> Tap to toggle the eraser instead of holding</label><label class="monster-setting"><input id="eraserLeft" type="checkbox"> Put the eraser button on the left</label><p class="option-help">Hold Erase with one thumb and rub a wall with your other finger. Release to draw again. On PC, right-drag to erase. Erasing costs no ink and gives no refund.</p><label class="monster-setting"><input id="optionsIntros" type="checkbox" checked> Introduce new monsters before a wave</label><p class="option-help">Motion follows your device’s reduced-motion setting. Open Tool any time to pause and inspect your pencil, effects, and synergies.</p></section>
+    <section class="option-section"><h3>How you play</h3><label class="monster-setting"><input id="eraserToggle" type="checkbox"> Tap to toggle the eraser instead of holding</label><label class="monster-setting"><input id="eraserLeft" type="checkbox"> Put the eraser button on the left</label><p class="option-help">Hold Erase with one thumb and rub a wall with your other finger. Release to draw again. On PC, right-drag to erase. Erasing costs no ink and recovers a portion of the paid ink in healthy walls.</p><label class="monster-setting"><input id="optionsIntros" type="checkbox" checked> Introduce new monsters before a wave</label><p class="option-help">Motion follows your device’s reduced-motion setting. Open Tool any time to pause and inspect your pencil, effects, and synergies.</p></section>
     <div class="options-links"><button class="secondary" id="optionsStatsBtn">Notebook stats</button><button class="secondary" id="changelogBtn">What’s new</button></div>
     <section class="dev-mode-section"><button class="secondary dev-mode-button" id="devModeBtn" aria-pressed="false">DEV MODE</button><p id="devModeNote" class="option-help"></p><button class="secondary" id="testLabBtn" aria-expanded="false" aria-controls="testLabPanel">Test a wave / boss</button>
       <section id="testLabPanel" class="test-lab" hidden aria-labelledby="testLabTitle">
@@ -292,11 +300,12 @@
     <p id="statisticsSaveNote" class="save-note"></p>
   </div>
 </div>
+
 <div class="overlay build-overlay" id="notebookOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="notebookTitle">
   <div class="cardbox build-box notebook-book">
     <div class="build-heading"><h2 id="notebookTitle">Back of the Notebook</h2><button id="closeNotebookBtn">Close</button></div>
     <div class="notebook-wallet"><img class="notebook-scrap" src="assets/art/ui/scraps.png" alt="" width="84" height="84"><div><strong id="notebookBank">0</strong> <b>Notebook Scraps</b><small>Saved on this browser · Kept after defeat</small></div></div>
-    <aside id="scrapGuideShop" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>Each upgrade shows its price and what changes. Tap Buy rank when you have enough scraps. Greyed-out buttons mean you need more scraps, the perk is full, or a run is still active. First ranks start at 5 scraps—keep saving! Bought perks help every new run.</p><div class="cardactions"><button id="scrapGuideDone">Got it, Stevie!</button></div></div></aside><p id="notebookNotice" role="status"></p>
+    <aside id="scrapGuideShop" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>Here’s your first purchase: Starter Eraser! It costs 0 scraps and helps every future run recover a little more ink from erased walls. Claim it below. Your earned scraps stay in the bank for the other upgrades.</p><div class="cardactions"><button id="scrapGuideDone">Claim Starter Eraser · 0 scraps</button></div></div></aside><p id="notebookNotice" role="status"></p>
     <div class="notebook-earn"><b>How to collect scraps</b><span>1 per 25 kills (up to 8 per run) · 1 per cleared wave · Chapter-clear bonuses: 6 / 8 / 10 / 12 · 5 extra for winning wave 20. A defeat with no earnings keeps 1 consolation scrap.</span></div>
     <h3>Your next starting kit</h3><p id="notebookLoadout"></p>
     <div id="notebookPerks" class="notebook-grid"></div>
@@ -331,6 +340,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.3 · Stevie shows you the ropes</h3><p>First-time wave 1 pauses for Stevie’s drawing practice and ink, health and timer tour. Wave 2 teaches erasing with controls for your platform. Erasing healthy paid wall sections recovers 25% of their ink; damaged walls return less, and free strokes and copies return none. Clean Erasing improves recovery up to 60%. After your first adventure, Stevie guides you to claim a free permanent Starter Eraser before your next normal run.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.2 · Rub out a new route</h3><p>Right-drag on PC, or hold the Erase button with one thumb while your other finger rubs out sections of wall. Release to draw again, even during the same stroke. Settings includes tap-to-toggle and a left-side button. Remaining wall pieces keep their ink effects, health ratio and lifetime. Erasing costs no ink, gives no refund and does not trigger wall explosions.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.1 · Clearer Android cover</h3><p>The Android title, tagline and footer now use dark ink on the notebook paper. The menu shows an Alpha update number at the bottom so you can tell which version you are testing.</p></article>
       <article class="build-entry"><h3>Twicey has double trouble</h3><p>Draw across Twicey Dicey’s center seam to split him early. His red half warns before dashing at Stevie; his purple half chews walls. After a few seconds they wave and try to reunite along a dotted route. Barriers keep them apart; a reunion leaves Twicey dizzy without healing him.</p></article>
@@ -575,6 +585,7 @@
 <script src="js/wobblechomp-phase-two.js"></script>
 <script src="js/wobblechomp-boss.js"></script>
 <script src="js/wobblechomp-preview.js"></script>
+<script src="js/first-lessons.js"></script>
 <script src="js/loop.js"></script>
 <script src="js/input.js"></script>
 <script src="game.js"></script>

@@ -13,7 +13,7 @@ function insideLoop(e,w){
 function loopDamageMultiplier(enemy){const t=loopUtilityTuning();return t.damage&&game.state.walls.some(w=>w.closed&&w.hp>0&&w.life>0&&insideLoop(enemy,w))?1+t.damage:1}
 function rewardClosedLoop(wall,paid){
  const t=loopUtilityTuning();if(!t.refund||paid<=0)return;
- const refund=Math.min(paid*t.refund,game.state.stats.maxInk-game.state.stats.ink);game.state.stats.ink+=refund;
+ const refund=Math.min(paid*t.refund,game.state.stats.maxInk-game.state.stats.ink);game.state.stats.ink+=refund;wall.eraseInk=Math.max(0,(wall.eraseInk||0)-refund);
  const requests=[];
  for(const w of game.state.walls){if(w===wall||w.hp<=0||w.hp>=w.maxHp)continue;
   const touched=w.pts.some(p=>insideLoop(p,wall))||w.pts.some(p=>{const near=game.api.nearestPointOnWall(p,wall);return near&&Math.hypot(near.x-p.x,near.y-p.y)<=wall.thick+w.thick});
@@ -50,7 +50,7 @@ function eraserIntervals(p,q,a,b,r){
 function eraseWallPath(a,b,r=20){
  if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
  if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
- let changed=false;const result=[];
+ let changed=false,recovered=0;const result=[];
  for(const wall of game.state.walls){
   const bounds=game.api.wallGeometry(wall.pts),pad=r+wall.thick/2;
   if(bounds.maxX<Math.min(a.x,b.x)-pad||bounds.minX>Math.max(a.x,b.x)+pad||bounds.maxY<Math.min(a.y,b.y)-pad||bounds.minY>Math.max(a.y,b.y)+pad){result.push(wall);continue;}
@@ -69,13 +69,15 @@ function eraseWallPath(a,b,r=20){
   changed=true;
   // A closed stroke can wrap across its first point; retain that connected piece.
   if(pieces.length>1){const first=pieces[0],last=pieces.at(-1);if(Math.hypot(first[0].x-last.at(-1).x,first[0].y-last.at(-1).y)<.001){pieces[0]=last.concat(first.slice(1));pieces.pop();}}
+  let kept=0;
   for(const pts of pieces){
    let length=0;for(let i=1;i<pts.length;i++)length+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
    if(length<2||total<=0)continue;
-   const fraction=length/total;result.push({...wall,pts,hp:wall.hp*fraction,maxHp:wall.maxHp*fraction,closed:false});
+   const fraction=length/total;kept+=fraction;result.push({...wall,pts,hp:wall.hp*fraction,maxHp:wall.maxHp*fraction,eraseInk:(wall.eraseInk||0)*fraction,closed:false});
   }
+  if(wall.eraseInk>0&&wall.maxHp>0)recovered+=wall.eraseInk*Math.max(0,1-kept)*game.api.clamp(wall.hp/wall.maxHp,0,1)*game.api.clamp(game.state.stats.eraseRefund??.25,0,.6);
  }
- if(changed)game.state.walls=result;
+ if(changed){game.state.walls=result;game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+recovered);game.api.updateUI();}
  return changed;
 }
 
@@ -313,7 +315,7 @@ function createWall(points){
   const lengthFactor=game.api.clamp(length/180,.35,2.4);
   const hp=game.state.stats.wallHp*lengthFactor*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);
   const life=infinite?Math.min(10,game.state.stats.wallLife):game.state.stats.wallLife;
-  const base={...(infinite?{wobbleBumper:true}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
+  const base={eraseInk:actualPaid,...(infinite?{wobbleBumper:true}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
   game.state.walls.push(base);
 
   if(game.state.stats.doubleLine||game.state.stats.tripleLine){
@@ -507,7 +509,7 @@ function applySynergies(e,dt){
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
-const api = { eraseWallPath, flingBossFriend, launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
+const api = { eraserIntervals, eraseWallPath, flingBossFriend, launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
 Object.assign(game.api, api);
 return api;
 };

@@ -96,7 +96,7 @@ function resetRun(options={}){
   game.state.wave=1;game.state.kills=0;game.state.score=0;game.state.waveKills=0;game.state.rerolls=0;game.state.endless=false;game.state.specialization='none';game.state.finalOvertime=false;game.state.finalBossDefeated=false;
   game.state.walls=[];game.state.enemies=[];game.state.particles=[];game.state.floaters=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.synergies.clear();
   Object.assign(game.state.stats,{
-    maxInk:160,ink:160,inkRegen:5,wallHp:65,wallDamage:8,wallSlow:0,wallStun:0,
+    maxInk:160,ink:160,inkRegen:5,eraseRefund:.25,wallHp:65,wallDamage:8,wallSlow:0,wallStun:0,
     refund:0,luck:0,playerRegen:0,doubleLine:false,tripleLine:false,explode:false,
     repairOnKill:0,freehandLevel:0,freehandCharge:0,freehandThreshold:80,freehandBank:0,freehandBankSize:40,strokeCount:0,closedBonus:1,killHeal:0,
     lineCost:.31,lineWidth:8,wallLife:72,intersectBonus:0,repairDraw:0,firstFree:false,
@@ -133,7 +133,7 @@ function startWave(options={}){
   game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+game.state.stats.playerRegen+5);
   game.api.setMsg(game.state.wave%5===0?'Wave '+game.state.wave+'. Clear the timed fight; the boss follows.':'Wave '+game.state.wave+'. Fresh page, full ink.');
   game.api.updateUI();
-  if(!options.skipIntro&&!game.api.testLabActive?.())game.api.introduceWave();
+  if(!options.skipIntro&&!game.api.testLabActive?.()&&!game.api.beginFirstLesson?.())game.api.introduceWave();
 }
 
 function waveComplete(){

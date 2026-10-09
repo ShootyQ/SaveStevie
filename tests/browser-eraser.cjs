@@ -6,7 +6,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
  try{
  for(const viewport of [{width:1280,height:900},{width:393,height:851},{width:360,height:640},{width:851,height:393}]){
   const page=await browser.newPage({viewport,hasTouch:true}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');Object.defineProperty(Element.prototype,'requestFullscreen',{value:undefined});});
+  await page.addInitScript(()=>{localStorage.setItem('saveStevieLessonsV1',JSON.stringify({draw:true,erase:true}));requestAnimationFrame=()=>0;localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');Object.defineProperty(Element.prototype,'requestFullscreen',{value:undefined});});
   await page.route('http://127.0.0.1:8001/**',route=>{
    const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;
    try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}
@@ -22,7 +22,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   let p=await reset();await page.mouse.move(p.x-80,p.y);await page.mouse.down();await page.mouse.move(p.x+80,p.y,{steps:10});await page.mouse.up();
   await page.evaluate(()=>{if(testGame.state.walls.length!==1)throw Error('normal drawing failed');testGame.state.stats.ink=0;});
   await page.mouse.move(p.x,p.y);await page.mouse.down({button:'right'});await page.mouse.move(p.x,p.y+20,{steps:4});
-  await page.evaluate(()=>{const g=testGame;if(g.state.walls.length!==2||g.state.stats.ink!==0||!g.api.eraserActive())throw Error('right erase failed');const before=JSON.stringify(g.state);g.api.draw();if(before!==JSON.stringify(g.state))throw Error('cursor changed state');});
+  await page.evaluate(()=>{const g=testGame;if(g.state.walls.length!==2||g.state.stats.ink<=0||!g.api.eraserActive())throw Error('right erase failed');const before=JSON.stringify(g.state);g.api.draw();if(before!==JSON.stringify(g.state))throw Error('cursor changed state');});
   await page.screenshot({path:'/tmp/eraser-right-'+viewport.width+'.png'});await page.mouse.up({button:'right'});
   assert.equal(await page.evaluate(()=>testGame.api.eraserActive()),false);
   p=await reset();const cdp=await page.context().newCDPSession(page),button=await page.locator('#eraserBtn').boundingBox(),thumb={x:button.x+button.width/2,y:button.y+button.height/2,id:2};

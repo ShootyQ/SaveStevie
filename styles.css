@@ -946,3 +946,14 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 .bottom #eraserBtn.is-erasing{background:#f7c9d5;color:#572f40;border:2px solid #793a51;box-shadow:inset 0 2px 3px #793a5128}
 .bottom #eraserBtn.eraser-left{order:-1;margin-right:auto}
 html.native-app .bottom #eraserBtn{flex:0 1 108px;font-size:21px}
+
+#lessonOverlay{z-index:40;padding-top:calc(110px + var(--native-top,0px));background:#17232bbb}
+.lesson-box{width:min(100%,580px);max-height:100%;overflow:auto;background:#fffaf0;color:#26333c;border:2px solid #b8a785}
+.lesson-heading{display:flex;align-items:center;gap:12px}.lesson-heading img{flex:none;object-fit:contain}.lesson-heading h2{text-align:left;font-family:'Stevie Pencil',cursive;font-size:30px;line-height:1.1;margin:8px 0}
+.lesson-box p{text-align:left;line-height:1.45;font-size:16px}.lesson-box .cardactions{display:flex;flex-wrap:wrap;gap:8px}.lesson-box button{min-height:44px}
+#lessonPractice[hidden],#lessonExample[hidden],#lessonErase[hidden]{display:none}
+#lessonCanvas{display:block;width:100%;height:auto;border:2px dashed #b8a785;border-radius:8px;touch-action:none}
+#lessonErase{touch-action:none;margin-top:8px}#lessonFeedback{min-height:2.5em;font-size:14px}
+.hud:has(.lesson-spotlight){z-index:41;pointer-events:none}.hud .lesson-spotlight{outline:4px solid #d89b23;outline-offset:3px;box-shadow:0 0 0 7px #fffaf0cc}
+#scrapGuideCover,#scrapGuideHub,#scrapGuideShop{border:3px solid #a77a22}.notebook-perk.scrap-guide-target{outline:3px solid #a77a22;background:#fff1c9}
+@media(max-height:500px){#lessonOverlay{padding-top:80px}.lesson-heading img{width:48px;height:48px}.lesson-heading h2{font-size:24px}.lesson-box p{font-size:14px}}

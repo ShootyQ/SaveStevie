@@ -5,7 +5,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..')),native=proce
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});
  for(const viewport of [{width:1280,height:900},{width:393,height:851},{width:360,height:640},{width:851,height:393}]){
   const page=await browser.newPage({viewport}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');Object.defineProperty(Element.prototype,'requestFullscreen',{value:undefined})});
+  await page.addInitScript(()=>{localStorage.setItem('saveStevieLessonsV1',JSON.stringify({draw:true,erase:true}));requestAnimationFrame=()=>0;localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');Object.defineProperty(Element.prototype,'requestFullscreen',{value:undefined})});
   const wait=page.waitForFunction.bind(page);page.waitForFunction=(f,a,o)=>wait(f,a,{polling:50,...o});
   await page.route('http://127.0.0.1:8001/**',route=>{
    const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;
@@ -59,7 +59,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..')),native=proce
   await page.click('#pauseBtn');await page.click('#returnMenuBtn');await page.click('#confirmQuitBtn');
   assert.equal(await page.locator('#startOverlay').isVisible(),true);assert.equal(await page.evaluate(()=>testGame.state.running),false);assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),scraps);
   await page.click('#splashHubBtn');await page.click('#hubNotebookBtn');assert.equal(await page.locator('#notebookOverlay').isVisible(),true);await page.click('#closeNotebookBtn');await page.click('#closeHubBtn');
-  await page.click('#startBtn');assert.equal(await page.evaluate(()=>testGame.state.wave),1);
+  await page.evaluate(()=>testGame.api.buyNotebookPerk('starterEraser'));await page.click('#startBtn');assert.equal(await page.evaluate(()=>testGame.state.wave),1);
   await page.click('#pauseBtn');await page.click('#returnMenuBtn');await page.click('#confirmQuitBtn');assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),scraps,'empty quit does not farm scraps');
   await page.reload();assert.equal(await page.textContent('#splashScraps'),String(scraps));
   assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' main menu, pause/submenus, Escape/cancel/resume, saved scraps, no quit farming, fresh run and reload');await page.close();
