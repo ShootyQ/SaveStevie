@@ -161,7 +161,7 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
-const infoButtons={lesson:'lessonSkip',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(game.api.wobbleRepairActive?.())return;

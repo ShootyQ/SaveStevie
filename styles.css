@@ -1006,3 +1006,33 @@ html.native-app input,html.native-app textarea{user-select:text;-webkit-user-sel
 @keyframes splashFlameDance{from{transform:skewX(-6deg) scale(.95,1)}to{transform:skewX(5deg) scale(1.05,1.12)}}
 @keyframes splashEmberRise{0%{opacity:0;transform:translate(0,4px)}25%{opacity:1}100%{opacity:0;transform:translate(3px,-13px)}}
 @media(prefers-reduced-motion:reduce){.splash-grunt,.splash-splitter{transform:rotate(-5deg)}.splash-embers{display:none}}
+
+/* Stevie's safe practice page sits below the highlighted HUD. */
+#lessonOverlay{padding:calc(108px + var(--native-top,0px)) 14px 14px;align-items:center}
+.lesson-box{position:relative;padding:22px 24px;border-radius:5px 14px 8px 16px;box-shadow:6px 7px 0 #a99874;background:repeating-linear-gradient(transparent 0 27px,#bfd0dc55 27px 28px),#fffaf0;text-align:left;max-height:100%;overscroll-behavior:contain}
+.lesson-heading img{width:68px;height:72px;filter:drop-shadow(1px 2px 0 #ac987533)}
+.lesson-heading .section-kicker{font-size:11px;color:#71522b;letter-spacing:.6px}
+.lesson-box .lesson-pause-note{margin:5px 0 8px;font-size:12px;font-weight:bold;color:#3d6647}
+.lesson-track{color:#3463b9;letter-spacing:6px;font-size:17px;line-height:1.2}
+.lesson-box #lessonText{margin:12px 0;font-size:16px;line-height:1.5}
+.lesson-box .lesson-takeaway{margin:10px 0 14px;padding:9px 12px;border-left:4px solid #d4a52e;background:#fff0bccc;font-weight:bold;font-size:14px;color:#514028;transform:rotate(-.5deg)}
+.lesson-box .lesson-practice-label{font-size:11px;font-weight:bold;letter-spacing:.6px;color:#596c73;margin:10px 0 5px}
+#lessonCanvas{background:#fffaf0;box-shadow:2px 3px 0 #b8a78555;border-radius:4px;border-color:#6f8998}
+.lesson-box .lesson-metrics{font-variant-numeric:tabular-nums;font-size:13px;font-weight:bold;color:#31578a;margin:8px 0}
+#lessonFeedback{min-height:0;margin:8px 0 12px;color:#3d6647}
+#lessonErase{min-width:132px;border:2px solid #486551;background:#e9f0da;color:#294634;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#lessonErase.is-erasing{background:#39553f;color:#fffaf0}
+.lesson-actions{border-top:1px dashed #b8a785;padding-top:12px}
+#lessonNext{background:#355d43;color:#fffaf0;flex:1}
+#lessonSkip{width:100%;border:0;box-shadow:none;background:transparent;color:#625c50;font-size:12px;min-height:36px}
+#lessonBack[hidden]{display:none}
+.scrap-guide h3{color:#355d43}.scrap-guide .cardactions{gap:8px}.scrap-guide button{min-height:44px}
+@media(max-width:600px){.lesson-box{padding:16px}.lesson-heading{gap:9px}.lesson-heading h2{font-size:27px}.lesson-heading img{width:56px;height:62px}.lesson-box #lessonText{font-size:15px}.lesson-box .lesson-takeaway{font-size:13px}}
+@media(max-height:500px){#lessonOverlay{padding-top:80px;padding-bottom:8px}.lesson-box{padding:12px 16px}.lesson-heading img{width:42px;height:46px}.lesson-heading h2{font-size:24px;margin:3px 0}.lesson-box #lessonText{font-size:14px;margin:8px 0}.lesson-box .lesson-takeaway{margin:8px 0;padding:6px 10px}.lesson-track{font-size:13px}.lesson-actions{padding-top:8px}}
+.lesson-actions #lessonNext{order:-1;flex-basis:100%;min-height:46px}
+.lesson-actions #lessonBack,.lesson-actions #lessonExample{flex:1;min-width:110px}
+.lesson-actions #lessonSkip{flex-basis:100%}
+.lesson-practice-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0}
+.lesson-practice-toolbar #lessonErase{margin:0}
+.lesson-box{scrollbar-width:thin;scrollbar-color:#987944 #f3e7c7}
+.lesson-box::-webkit-scrollbar{width:6px}.lesson-box::-webkit-scrollbar-thumb{background:#987944;border-radius:4px}
