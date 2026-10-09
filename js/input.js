@@ -51,8 +51,8 @@ function enterScreen(){
   // Must run directly from a user gesture; unavailable/denied fullscreen is harmless.
   try{const request=document.documentElement.requestFullscreen();request?.catch(()=>{});}catch{}
 }
-function startRun(){
-  if(game.api.scrapLessonPending()){game.api.openInfo('hub');return;}
+function startRun(options={}){
+  if(options.fromEnd!==true&&game.api.scrapLessonPending()){game.api.openInfo('hub');return;}
   game.api.startMusic('margin-mischief');
   if(window.matchMedia?.('(pointer: coarse)').matches)enterScreen();
   game.api.resetRun();
@@ -80,7 +80,7 @@ game.dom.$('closeCompendiumBtn').onclick=game.api.closeCompendium;
 game.dom.$('monsterIntrosEnabled').onchange=e=>game.api.setMonsterIntrosEnabled(e.target.checked);
 game.dom.$('continueMonsterIntroBtn').onclick=game.api.continueMonsterIntro;
 game.dom.$('continueSynergyBtn').onclick=game.api.continueSynergyReveal;
-for(const id of ['deathNotebookBtn','victoryNotebookBtn','buildNotebookBtn'])game.dom.$(id).onclick=game.api.openNotebook;
+game.dom.$('victoryMenuBtn').onclick=game.api.returnToMenu;
 game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
 game.dom.$('resetNotebookBtn').onclick=game.api.resetNotebookProgress;
 window.addEventListener('keydown',game.api.handleInfoKey);
@@ -122,6 +122,7 @@ window.addEventListener('blur',cancelDrawingInput);
 syncDrawingControls();
 game.dom.$('startBtn').onclick=startRun;
 game.dom.$('againBtn').onclick=game.api.returnToMenu;
+game.dom.$('deathNewRunBtn').onclick=()=>startRun({fromEnd:true});
 game.dom.$('scrapGuideShow').onclick=()=>game.api.openInfo('hub');
 game.dom.$('scrapGuideSkip').onclick=()=>game.api.openInfo('hub');
 game.dom.$('scrapGuideHubSkip').onclick=game.api.openNotebook;

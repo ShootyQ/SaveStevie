@@ -1049,3 +1049,9 @@ html.native-app input,html.native-app textarea{user-select:text;-webkit-user-sel
 .scrubber-hint strong,.scrubber-hint span{display:block}.scrubber-hint[hidden]{display:none}
 #eraserBtn.scrubber-erase-cue{outline:3px solid #d59b24;outline-offset:2px;box-shadow:0 0 0 5px #fff3ce}
 html.native-app .scrubber-hint{bottom:calc(66px + var(--native-bottom))}
+.report-book label{display:block;margin:14px 0 6px;font-weight:700;color:#29462c}
+.report-book textarea{display:block;box-sizing:border-box;width:100%;max-width:100%;padding:10px;border:2px solid #a5997d;border-radius:5px;background:#fffdf3;color:#26333c;font:14px/1.5 system-ui,sans-serif;resize:vertical;user-select:text;-webkit-user-select:text}
+.report-book #reportPreview{font-size:12px}
+.report-book .cardactions{flex-wrap:wrap}
+.report-link{display:inline-block;padding:12px 16px;border:2px solid #456238;border-radius:8px;background:#dbead5;color:#29462c;font-weight:700;text-align:center;text-decoration:none}
+.report-link:focus-visible{outline:3px solid #3268b8;outline-offset:3px}

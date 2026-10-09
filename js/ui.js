@@ -162,7 +162,7 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
-const infoButtons={doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(game.api.wobbleRepairActive?.())return;
@@ -179,6 +179,7 @@ function openInfo(kind){
   if(kind==='compendium')game.api.renderCompendium();
   if(kind==='notebook')game.api.renderNotebook();
   if(kind==='options')game.api.renderOptions();
+  if(kind==='report')game.api.renderProblemReport();
   if(kind==='statistics')game.api.renderStatistics();
   game.dom.$(kind+'Overlay').style.display='grid';
   game.api.syncScrapTutorial();
@@ -217,7 +218,7 @@ function handleInfoKey(e){
   }
   if(e.key==='Tab'){
     const overlay=game.dom.$(activeInfo+'Overlay');
-    const controls=Array.from(overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')).filter(el=>!el.getClientRects||el.getClientRects().length>0);
+    const controls=Array.from(overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]')).filter(el=>!el.getClientRects||el.getClientRects().length>0);
     const first=controls[0],last=controls.at(-1);
     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
     else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}

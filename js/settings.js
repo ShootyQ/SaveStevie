@@ -55,14 +55,61 @@ function renderStatistics(){
   game.dom.$('statisticsProgressBar').style.width=(100*ranks/max)+'%';
   game.dom.$('statisticsSaveNote').textContent=p.storageIssue?'Progress is temporary because this browser cannot save it.':'Records and Notebook progress are saved on this browser. Run stats reset when you start a new run.';
 }
+// Reports are local drafts. Only the player's GitHub submission sends anything.
+let reportContext='';
+function renderProblemReport(){
+ const s=game.state,version=game.dom.$('appVersion').textContent||'Alpha',ua=window.navigator?.userAgent||'Unavailable';
+ const list=obj=>Object.entries(obj).filter(([,n])=>n>0).map(([name,n])=>name+' ×'+n).join(', ')||'None';
+ reportContext=[
+  'Save Stevie problem report',
+  'Version: '+version,
+  'Device/browser: '+ua,
+  'Screen: '+(window.innerWidth||s.W)+' ×'+(window.innerHeight||s.H)+'; game: '+Math.round(s.W)+' ×'+Math.round(s.H),
+  'Platform: '+(document.documentElement?.classList?.contains('native-app')?'Android app':'Web'),
+  'Run: '+(game.api.testLabActive?.()?'Scratch Page test':devRunActive()?'Dev run':s.running?'Normal run':'Menu / ended run'),
+  'Wave: '+s.wave+'; timer: '+Math.round(s.timeLeft)+'s; kills: '+s.kills,
+  'Stevie HP: '+Math.ceil(s.player.hp)+' / '+s.player.maxHp+'; ink: '+Math.ceil(s.stats.ink)+' / '+s.stats.maxInk,
+  'Tool: '+s.tool.name+'; upgrades: '+list(s.stacks),
+  'Ink effects: '+list(s.inks),
+  'Synergies: '+(Array.from(s.synergies).join(', ')||'None'),
+  'Throwing element: '+(game.api.paperElementName?.()||'Ordinary paper'),
+  'Walls: '+s.walls.length+'; monsters: '+s.enemies.filter(e=>e.hp>0).length,
+  'Last hit: '+(game.dom.$('lastHitText').textContent||'None recorded'),
+  'Eraser controls: '+(controls.eraserToggle?'Tap to toggle':'Hold')+', '+(controls.eraserLeft?'left':'right')+' button'
+ ].join('\n');
+ game.dom.$('reportDescription').value='';game.dom.$('reportStatus').textContent='';updateProblemReport();
+}
+function updateProblemReport(){
+ const description=String(game.dom.$('reportDescription').value||'').trim().slice(0,2000);
+ const body='What happened / what I expected:\n'+(description||'[Describe the problem here]')+'\n\n'+reportContext;
+ game.dom.$('reportPreview').value=body;
+ const url='https://github.com/ShootyQ/SaveStevie/issues/new?title='+encodeURIComponent('Problem report · '+(game.dom.$('appVersion').textContent||'Alpha')+' · wave '+game.state.wave)+'&body='+encodeURIComponent(body);
+ game.dom.$('reportGitHubLink').href=url;
+ return body;
+}
+async function copyProblemReport(){
+ const text=updateProblemReport();
+ try{if(!window.navigator?.clipboard?.writeText)throw new Error('No clipboard');await window.navigator.clipboard.writeText(text);game.dom.$('reportStatus').textContent='Report copied. Paste it wherever you want to share it.';}
+ catch{const preview=game.dom.$('reportPreview');preview.focus?.();preview.select?.();game.dom.$('reportStatus').textContent='Clipboard unavailable. The report is selected so you can copy it, or choose Save report.';}
+}
+function saveProblemReport(){
+ const blob=new Blob([updateProblemReport()],{type:'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+ link.href=url;link.download='SaveStevie-problem-report.txt';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+ game.dom.$('reportStatus').textContent='Report saved as a text file. Share it with the creator when ready.';
+}
 function openOptions(){game.api.openInfo('options');}
 function closeOptions(){game.api.closeInfo();}
 function openStatistics(){game.api.openInfo('statistics');}
 function closeStatistics(){game.api.closeInfo();}
-const api={drawingControls,setDrawingControl,devModeEnabled,devRunActive,beginDevRun,setDevMode,renderDevMode,audioSettings,setAudioVolume,renderOptions,renderStatistics,openOptions,closeOptions,openStatistics,closeStatistics};Object.assign(game.api,api);
+const api={renderProblemReport,updateProblemReport,copyProblemReport,saveProblemReport,drawingControls,setDrawingControl,devModeEnabled,devRunActive,beginDevRun,setDevMode,renderDevMode,audioSettings,setAudioVolume,renderOptions,renderStatistics,openOptions,closeOptions,openStatistics,closeStatistics};Object.assign(game.api,api);
 for(const name of ['musicVolume','effectsVolume'])game.dom.$(name).oninput=e=>setAudioVolume(name,Number(e.target.value)/100);
 game.dom.$('optionsIntros').onchange=e=>game.api.setMonsterIntrosEnabled(e.target.checked);
 game.dom.$('devModeBtn').onclick=()=>setDevMode(!devEnabled);
 for(const name of ['eraserToggle','eraserLeft'])game.dom.$(name).onchange=e=>setDrawingControl(name,e.target.checked);
+game.dom.$('reportProblemBtn').onclick=()=>game.api.openInfo('report');
+game.dom.$('closeReportBtn').onclick=()=>game.api.closeInfo();
+game.dom.$('reportDescription').oninput=updateProblemReport;
+game.dom.$('copyReportBtn').onclick=copyProblemReport;
+game.dom.$('saveReportBtn').onclick=saveProblemReport;
 renderOptions();return api;
 };
