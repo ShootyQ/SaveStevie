@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.11
+# Save Stevie upgrade reference — Alpha 0.1.13
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -86,7 +86,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Heavy Artillery | Blast Ink + Fat Marker | Thicker walls create larger explosions. |
 | Hot Rocks | Fire Ink + Pocket Rocks | Stevie's rocks ignite enemies. |
 | Snowball Fight | Frost Ink + Pocket Rocks | Stevie's rocks chill and sometimes freeze enemies. |
-| Thunderstones | Electric Ink + Pocket Rocks | Stevie's rocks can chain lightning. |
+| Thunderstones | Electric Ink + Pocket Rocks | Stevie's rocks chain lightning and burst sparks from Electric Ink walls. |
 | Stevie the Unreasonable | Vampire Ink + Stevie Has Had Enough | Stevie heals from his own attacks. |
 | Human Pinball | Repulsion Ink + Helmet | Contact explosions knock nearby enemies away from Stevie. |
 | THE STORM | Electric Ink + Frost Ink + Gravity Ink | Gravity clusters, frost holds, lightning shreds the whole pack. |
@@ -101,12 +101,13 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Perk | Current effect | Ranks | Costs per rank |
 | --- | --- | --- | --- |
 | Starter Eraser | Stevie’s free first purchase. Adds 5 percentage points to ink recovery when erasing; applies to every new run. | 1 | 0 |
+| Doodle Scraps | Unlock mysterious paper drops in future runs, from any wave. Draw through one and choose a temporary element for Stevie’s paper balls. Finds last only for that run. | 1 | 25 |
 | Your Drawing Tool | Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Every rank has its own artwork and adds +8 base wall HP. Pens unlock a third effect slot; Sharpies unlock a fourth. | 10 | 5, 8, 12, 16, 20, 24, 30, 36, 44, 55 |
 | Bigger Starting Tank | +20 starting/max ink per rank. | 5 | 5, 12, 24, 40, 60 |
 | Refill Practice | +1 starting ink regeneration per second per rank. Stacks with run upgrades. | 3 | 5, 12, 24 |
 | Extra Credit | Start every run with four reward choices instead of three. Boss rewards already have four. | 1 | 25 |
 | Lunchbox Band-Aids | +8 starting/max Stevie HP per rank. | 4 | 5, 12, 24, 40 |
-| Pocket Pebbles | Start throwing rocks: 3 damage per rank. Higher ranks throw a little faster. | 3 | 5, 12, 24 |
+| Paper Ball Practice | Start throwing crumpled paper: 3 damage per rank. Higher ranks throw a little faster. | 3 | 5, 12, 24 |
 | Lunch Money | +1 starting reroll per rank. Each cleared wave still supplies a free reroll. | 2 | 5, 12 |
 | Lucky Eraser | +2 starting Luck per rank, improving upgrade rarity odds. | 4 | 5, 12, 24, 40 |
 
@@ -119,7 +120,8 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Paper wear and tunnels | About 7 seconds of local active eraser rubbing tears a hole. Holes persist for the run, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. One 30% entry decision per hole encounter, with no approach-alignment requirement. Bosses never enter. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page. |
 | Erase combat | Erase small hostile pencils/spikes, sacrificing return damage. Erasing paid electric ink between surviving wall ends discharges up to 12 + 2 × Electric Ink level damage, limited to 0.8 × removed paid ink, with a 0.8-second wall cooldown retained by fragments. Erase Chonks’s windup support or Boingus’s fresh rebound support to stun for 1.4 seconds; each monster has a 6-second stumble cooldown. |
 | Closed shapes | A stroke with more than six points and endpoints less than 22 pixels apart is a closed loop. Closed Loop/Fortress Geometry add durability and paid completion utility; related synergies add effects. |
-| Stevie throws rocks | Unlocked through rock upgrades or Pocket Pebbles. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies. |
+| Stevie throws paper balls | Unlocked through throwing upgrades, Paper Ball Practice or a Doodle Scrap discovery. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies. |
+| Doodle Scraps | Permanent Notebook unlock costs 25 saved scraps. From wave 1, eligible normal kills have an 8% drop chance; first drop guaranteed by eight eligible kills. Minimum 20 combat seconds between drops, one ground pickup at a time, max four per run; drops last 45 combat seconds. Finish a drawing through a pickup to reel it in and pause for two random elements. Fire, electric, poison, frost and eraser paper replace the current element and last only for the run; no wave-reward or ink slots used. Choosing an element unlocks 4-damage, 1.6s throws if needed. Bosses/helpers and development tests do not drop discoveries. |
 | Specialization: Fortress | Defense-category upgrade weights ×3. Does not directly add wall HP. |
 | Specialization: Ink Alchemist | Ink-category upgrade weights ×3. Does not directly add ink levels. |
 | Specialization: Chaos | Adds +12 normal-reward rarity bonus; enemy HP scale ×1.08. No additional Legendary chances. |

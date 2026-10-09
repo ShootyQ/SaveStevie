@@ -13,7 +13,7 @@ function update(dt){
   if(game.api.synergyRevealActive()||game.api.beginSynergyReveal())return;
   if(game.api.bossEntranceActive()){game.api.updateBossEntrance(dt);game.api.updateUI();return}
   if((game.state.wave===5||game.state.wave===10)&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
-  game.api.updateRefuge(dt);game.api.updatePaper(dt);
+  game.api.updateRefuge(dt);game.api.updatePaper(dt);game.api.updateScrubberHint(dt);if(game.api.updateDoodleScraps(dt))return;
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
   game.state.waveElapsed+=dt;
   if(game.state.wave%5!==0||game.api.bossWavePhase()==='timed'){
@@ -30,6 +30,7 @@ function update(dt){
   game.api.updateSustain(dt);
   game.state.stats.ink=game.api.wobbleInfiniteInk()?game.state.stats.maxInk:Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.inkRegen*dt);
 
+  game.api.updateRockWalls(dt);
   // Ink slowly fades even when nobody is touching it.
   // It remains solid for most of its life, then visibly ghosts out before disappearing.
   for(const w of [...game.state.walls]){

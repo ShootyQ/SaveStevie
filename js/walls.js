@@ -399,7 +399,7 @@ function createWall(points,options={}){
   if(infinite){const bumpers=game.state.walls.filter(w=>w.wobbleBumper);if(bumpers.length>40){const remove=new Set(bumpers.slice(0,bumpers.length-40));game.state.walls=game.state.walls.filter(w=>!remove.has(w))}}
   const t={base,copies,free:firstStrokeFree,infinite,cost,paid:actualPaid,length,strokePts:base.pts,prefix:null,oldMaxHp:0,oldIntersections:0,newIntersections:intersections,factor:1};
   if(start)joinStitchStart(t,start);
-  if(!options.live){finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,copies,t.strokePts);}
+  if(!options.live){finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,copies,t.strokePts);game.api.collectDoodleScrap(t.strokePts,t.paid);}
   game.api.updateUI();return t;
 }
 function chargeFreehand(actualPaid){
@@ -450,7 +450,7 @@ function updateLiveWall(points){
 function finishLiveWall(){
  const t=liveStroke;liveStroke=null;if(!t)return false;
  const w=t.base;if(game.state.walls.includes(w)&&w.hp>0){
-  finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,t.copies,t.strokePts);game.api.updateUI();
+  finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,t.copies,t.strokePts);game.api.collectDoodleScrap(t.strokePts,t.paid);game.api.updateUI();
  }else chargeFreehand(t.paid);
  return true;
 }
@@ -493,6 +493,9 @@ function applyInkContact(e,dt,wall=null){
     e.poisonDps=2+game.state.inks.poison*2.5;
   }
   game.api.applyFrostContact(e,dt);
+  if(wall?.rockCharge?.life>0&&e.chainCd<=0){
+    const c=wall.rockCharge;if(Math.hypot(e.x-c.x,e.y-c.y)<=48+e.r)game.api.chainLightning(e,c.level);
+  }
   if(game.state.inks.electric>0&&e.chainCd<=0){
     game.api.chainLightning(e,game.state.inks.electric);
   }

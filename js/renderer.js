@@ -35,6 +35,7 @@ if(typeof Image!=='undefined')for(const name of doodleNames){
 // One SVG coordinate system drives both the visible stroke and its physical nib.
 const menuPath=game.dom.$('splashInkPath'),menuPencil=document.querySelector?.('.splash-pencil');
 const menuStrokes=document.querySelectorAll('.splash-ink-stroke');
+const menuFire=game.dom.$("splashLineFire");
 let menuAge=0,menuLength=0;
 function resetMenuPencil(){menuAge=0}
 function updateMenuPencil(dt){
@@ -47,6 +48,15 @@ function updateMenuPencil(dt){
  const p=menuPath.getPointAtLength(menuLength*progress);
  menuPencil.setAttribute('transform','translate('+p.x+' '+p.y+')');
  for(const stroke of menuStrokes){stroke.style.strokeDasharray=menuLength+' '+menuLength;stroke.style.strokeDashoffset=String(menuLength*(1-progress))}
+ // Ignite behind the nib once it passes this spot, then settle into a flicker.
+ if(menuFire){
+  const anchor=menuPath.getPointAtLength(menuLength*.28),ignite=1.2+3.6*.28;
+  const age=phase-ignite,appear=motionReduced?1:Math.max(0,Math.min(1,age/.22));
+  const fade=motionReduced?1:Math.min(1,(18-phase)/.65);
+  const pop=motionReduced?1:1+Math.sin(Math.min(1,Math.max(0,age)/.4)*Math.PI)*.38;
+  menuFire.setAttribute('transform','translate('+anchor.x+' '+anchor.y+') scale('+(appear*pop)+')');
+  menuFire.setAttribute('opacity',String(appear*Math.max(0,fade)));
+ }
  if(!motionReduced&&phase>1.2&&phase<4.8)game.api.playMenuScribble();else game.api.stopSoundEffects('scribble');
 }
 // Presentation only: no combat RNG, attack delays, or collider changes.
@@ -436,10 +446,11 @@ function resize(){
   if(dx||dy){
     // Keep combat distances unchanged through browser chrome/fullscreen changes.
     const move=p=>{p.x+=dx;p.y+=dy;if(Number.isFinite(p.originX))p.originX+=dx;if(Number.isFinite(p.originY))p.originY+=dy};
-    for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
+    const movedCharges=new Set();
+    for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.rockCharge&&!movedCharges.has(wall.rockCharge)){movedCharges.add(wall.rockCharge);wall.rockCharge.x+=dx;wall.rockCharge.y+=dy;}if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
-    game.api.moveLaunchEffects(dx,dy);game.api.movePaper(dx,dy);
+    game.api.moveLaunchEffects(dx,dy);game.api.movePaper(dx,dy);game.api.moveDoodleScraps(dx,dy);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
@@ -629,7 +640,7 @@ function draw(){
   game.dom.ctx.strokeStyle='rgba(212,76,76,.35)';game.dom.ctx.lineWidth=2;
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
 
-  game.api.drawPaper();
+  game.api.drawPaper();game.api.drawDoodleScraps();
   game.api.drawPlaguefire();
   game.api.drawLaunchGround();
 
@@ -643,6 +654,11 @@ function draw(){
 
     drawWallTextures(w.pts,w.thick,.08+.92*visualRatio);
     if(w.stitchPoints){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b37b32';ctx.lineWidth=2;ctx.globalAlpha=.85;for(const p of w.stitchPoints){if(!w.pts.slice(1).some((q,i)=>game.api.pointSegDist(p.x,p.y,w.pts[i].x,w.pts[i].y,q.x,q.y)<2))continue;ctx.beginPath();ctx.moveTo(p.x-4,p.y-5);ctx.lineTo(p.x+4,p.y+5);ctx.moveTo(p.x+4,p.y-5);ctx.lineTo(p.x-4,p.y+5);ctx.stroke();}ctx.restore();}
+    if(w.rockCharge?.life>0){
+      const ctx=game.dom.ctx,c=w.rockCharge;ctx.save();ctx.strokeStyle='#628fff';ctx.lineWidth=3;ctx.globalAlpha=Math.min(1,c.life)*.8;
+      for(let i=1;i<w.pts.length;i++){const a=w.pts[i-1],b=w.pts[i],cuts=game.api.eraserIntervals(a,b,c,c,48);for(const [lo,hi] of cuts){ctx.beginPath();ctx.moveTo(a.x+(b.x-a.x)*lo,a.y+(b.y-a.y)*lo);ctx.lineTo(a.x+(b.x-a.x)*hi,a.y+(b.y-a.y)*hi);ctx.stroke();}}
+      ctx.restore();
+    }
     if(w.sealAge!==undefined&&w.sealAge<.65){
       const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#638466';ctx.globalAlpha=(1-w.sealAge/.65)*.65;ctx.lineWidth=w.thick+3;ctx.lineCap='round';
       ctx.beginPath();ctx.moveTo(w.pts[0].x,w.pts[0].y);
@@ -824,8 +840,11 @@ function draw(){
     game.dom.ctx.restore();
   }
 
+  const scrubberCue=game.api.scrubberHintSnapshot();
+  if(scrubberCue){const ctx=game.dom.ctx,x=game.api.clamp(scrubberCue.x,48,game.state.W-48),y=game.api.clamp(scrubberCue.y-50,90,game.state.H-50);ctx.save();ctx.fillStyle='#fff4cd';ctx.strokeStyle='#456238';ctx.lineWidth=2;ctx.fillRect(x-43,y-14,86,25);ctx.strokeRect(x-43,y-14,86,25);ctx.fillStyle='#29462c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('Erase me!',x,y+3);ctx.beginPath();ctx.moveTo(x,y+11);ctx.lineTo(scrubberCue.x,scrubberCue.y-20);ctx.stroke();ctx.restore();}
   for(const p of game.state.projectiles){
-    game.dom.ctx.fillStyle='#5f5a53';game.dom.ctx.beginPath();game.dom.ctx.arc(p.x,p.y,4,0,Math.PI*2);game.dom.ctx.fill()
+    const ctx=game.dom.ctx,color={fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a'}[p.paperElement];
+    ctx.save();ctx.translate(p.x,p.y);ctx.fillStyle='#fffaf0';ctx.strokeStyle=color||'#6d655b';ctx.lineWidth=color?2:1.5;ctx.beginPath();ctx.moveTo(-5,-2);ctx.lineTo(-2,-5);ctx.lineTo(3,-4);ctx.lineTo(5,0);ctx.lineTo(2,5);ctx.lineTo(-4,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-3,-2);ctx.lineTo(1,1);ctx.lineTo(3,-2);ctx.moveTo(1,1);ctx.lineTo(0,4);ctx.stroke();ctx.restore();
   }
   for(const p of game.state.particles){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1

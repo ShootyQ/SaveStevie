@@ -1,5 +1,5 @@
 {
-  "version": "0.1.11",
+  "version": "0.1.13",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -782,7 +782,7 @@
         "Electric Ink",
         "Pocket Rocks"
       ],
-      "effect": "Stevie's rocks can chain lightning."
+      "effect": "Stevie's rocks chain lightning and burst sparks from Electric Ink walls."
     },
     {
       "name": "Stevie the Unreasonable",
@@ -876,6 +876,17 @@
       "source": "js/notebook.js"
     },
     {
+      "name": "Doodle Scraps",
+      "effect": "Unlock mysterious paper drops in future runs, from any wave. Draw through one and choose a temporary element for Stevie’s paper balls. Finds last only for that run.",
+      "maxRanks": 1,
+      "costs": [
+        25
+      ],
+      "rankOne": "Doodle Scraps can drop from wave 1",
+      "atMax": "Doodle Scraps can drop from wave 1",
+      "source": "js/notebook.js"
+    },
+    {
       "name": "Your Drawing Tool",
       "effect": "Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Every rank has its own artwork and adds +8 base wall HP. Pens unlock a third effect slot; Sharpies unlock a fourth.",
       "maxRanks": 10,
@@ -949,16 +960,16 @@
       "source": "js/notebook.js"
     },
     {
-      "name": "Pocket Pebbles",
-      "effect": "Start throwing rocks: 3 damage per rank. Higher ranks throw a little faster.",
+      "name": "Paper Ball Practice",
+      "effect": "Start throwing crumpled paper: 3 damage per rank. Higher ranks throw a little faster.",
       "maxRanks": 3,
       "costs": [
         5,
         12,
         24
       ],
-      "rankOne": "3 starting rock damage · 1.5s between throws",
-      "atMax": "9 starting rock damage · 1.3s between throws",
+      "rankOne": "3 starting paper-ball damage · 1.5s between throws",
+      "atMax": "9 starting paper-ball damage · 1.3s between throws",
       "source": "js/notebook.js"
     },
     {
@@ -1015,9 +1026,14 @@
       "source": "js/walls.js; js/upgrades.js"
     },
     {
-      "name": "Stevie throws rocks",
-      "effect": "Unlocked through rock upgrades or Pocket Pebbles. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies.",
+      "name": "Stevie throws paper balls",
+      "effect": "Unlocked through throwing upgrades, Paper Ball Practice or a Doodle Scrap discovery. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies.",
       "source": "js/enemies.js; js/balance.js"
+    },
+    {
+      "name": "Doodle Scraps",
+      "effect": "Permanent Notebook unlock costs 25 saved scraps. From wave 1, eligible normal kills have an 8% drop chance; first drop guaranteed by eight eligible kills. Minimum 20 combat seconds between drops, one ground pickup at a time, max four per run; drops last 45 combat seconds. Finish a drawing through a pickup to reel it in and pause for two random elements. Fire, electric, poison, frost and eraser paper replace the current element and last only for the run; no wave-reward or ink slots used. Choosing an element unlocks 4-damage, 1.6s throws if needed. Bosses/helpers and development tests do not drop discoveries.",
+      "source": "js/doodle-scraps.js; js/notebook.js"
     },
     {
       "name": "Specialization: Fortress",

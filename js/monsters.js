@@ -81,6 +81,6 @@ function continueMonsterIntro(){
   if(game.dom.$('hideMonsterIntros').checked)setMonsterIntrosEnabled(false);
   game.api.closeInfo();
 }
-const api={discoverMonster,discoveredMonsterTypes,monsterName,monsterIntrosEnabled,setMonsterIntrosEnabled,renderMonsterCards,renderCompendium,introduceWave,continueMonsterIntro};
+const api={adoptDiscoveryBackup:types=>{knownMonsters.clear();for(const type of types)knownMonsters.add(type)},discoverMonster,discoveredMonsterTypes,monsterName,monsterIntrosEnabled,setMonsterIntrosEnabled,renderMonsterCards,renderCompendium,introduceWave,continueMonsterIntro};
 Object.assign(game.api,api);return api;
 };

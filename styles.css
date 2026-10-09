@@ -975,3 +975,113 @@ html.native-app input,html.native-app textarea{user-select:text;-webkit-user-sel
 .tool-rank-comparison .instrument-hero{width:100%;margin:4px 0 0}
 .tool-rank-art .socket-plus{line-height:1}
 .tool-rank-comparison .socket-plus{font-size:11px;line-height:1}
+
+/* Little cover routines reuse the combat drawings, with no gameplay state. */
+.splash-grunt{position:absolute;aspect-ratio:1;overflow:hidden;animation:splashGribbleRoutine 7s ease-in-out infinite}
+.splash-art .splash-grunt-frames{width:400%;max-width:none;left:0;top:0;animation:splashGribbleFrames 7s step-end infinite}
+@keyframes splashGribbleRoutine{
+  0%,100%{transform:rotate(-8deg)}
+  25%{transform:translate(15%,-3%) rotate(2deg)}
+  40%{transform:translate(22%,0) rotate(6deg) scale(1.08,.92)}
+  48%{transform:translate(14%,-9%) rotate(-9deg) scale(.94,1.06)}
+  60%{transform:translate(14%,0) rotate(-5deg)}
+  80%{transform:translate(0,-2%) rotate(-8deg)}
+}
+@keyframes splashGribbleFrames{
+  0%,100%{transform:translate(0,0)}
+  5%,65%{transform:translate(-25%,0)}10%,70%{transform:translate(-50%,0)}15%,75%{transform:translate(-75%,0)}
+  20%,80%{transform:translate(0,-25%)}25%,85%{transform:translate(-25%,-25%)}30%,90%{transform:translate(-50%,-25%)}
+  35%{transform:translate(0,-50%)}38%{transform:translate(-25%,-50%)}41%{transform:translate(-50%,-50%)}44%{transform:translate(-75%,-50%)}
+  47%{transform:translate(0,-75%)}50%{transform:translate(-25%,-75%)}53%{transform:translate(-50%,-75%)}56%{transform:translate(-75%,-75%)}
+}
+.splash-splitter{position:absolute;right:7%;aspect-ratio:200 / 153;animation:splashTwiceyRoutine 6.5s ease-in-out infinite}
+.splash-art .splash-splitter img{width:100%;left:0;top:0;transform-origin:50% 85%}
+.splash-twin-left{clip-path:inset(0 50% 0 0);animation:splashTwinLeft 6.5s ease-in-out infinite}
+.splash-twin-right{clip-path:inset(0 0 0 50%);animation:splashTwinRight 6.5s ease-in-out infinite}
+@keyframes splashTwiceyRoutine{0%,100%{transform:rotate(-5deg)}20%{transform:scale(1.09,.91) rotate(-5deg)}35%{transform:translateY(-10%) rotate(3deg)}60%{transform:scale(.92,1.08)}70%{transform:scale(1.08,.92)}85%{transform:rotate(-5deg)}}
+@keyframes splashTwinLeft{0%,20%,68%,100%{transform:translate(0,0)}35%{transform:translate(-18%,-8%) rotate(-12deg)}50%{transform:translate(-18%,0) rotate(7deg)}60%{transform:translate(-8%,-12%) rotate(-5deg)}}
+@keyframes splashTwinRight{0%,20%,68%,100%{transform:translate(0,0)}35%{transform:translate(12%,0) rotate(12deg)}50%{transform:translate(12%,-10%) rotate(-7deg)}60%{transform:translate(6%,-4%) rotate(5deg)}}
+.splash-flame{transform-origin:0 0;animation:splashFlameDance .55s ease-in-out infinite alternate}
+.splash-embers{animation:splashEmberRise .85s ease-out infinite}
+@keyframes splashFlameDance{from{transform:skewX(-6deg) scale(.95,1)}to{transform:skewX(5deg) scale(1.05,1.12)}}
+@keyframes splashEmberRise{0%{opacity:0;transform:translate(0,4px)}25%{opacity:1}100%{opacity:0;transform:translate(3px,-13px)}}
+@media(prefers-reduced-motion:reduce){.splash-grunt,.splash-splitter{transform:rotate(-5deg)}.splash-embers{display:none}}
+
+/* Stevie's safe practice page sits below the highlighted HUD. */
+#lessonOverlay{padding:calc(108px + var(--native-top,0px)) 14px 14px;align-items:center}
+.lesson-box{position:relative;padding:22px 24px;border-radius:5px 14px 8px 16px;box-shadow:6px 7px 0 #a99874;background:repeating-linear-gradient(transparent 0 27px,#bfd0dc55 27px 28px),#fffaf0;text-align:left;max-height:100%;overscroll-behavior:contain}
+.lesson-heading img{width:68px;height:72px;filter:drop-shadow(1px 2px 0 #ac987533)}
+.lesson-heading .section-kicker{font-size:11px;color:#71522b;letter-spacing:.6px}
+.lesson-box .lesson-pause-note{margin:5px 0 8px;font-size:12px;font-weight:bold;color:#3d6647}
+.lesson-track{color:#3463b9;letter-spacing:6px;font-size:17px;line-height:1.2}
+.lesson-box #lessonText{margin:12px 0;font-size:16px;line-height:1.5}
+.lesson-box .lesson-takeaway{margin:10px 0 14px;padding:9px 12px;border-left:4px solid #d4a52e;background:#fff0bccc;font-weight:bold;font-size:14px;color:#514028;transform:rotate(-.5deg)}
+.lesson-box .lesson-practice-label{font-size:11px;font-weight:bold;letter-spacing:.6px;color:#596c73;margin:10px 0 5px}
+#lessonCanvas{background:#fffaf0;box-shadow:2px 3px 0 #b8a78555;border-radius:4px;border-color:#6f8998}
+.lesson-box .lesson-metrics{font-variant-numeric:tabular-nums;font-size:13px;font-weight:bold;color:#31578a;margin:8px 0}
+#lessonFeedback{min-height:0;margin:8px 0 12px;color:#3d6647}
+#lessonErase{min-width:132px;border:2px solid #486551;background:#e9f0da;color:#294634;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#lessonErase.is-erasing{background:#39553f;color:#fffaf0}
+.lesson-actions{border-top:1px dashed #b8a785;padding-top:12px}
+#lessonNext{background:#355d43;color:#fffaf0;flex:1}
+#lessonSkip{width:100%;border:0;box-shadow:none;background:transparent;color:#625c50;font-size:12px;min-height:36px}
+#lessonBack[hidden]{display:none}
+.scrap-guide h3{color:#355d43}.scrap-guide .cardactions{gap:8px}.scrap-guide button{min-height:44px}
+@media(max-width:600px){.lesson-box{padding:16px}.lesson-heading{gap:9px}.lesson-heading h2{font-size:27px}.lesson-heading img{width:56px;height:62px}.lesson-box #lessonText{font-size:15px}.lesson-box .lesson-takeaway{font-size:13px}}
+@media(max-height:500px){#lessonOverlay{padding-top:80px;padding-bottom:8px}.lesson-box{padding:12px 16px}.lesson-heading img{width:42px;height:46px}.lesson-heading h2{font-size:24px;margin:3px 0}.lesson-box #lessonText{font-size:14px;margin:8px 0}.lesson-box .lesson-takeaway{margin:8px 0;padding:6px 10px}.lesson-track{font-size:13px}.lesson-actions{padding-top:8px}}
+.lesson-actions #lessonNext{order:-1;flex-basis:100%;min-height:46px}
+.lesson-actions #lessonBack,.lesson-actions #lessonExample{flex:1;min-width:110px}
+.lesson-actions #lessonSkip{flex-basis:100%}
+.lesson-practice-toolbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:8px 0}
+.lesson-practice-toolbar #lessonErase{margin:0}
+.lesson-box{scrollbar-width:thin;scrollbar-color:#987944 #f3e7c7}
+.lesson-box::-webkit-scrollbar{width:6px}.lesson-box::-webkit-scrollbar-thumb{background:#987944;border-radius:4px}
+#doodleOverlay{z-index:40;padding:18px;background:#17232bbb}
+.doodle-choice-box{max-width:580px;max-height:100%;overflow:auto;background:#fffaf0;color:#26333c;border:2px solid #b8a785;text-align:left}
+.doodle-choice-box h2{font-family:'Stevie Pencil',cursive;font-size:30px;margin:8px 0}
+.doodle-choice-box p{color:#4d5c65;line-height:1.5}
+.doodle-choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
+.doodle-choice-grid article{padding:12px;border:2px dashed #b8a785;background:#fff3ce;border-radius:7px;min-width:0}
+.doodle-choice-grid button{width:100%;min-height:48px;background:#355d43;color:#fffaf0}
+.doodle-choice-grid p{font-size:14px;margin:10px 0 0}#doodleKeep{min-height:44px}
+@media(max-width:480px){.doodle-choice-box{padding:16px}.doodle-choice-grid{grid-template-columns:1fr}.doodle-choice-box h2{font-size:27px}}
+.scrubber-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:5;max-width:calc(100% - 24px);width:max-content;pointer-events:none;padding:8px 12px;border:2px solid #456238;border-radius:7px;background:#fff4cdf5;box-shadow:2px 3px 0 #283c3130;color:#29462c;font-size:13px;text-align:center;line-height:1.4}
+.scrubber-hint strong,.scrubber-hint span{display:block}.scrubber-hint[hidden]{display:none}
+#eraserBtn.scrubber-erase-cue{outline:3px solid #d59b24;outline-offset:2px;box-shadow:0 0 0 5px #fff3ce}
+html.native-app .scrubber-hint{bottom:calc(66px + var(--native-bottom))}
+.report-book label{display:block;margin:14px 0 6px;font-weight:700;color:#29462c}
+.report-book textarea{display:block;box-sizing:border-box;width:100%;max-width:100%;padding:10px;border:2px solid #a5997d;border-radius:5px;background:#fffdf3;color:#26333c;font:14px/1.5 system-ui,sans-serif;resize:vertical;user-select:text;-webkit-user-select:text}
+.report-book #reportPreview{font-size:12px}
+.report-book .cardactions{flex-wrap:wrap}
+.report-link{display:inline-block;padding:12px 16px;border:2px solid #456238;border-radius:8px;background:#dbead5;color:#29462c;font-weight:700;text-align:center;text-decoration:none}
+.report-link:focus-visible{outline:3px solid #3268b8;outline-offset:3px}
+.report-book input[type="file"]{max-width:100%;color:#26333c;font:13px system-ui,sans-serif}
+#backupPerkChanges{padding-left:22px;color:#29462c;font:14px/1.6 system-ui,sans-serif;text-align:left}
+/* Creature scraps belong in the same notebook as Settings. */
+.monster-book{position:relative;isolation:isolate;padding:24px;background:repeating-linear-gradient(0deg,#f4eedc 0 27px,#ccd8db 27px 28px)}
+.monster-book .build-heading{background:none;border:0;padding:6px 0 16px;gap:12px;align-items:center}
+.monster-book .section-kicker{font-family:'Stevie Pencil',cursive;font-size:16px;letter-spacing:0;text-transform:none;color:#625746}
+.monster-book .build-heading h2{font-family:'Stevie Pencil',cursive;font-size:44px;color:#315d8c;margin:4px 0;line-height:1.1}
+.monster-book .monster-subtitle{font-family:'Stevie Pencil',cursive;font-size:21px;line-height:1.4;color:#4f5956;text-align:left}
+.monster-preferences{padding:12px 16px;margin:16px 0;background:#fffbef;border:1px dashed #a5997d;border-radius:4px 9px 5px 7px;box-shadow:2px 3px 0 #8d806724}
+.monster-preferences .monster-setting{padding:0;color:#35464b}
+.monster-book .monster-setting-note{color:#535b5e;line-height:1.6;margin-bottom:0}
+.monster-book #monsterDiscoveryNote{display:inline-block;padding:7px 12px;margin:0 0 22px;background:#fff1c9;border-left:3px solid #c09835;color:#4d543f;font-size:13px}
+.monster-book .monster-grid{gap:26px 18px;padding:0 3px 8px}
+.monster-book .monster-card{position:relative;padding:24px 16px 16px;border:0;border-radius:2px 9px 4px 6px;background:repeating-linear-gradient(0deg,#fffaf0 0 27px,#dce4e8 27px 28px);box-shadow:2px 4px 0 #8d806730}
+.monster-book .monster-card::before{content:'';position:absolute;z-index:1;top:-10px;left:calc(50% - 35px);width:70px;height:22px;background:url('assets/art/ui/tape.svg') center/contain no-repeat;transform:rotate(-5deg);pointer-events:none}
+.monster-book .monster-card:nth-child(even)::before{transform:rotate(7deg)}
+.monster-book .monster-card h3{font-family:'Stevie Pencil',cursive;font-size:29px;font-weight:400;color:#315d8c;line-height:1.15;overflow-wrap:anywhere}
+.monster-book .monster-card-heading>img,.monster-book .wobble-portrait{background:#fffdf6;border-radius:42% 48% 44% 39%;box-shadow:1px 2px 0 #8d80671a}
+.monster-book .monster-wave{color:#68572f;background:#ffefbc;padding:3px 6px;display:inline-block;border-radius:2px;font-size:10px;letter-spacing:.3px}
+.monster-book .monster-role{color:#535b5e}
+.monster-book .monster-card p{color:#35464b;line-height:1.65}
+.monster-book .monster-card .monster-flavor{color:#6b5633;min-height:0}
+.monster-book .monster-stats{background:#fffdf2d9;border-block:1px dashed #a89c80;padding:9px 5px;gap:5px}
+.monster-book .monster-stats dt{color:#535b5e}.monster-book .monster-stats dd{color:#29462c}
+.monster-book .monster-card .monster-tip{background:#eaf1e2e8;border-left:3px solid #6a8858;padding:9px 10px;color:#29462c}
+.monster-book button{background:#fff5d9;color:#315d8c;border:1.5px solid #72674f;border-radius:3px 8px 4px 6px;box-shadow:1px 3px 0 #8d80674a;font-family:'Stevie Pencil',cursive;font-size:22px;font-weight:400;min-height:44px;padding:8px 14px}
+.monster-book button:focus-visible{outline:3px dashed #3562be;outline-offset:3px}
+.monster-book .monster-paused{padding:6px 8px;background:#eaf1e2;color:#29462c;border:1px dashed #6a8858;border-radius:3px;white-space:normal;text-align:center}
+.monster-book .monster-intro-footer{background:#fffbef;padding:12px 14px;border:1px dashed #a5997d;border-radius:4px;margin-top:22px}
+@media(max-width:480px){.monster-book{padding:18px 14px}.monster-book .build-heading h2{font-size:36px}.monster-book .monster-card{padding:22px 13px 14px}.monster-book .monster-card h3{font-size:27px}.monster-book .monster-subtitle{font-size:20px}.monster-book .monster-preferences{padding:12px}.monster-book .monster-card-heading{gap:9px}}

@@ -51,7 +51,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>key==='synergySplashTimer'?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>key==='synergySplashTimer'?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
 for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -669,7 +669,7 @@ assert.ok(Number(stored.get('doodleDefenderBestV4'))>=15,'existing best never er
 const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:2000,lifetimeScraps:2000,levels:{}}):null,setItem(){}};
 const rich=load(true,{storage:richStore}).sandbox.testGame;
 for(const p of rich.catalog.notebookPerks){for(let rank=0;rank<p.max;rank++)assert.equal(rich.api.buyNotebookPerk(p.id),true);assert.equal(rich.api.buyNotebookPerk(p.id),false,'rank cap')}
-assert.equal(rich.api.notebookSnapshot().scraps,1323,'all rank prices charged exactly');
+assert.equal(rich.api.notebookSnapshot().scraps,1298,'all rank prices charged exactly');
 rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,8);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);rich.api.rollCards();assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,145,107,9,1.3,2,8]);
 rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.3,'rock unlock preserves faster starter throws');assert.equal(rich.state.stats.rockDamage,13);
 const dirty=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:-5,lifetimeScraps:'oops',levels:{inkTank:999,health:-2,rocks:1.5,luck:'4'}}):null,setItem(){}}}).sandbox.testGame;
@@ -2263,9 +2263,10 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const env=load(true,{lessons:true}),g=env.sandbox.testGame;g.api.resetRun();assert(g.api.firstLessonActive());assert.equal(g.state.paused,true);assert.equal(g.api.lessonSnapshot().kind,'draw');
  const before=JSON.stringify(g.state);g.api.update(3);assert.equal(JSON.stringify(g.state),before,'no waves, monsters or ink advance during lesson');
  env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);const canvas=env.node('lessonCanvas');canvas.getBoundingClientRect=()=>({left:0,top:0,width:420,height:150});
- canvas.listeners.pointerdown({pointerId:1,clientX:100,clientY:75,button:0});canvas.listeners.pointermove({pointerId:1,clientX:220,clientY:75});canvas.listeners.pointerup({pointerId:1});assert.equal(env.node('lessonNext').disabled,false);assert.equal(JSON.stringify(g.state),before,'practice changes no real walls, health, ink or timer');
+ canvas.listeners.pointerdown({pointerId:1,clientX:100,clientY:75,button:0});canvas.listeners.pointermove({pointerId:1,clientX:220,clientY:75});canvas.listeners.pointerup({pointerId:1});assert.equal(env.node('lessonNext').disabled,false);assert.match(env.node('lessonMetrics').textContent,/37.2.*43.3/);assert.equal(JSON.stringify(g.state),before,'practice changes no real walls, health, ink or timer');
  for(let i=0;i<4;i++)env.node('lessonNext').onclick();assert.equal(g.api.firstLessonActive(),false);assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.draw,true);
- g.state.wave=2;g.api.startWave();assert.equal(g.api.lessonSnapshot().kind,'erase');assert.equal(g.state.paused,true);env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);env.node('lessonExample').onclick();assert.equal(env.node('lessonNext').disabled,false);env.node('lessonNext').onclick();assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.erase,true);
+ g.state.wave=2;g.api.startWave();assert.equal(g.api.lessonSnapshot().kind,'erase');assert.equal(g.state.paused,true);env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);env.node('lessonExample').onclick();assert.equal(env.node('lessonNext').disabled,false);env.node('lessonNext').onclick();assert.equal(g.state.paused,true);assert.equal(g.api.lessonSnapshot().step,2);assert.match(env.node('lessonText').textContent,/erase HIM/);env.node('lessonBack').onclick();assert.equal(g.api.lessonSnapshot().step,1);assert.equal(env.node('lessonNext').disabled,true);env.node('lessonExample').onclick();env.node('lessonNext').onclick();env.node('lessonNext').onclick();assert.match(env.node('lessonText').textContent,/7 seconds/);env.node('lessonNext').onclick();assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.erase,true);
+ g.api.resetFirstLessons();g.api.setDrawingControl('eraserToggle',true);g.api.beginFirstLesson();env.node('lessonNext').onclick();env.node('lessonErase').onclick({detail:1});assert.equal(env.node('lessonErase').textContent,'Erasing');const eraseState=JSON.stringify(g.state);canvas.listeners.pointerdown({pointerId:3,clientX:210,clientY:75,button:0});canvas.listeners.pointerup({pointerId:3});assert.equal(env.node('lessonNext').disabled,false,'toggle practice erases with one pointer');assert.equal(JSON.stringify(g.state),eraseState);g.api.cancelLessonGesture();assert.equal(env.node('lessonErase').textContent,'Erase');g.api.finishFirstLesson();g.api.setDrawingControl('eraserToggle',false);g.state.wave=1;g.api.beginFirstLesson();g.api.finishFirstLesson();
  g.api.resetRun();assert.equal(g.api.firstLessonActive(),false,'completed lesson does not repeat');g.api.resetFirstLessons();g.api.setDevMode(true);g.api.resetRun();assert.equal(g.api.firstLessonActive(),false,'dev testing bypasses beginner lessons');
  const store=new Map(),storage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)};const fresh=load(true,{lessons:true,storage});fresh.sandbox.testGame.api.resetRun();fresh.sandbox.testGame.api.finishFirstLesson();const reloaded=load(true,{lessons:true,storage});reloaded.sandbox.testGame.api.resetRun();assert.equal(reloaded.sandbox.testGame.api.firstLessonActive(),false,'completion saves across reload');reloaded.sandbox.testGame.state.wave=2;reloaded.sandbox.testGame.api.startWave();assert.equal(reloaded.sandbox.testGame.api.firstLessonActive(),true,'wave-two lesson remains pending separately');
  const blocked=load(true,{lessons:true,storage:{getItem(k){if(k==='saveStevieLessonsV1')throw Error('blocked');return null;},setItem(){throw Error('blocked')}}});blocked.sandbox.testGame.api.resetRun();blocked.sandbox.testGame.api.finishFirstLesson();assert.equal(blocked.sandbox.testGame.state.paused,false,'storage denial cannot trap the lesson');
@@ -2406,4 +2407,75 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const blocked=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:100,lifetimeScraps:500,levels:{pencil:4}}):null,setItem(){throw Error('blocked')}}}).sandbox.testGame;assert.equal(blocked.api.notebookSnapshot().scraps,181);assert(blocked.api.notebookSnapshot().storageIssue);
  const noRepeat=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:2,scraps:100,levels:{pencil:4}}):null,setItem(){}}}).sandbox.testGame;assert.equal(noRepeat.api.notebookSnapshot().scraps,100,'new save ignores removed perk');
  console.log('PASS: eleven ranked tool artworks/slots, +8 HP at every rank and real wall creation/reset, retired Fresh Pencil, one-time exact refund/persisted migration, protected lifetime/best/perks and blocked storage.');
+}
+
+// Rock/wall reactions are swept, local, bounded, and never consume the rock.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
+ assert.equal(g.catalog.upgrades.some(u=>u.name==='Electric Rocks'),false,'elements come from discoveries, not wave cards');g.state.stats.electricRocks=2;
+ const wall=x=>({pts:[{x,y:70},{x,y:170}],hp:60,maxHp:60,life:10,maxLife:10,thick:8,eraseInk:31});
+ const far=wall(160),near=wall(100);g.state.walls=[far,near];
+ const rock={electricLevel:2};assert(g.api.rockWallReaction(rock,{x:40,y:120},{x:210,y:120}));assert(near.rockCharge);assert.equal(far.rockCharge,undefined,'first crossed wall wins regardless of array order');assert.equal(near.hp,60);assert.equal(near.life,10);
+ assert.equal(g.api.rockWallReaction(rock,{x:40,y:120},{x:210,y:120}),false,'one reaction per projectile');
+ assert.equal(g.api.rockWallReaction({electricLevel:0},{x:40,y:120},{x:210,y:120}),false);
+ const e=g.api.spawnEnemy(false,null,null,'grunt');e.x=95;e.y=120;e.hp=e.maxHp=100;e.chainCd=0;
+ const hp=e.hp;g.api.applyInkContact(e,.1,near);assert(e.hp<hp,'charged patch shocks contact');const once=e.hp;g.api.applyInkContact(e,.1,near);assert.equal(e.hp,once,'shared electric recovery');
+ e.chainCd=0;e.x=260;g.api.applyInkContact(e,.1,near);assert.equal(e.hp,once,'charge is local, not the entire wall');
+ g.state.walls.push({...near,pts:[{x:100,y:180},{x:100,y:190}]});g.api.updateRockWalls(.4);assert.equal(near.rockCharge.life,2,'shared fragments decrement once');const cx=near.rockCharge.x,cy=near.rockCharge.y;env.node('game').getBoundingClientRect=()=>({width:900,height:800});g.api.resize();assert.equal(near.rockCharge.x,cx+50);assert.equal(near.rockCharge.y,cy+50);env.node('game').getBoundingClientRect=()=>({width:800,height:700});g.api.resize();assert.equal(near.rockCharge.x,cx,'shared charge translates once through resize');
+ g.state.paused=true;g.api.update(2);assert.equal(near.rockCharge.life,2);g.state.paused=false;g.api.updateRockWalls(2.1);assert.equal(near.rockCharge.life,0);e.x=95;e.chainCd=0;g.api.applyInkContact(e,.1,near);assert.equal(e.hp,once,'expired patch is ordinary ink');
+ // A real throw crosses the wall, retains its target and lands its physical hit.
+ e.x=220;e.y=120;e.hp=100;g.state.walls=[near];g.state.projectiles=[{x:40,y:120,target:e,speed:290,damage:7,life:1.2,electricLevel:1}];g.api.updateProjectiles(.5);assert.equal(g.state.projectiles.length,1);assert(near.rockCharge.life>0);g.api.updateProjectiles(.05);g.api.updateProjectiles(.05);assert.equal(g.state.projectiles.length,0);assert.equal(e.hp,93);
+ // Electric walls use a radial burst: no underground/immune damage or stacked zaps.
+ g.state.inks.electric=1;g.state.enemies=[];near.rockPulseCd=0;
+ const targets=[];for(let i=0;i<12;i++){const n=g.api.spawnEnemy(false,null,null,'grunt');n.x=100+(i%3)*15;n.y=120+Math.floor(i/3)*10;n.hp=n.maxHp=100;n.chainCd=0;targets.push(n);}
+ targets[0].immunity='electric';targets[1].paperTunnel={};
+ g.api.rockWallReaction({electricLevel:1},{x:40,y:120},{x:200,y:120});assert.equal(targets[0].hp,100);assert.equal(targets[1].hp,100);assert.equal(targets.filter(n=>n.hp<100).length,8);assert(targets.every(n=>n.hp===100||n.hp===96));
+ const after=targets.map(n=>n.hp);g.api.rockWallReaction({electricLevel:1},{x:40,y:120},{x:200,y:120});assert.deepEqual(targets.map(n=>n.hp),after,'wall cooldown suppresses repeated bursts');
+ near.rockPulseCd=0;g.api.rockWallReaction({electricLevel:6},{x:40,y:120},{x:200,y:120});assert(targets.every((n,i)=>after[i]<100?n.hp===after[i]:n.hp>=91),'enemy cooldown prevents overlap amplification');
+ g.api.resetRun();assert.equal(g.state.stats.electricRocks,0);assert.equal(g.state.walls.length,0);assert.equal(g.state.projectiles.length,0);
+ g.state.synergies.add('Thunderstones');g.state.inks.electric=3;assert.equal(g.api.rockElectricLevel(),3,'existing synergy enables wall interaction');
+ console.log('PASS: electric rock unlock/cap, swept first-wall charge, local contact/recovery/expiry, fragment and pause clocks, continued physical flight, bounded radial sparks, surface immunity, wall/enemy cooldowns and reset.');
+}
+
+// Discovery unlock, real paid-stroke collection, independent choices and run-only effects.
+{
+ const key='saveStevieNotebookV1',store=new Map([[key,JSON.stringify({version:2,scraps:25,lifetimeScraps:40,levels:{starterEraser:1}})]]),storage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)};
+ const locked=load(true),l=locked.sandbox.testGame;l.api.resetRun();const random=locked.sandbox.Math.random;locked.sandbox.Math.random=()=>{throw Error('locked discoveries must not roll')};assert.equal(l.api.dropDoodleScrap({type:'grunt',x:100,y:200}),false);locked.sandbox.Math.random=random;
+ const env=load(true,{storage}),g=env.sandbox.testGame;assert.equal(g.api.doodleScrapsSnapshot().unlocked,false);assert(g.api.buyNotebookPerk('doodleScraps'));assert.equal(g.api.notebookSnapshot().scraps,0);assert.equal(g.api.buyNotebookPerk('doodleScraps'),false);g.api.resetRun();assert.equal(g.api.doodleScrapsSnapshot().unlocked,true);
+ const foe=g.api.spawnEnemy(false,null,null,'grunt');foe.x=130;foe.y=180;
+ for(let i=0;i<8&&!g.api.doodleScrapsSnapshot().drop;i++)g.api.dropDoodleScrap(foe);
+ let snap=g.api.doodleScrapsSnapshot();assert(snap.drop,'first discovery by eight eligible kills');assert.equal(g.state.wave,1);const drop=snap.drop;
+ g.state.paused=true;g.api.update(5);assert.equal(g.api.doodleScrapsSnapshot().clock,snap.clock);g.state.paused=false;
+ assert.equal(g.api.collectDoodleScrap([{x:drop.x-20,y:drop.y+50},{x:drop.x+20,y:drop.y+50}],0),false,'drawing must reach the pickup');
+ g.api.createWall([{x:drop.x-20,y:drop.y},{x:drop.x+20,y:drop.y}]);assert(g.api.doodleScrapsSnapshot().drop.reel>0);
+ const time=g.state.timeLeft;g.api.update(.5);assert.equal(g.state.paused,true);assert.equal(g.state.timeLeft,time);snap=g.api.doodleScrapsSnapshot();assert.equal(snap.offers.length,2);assert.notEqual(snap.offers[0],snap.offers[1]);const selected=snap.offers[0];assert(g.api.chooseDoodle(0));assert.equal(g.state.paused,false);assert.equal(g.api.paperElement(),selected);assert.equal(g.state.stats.rockDamage,4);assert.equal(g.state.stats.rockRate,1.6);assert.equal(g.state.tool.slots,2);assert.equal(Object.keys(g.state.stacks).length,0,'does not spend a wave upgrade');assert.equal(g.api.chooseDoodle(0),false,'choice is single use');
+ const old=g.api.paperElement();g.api.updateDoodleScraps(21);for(let i=0;i<1000&&!g.api.doodleScrapsSnapshot().drop;i++)g.api.dropDoodleScrap(foe);snap=g.api.doodleScrapsSnapshot();assert(snap.drop);assert.equal(g.api.collectDoodleScrap([{x:snap.drop.x,y:snap.drop.y-20},{x:snap.drop.x,y:snap.drop.y+20}],0),true,'freehand lines can collect too');g.api.updateDoodleScraps(.5);assert(!g.api.doodleScrapsSnapshot().offers.includes(old));g.api.chooseDoodle(1);assert.notEqual(g.api.paperElement(),old,'new discovery replaces the active element');
+ for(const id of ['fire','poison','frost','electric','eraser']){
+  const e=g.api.spawnEnemy(false,null,null,'grunt');e.hp=e.maxHp=100;e.x=300;e.y=200;e.chainCd=0;g.api.applyDoodleHit(e,id);
+  if(id==='fire'){assert.equal(e.burn,2);assert.equal(e.burnDps,5.5)}if(id==='poison')assert.equal(e.poison,1);if(id==='frost')assert.equal(e.freeze,.3);if(id==='electric')assert(e.hp<100);if(id==='eraser')assert.equal(e.hp,97);
+ }
+ const ruff=g.api.spawnEnemy(false,null,null,'scrubber');g.api.applyDoodleHit(ruff,'eraser');assert.equal(ruff.hp,0);
+ const underground=g.api.spawnEnemy(false,null,null,'grunt');underground.paperTunnel={};const before=JSON.stringify(underground);for(const id of ['fire','poison','frost','electric','eraser'])g.api.applyDoodleHit(underground,id);assert.equal(JSON.stringify(underground),before,'paper elements stay on the surface');
+ g.state.projectiles=[{x:foe.x-5,y:foe.y,target:foe,speed:290,damage:4,life:1,paperElement:'fire',electricLevel:0}];foe.hp=100;foe.burn=0;g.api.updateProjectiles(.01);assert.equal(foe.burn,2,'in-flight element is captured, independent of current choice');
+ const count=g.api.doodleScrapsSnapshot().found;assert.equal(g.api.dropDoodleScrap({type:'boss',waveBoss:true,x:100,y:200}),false);assert.equal(g.api.doodleScrapsSnapshot().found,count);
+ g.api.resetRun();assert.equal(g.api.paperElement(),null);assert.equal(g.api.doodleScrapsSnapshot().drop,null);assert.equal(g.api.doodleScrapsSnapshot().found,0);assert.equal(g.api.doodleScrapsSnapshot().unlocked,true);
+ const reload=load(true,{storage});assert.equal(reload.sandbox.testGame.api.doodleScrapsSnapshot().unlocked,true);assert.equal(reload.sandbox.testGame.api.paperElement(),null);assert.equal(reload.sandbox.testGame.api.notebookSnapshot().scraps,0);
+ console.log('PASS: paid permanent discovery unlock, no locked RNG, first-wave drops/guarantee, paused real paid-stroke pickup, two distinct choices without wave slots, replacement, five basic effects, surface immunity, captured projectiles, boss exclusion and run/reset persistence.');
+}
+// Portable progress rejects bad files before writes, and restores as a transaction.
+{
+ const key='saveStevieNotebookV1',saved=new Map([[key,JSON.stringify({version:2,scraps:12,lifetimeScraps:40,scrapTutorialDone:true,levels:{starterEraser:1,tool:2}})],['doodleDefenderBestV4','6']]);let writes=0,failAt=0;
+ const storage={getItem:k=>saved.get(k)??null,setItem(k,v){writes++;if(writes===failAt)throw Error('quota');saved.set(k,v)},removeItem:k=>saved.delete(k)};
+ const env=load(true,{storage}),g=env.sandbox.testGame,original=g.api.saveBackupText(),data=JSON.parse(original);
+ assert.equal(data.format,'SaveStevieBackup');assert.equal(data.progress.notebook.scraps,12);assert.equal(data.progress.bestWave,6);
+ const initial=JSON.stringify([...saved]);for(const text of ['',JSON.stringify({...data,version:2}),JSON.stringify({...data,format:'other-game'}),'x'.repeat(65537)])assert.throws(()=>g.api.validateSaveBackup(text));
+ for(const change of [p=>p.notebook.scraps=-1,p=>p.notebook.scraps=1.5,p=>p.notebook.levels.tool=11,p=>p.bestWave=0,p=>p.notebook.lifetimeScraps=0,p=>p.lessons.draw='yes',p=>p.discoveries=['unknown'],p=>p.notebook.levels.futurePerk=1]){const d=JSON.parse(original);change(d.progress);assert.throws(()=>g.api.validateSaveBackup(JSON.stringify(d)));}assert.equal(JSON.stringify([...saved]),initial);
+ data.progress.notebook.scraps=8;data.progress.notebook.levels.tool=3;data.progress.bestWave=10;data.progress.lessons={draw:true,erase:false};data.progress.discoveries=['grunt','scrubber'];const text=JSON.stringify(data);
+ g.state.running=true;assert(g.api.previewSaveBackup(text));assert.equal(g.api.restoreSaveBackup(),false);assert.equal(JSON.stringify([...saved]),initial);g.state.running=false;
+ for(const failure of [1,3,5]){writes=0;failAt=failure;assert.equal(g.api.restoreSaveBackup(),false);assert.equal(JSON.stringify([...saved]),initial);assert.equal(g.api.notebookSnapshot().scraps,12);assert.equal(g.state.best,6);}
+ writes=0;failAt=0;assert.equal(g.api.restoreSaveBackup(),true);assert.equal(g.api.notebookSnapshot().scraps,8);assert.equal(g.state.best,10);assert.equal(g.api.lessonSnapshot().seen.erase,false);assert.deepEqual(Array.from(g.api.discoveredMonsterTypes()),['grunt','scrubber']);assert.equal(JSON.parse(saved.get('saveStevieBeforeRestoreV1')).progress.notebook.scraps,12);
+ const reloaded=load(true,{storage}).sandbox.testGame;assert.equal(reloaded.state.best,10);assert.equal(reloaded.api.notebookSnapshot().levels.tool,3);assert.equal(reloaded.api.lessonSnapshot().seen.erase,false);assert.deepEqual(Array.from(reloaded.api.discoveredMonsterTypes()),['grunt','scrubber']);
+ assert(g.api.previewSaveBackup(saved.get('saveStevieBeforeRestoreV1')));assert(g.api.restoreSaveBackup());assert.equal(g.api.notebookSnapshot().scraps,12);assert.equal(g.state.best,6);assert.equal(g.api.notebookSnapshot().levels.tool,2);
+ g.api.resetRun();assert.equal(g.state.stats.wallHp,81);assert.equal(g.state.stats.maxInk,160);assert.equal(g.api.notebookSnapshot().scraps,12);
+ console.log('PASS: portable progress roundtrip, bad/foreign/future backups, rank/number/schema limits, no active-run restore, partial-write rollback, durable reload, recovery copy and next-run loadout.');
 }

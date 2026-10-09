@@ -12,6 +12,7 @@
   <div class="panel">
     <div id="chapterPaper" aria-hidden="true"></div>
     <canvas id="game"></canvas>
+    <aside id="scrubberHint" class="scrubber-hint" hidden role="status"><strong>Rubble Ruff erases your walls.</strong><span id="scrubberHintControl"></span></aside>
 
     <div class="hud">
       <div class="box inkbox">
@@ -59,6 +60,7 @@
             <defs><pattern id="menuGraphite" patternUnits="userSpaceOnUse" width="4" height="4"><rect width="4" height="4" fill="#514e49"/><path d="M0 1h1m1 2h2" stroke="#a7a093" stroke-width=".6"/></pattern></defs>
             <path id="splashInkPath" class="splash-ink-stroke" d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="#6c675e" stroke-opacity=".35" stroke-width="7" stroke-linecap="round"/>
             <path class="splash-ink-stroke" d="M130 175Q105 95 151 63Q225 30 291 71Q337 112 301 167" fill="none" stroke="url(#menuGraphite)" stroke-width="3.5" stroke-linecap="round"/>
+          <g id="splashLineFire" opacity="0" pointer-events="none"><g class="splash-flame"><image href="assets/art/fire.png" x="-23" y="-40" width="46" height="40"/></g><g class="splash-embers" fill="#f2ad32" stroke="#9e4927" stroke-width="1"><path d="M-12-31l-3-5m20-3 3-6m-5 16 7-3"/></g></g>
           <g class="splash-pencil" stroke="#26333c" stroke-width="1.8" stroke-linejoin="round">
             <path d="M0 0 6-17 42-53 55-40 19-4Z" fill="#edc958"/>
             <path d="m42-53 5-5 13 13-5 5Z" fill="#e69a93"/>
@@ -69,17 +71,16 @@
           </svg>
           <span class="splash-stevie"><img class="splash-stevie-frames" src="assets/art/stevie-animations.png" alt="" width="512" height="272"></span>
           <span class="splash-rock"></span>
-          <img class="splash-grunt" src="assets/art/grunt.png" alt="" width="200" height="182">
+          <span class="splash-grunt"><img class="splash-grunt-frames" src="assets/art/grunt-animations.png" alt=""></span>
           <span class="splash-sniper"><img class="splash-sniper-frames" src="assets/art/sniper-animations.png" alt="" width="1448" height="1086"></span>
-          <img class="splash-splitter" src="assets/art/splitter.png" alt="" width="200" height="153">
-          <img class="splash-fire" src="assets/art/fire.png" alt="" width="136" height="119">
+          <span class="splash-splitter"><img class="splash-twin-left" src="assets/art/splitter.png" alt="" width="200" height="153"><img class="splash-twin-right" src="assets/art/splitter.png" alt="" width="200" height="153"></span>
         </div>
         <h1 class="splash-title">Save <span>Stevie.</span></h1>
         <p class="splash-tagline">Draw walls. Keep Stevie safe.</p>
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <aside id="scrapGuideCover" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>Psst! You earned scraps! They stay in my Notebook even when the monsters get me. Come with me to the Notebook! I saved a free Starter Eraser for your first purchase. Let’s claim it before our next adventure.</p><div class="cardactions"><button id="scrapGuideShow">Show me →</button><button class="secondary" id="scrapGuideSkip">Let’s go</button></div></div></aside><div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.11</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <aside id="scrapGuideCover" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>Stevie’s scrap trail</h3><p>Step 1 of 3: you earned scraps! They stay in my Notebook even when the monsters get me. Come with me to the Notebook! I saved a free Starter Eraser for your first purchase. Let’s claim it before our next adventure.</p><div class="cardactions"><button id="scrapGuideShow">Show me →</button><button class="secondary" id="scrapGuideSkip">Open Notebook</button></div></div></aside><div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.13</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -163,7 +164,7 @@
           <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="victoryNoteHeading"></h3><p id="victoryNoteMessage"></p><small id="victoryNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
         </aside>
       <button class="secondary paper-slip" id="victoryRestartTestBtn" hidden>Restart test · same build ↻</button>
-        <button class="gold notebook-entry" id="victoryNotebookBtn">Spend Notebook Scraps</button>
+        <button class="secondary" id="victoryMenuBtn">Return to main menu</button>
         <div class="cardactions">
           <button id="endlessBtn">Continue Endless Mode</button>
           <button class="secondary" id="newRunBtn">New Run</button>
@@ -183,15 +184,18 @@
           <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="deathNoteHeading"></h3><p id="deathNoteMessage"></p><small id="deathNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
         </aside>
       <button class="secondary paper-slip" id="deathRestartTestBtn" hidden>Restart test · same build ↻</button>
-        <div class="cardactions"><button class="gold" id="deathNotebookBtn">Spend Scraps</button><button id="againBtn">Return to main menu</button></div>
+        <div class="cardactions"><button id="againBtn">Return to main menu</button><button class="secondary" id="deathNewRunBtn">Start a new run</button></div>
       </div>
     </div>
+<div id="doodleOverlay" class="overlay build-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="doodleTitle"><div class="cardbox build-box doodle-choice-box"><div class="lesson-heading"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="68"><div><span class="section-kicker">Doodle Scraps · game paused</span><h2 id="doodleTitle" tabindex="-1">Ooh! What’s on this paper?</h2></div></div><p id="doodleCurrent"></p><div class="doodle-choice-grid"><article><button id="doodleChoice0"></button><p id="doodleDescription0"></p></article><article><button id="doodleChoice1"></button><p id="doodleDescription1"></p></article></div><button id="doodleKeep" class="secondary">Keep ordinary paper</button></div></div>
 <div id="lessonOverlay" class="overlay build-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="lessonTitle">
- <div class="cardbox build-box lesson-box">
-  <div class="lesson-heading"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="72" height="72"><div><span id="lessonProgress" class="section-kicker"></span><h2 id="lessonTitle" tabindex="-1"></h2></div></div>
-  <p id="lessonText"></p>
-  <div id="lessonPractice" hidden><canvas id="lessonCanvas" width="420" height="150" aria-label="Safe practice paper for drawing or erasing"></canvas><button id="lessonErase" class="secondary">Erase</button><p id="lessonFeedback" role="status"></p></div>
-  <div class="cardactions"><button id="lessonNext">Next →</button><button id="lessonExample" class="secondary" hidden>Use Stevie’s example</button><button id="lessonSkip" class="secondary">Skip this lesson</button></div>
+ <div class="cardbox build-box lesson-box" id="lessonCard">
+  <div class="lesson-heading"><img id="lessonPortrait" src="assets/art/stevie-cheer-a.png" alt="Stevie" width="72" height="72"><div><span id="lessonProgress" class="section-kicker"></span><h2 id="lessonTitle" tabindex="-1"></h2></div></div>
+  <p id="lessonPauseNote" class="lesson-pause-note"></p>
+  <div id="lessonTrack" class="lesson-track" aria-hidden="true"></div>
+  <p id="lessonText"></p><p id="lessonTakeaway" class="lesson-takeaway"></p>
+  <div id="lessonPractice" hidden><div class="lesson-practice-toolbar"><p class="lesson-practice-label">Practice paper · no ink spent</p><button id="lessonErase" class="secondary">Erase</button></div><canvas id="lessonCanvas" width="420" height="150" aria-label="Safe practice paper for drawing or erasing"></canvas><p id="lessonMetrics" class="lesson-metrics" aria-live="off"></p><p id="lessonFeedback" role="status"></p></div>
+  <div class="cardactions lesson-actions"><button id="lessonBack" class="secondary" hidden>← Back</button><button id="lessonNext">Next →</button><button id="lessonExample" class="secondary" hidden>Use Stevie’s example</button><button id="lessonSkip" class="secondary">Skip this lesson</button></div>
  </div>
 </div>
   </div>
@@ -209,7 +213,7 @@
   <div class="cardbox build-box">
     <div class="build-heading"><h2 id="buildTitle">Your Tool &amp; Build</h2><button id="closeBuildBtn">Close</button></div>
     <p>The game pauses while you review. Totals include Notebook perks, run upgrades, and your specialization.</p>
-    <button class="secondary notebook-entry" id="buildNotebookBtn">Notebook · <span id="buildScraps">0</span> banked scraps</button>
+    <p class="option-help">Notebook · <span id="buildScraps">0</span> banked scraps. Spend them from the home screen.</p>
     <h3>Current totals</h3><section id="buildTool" class="tool-panel" aria-label="Your drawing tool"></section>
     <div id="buildStats" class="build-stats"></div>
     <h3>Luck &amp; rewards</h3><p id="buildLuck" class="build-luck"></p>
@@ -222,7 +226,7 @@
   <div class="cardbox build-box notebook-hub">
     <div class="build-heading"><h2 class="paper-slip" id="hubTitle">My notebook</h2><button class="paper-slip" id="closeHubBtn">Back</button></div>
     <p class="hub-note">Saved scraps: <span id="splashScraps">0</span></p>
-    <aside id="scrapGuideHub" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>This is our Notebook! Choose Spend scraps below. That’s where we keep the upgrades that last between adventures.</p><div class="cardactions"><button class="secondary" id="scrapGuideHubSkip">Spend scraps →</button></div></div></aside><nav class="hub-pages" aria-label="Notebook pages">
+    <aside id="scrapGuideHub" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>Stevie’s scrap trail</h3><p>Step 2 of 3: our Notebook! Choose Spend scraps below. These upgrades last between adventures.</p><div class="cardactions"><button class="secondary" id="scrapGuideHubSkip">Spend scraps →</button></div></div></aside><nav class="hub-pages" aria-label="Notebook pages">
       <button class="paper-slip" id="hubMonstersBtn">Monster notes</button>
       <button class="paper-slip" id="hubToolBtn">My pencil</button>
       <button class="paper-slip" id="hubNotebookBtn">Spend scraps</button>
@@ -251,6 +255,27 @@
     </section>
   </div>
 </div>
+<div class="overlay build-overlay" id="backupOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="backupTitle"><div class="cardbox build-box report-book">
+ <div class="build-heading"><div><span class="section-kicker">KEEP A SPARE NOTEBOOK</span><h2 id="backupTitle">Back up &amp; restore</h2></div><button id="closeBackupBtn">Close</button></div>
+ <p id="backupCurrent"></p><p class="option-help">Backups keep permanent progress, not the fight in progress. Keep the file or copied text somewhere safe. Restoring replaces this device’s saved progress.</p>
+ <div class="cardactions"><button id="downloadBackupBtn">Save backup file</button><button id="copyBackupBtn" class="secondary">Copy backup text</button></div>
+ <label for="backupText">Backup text · copy it or paste one to restore</label><textarea id="backupText" rows="6" maxlength="65536" spellcheck="false"></textarea>
+ <label for="backupFile">Or choose a Save Stevie backup file</label><input id="backupFile" type="file" accept=".json,application/json">
+ <div class="cardactions"><button id="previewBackupBtn" class="secondary">Check pasted backup</button><button id="previousBackupBtn" class="secondary" hidden>Recover previous save</button></div>
+ <section id="backupReview" hidden><h3>Before you restore</h3><p id="backupComparison"></p><ul id="backupPerkChanges"></ul><p class="option-help">This replaces scraps and upgrades; it does not add them together. Your current progress will be kept as a recovery copy on this device.</p><div class="cardactions"><button id="confirmBackupBtn">Replace saved progress</button><button id="cancelBackupBtn" class="secondary">Cancel</button></div></section>
+ <p id="backupStatus" role="status"></p>
+</div></div>
+<div class="overlay build-overlay" id="reportOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+ <div class="cardbox build-box report-book">
+  <div class="build-heading"><div><span class="section-kicker">A NOTE TO THE CREATOR</span><h2 id="reportTitle">Report a problem</h2></div><button id="closeReportBtn">Close</button></div>
+  <p>Your game pauses here. Tell us what happened and what you expected.</p>
+  <label for="reportDescription">What went wrong?</label><textarea id="reportDescription" rows="4" maxlength="2000" placeholder="I was on wave… I tried… I expected…"></textarea>
+  <label for="reportPreview">Your report · included game details</label><textarea id="reportPreview" rows="9" readonly></textarea>
+  <p class="option-help">Open GitHub to review and submit a public issue to ShootyQ/SaveStevie. A GitHub account is needed. Nothing is sent automatically. You can also copy or save this report to share yourself.</p>
+  <div class="cardactions"><a id="reportGitHubLink" class="report-link" target="_blank" rel="noopener noreferrer">Review on GitHub</a><button id="copyReportBtn" class="secondary">Copy report</button><button id="saveReportBtn" class="secondary">Save report</button></div>
+  <p id="reportStatus" role="status"></p>
+ </div>
+</div>
 <div class="overlay build-overlay" id="optionsOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="optionsTitle">
   <div class="cardbox build-box options-book">
     <div class="build-heading"><div><span class="section-kicker">MAKE IT YOUR NOTEBOOK</span><h2 id="optionsTitle">Settings</h2></div><button id="closeOptionsBtn">Close</button></div>
@@ -265,7 +290,7 @@
       <p class="option-help">Adjust pencil scribbles, impacts and electric zaps. Set this to zero to mute effects without muting music.</p>
     </section>
     <section class="option-section"><h3>How you play</h3><label class="monster-setting"><input id="eraserToggle" type="checkbox"> Tap to toggle the eraser instead of holding</label><label class="monster-setting"><input id="eraserLeft" type="checkbox"> Put the eraser button on the left</label><p class="option-help">Hold Erase with one thumb and rub a wall with your other finger. Release to draw again. On PC, right-drag to erase. Erasing costs no ink and recovers a portion of the paid ink in healthy walls.</p><label class="monster-setting"><input id="optionsIntros" type="checkbox" checked> Introduce new monsters before a wave</label><p class="option-help">Motion follows your device’s reduced-motion setting. Open Tool any time to pause and inspect your pencil, effects, and synergies.</p></section>
-    <div class="options-links"><button class="secondary" id="optionsStatsBtn">Notebook stats</button><button class="secondary" id="changelogBtn">What’s new</button></div>
+    <div class="options-links"><button class="secondary" id="optionsStatsBtn">Notebook stats</button><button class="secondary" id="changelogBtn">What’s new</button><button class="secondary" id="reportProblemBtn">Report a problem</button></div>
     <section class="dev-mode-section"><button class="secondary dev-mode-button" id="devModeBtn" aria-pressed="false">DEV MODE</button><p id="devModeNote" class="option-help"></p><button class="secondary" id="testLabBtn" aria-expanded="false" aria-controls="testLabPanel">Test a wave / boss</button>
       <section id="testLabPanel" class="test-lab" hidden aria-labelledby="testLabTitle">
         <h3 id="testLabTitle">The scratch page</h3>
@@ -278,6 +303,7 @@
         <button type="button" id="addTestUpgrade" class="secondary">Add to build</button><div id="testLoadout" class="test-loadout" aria-live="polite"></div>
         <p id="testLabNotice" class="option-help" role="status"></p><div class="cardactions"><button id="startTestBtn">Start test →</button><button id="repeatTestBtn" class="secondary" hidden>Repeat last test</button><button id="clearTestBuildBtn" class="secondary">Clear build</button></div>
       </section></section>
+    <section class="option-section"><h3>Keep your Notebook safe</h3><p class="option-help">Back up saved scraps, permanent upgrades, best wave, tutorials and monster discoveries. Active runs and device settings are not included.</p><button id="openBackupBtn" class="secondary">Back up / restore progress</button></section>
     <p id="optionsStorageNote" class="save-note" role="status"></p>
   </div>
 </div>
@@ -305,7 +331,7 @@
   <div class="cardbox build-box notebook-book">
     <div class="build-heading"><h2 id="notebookTitle">Back of the Notebook</h2><button id="closeNotebookBtn">Close</button></div>
     <div class="notebook-wallet"><img class="notebook-scrap" src="assets/art/ui/scraps.png" alt="" width="84" height="84"><div><strong id="notebookBank">0</strong> <b>Notebook Scraps</b><small>Saved on this browser · Kept after defeat</small></div></div>
-    <aside id="scrapGuideShop" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>Here’s your first purchase: Starter Eraser! It costs 0 scraps and helps every future run recover a little more ink from erased walls. Claim it below. Your earned scraps stay in the bank for the other upgrades.</p><div class="cardactions"><button id="scrapGuideDone">Claim Starter Eraser · 0 scraps</button></div></div></aside><p id="notebookNotice" role="status"></p>
+    <aside id="scrapGuideShop" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>Stevie’s scrap trail</h3><p>Step 3 of 3: claim your free Starter Eraser! It costs 0 scraps and helps every future run recover a little more ink from erased walls. Claim it below. Your earned scraps stay in the bank for the other upgrades.</p><div class="cardactions"><button id="scrapGuideDone">Claim Starter Eraser · 0 scraps</button></div></div></aside><p id="notebookNotice" role="status"></p>
     <div class="notebook-earn"><b>How to collect scraps</b><span>1 per 25 kills (up to 8 per run) · 1 per cleared wave · Chapter-clear bonuses: 6 / 8 / 10 / 12 · 5 extra for winning wave 20. A defeat with no earnings keeps 1 consolation scrap.</span></div>
     <h3>Your next starting kit</h3><p id="notebookLoadout"></p>
     <div id="notebookPerks" class="notebook-grid"></div>
@@ -315,11 +341,11 @@
 </div>
 <div class="overlay build-overlay" id="compendiumOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="compendiumTitle">
   <div class="cardbox build-box monster-book">
-    <div class="build-heading"><h2 id="compendiumTitle">Monster Compendium</h2><button id="closeCompendiumBtn">Close</button></div>
-    <p class="monster-subtitle">Know your notebook nuisances. All 19 monsters, from first scribble to final boss. Your run pauses while you browse.</p>
-    <label class="monster-setting"><input id="monsterIntrosEnabled" type="checkbox" checked> Show new-monster introductions before each wave</label>
+    <div class="build-heading"><div><span class="section-kicker">STEVIE’S CREATURE SCRAPBOOK</span><h2 id="compendiumTitle">Monster notes</h2></div><button id="closeCompendiumBtn">Close</button></div>
+    <p class="monster-subtitle">Meet the doodles behind the trouble. Creature notes appear as you discover them. Your run pauses while you browse.</p>
+    <section class="monster-preferences"><label class="monster-setting"><input id="monsterIntrosEnabled" type="checkbox" checked> Show new-monster introductions before each wave</label>
     <p class="monster-setting-note">Saved on this device. Switch off for uninterrupted runs. Stats show base values before wave scaling, upgrades, or armor.</p>
-    <p id="monsterDiscoveryNote" class="option-help"></p>
+    </section><p id="monsterDiscoveryNote" class="option-help"></p>
     <div id="monsterCards" class="monster-grid"></div>
   </div>
 </div>
@@ -340,6 +366,8 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.13 · Lessons, paper balls and Doodle Scraps</h3><p>Stevie’s beginner lessons now have clear steps, a notebook practice page, live ink and wall-HP estimates, a Back button and short reminders. Wave 2 teaches erasing, Rubble Ruff and paper holes one idea at a time. His scrap trail shows all three steps to the free Starter Eraser. Practice keeps combat paused and uses no real ink. Buy Doodle Scraps in the Notebook for 25 saved scraps to unlock run-only discoveries from wave 1. Draw through a dropped scrap and choose between two elements for Stevie’s crumpled paper balls: fire, electric, poison, frost or eraser. New discoveries replace the current element. Rubble Ruff’s first appearance each run now shows an “Erase me!” label, platform instructions and a highlighted Erase button. Thunderstones retains its wall-charging and burst reaction. Report problems from Settings with ready-to-share game details. Defeat now offers Return to main menu or Start a new run; spend saved scraps from the home screen. Back up permanent progress in Settings, and review imported saves before restoring; a recovery copy keeps the previous save. Monster notes and new-monster introductions now use taped scrapbook pages with clearer creature headings, stats and tips.</p></article>
+      <article class="build-entry"><h3>Alpha 0.1.12 · Doodles play on the cover</h3><p>Gribble waddles up for a playful chomp, Twicey separates and springs back together, and fire pops onto the freshly drawn menu barrier with little sparks. Reduced-motion settings keep the cover still.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.11 · A tool worth upgrading</h3><p>Every drawing-tool rank now has its own colored-pencil artwork, with current and next-rank previews in the Notebook. Each purchased rank adds +8 base wall HP to every new run, up to +80 at rank 10. The third and fourth effect slots still unlock at ranks 6 and 10. Fresh Pencil has been retired; scraps spent on its ranks are refunded once when your saved Notebook is updated.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.10 · A few sneaky doodles</h3><p>Monsters take a valid paper shortcut only 30% of the time, with one decision per hole encounter. Exits must be meaningfully closer to Stevie; they need not line up with the approach. Bosses never burrow. Gribbles tumble in, Rubble Ruff wriggles, Zoom Nugget and Crash Dash dive, and Boingus squashes into the hole and springs out. Emergence keeps its warning and daze; reduced motion uses a simple fade.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.9 · Trouble under the paper</h3><p>Rubbing the same patch for about seven seconds wears through the page. Holes stay for the run: ordinary monsters can duck under the paper to a hole closer to Stevie, ignoring surface walls and effects while rocks still hit them. Follow their moving paper bump and rub near it for two seconds to force a warned, dazed return. Holes stay clear of the fort. Erase small hostile pencils and spikes for safety; returning them with walls keeps its damage reward. Cut a gap in electric ink for a paid-section lightning discharge with a short cooldown. Catch Sir Chonks during his wall windup or Boingus just as he rebounds by erasing their support to make them stumble.</p></article>
@@ -595,7 +623,9 @@
 <script src="js/wobblechomp-preview.js"></script>
 <script src="js/first-lessons.js"></script>
 <script src="js/paper.js"></script>
+<script src="js/doodle-scraps.js"></script>
 <script src="js/loop.js"></script>
+<script src="js/save-backup.js"></script>
 <script src="js/input.js"></script>
 <script src="game.js"></script>
 </body>

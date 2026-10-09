@@ -3,15 +3,16 @@ DoodleDefender.systems.notebook = function createNotebook(game) {
 const key='saveStevieNotebookV1',costs=[5,12,24,40,60],maxCurrency=1e9;
 const toolForRank=rank=>rank>=10?{name:'Scented Sharpie',slots:4}:rank>=6?{name:'Simple Pen',slots:3}:rank>=3?{name:'Mechanical Pencil',slots:2}:{name:'Pencil',slots:2};
 const toolCosts=[5,8,12,16,20,24,30,36,44,55];
-const perkPrice=(perk,rank)=>perk.id==='starterEraser'?0:perk.id==='tool'?toolCosts[rank]:perk.id==='extraChoice'?25:costs[rank];
+const perkPrice=(perk,rank)=>perk.id==='starterEraser'?0:perk.id==='tool'?toolCosts[rank]:['extraChoice','doodleScraps'].includes(perk.id)?25:costs[rank];
 const perks=game.catalog.notebookPerks=[
   {id:'starterEraser',name:'Starter Eraser',max:1,art:'recycling',desc:'Stevie’s free first purchase. Adds 5 percentage points to ink recovery when erasing; applies to every new run.',effect:n=>n?'+5% erase recovery · permanent':'Claim free after your first adventure'},
+  {id:'doodleScraps',name:'Doodle Scraps',max:1,art:'collector',desc:'Unlock mysterious paper drops in future runs, from any wave. Draw through one and choose a temporary element for Stevie’s paper balls. Finds last only for that run.',effect:n=>n?'Doodle Scraps can drop from wave 1':'Unlock discoveries · 25 scraps'},
   {id:'tool',name:'Your Drawing Tool',max:10,art:'thick-ink',desc:'Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Every rank has its own artwork and adds +8 base wall HP. Pens unlock a third effect slot; Sharpies unlock a fourth.',effect:n=>toolForRank(n).name+' · '+toolForRank(n).slots+' effect slots · +'+8*n+' base wall HP'},
   {id:'inkTank',name:'Bigger Starting Tank',max:5,art:'bigger-ink-tank',desc:'+20 starting/max ink per rank.',effect:n=>'+'+20*n+' starting/max ink'},
   {id:'inkRegen',name:'Refill Practice',max:3,art:'quick-refill',desc:'+1 starting ink regeneration per second per rank. Stacks with run upgrades.',effect:n=>'+'+n+' starting ink/s'},
   {id:'extraChoice',name:'Extra Credit',max:1,art:'greedy-goblin',desc:'Start every run with four reward choices instead of three. Boss rewards already have four.',effect:n=>n?'4 reward choices from the first wave':'3 normal reward choices'},
   {id:'health',name:'Lunchbox Band-Aids',max:4,art:'bandages',desc:'+8 starting/max Stevie HP per rank.',effect:n=>'+'+8*n+' Stevie HP'},
-  {id:'rocks',name:'Pocket Pebbles',max:3,art:'pocket-rocks',desc:'Start throwing rocks: 3 damage per rank. Higher ranks throw a little faster.',effect:n=>n?(3*n)+' starting rock damage · '+Number((1.6-.1*n).toFixed(1))+'s between throws':'Starting rocks not unlocked'},
+  {id:'rocks',name:'Paper Ball Practice',max:3,art:'pocket-rocks',desc:'Start throwing crumpled paper: 3 damage per rank. Higher ranks throw a little faster.',effect:n=>n?(3*n)+' starting paper-ball damage · '+Number((1.6-.1*n).toFixed(1))+'s between throws':'Starting paper balls not unlocked'},
   {id:'rerolls',name:'Lunch Money',max:2,art:'reroll-coupon',desc:'+1 starting reroll per rank. Each cleared wave still supplies a free reroll.',effect:n=>'+'+n+' starting rerolls'},
   {id:'luck',name:'Lucky Eraser',max:4,art:'lucky-scribble',desc:'+2 starting Luck per rank, improving upgrade rarity odds.',effect:n=>'+'+2*n+' starting Luck'}
 ];
@@ -34,6 +35,7 @@ for(const p of perks)progress.levels[p.id]??=0;
 function saveNotebook(){
   try{localStorage.setItem(key,JSON.stringify(progress));storageIssue=false}catch{storageIssue=true}
 }
+function adoptNotebookBackup(saved){progress={...saved,levels:{...saved.levels}};storageIssue=false;migrationRefund=0;runScraps=0;killScraps=0;runActive=false;updateScrapCounters();}
 function notebookSnapshot(){return {...progress,levels:{...progress.levels},runScraps,runActive,storageIssue}}
 function updateScrapCounters(){
   for(const id of ['splashScraps','buildScraps','deathBankScraps','victoryBankScraps','notebookBank'])game.dom.$(id).textContent=progress.scraps;
@@ -134,6 +136,6 @@ function syncScrapTutorial(){
 function finishScrapTutorial(){if(!progress.levels.starterEraser)return false;progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial();return true;}
 function openNotebook(){game.api.openInfo('notebook')}
 function closeNotebook(){game.api.closeInfo()}
-const api={scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
+const api={adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;
 };

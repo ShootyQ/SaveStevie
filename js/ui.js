@@ -119,6 +119,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Triple Stroke':()=>`One-time unlock: 3 walls per stroke; extra walls have 60% HP`,
     'Bottomless Pen':()=>`+${40*n} max ink; +${f(game.api.regenStackEffect('Bottomless Pen',n))} ink/s; diminishing returns`, 'Fortress Geometry':()=>`+${50*n}% closed-wall durability; `+loopDetails(n,'Closed Loop'),
     'Bandages':()=>`+${8*n} HP healed between waves`, 'Helmet':()=>`${f(Math.min(.55,.1*n)*100)}% damage reduction (cap 55%)`,
+    'Electric Rocks':()=>`Level ${Math.min(6,n)}: rocks charge a 48px wall patch for 2.4s; Electric Ink bursts hit up to 8 monsters for ${3+Math.min(6,n)} damage, with 1.1s wall recovery`,
     'Pocket Rocks':()=>`+${game.api.rockTotal('Pocket Rocks',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
     'Better Rocks':()=>`+${game.api.rockTotal('Better Rocks',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
     'Emergency Medicine':()=>`Up to ${2*n} HP per kill; shared 6 HP/s combat budget`, 'Really Good Rocks':()=>`+${game.api.rockTotal('Really Good Rocks',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
@@ -149,7 +150,7 @@ function renderBuild(){
     ['Wall damage',f(s.wallDamage)+' /s'],['Base wall HP',s.wallHp],['Wall lifetime',s.wallLife+'s'],['Line width',s.lineWidth+'px'],
     ['Closed-wall multiplier','×'+f(s.closedBonus)],['Intersection bonus',f(s.intersectBonus*100)+'% each'],
     ['Stevie max HP',game.state.player.maxHp],['Damage reduction',f(s.playerArmor*100)+'%'],
-    ['Rock damage',s.rockDamage],['Throw interval',s.rockRate?s.rockRate+'s':'Not unlocked'],
+    ['Paper-ball element',game.api.paperElementName()],['Paper-ball damage',s.rockDamage],['Throw interval',s.rockRate?s.rockRate+'s':'Not unlocked'],
     ['Walls per stroke',s.tripleLine?3:s.doubleLine?2:1],['Erase recovery',Math.round(s.eraseRefund*100)+'%'],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
     ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','6 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','12 HP/s shared']];
   game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
@@ -161,7 +162,7 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
-const infoButtons={lesson:'lessonSkip',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(game.api.wobbleRepairActive?.())return;
@@ -178,6 +179,8 @@ function openInfo(kind){
   if(kind==='compendium')game.api.renderCompendium();
   if(kind==='notebook')game.api.renderNotebook();
   if(kind==='options')game.api.renderOptions();
+  if(kind==='report')game.api.renderProblemReport();
+  if(kind==='backup')game.api.renderSaveBackup();
   if(kind==='statistics')game.api.renderStatistics();
   game.dom.$(kind+'Overlay').style.display='grid';
   game.api.syncScrapTutorial();
@@ -191,6 +194,7 @@ function closeInfo(back=true){
   const kind=activeInfo,goBack=back&&returnInfo;returnInfo=null;activeInfo=null;game.state.paused=pausedBeforeInfo;
   game.dom.$(kind+'Overlay').style.display='none';
   if(kind==='lesson')game.api.dismissFirstLesson?.();
+  if(kind==='doodle')game.api.dismissDoodleChoice?.();
   game.dom.$('pauseBtn').textContent='Pause';
   if(goBack){openInfo(goBack);return}
   game.api.syncScrapTutorial();
@@ -215,7 +219,7 @@ function handleInfoKey(e){
   }
   if(e.key==='Tab'){
     const overlay=game.dom.$(activeInfo+'Overlay');
-    const controls=Array.from(overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled])')).filter(el=>!el.getClientRects||el.getClientRects().length>0);
+    const controls=Array.from(overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href]')).filter(el=>!el.getClientRects||el.getClientRects().length>0);
     const first=controls[0],last=controls.at(-1);
     if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
     else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
