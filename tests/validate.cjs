@@ -52,7 +52,7 @@ function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
 // Preserve legacy comparison for unchanged systems; test the new contact rule separately.
 both(e=>{const s=state(e);s.player.x=4000;s.player.y=3500;});
-both(e=>{const c=e.node('game');c.listeners.pointerdown({clientX:180,clientY:180,pointerId:1});for(let i=1;i<16;i++)c.listeners.pointermove({clientX:180+i*9,clientY:180+i*3});c.listeners.pointerup();});compare('paid wall');
+both(e=>{const c=e.node('game');c.listeners.pointerdown({clientX:180,clientY:180,pointerId:1,button:0});for(let i=1;i<16;i++)c.listeners.pointermove({clientX:180+i*9,clientY:180+i*3,pointerId:1});c.listeners.pointerup({pointerId:1});});compare('paid wall');
 both(e=>e.node('pauseBtn').onclick());compare('pause');both(e=>e.node('pauseBtn').onclick());compare('resume');
 for(let i=1;i<=2000;i++){both(e=>e.sandbox.frame(i*16));if(i%100===0)compare('frame '+i);}
 both(e=>e.node('continueBtn').onclick());compare('wave reward');
@@ -382,7 +382,7 @@ const oldPoint=wall.pts[0],oldGeometry=rr.api.wallGeometry(wall.pts),oldDistance
 resizable.node('game').getBoundingClientRect=()=>({left:0,top:0,width:400,height:850});rr.api.resize();
 assert.equal(rr.api.dist(moving.x,moving.y,rr.state.player.x,rr.state.player.y),oldDistance,'resize preserves combat distances');
 assert.equal(wall.pts[0].x,oldPoint.x-200);assert.equal(wall.pts[0].y,oldPoint.y+75);assert.notEqual(rr.api.wallGeometry(wall.pts),oldGeometry,'resize refreshes immutable geometry caches');
-assert.equal(rr.state.enemyShots[0].x,50);assert.equal(rr.state.currentWall[0].x,-100);
+assert.equal(rr.state.enemyShots[0].x,50);assert.equal(rr.state.currentWall,null,'resize cancels the gesture instead of drawing across a rotated screen');
 const beforeResizeDraw=JSON.stringify(rr.state);rr.api.draw();assert.equal(JSON.stringify(rr.state),beforeResizeDraw,'telegraphs and shots render without changing combat');
 assert.equal(resizable.node('liveWave').textContent,'1');
 console.log('PASS: visible ranged shots, armor, cover, swept collision, misses, freeze/pause, transitions, lethal hits, hit attribution, and resize-safe combat.');
@@ -1535,7 +1535,7 @@ console.log('PASS: unattended starting-kit fight loses; active paid-wall play wi
  env.node('closeCompendiumBtn').onclick();assert.equal(env.node('hubOverlay').style.display,'grid');env.node('closeHubBtn').onclick();assert.equal(g.state.paused,false);
  g.api.resetRun();env.node('pauseBtn').onclick();assert.equal(env.node('pauseBtn').textContent,'Resume');env.node('pauseSettingsBtn').onclick();env.node('pauseBtn').onclick();assert.equal(env.node('optionsOverlay').style.display,'none');assert.equal(g.state.paused,false);assert.equal(env.node('pauseBtn').textContent,'Pause');
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),bar=html.match(/<nav class="bottom"[\s\S]*?<\/nav>/)[0];
- assert.deepEqual([...bar.matchAll(/<button[^>]+id="([^"]+)"/g)].map(m=>m[1]),['fullscreenBtn','pauseBtn']);assert.match(html,/id="pauseOverlay"[\s\S]*?id="clearBtn"/);assert.match(html,/id="pauseOverlay"[\s\S]*?id="musicBtn"/);
+ assert.deepEqual([...bar.matchAll(/<button[^>]+id="([^"]+)"/g)].map(m=>m[1]),['fullscreenBtn','pauseBtn','eraserBtn']);assert.match(html,/id="pauseOverlay"[\s\S]*?id="clearBtn"/);assert.match(html,/id="pauseOverlay"[\s\S]*?id="musicBtn"/);
 }
 console.log('PASS: notebook hub opens monster pages and returns correctly; pause/resume closes submenus; live toolbar contains only Screen and Pause, with erasing/music in Pause.');
 
@@ -2222,4 +2222,33 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  e=setup();g.state.stats.doubleLine=true;g.api.createWall([{x:170,y:200},{x:200,y:200},{x:230,y:200}]);assert.equal(g.state.enemies.length,2,'sampled seam and copy strokes create exactly one pair');assert(Math.hypot(g.state.enemies[0].x-g.state.enemies[1].x,g.state.enemies[0].y-g.state.enemies[1].y)>15,'cut halves separate visibly');
  e=setup();g.api.splitTwicey(e);[runner,chewer]=g.state.enemies;g.api.killEnemy(chewer);runner.twicey.age=10;g.api.updateTwicey(runner,.1);assert.equal(g.state.enemies.length,1,'orphan never reunites with another family');g.api.resetRun();assert(!g.state.enemies.some(n=>n.twicey));
  console.log('PASS: paid seam cuts, distinct warned dash/chew halves, health/status/reward preservation, solid-wall reunion blocking, frozen clocks, dizzy opening, bounded death splitting, contact, orphan/reset and pure rendering.');
+}
+
+// Manual erasing clips real geometry without buying health, ink or explosions.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=9999;
+ const wall=pts=>({pts,thick:8,hp:60,maxHp:120,life:40,maxLife:72,closed:false,intersections:2,wobbleBumper:true});
+ const w=wall([{x:100,y:200},{x:300,y:200}]);g.state.walls=[w];const ink=g.state.stats.ink,kills=g.state.kills,score=g.state.score;g.state.stats.explode=true;
+ assert(g.api.eraseWallPath({x:200,y:200},{x:200,y:200},20));assert.equal(g.state.walls.length,2);const [left,right]=g.state.walls;
+ assert.equal(left.pts.at(-1).x,176);assert.equal(right.pts[0].x,224,'eraser includes stroke thickness');
+ for(const piece of g.state.walls){assert.equal(piece.hp/piece.maxHp,.5);assert.equal(piece.life,40);assert.equal(piece.maxLife,72);assert.equal(piece.wobbleBumper,true);assert.equal(piece.closed,false);}
+ assert(Math.abs(g.state.walls.reduce((sum,w)=>sum+w.hp,0)-45.6)<1e-8,'remaining length carries proportional health');assert.equal(g.state.stats.ink,ink);assert.equal(g.state.kills,kills);assert.equal(g.state.score,score);assert.equal(g.api.abilityEffectsSnapshot().explosions.length,0,'erase never triggers destruction effects');
+ const enemy=g.api.spawnEnemy(false,200,200,'grunt');assert.equal(g.api.nearestWallHit(enemy),null,'gap is physically open');enemy.x=150;assert(g.api.nearestWallHit(enemy),'surviving wall is solid');
+ const outside=g.state.walls[0];assert.equal(g.api.eraseWallPath({x:500,y:500},{x:600,y:600},20),false);assert.equal(g.state.walls[0],outside,'untouched wall identity remains stable');
+ g.state.walls=[wall([{x:100,y:200},{x:300,y:200}])];g.api.eraseWallPath({x:200,y:80},{x:200,y:320},20);assert.equal(g.state.walls.length,2,'swept erasing catches a crossing with no intermediate events');assert.equal(g.state.walls[0].pts.at(-1).x,176);
+ g.state.walls=[wall([{x:100,y:200},{x:200,y:200},{x:300,y:200}])];g.api.eraseWallPath({x:200,y:200},{x:200,y:200});assert.equal(g.state.walls.length,2,'cut at a sampled vertex does not reconnect');
+ const closed=wall([{x:100,y:100},{x:200,y:100},{x:200,y:200},{x:100,y:200},{x:100,y:100}]);closed.closed=true;g.state.walls=[closed];g.api.eraseWallPath({x:150,y:100},{x:150,y:100});assert.equal(g.state.walls.length,1,'unbroken wrap-around stays one piece');assert.equal(g.state.walls[0].closed,false,'erased enclosure loses closed-loop bonus');
+ g.state.walls=[wall([{x:100,y:200},{x:120,y:200}])];g.api.eraseWallPath({x:110,y:200},{x:110,y:200});assert.equal(g.state.walls.length,0,'whole small wall disappears');
+ g.state.walls=[w];g.state.paused=true;assert.equal(g.api.eraseWallPath({x:200,y:200},{x:200,y:200}),false);assert.equal(g.state.walls[0],w);g.state.paused=false;
+ assert.equal(g.api.eraseWallPath({x:NaN,y:0},{x:0,y:0}),false);
+ const fire=g.state.inks.fire;g.state.inks.fire=1;enemy.x=150;enemy.y=200;g.api.applyInkContact(enemy,.1,g.state.walls[0]);assert(enemy.burn>0,'remaining sections still apply equipped ink');g.state.inks.fire=fire;
+ const canvas=env.node('game'),button=env.node('eraserBtn'),event=(id,x,y,button=0)=>({pointerId:id,clientX:x,clientY:y,button,preventDefault(){}});
+ g.state.walls=[];canvas.listeners.pointerdown(event(1,100,300));canvas.listeners.pointermove(event(1,180,300));
+ button.listeners.pointerdown(event(2,0,0));assert.equal(g.api.eraserActive(),true);assert.equal(g.state.currentWall,null,'draw segment commits before switching');canvas.listeners.pointermove(event(1,150,300));
+ const paidInk=g.state.stats.ink;button.listeners.pointerup(event(2,0,0));assert.equal(g.api.eraserActive(),false);assert.equal(g.state.currentWall[0].x,150,'same finger resumes drawing at current point');canvas.listeners.pointermove(event(1,150,350));canvas.listeners.pointerup(event(1,150,350));assert(g.state.stats.ink<paidInk,'resumed drawing pays normal cost');
+ g.state.stats.ink=0;g.state.walls=[w];canvas.listeners.pointerdown(event(3,200,200,2));canvas.listeners.pointermove(event(4,300,300));assert.equal(g.state.walls.length,2,'other finger cannot draw or extend eraser path');canvas.listeners.pointerup(event(4,300,300));assert(g.api.eraserActive(),'unrelated pointerup does not end erasing');canvas.listeners.pointerup(event(3,200,200));assert.equal(g.api.eraserActive(),false);assert.equal(g.state.stats.ink,0,'right erasing works with empty ink');
+ g.api.setDrawingControl('eraserToggle',true);button.onclick({detail:1});assert(g.api.eraserActive());g.api.endDraw();assert.equal(g.api.eraserActive(),false,'pause/UI close resets sticky mode');
+ button.onclick({detail:1});g.api.resetRun();assert.equal(g.api.eraserActive(),false,'run reset releases eraser');assert.equal(g.api.drawingControls().eraserToggle,true,'run reset preserves preference');
+ const saved={};const controls=load(true,{storage:{getItem:k=>saved[k]||null,setItem:(k,v)=>{saved[k]=v}}});controls.sandbox.testGame.api.setDrawingControl('eraserToggle',true);controls.sandbox.testGame.api.setDrawingControl('eraserLeft',true);const reload=load(true,{storage:{getItem:k=>saved[k]||null,setItem(){}}});assert.equal(reload.sandbox.testGame.api.drawingControls().eraserToggle,true);assert.equal(reload.sandbox.testGame.api.drawingControls().eraserLeft,true);
+ console.log('PASS: sparse/swept/vertex/closed-wall erasing, proportional durability/lifetime, open collision gap, preserved ink, no refunds/explosions, paused/invalid guards, multi-pointer mid-stroke switching, empty-ink right-drag, sticky/reset behavior and saved controls.');
 }

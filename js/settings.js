@@ -11,6 +11,14 @@ function setAudioVolume(name,value){
   try{localStorage.setItem(key,JSON.stringify(preferences));storageIssue=false;}catch{storageIssue=true;}
   game.api.applyMusicVolume?.();game.api.applyEffectsVolume?.();renderOptions();return true;
 }
+const controlsKey='saveStevieControlsV1';let controls={eraserToggle:false,eraserLeft:false};
+try{const saved=JSON.parse(localStorage.getItem(controlsKey)||'null');if(saved&&typeof saved==='object')for(const name of Object.keys(controls))if(typeof saved[name]==='boolean')controls[name]=saved[name];}catch{}
+function drawingControls(){return {...controls};}
+function setDrawingControl(name,value){
+ if(!Object.hasOwn(controls,name)||typeof value!=='boolean')return false;
+ controls[name]=value;try{localStorage.setItem(controlsKey,JSON.stringify(controls));}catch{}
+ game.api.cancelDrawingInput?.();game.api.syncDrawingControls?.();renderOptions();return true;
+}
 // Session-only manual rewards. Once used, a run stays unranked until reset.
 let devEnabled=false,testRun=false;
 function devModeEnabled(){return devEnabled}
@@ -30,6 +38,7 @@ function renderDevMode(){
 }
 function renderOptions(){
   renderDevMode();
+  game.dom.$('eraserToggle').checked=controls.eraserToggle;game.dom.$('eraserLeft').checked=controls.eraserLeft;
   for(const [name,id] of [['musicVolume','musicVolume'],['effectsVolume','effectsVolume']]){
     game.dom.$(id).value=Math.round(preferences[name]*100);game.dom.$(id+'Value').textContent=Math.round(preferences[name]*100)+'%';
   }
@@ -50,9 +59,10 @@ function openOptions(){game.api.openInfo('options');}
 function closeOptions(){game.api.closeInfo();}
 function openStatistics(){game.api.openInfo('statistics');}
 function closeStatistics(){game.api.closeInfo();}
-const api={devModeEnabled,devRunActive,beginDevRun,setDevMode,renderDevMode,audioSettings,setAudioVolume,renderOptions,renderStatistics,openOptions,closeOptions,openStatistics,closeStatistics};Object.assign(game.api,api);
+const api={drawingControls,setDrawingControl,devModeEnabled,devRunActive,beginDevRun,setDevMode,renderDevMode,audioSettings,setAudioVolume,renderOptions,renderStatistics,openOptions,closeOptions,openStatistics,closeStatistics};Object.assign(game.api,api);
 for(const name of ['musicVolume','effectsVolume'])game.dom.$(name).oninput=e=>setAudioVolume(name,Number(e.target.value)/100);
 game.dom.$('optionsIntros').onchange=e=>game.api.setMonsterIntrosEnabled(e.target.checked);
 game.dom.$('devModeBtn').onclick=()=>setDevMode(!devEnabled);
+for(const name of ['eraserToggle','eraserLeft'])game.dom.$(name).onchange=e=>setDrawingControl(name,e.target.checked);
 renderOptions();return api;
 };
