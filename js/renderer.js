@@ -35,6 +35,7 @@ if(typeof Image!=='undefined')for(const name of doodleNames){
 // One SVG coordinate system drives both the visible stroke and its physical nib.
 const menuPath=game.dom.$('splashInkPath'),menuPencil=document.querySelector?.('.splash-pencil');
 const menuStrokes=document.querySelectorAll('.splash-ink-stroke');
+const menuFire=game.dom.$("splashLineFire");
 let menuAge=0,menuLength=0;
 function resetMenuPencil(){menuAge=0}
 function updateMenuPencil(dt){
@@ -47,6 +48,15 @@ function updateMenuPencil(dt){
  const p=menuPath.getPointAtLength(menuLength*progress);
  menuPencil.setAttribute('transform','translate('+p.x+' '+p.y+')');
  for(const stroke of menuStrokes){stroke.style.strokeDasharray=menuLength+' '+menuLength;stroke.style.strokeDashoffset=String(menuLength*(1-progress))}
+ // Ignite behind the nib once it passes this spot, then settle into a flicker.
+ if(menuFire){
+  const anchor=menuPath.getPointAtLength(menuLength*.28),ignite=1.2+3.6*.28;
+  const age=phase-ignite,appear=motionReduced?1:Math.max(0,Math.min(1,age/.22));
+  const fade=motionReduced?1:Math.min(1,(18-phase)/.65);
+  const pop=motionReduced?1:1+Math.sin(Math.min(1,Math.max(0,age)/.4)*Math.PI)*.38;
+  menuFire.setAttribute('transform','translate('+anchor.x+' '+anchor.y+') scale('+(appear*pop)+')');
+  menuFire.setAttribute('opacity',String(appear*Math.max(0,fade)));
+ }
  if(!motionReduced&&phase>1.2&&phase<4.8)game.api.playMenuScribble();else game.api.stopSoundEffects('scribble');
 }
 // Presentation only: no combat RNG, attack delays, or collider changes.
