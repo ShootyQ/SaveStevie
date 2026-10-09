@@ -24,7 +24,7 @@ game.catalog.synergyDefs = [
   {name:'Heavy Artillery', req:()=>game.state.stacks['Fat Marker']&&game.state.inks.blast, desc:'Thicker walls create larger explosions.'},
   {name:'Hot Rocks', req:()=>game.state.stacks['Pocket Rocks']&&game.state.inks.fire, desc:'Stevie\'s rocks ignite enemies.'},
   {name:'Snowball Fight', req:()=>game.state.stacks['Pocket Rocks']&&game.state.inks.frost, desc:'Stevie\'s rocks chill and sometimes freeze enemies.'},
-  {name:'Thunderstones', req:()=>game.state.stacks['Pocket Rocks']&&game.state.inks.electric, desc:'Stevie\'s rocks can chain lightning.'},
+  {name:'Thunderstones', req:()=>game.state.stacks['Pocket Rocks']&&game.state.inks.electric, desc:'Stevie\'s rocks chain lightning and burst sparks from Electric Ink walls.'},
   {name:'Stevie the Unreasonable', req:()=>game.state.stacks['Stevie Has Had Enough']&&game.state.inks.vampire, desc:'Stevie heals from his own attacks.'},
   {name:'Human Pinball', req:()=>game.state.stacks['Helmet']&&game.state.inks.repulsion, desc:'Contact explosions knock nearby enemies away from Stevie.'},
 
@@ -81,6 +81,7 @@ function upgradeLevels(u){
   if(required&&u.rarity&&u.rarity!==required)return 0;
   if(oneTimeUpgrades.has(u.name))return 1;
   let levels=rarityLevels[u.rarity]||1;
+  if(u.name==='Electric Rocks')levels=Math.min(levels,6-(game.state.stats.electricRocks||0));
   if(u.name==='Helmet')levels=Math.min(levels,Math.ceil((.55-game.state.stats.playerArmor-1e-9)/.1));
   if(u.name==='Reroll Coupon')levels=Math.min(levels,Math.ceil((5-game.state.rerolls)/2));
   return Math.max(0,levels);
@@ -118,6 +119,7 @@ function upgradePreview(u){
     'Fortress Geometry':()=>loopPreview(.5),
     'Bandages':()=>pair('Between-wave healing',5+s.playerRegen,5+s.playerRegen+8*levels,' HP'),
     'Helmet':()=>pair('Contact damage reduction',s.playerArmor*100,Math.min(.55,s.playerArmor+.1*levels)*100,'%'),
+    'Electric Rocks':()=>pair('Electric rock level',s.electricRocks||0,Math.min(6,(s.electricRocks||0)+levels)),
     'Pocket Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+game.api.rockTotal('Pocket Rocks',n+levels)-game.api.rockTotal('Pocket Rocks',n)),
     'Better Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+game.api.rockTotal('Better Rocks',n+levels)-game.api.rockTotal('Better Rocks',n)),
     'Emergency Medicine':()=>pair('Healing per kill',s.killHeal,s.killHeal+2*levels,' HP'),
@@ -213,6 +215,7 @@ game.catalog.upgrades = [
   // Stevie
   {name:'Bandages',cat:'stevie',desc:'Heal 8 extra HP between waves.',apply:()=>game.state.stats.playerRegen+=8},
   {name:'Helmet',cat:'stevie',desc:'Stevie takes 10% less contact damage.',apply:()=>game.state.stats.playerArmor=Math.min(.55,game.state.stats.playerArmor+.1)},
+  {name:'Electric Rocks',cat:'stevie',desc:'Unlock 4-damage rocks if needed. Rocks charge a short wall section for 2.4s, or burst sparks from Electric Ink walls. Sparks hit up to 8 nearby monsters for 4–9 damage. Each wall recovers for 1.1s. Max 6 levels.',apply:()=>{game.state.stats.electricRocks=Math.min(6,(game.state.stats.electricRocks||0)+1);if(!game.state.stats.rockRate){game.state.stats.rockDamage=Math.max(4,game.state.stats.rockDamage);game.state.stats.rockRate=1.6;}}},
   {name:'Pocket Rocks',cat:'stevie',desc:'Unlock rock throwing: +4 first-level damage, later gains grow to +9. Throws every 1.6s; preserves faster throws.',apply:()=>game.api.applyRockUpgrade('Pocket Rocks')},
   {name:'Better Rocks',cat:'stevie',desc:'+6 first-level rock damage, later gains grow to +12. Each level shortens throws by 0.08s, down to 0.65s.',apply:()=>game.api.applyRockUpgrade('Better Rocks')},
   {name:'Emergency Medicine',cat:'stevie',desc:'Heal 2 HP per kill, sharing the 6 HP/s combat healing budget.',apply:()=>game.state.stats.killHeal+=2},
@@ -241,6 +244,7 @@ game.catalog.upgrades = [
 
 const oneTimeUpgrades = new Set(['Double Stroke','Triple Stroke','Doodle Stitch','Loaded Deck','Collector','Greedy Goblin']);
 function upgradeAvailable(u){
+  if(u.name==='Electric Rocks'&&game.state.stats.electricRocks>=6)return false;
   if(oneTimeUpgrades.has(u.name)&&game.state.stacks[u.name])return false;
   if(u.name==='Greedy Goblin'&&game.state.stats.extraChoice)return false;
   if(u.name==='Double Stroke'&&game.state.stats.doubleLine)return false;
@@ -283,11 +287,13 @@ const upgradeArtGroups=[
 ];
 function upgradeArtworkInfo(u){
  if(u.name==='Doodle Stitch')return {file:'assets/art/upgrades/doodle-stitch.svg',grid:1,x:0,y:0};
+ if(u.name==='Electric Rocks')return upgradeArtworkInfo({name:'Electric Ink'});
  if(u.name==='Clean Erasing')return upgradeArtworkInfo({name:'Recycling'});
  for(let sheet=0;sheet<upgradeArtGroups.length;sheet++){const index=upgradeArtGroups[sheet].indexOf(u.name);if(index>=0){const grid=sheet===2?3:4;return {file:'assets/art/upgrades/gallery-'+(sheet+1)+'.png',grid,x:index%grid,y:Math.floor(index/grid)}}}
  return null;
 }
 function legacyUpgradeArtwork(u){
+ if(u.name==='Electric Rocks')return 'assets/art/electric.png';
  if(u.name==='Clean Erasing')return 'assets/art/upgrades/recycling.svg';
  const existing={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos','Fine Tip':'pencil','Stevie Has Had Enough':'pencil'};
  return existing[u.name]?'assets/art/'+existing[u.name]+'.png':'assets/art/upgrades/'+u.name.toLowerCase().replaceAll(' ','-')+'.svg';

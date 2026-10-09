@@ -446,7 +446,8 @@ function resize(){
   if(dx||dy){
     // Keep combat distances unchanged through browser chrome/fullscreen changes.
     const move=p=>{p.x+=dx;p.y+=dy;if(Number.isFinite(p.originX))p.originX+=dx;if(Number.isFinite(p.originY))p.originY+=dy};
-    for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
+    const movedCharges=new Set();
+    for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.rockCharge&&!movedCharges.has(wall.rockCharge)){movedCharges.add(wall.rockCharge);wall.rockCharge.x+=dx;wall.rockCharge.y+=dy;}if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
     game.api.moveLaunchEffects(dx,dy);game.api.movePaper(dx,dy);
@@ -653,6 +654,11 @@ function draw(){
 
     drawWallTextures(w.pts,w.thick,.08+.92*visualRatio);
     if(w.stitchPoints){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b37b32';ctx.lineWidth=2;ctx.globalAlpha=.85;for(const p of w.stitchPoints){if(!w.pts.slice(1).some((q,i)=>game.api.pointSegDist(p.x,p.y,w.pts[i].x,w.pts[i].y,q.x,q.y)<2))continue;ctx.beginPath();ctx.moveTo(p.x-4,p.y-5);ctx.lineTo(p.x+4,p.y+5);ctx.moveTo(p.x+4,p.y-5);ctx.lineTo(p.x-4,p.y+5);ctx.stroke();}ctx.restore();}
+    if(w.rockCharge?.life>0){
+      const ctx=game.dom.ctx,c=w.rockCharge;ctx.save();ctx.strokeStyle='#628fff';ctx.lineWidth=3;ctx.globalAlpha=Math.min(1,c.life)*.8;
+      for(let i=1;i<w.pts.length;i++){const a=w.pts[i-1],b=w.pts[i],cuts=game.api.eraserIntervals(a,b,c,c,48);for(const [lo,hi] of cuts){ctx.beginPath();ctx.moveTo(a.x+(b.x-a.x)*lo,a.y+(b.y-a.y)*lo);ctx.lineTo(a.x+(b.x-a.x)*hi,a.y+(b.y-a.y)*hi);ctx.stroke();}}
+      ctx.restore();
+    }
     if(w.sealAge!==undefined&&w.sealAge<.65){
       const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#638466';ctx.globalAlpha=(1-w.sealAge/.65)*.65;ctx.lineWidth=w.thick+3;ctx.lineCap='round';
       ctx.beginPath();ctx.moveTo(w.pts[0].x,w.pts[0].y);
@@ -835,7 +841,7 @@ function draw(){
   }
 
   for(const p of game.state.projectiles){
-    game.dom.ctx.fillStyle='#5f5a53';game.dom.ctx.beginPath();game.dom.ctx.arc(p.x,p.y,4,0,Math.PI*2);game.dom.ctx.fill()
+    game.dom.ctx.fillStyle=p.electricLevel>0?'#6595e6':'#5f5a53';game.dom.ctx.beginPath();game.dom.ctx.arc(p.x,p.y,4,0,Math.PI*2);game.dom.ctx.fill();if(p.electricLevel>0){game.dom.ctx.strokeStyle='#e6f1ff';game.dom.ctx.lineWidth=1.5;game.dom.ctx.beginPath();game.dom.ctx.moveTo(p.x-2,p.y-5);game.dom.ctx.lineTo(p.x+2,p.y);game.dom.ctx.lineTo(p.x-1,p.y+4);game.dom.ctx.stroke()}
   }
   for(const p of game.state.particles){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1

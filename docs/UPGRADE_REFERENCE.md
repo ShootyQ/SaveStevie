@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.11
+# Save Stevie upgrade reference — Alpha 0.1.13
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -38,6 +38,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Fortress Geometry | Walls / shapes | Per level: +50% closed-shape durability. Shares Closed Loop’s diminishing ink refund, completion repair and enclosed-enemy damage bonus (15% / 15% / 10% at the first utility level). | Repeatable; caps/diminishing returns may apply; Shares diminishing loop utility with Closed Loop; free strokes/copies do not earn ink refunds. |
 | Bandages | Stevie / rocks / survival | Heal 8 extra HP between waves. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Helmet | Stevie / rocks / survival | Stevie takes 10% less contact damage. | Repeatable; caps/diminishing returns may apply; Damage reduction capped at 55%; awarded levels respect remaining cap. |
+| Electric Rocks | Stevie / rocks / survival | Unlock 4-damage rocks if needed. Rocks charge a short wall section for 2.4s, or burst sparks from Electric Ink walls. Sparks hit up to 8 nearby monsters for 4–9 damage. Each wall recovers for 1.1s. Max 6 levels. | Repeatable; caps/diminishing returns may apply; Max 6 levels. First wall crossed per rock; 2.4s charge within 48px of impact. Electric Ink burst reaches 103–118px, hits up to 8 surface monsters for 4–9 electric damage, and shares enemy electric recovery; 1.1s wall cooldown. Rocks keep flying. Thunderstones also enables this wall reaction. |
 | Pocket Rocks | Stevie / rocks / survival | Unlock rock throwing: +4 first-level damage, later gains grow to +9. Throws every 1.6s; preserves faster throws. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Better Rocks | Stevie / rocks / survival | +6 first-level rock damage, later gains grow to +12. Each level shortens throws by 0.08s, down to 0.65s. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Emergency Medicine | Stevie / rocks / survival | Heal 2 HP per kill, sharing the 6 HP/s combat healing budget. | Repeatable; caps/diminishing returns may apply; Shared combat-healing budget: 6 HP/s. |
@@ -86,7 +87,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Heavy Artillery | Blast Ink + Fat Marker | Thicker walls create larger explosions. |
 | Hot Rocks | Fire Ink + Pocket Rocks | Stevie's rocks ignite enemies. |
 | Snowball Fight | Frost Ink + Pocket Rocks | Stevie's rocks chill and sometimes freeze enemies. |
-| Thunderstones | Electric Ink + Pocket Rocks | Stevie's rocks can chain lightning. |
+| Thunderstones | Electric Ink + Pocket Rocks | Stevie's rocks chain lightning and burst sparks from Electric Ink walls. |
 | Stevie the Unreasonable | Vampire Ink + Stevie Has Had Enough | Stevie heals from his own attacks. |
 | Human Pinball | Repulsion Ink + Helmet | Contact explosions knock nearby enemies away from Stevie. |
 | THE STORM | Electric Ink + Frost Ink + Gravity Ink | Gravity clusters, frost holds, lightning shreds the whole pack. |

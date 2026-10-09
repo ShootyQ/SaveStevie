@@ -1,5 +1,5 @@
 {
-  "version": "0.1.11",
+  "version": "0.1.13",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -277,6 +277,17 @@
       "synergies": [
         "Human Pinball"
       ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Electric Rocks",
+      "category": "Stevie / rocks / survival",
+      "effect": "Unlock 4-damage rocks if needed. Rocks charge a short wall section for 2.4s, or burst sparks from Electric Ink walls. Sparks hit up to 8 nearby monsters for 4–9 damage. Each wall recovers for 1.1s. Max 6 levels.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Max 6 levels. First wall crossed per rock; 2.4s charge within 48px of impact. Electric Ink burst reaches 103–118px, hits up to 8 surface monsters for 4–9 electric damage, and shares enemy electric recovery; 1.1s wall cooldown. Rocks keep flying. Thunderstones also enables this wall reaction.",
+      "synergies": [],
       "source": "js/upgrades.js"
     },
     {
@@ -782,7 +793,7 @@
         "Electric Ink",
         "Pocket Rocks"
       ],
-      "effect": "Stevie's rocks can chain lightning."
+      "effect": "Stevie's rocks chain lightning and burst sparks from Electric Ink walls."
     },
     {
       "name": "Stevie the Unreasonable",
@@ -1292,6 +1303,18 @@
       "name": "Helmet",
       "category": "Stevie / rocks / survival",
       "effect": "Stevie takes 10% less contact damage.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Electric Rocks",
+      "category": "Stevie / rocks / survival",
+      "effect": "Unlock 4-damage rocks if needed. Rocks charge a short wall section for 2.4s, or burst sparks from Electric Ink walls. Sparks hit up to 8 nearby monsters for 4–9 damage. Each wall recovers for 1.1s. Max 6 levels.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",

@@ -233,6 +233,44 @@ function nearestEnemy(x,y,maxD){
   return bestE;
 }
 
+// A rock interacts with the first live wall along its swept path, then keeps flying.
+function rockElectricLevel(){return Math.max(game.state.stats.electricRocks||0,game.state.synergies.has('Thunderstones')?game.state.inks.electric:0);}
+function rockWallReaction(p,a,b){
+ if(!(p.electricLevel>0)||p.wallReacted)return false;
+ let hit=null;
+ for(const wall of game.state.walls){
+  if(wall.hp<=0||wall.life<=0)continue;
+  const bounds=game.api.wallGeometry(wall.pts),pad=wall.thick/2+4,minX=Math.min(a.x,b.x)-pad,maxX=Math.max(a.x,b.x)+pad,minY=Math.min(a.y,b.y)-pad,maxY=Math.max(a.y,b.y)+pad;
+  if(bounds.maxX<minX||bounds.minX>maxX||bounds.maxY<minY||bounds.minY>maxY)continue;
+  for(const seg of bounds.segments){
+   if(seg.maxX<minX||seg.minX>maxX||seg.maxY<minY||seg.minY>maxY)continue;
+   const cuts=game.api.eraserIntervals(a,b,seg.a,seg.b,pad);
+   if(cuts.length&&(!hit||cuts[0][0]<hit.t))hit={wall,t:cuts[0][0]};
+  }
+ }
+ if(!hit)return false;
+ p.wallReacted=true;const w=hit.wall,x=a.x+(b.x-a.x)*hit.t,y=a.y+(b.y-a.y)*hit.t;
+ if(game.state.inks.electric>0){
+  if(w.rockPulseCd>0)return true;
+  w.rockPulseCd=1.1;
+  const level=Math.min(6,p.electricLevel),radius=100+3*level,damage=Math.min(10,3+level);
+  const targets=game.state.enemies.filter(e=>e.hp>0&&!game.api.underPaper(e)&&e.immunity!=='electric'&&!(e.chainCd>0)&&Math.hypot(e.x-x,e.y-y)<=radius+e.r).sort((a,b)=>Math.hypot(a.x-x,a.y-y)-Math.hypot(b.x-x,b.y-y)).slice(0,8);
+  for(const e of targets){e.chainCd=Math.max(1.1,game.api.electricTuning(level).cooldown);game.api.dealDamage(e,damage,'electric');}
+  // Spokes show the reach even when the burst finds no enemy.
+  for(let i=0;i<8;i++){const angle=i*Math.PI/4;game.api.animateChainLightning({x,y},[{x:x+Math.cos(angle)*radius,y:y+Math.sin(angle)*radius}]);}
+  game.api.playSound('electric');
+ }else{
+  w.rockCharge={x,y,life:2.4,level:Math.min(6,p.electricLevel)};
+  game.api.animateChainLightning({x,y},[]);game.api.playSound('electric');
+ }
+ return true;
+}
+function updateRockWalls(dt){
+ const charges=new Set();
+ for(const w of game.state.walls){if(w.rockPulseCd>0)w.rockPulseCd=Math.max(0,w.rockPulseCd-dt);if(w.rockCharge)charges.add(w.rockCharge);}
+ for(const charge of charges)charge.life=Math.max(0,charge.life-dt);
+}
+
 function updateStevie(dt){
   game.api.updateStevieAnimation(dt);
   if(!game.state.stats.rockDamage||!game.state.stats.rockRate)return;
@@ -240,7 +278,7 @@ function updateStevie(dt){
   if(game.state.player.rockCd<=0){
     const e=game.api.nearestEnemy(game.state.player.x,game.state.player.y,210);
     if(e){
-      game.state.projectiles.push({x:game.state.player.x,y:game.state.player.y-8,target:e,speed:290,damage:game.state.stats.rockDamage,life:1.2});
+      game.state.projectiles.push({x:game.state.player.x,y:game.state.player.y-8,target:e,speed:290,damage:game.state.stats.rockDamage,life:1.2,electricLevel:rockElectricLevel()});
       game.api.startStevieThrow(e);
       game.state.player.rockCd=game.state.stats.rockRate;
     }
@@ -252,7 +290,10 @@ function updateProjectiles(dt){
     p.life-=dt;
     if(!p.target||!game.state.enemies.includes(p.target)||p.life<=0){game.state.projectiles=game.state.projectiles.filter(q=>q!==p);continue}
     const dx=p.target.x-p.x,dy=p.target.y-p.y,d=Math.hypot(dx,dy)||1;
+    const from={x:p.x,y:p.y};
     p.x+=dx/d*p.speed*dt;p.y+=dy/d*p.speed*dt;
+    const travel=Math.min(d,p.speed*dt);
+    rockWallReaction(p,from,{x:from.x+dx/d*travel,y:from.y+dy/d*travel});
     if(d<10+p.target.r){
       game.api.playSound('rock');
       game.api.dealDamage(p.target,p.damage,'physical',{rock:true});
@@ -724,7 +765,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

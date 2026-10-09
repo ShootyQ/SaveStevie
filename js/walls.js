@@ -493,6 +493,9 @@ function applyInkContact(e,dt,wall=null){
     e.poisonDps=2+game.state.inks.poison*2.5;
   }
   game.api.applyFrostContact(e,dt);
+  if(wall?.rockCharge?.life>0&&e.chainCd<=0){
+    const c=wall.rockCharge;if(Math.hypot(e.x-c.x,e.y-c.y)<=48+e.r)game.api.chainLightning(e,c.level);
+  }
   if(game.state.inks.electric>0&&e.chainCd<=0){
     game.api.chainLightning(e,game.state.inks.electric);
   }

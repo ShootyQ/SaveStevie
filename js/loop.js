@@ -30,6 +30,7 @@ function update(dt){
   game.api.updateSustain(dt);
   game.state.stats.ink=game.api.wobbleInfiniteInk()?game.state.stats.maxInk:Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.inkRegen*dt);
 
+  game.api.updateRockWalls(dt);
   // Ink slowly fades even when nobody is touching it.
   // It remains solid for most of its life, then visibly ghosts out before disappearing.
   for(const w of [...game.state.walls]){
