@@ -38,7 +38,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..')),native=proce
   await page.screenshot({path:'/tmp/notebook-hub-'+viewport.width+'.png'});
   await page.click('#closeHubBtn');assert.equal(await page.locator('#startOverlay').isVisible(),true);assert.equal(await page.evaluate(()=>testGame.state.paused),false);assert.equal(await page.evaluate(()=>document.activeElement.id),'splashHubBtn');
   await page.click('#startBtn');assert.equal(await page.locator('.bottom').isVisible(),true);
-  assert.deepEqual(await page.locator('.bottom button').evaluateAll(buttons=>buttons.filter(b=>getComputedStyle(b).display!=='none').map(b=>b.id)),native?['pauseBtn']:['fullscreenBtn','pauseBtn']);
+  assert.deepEqual(await page.locator('.bottom button').evaluateAll(buttons=>buttons.filter(b=>getComputedStyle(b).display!=='none').map(b=>b.id)),native?['pauseBtn','eraserBtn']:['fullscreenBtn','pauseBtn','eraserBtn']);
 
   await page.evaluate(()=>window.dispatchEvent(new Event('savestevie:background')));
   assert.equal(await page.locator('#pauseOverlay').isVisible(),true,'backgrounding pauses combat');

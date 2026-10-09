@@ -427,6 +427,7 @@ function drawEnemyFill(e,x,y,width,height){
 }
 
 function resize(){
+  game.api.cancelDrawingInput?.();
   const r=game.dom.canvas.getBoundingClientRect();
   game.state.dpr=Math.min(2,window.devicePixelRatio||1);
   game.dom.canvas.width=Math.floor(r.width*game.state.dpr);game.dom.canvas.height=Math.floor(r.height*game.state.dpr);
@@ -858,6 +859,7 @@ function draw(){
     if(stapleIntro.stage!=='punch'){ctx.save();ctx.scale(stapleIntro.scale,stapleIntro.scale);ctx.rotate(stapleIntro.angle);drawDoodleEnemy({type:'stapler',r:30,x:stapleIntro.x,y:stapleIntro.y,hp:1,maxHp:1,freeze:0,stun:0},1,false);ctx.restore()}
     if(stapleIntro.stage==='snap'){ctx.font='bold 22px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillStyle='#995c29';ctx.fillText(stapleIntro.age<2.55?'CLACK!':'CLACK CLACK!',0,-60)}ctx.restore();
   }
+  game.api.drawEraserCursor?.();
   game.api.drawWaveFinale(drawDoodleEnemy);game.dom.ctx.restore();
   if(game.state.paused){
     game.dom.ctx.fillStyle='rgba(20,25,28,.38)';game.dom.ctx.fillRect(0,0,game.state.W,game.state.H);

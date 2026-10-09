@@ -24,6 +24,61 @@ function rewardClosedLoop(wall,paid){
  const center=game.api.wallGeometry(wall.pts);wall.sealAge=0;
  game.api.floatText((center.minX+center.maxX)/2,(center.minY+center.maxY)/2,'SEALED! +'+refund.toFixed(1)+' ink','#456d49');
 }
+// Clip a wall segment against the swept eraser (a capsule), including sparse
+// two-point strokes. Parameter intervals keep every surviving edge exact.
+function eraserIntervals(p,q,a,b,r){
+ const vx=q.x-p.x,vy=q.y-p.y,v2=vx*vx+vy*vy,cuts=[];
+ if(v2<1e-10)return cuts;
+ for(const center of [a,b]){
+  const dx=p.x-center.x,dy=p.y-center.y,B=2*(dx*vx+dy*vy),C=dx*dx+dy*dy-r*r,D=B*B-4*v2*C;
+  if(D>0){const root=Math.sqrt(D),lo=Math.max(0,(-B-root)/(2*v2)),hi=Math.min(1,(-B+root)/(2*v2));if(hi>lo)cuts.push([lo,hi]);}
+ }
+ const length=Math.hypot(b.x-a.x,b.y-a.y);
+ if(length>1e-8){
+  const tx=(b.x-a.x)/length,ty=(b.y-a.y)/length,dx=p.x-a.x,dy=p.y-a.y;
+  let lo=0,hi=1;
+  for(const [origin,delta,min,max] of [[dx*tx+dy*ty,vx*tx+vy*ty,0,length],[-dx*ty+dy*tx,-vx*ty+vy*tx,-r,r]]){
+   if(Math.abs(delta)<1e-10){if(origin<min||origin>max){hi=-1;break;}}
+   else{const t1=(min-origin)/delta,t2=(max-origin)/delta;lo=Math.max(lo,Math.min(t1,t2));hi=Math.min(hi,Math.max(t1,t2));}
+  }
+  if(hi>lo)cuts.push([lo,hi]);
+ }
+ cuts.sort((x,y)=>x[0]-y[0]);const merged=[];
+ for(const cut of cuts){const last=merged.at(-1);if(last&&cut[0]<=last[1]+1e-8)last[1]=Math.max(last[1],cut[1]);else merged.push(cut);}
+ return merged;
+}
+function eraseWallPath(a,b,r=20){
+ if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
+ if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
+ let changed=false;const result=[];
+ for(const wall of game.state.walls){
+  const bounds=game.api.wallGeometry(wall.pts),pad=r+wall.thick/2;
+  if(bounds.maxX<Math.min(a.x,b.x)-pad||bounds.minX>Math.max(a.x,b.x)+pad||bounds.maxY<Math.min(a.y,b.y)-pad||bounds.minY>Math.max(a.y,b.y)+pad){result.push(wall);continue;}
+  let touched=false,total=0,piece=[],pieces=[];
+  const finish=()=>{if(piece.length>=2)pieces.push(piece);piece=[];};
+  for(let i=1;i<wall.pts.length;i++){
+   const p=wall.pts[i-1],q=wall.pts[i],length=Math.hypot(q.x-p.x,q.y-p.y);total+=length;if(length<1e-8)continue;
+   const point=t=>({x:p.x+(q.x-p.x)*t,y:p.y+(q.y-p.y)*t}),cuts=eraserIntervals(p,q,a,b,pad);
+   let start=0;
+   const keep=(lo,hi)=>{if(hi-lo<1e-8)return;const from=point(lo),to=point(hi);if(piece.length&&Math.hypot(piece.at(-1).x-from.x,piece.at(-1).y-from.y)>.001)finish();if(!piece.length)piece.push(from);piece.push(to);};
+   for(const [lo,hi] of cuts){touched=true;keep(start,lo);finish();start=hi;}
+   keep(start,1);
+  }
+  finish();
+  if(!touched){result.push(wall);continue;}
+  changed=true;
+  // A closed stroke can wrap across its first point; retain that connected piece.
+  if(pieces.length>1){const first=pieces[0],last=pieces.at(-1);if(Math.hypot(first[0].x-last.at(-1).x,first[0].y-last.at(-1).y)<.001){pieces[0]=last.concat(first.slice(1));pieces.pop();}}
+  for(const pts of pieces){
+   let length=0;for(let i=1;i<pts.length;i++)length+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
+   if(length<2||total<=0)continue;
+   const fraction=length/total;result.push({...wall,pts,hp:wall.hp*fraction,maxHp:wall.maxHp*fraction,closed:false});
+  }
+ }
+ if(changed)game.state.walls=result;
+ return changed;
+}
+
 function nearestWallHit(e){
   for(const wall of game.state.walls){
     const bounds=game.api.wallGeometry(wall.pts),radius=e.r+wall.thick/2;
@@ -452,7 +507,7 @@ function applySynergies(e,dt){
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
-const api = { flingBossFriend, launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
+const api = { eraseWallPath, flingBossFriend, launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
 Object.assign(game.api, api);
 return api;
 };

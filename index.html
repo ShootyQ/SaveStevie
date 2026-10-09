@@ -79,7 +79,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <aside id="scrapGuideCover" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>Psst! You earned scraps! They stay in my Notebook even when the monsters get me. Let’s see how they make our next adventure stronger.</p><div class="cardactions"><button id="scrapGuideShow">Show me →</button><button class="secondary" id="scrapGuideSkip">Got it</button></div></div></aside><div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.1</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <aside id="scrapGuideCover" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>A little tip from Stevie</h3><p>Psst! You earned scraps! They stay in my Notebook even when the monsters get me. Let’s see how they make our next adventure stronger.</p><div class="cardactions"><button id="scrapGuideShow">Show me →</button><button class="secondary" id="scrapGuideSkip">Got it</button></div></div></aside><div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.2</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -191,6 +191,7 @@
   <nav class="bottom" aria-label="Game controls">
     <button class="secondary" id="fullscreenBtn" title="Toggle fullscreen">Screen</button>
     <button id="pauseBtn">Pause</button>
+    <button class="secondary" id="eraserBtn" aria-pressed="false" aria-label="Erase walls">Erase</button>
   </nav>
 </div>
 <div id="message" hidden></div>
@@ -255,7 +256,7 @@
       <input id="effectsVolume" type="range" min="0" max="100" step="1" value="70">
       <p class="option-help">Adjust pencil scribbles, impacts and electric zaps. Set this to zero to mute effects without muting music.</p>
     </section>
-    <section class="option-section"><h3>How you play</h3><label class="monster-setting"><input id="optionsIntros" type="checkbox" checked> Introduce new monsters before a wave</label><p class="option-help">Motion follows your device’s reduced-motion setting. Open Tool any time to pause and inspect your pencil, effects, and synergies.</p></section>
+    <section class="option-section"><h3>How you play</h3><label class="monster-setting"><input id="eraserToggle" type="checkbox"> Tap to toggle the eraser instead of holding</label><label class="monster-setting"><input id="eraserLeft" type="checkbox"> Put the eraser button on the left</label><p class="option-help">Hold Erase with one thumb and rub a wall with your other finger. Release to draw again. On PC, right-drag to erase. Erasing costs no ink and gives no refund.</p><label class="monster-setting"><input id="optionsIntros" type="checkbox" checked> Introduce new monsters before a wave</label><p class="option-help">Motion follows your device’s reduced-motion setting. Open Tool any time to pause and inspect your pencil, effects, and synergies.</p></section>
     <div class="options-links"><button class="secondary" id="optionsStatsBtn">Notebook stats</button><button class="secondary" id="changelogBtn">What’s new</button></div>
     <section class="dev-mode-section"><button class="secondary dev-mode-button" id="devModeBtn" aria-pressed="false">DEV MODE</button><p id="devModeNote" class="option-help"></p><button class="secondary" id="testLabBtn" aria-expanded="false" aria-controls="testLabPanel">Test a wave / boss</button>
       <section id="testLabPanel" class="test-lab" hidden aria-labelledby="testLabTitle">
@@ -330,6 +331,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.2 · Rub out a new route</h3><p>Right-drag on PC, or hold the Erase button with one thumb while your other finger rubs out sections of wall. Release to draw again, even during the same stroke. Settings includes tap-to-toggle and a left-side button. Remaining wall pieces keep their ink effects, health ratio and lifetime. Erasing costs no ink, gives no refund and does not trigger wall explosions.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.1 · Clearer Android cover</h3><p>The Android title, tagline and footer now use dark ink on the notebook paper. The menu shows an Alpha update number at the bottom so you can tell which version you are testing.</p></article>
       <article class="build-entry"><h3>Twicey has double trouble</h3><p>Draw across Twicey Dicey’s center seam to split him early. His red half warns before dashing at Stevie; his purple half chews walls. After a few seconds they wave and try to reunite along a dotted route. Barriers keep them apart; a reunion leaves Twicey dizzy without healing him.</p></article>
       <article class="build-entry"><h3>Chonks gets a belly bump</h3><p>Sir Chonks waddles on alternating feet with a jiggly belly and builds speed and wall damage as he walks. Cut him off early for a weaker hit. His warned belly bump spends that momentum, then he flops down and gets back up. A nearby second wall doubles his recovery; frost and stun interrupt his windup.</p></article>

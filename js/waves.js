@@ -86,6 +86,7 @@ function waveDuration(){
 }
 
 function resetRun(options={}){
+  game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
   game.api.resetSynergyReveals();
   game.api.resetWaveFinale();
@@ -136,6 +137,7 @@ function startWave(options={}){
 }
 
 function waveComplete(){
+  game.api.cancelDrawingInput?.();
   if(game.api.wobbleRepairActive?.())return;
   if(game.api.waveFinaleActive())return;
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending()||(game.state.wave%5!==0&&game.state.enemies.length>0)||(game.state.wave%5===0&&!game.api.bossFightResolved()))return;
@@ -179,6 +181,7 @@ function proceedAfterWave(){
 }
 
 function returnToMenu(){
+  game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
   game.api.resetSynergyReveals();
   game.api.resetEnemyWave();
@@ -194,6 +197,7 @@ function returnToMenu(){
   game.dom.startOverlay.style.display='grid';game.api.selectMusicTrack('splash');game.api.updateUI();game.dom.$('startBtn').focus?.();
 }
 function gameOver(){
+  game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
   game.api.resetSynergyReveals();
   game.api.resetWaveFinale();
