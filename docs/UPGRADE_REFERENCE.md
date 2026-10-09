@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.9
+# Save Stevie upgrade reference — Alpha 0.1.10
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -117,7 +117,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | --- | --- |
 | Drawing | A valid segment becomes a working wall while dragging. Paid strokes cost at least 6 ink; default cost is 0.31 ink/pixel. HP = base wall HP × length/180, with loop/intersection bonuses. Growth preserves existing damage and lifetime. |
 | Erasing | PC: right-drag. Touch: hold Erase with one thumb while the other finger rubs; Settings supports tap-to-toggle and left-side controls. Healthy paid wall sections recover 25% ink, or 30% with Starter Eraser; damage reduces recovery. Only Rubble Ruff can be erased as an enemy. |
-| Paper wear and tunnels | About 7 seconds of local active eraser rubbing tears a hole. Holes persist for the run, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page. |
+| Paper wear and tunnels | About 7 seconds of local active eraser rubbing tears a hole. Holes persist for the run, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. One 30% entry decision per hole encounter, with no approach-alignment requirement. Bosses never enter. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page. |
 | Erase combat | Erase small hostile pencils/spikes, sacrificing return damage. Erasing paid electric ink between surviving wall ends discharges up to 12 + 2 × Electric Ink level damage, limited to 0.8 × removed paid ink, with a 0.8-second wall cooldown retained by fragments. Erase Chonks’s windup support or Boingus’s fresh rebound support to stun for 1.4 seconds; each monster has a 6-second stumble cooldown. |
 | Closed shapes | A stroke with more than six points and endpoints less than 22 pixels apart is a closed loop. Closed Loop/Fortress Geometry add durability and paid completion utility; related synergies add effects. |
 | Stevie throws rocks | Unlocked through rock upgrades or Pocket Pebbles. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies. |

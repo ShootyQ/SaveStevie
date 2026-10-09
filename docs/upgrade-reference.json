@@ -1,5 +1,5 @@
 {
-  "version": "0.1.9",
+  "version": "0.1.10",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -1015,7 +1015,7 @@
     },
     {
       "name": "Paper wear and tunnels",
-      "effect": "About 7 seconds of local active eraser rubbing tears a hole. Holes persist for the run, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page.",
+      "effect": "About 7 seconds of local active eraser rubbing tears a hole. Holes persist for the run, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. One 30% entry decision per hole encounter, with no approach-alignment requirement. Bosses never enter. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page.",
       "source": "js/paper.js"
     },
     {
