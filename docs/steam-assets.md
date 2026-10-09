@@ -8,9 +8,9 @@ Reference: [Store Graphical Assets Details & Templates](https://partner.steamgam
 
 | Asset | Requirement | Dimensions | Content / format | Reference | Status |
 | --- | --- | --- | --- | --- | --- |
-| Header Capsule | Required | 920 × 430 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#header_capsule) | To prepare |
-| Small Capsule | Required | 462 × 174 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#small_capsule) | To prepare |
-| Main Capsule | Required | 1232 × 706 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#main_capsule) | To prepare |
+| Header Capsule | Required | 920 × 430 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#header_capsule) | [Prepared PNG](../assets/steam/header-capsule-920x430.png) |
+| Small Capsule | Required | 462 × 174 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#small_capsule) | [Prepared PNG](../assets/steam/small-capsule-462x174.png) |
+| Main Capsule | Required | 1232 × 706 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#main_capsule) | [Prepared PNG](../assets/steam/main-capsule-1232x706.png) |
 | Vertical Capsule | Required | 748 × 896 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#hero_capsule) | To prepare |
 | Screenshots | Required | Minimum 1920 × 1080 px or larger; 16:9 | Gameplay screenshots | [Details](https://partner.steamgames.com/doc/store/assets/standard#screenshots) | Deferred — ignore for now |
 | Page Background | Optional | 1438 × 810 px | Subtle artwork, not too bright | [Details](https://partner.steamgames.com/doc/store/assets/standard#page_background) | Optional; to decide |
