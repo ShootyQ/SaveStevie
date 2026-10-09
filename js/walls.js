@@ -69,17 +69,19 @@ function eraseWallPath(a,b,r=20,options={}){
   changed=true;
   // A closed stroke can wrap across its first point; retain that connected piece.
   if(pieces.length>1){const first=pieces[0],last=pieces.at(-1);if(Math.hypot(first[0].x-last.at(-1).x,first[0].y-last.at(-1).y)<.001){pieces[0]=last.concat(first.slice(1));pieces.pop();}}
-  let kept=0;
+  let kept=0;const firstPiece=result.length;
   for(const pts of pieces){
    let length=0;for(let i=1;i<pts.length;i++)length+=Math.hypot(pts[i].x-pts[i-1].x,pts[i].y-pts[i-1].y);
    if(length<2||total<=0)continue;
    const fraction=length/total;kept+=fraction;result.push({...wall,pts,hp:wall.hp*fraction,maxHp:wall.maxHp*fraction,eraseInk:(wall.eraseInk||0)*fraction,closed:false});
   }
+  if(!options.enemy)game.api.eraseWallReaction(wall,result.slice(firstPiece),a,b,r,(wall.eraseInk||0)*Math.max(0,1-kept));
   if(!options.enemy&&wall.eraseInk>0&&wall.maxHp>0)recovered+=wall.eraseInk*Math.max(0,1-kept)*game.api.clamp(wall.hp/wall.maxHp,0,1)*game.api.clamp(game.state.stats.eraseRefund??.25,0,.6);
  }
  if(changed){game.state.walls=result;game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+recovered);game.api.updateUI();}
  if(!options.enemy){
-  for(const e of [...game.state.enemies])if(e.type==='scrubber'&&e.hp>0&&game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<=r+e.r*.7){
+  changed=game.api.eraseProjectiles(a,b,r)||changed;
+  for(const e of [...game.state.enemies])if(e.type==='scrubber'&&!game.api.underPaper(e)&&e.hp>0&&game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<=r+e.r*.7){
    game.api.dealDamage(e,e.hp,'erase');game.api.killEnemy(e);changed=true;
   }
  }
@@ -128,7 +130,7 @@ function landingPoint(e,x,y,inferno){
  return best;
 }
 function launchEnemy(e,x,y,inferno=false){
- if(e.hp<=0||e.flight)return false;
+ if(e.hp<=0||e.flight||game.api.underPaper(e))return false;
  if(isInkBoss(e)){game.api.animateEnemyAction(e,'slam');return false}
  const target=landingPoint(e,x,y,inferno);if(!target)return false;
  e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:inferno?1.05:.85,
@@ -319,7 +321,7 @@ function finishStitch(t){
  if(other===w){w.stitchPoints.push({...end.point});return;}
  const tail=end.index===0?[...other.pts]:[...other.pts].reverse();
  w.pts=w.pts.concat(tail.slice(1));w.hp+=other.hp;w.maxHp+=other.maxHp;t.oldMaxHp+=other.maxHp;t.oldIntersections+=other.intersections||0;
- w.life=Math.min(w.life,other.life);w.maxLife=Math.min(w.maxLife,other.maxLife);w.eraseInk+=(other.eraseInk||0);
+ w.sparkReadyAt=Math.max(w.sparkReadyAt||0,other.sparkReadyAt||0);w.life=Math.min(w.life,other.life);w.maxLife=Math.min(w.maxLife,other.maxLife);w.eraseInk+=(other.eraseInk||0);
  w.stitchCount=t.startCount+(other.stitchCount||0)+1;t.factor=stitchFactor(w.stitchCount);w.intersections=t.oldIntersections+t.newIntersections;
  w.stitchPoints=[...(w.stitchPoints||[]),...(other.stitchPoints||[]),{...end.point}];
  game.state.walls=game.state.walls.filter(a=>a!==other);resizeConnectorHp(t);
@@ -456,6 +458,7 @@ function cancelLiveWall(){const t=liveStroke;liveStroke=null;if(t)chargeFreehand
 function liveWallActive(){return liveStroke!==null;}
 
 function applyInkContact(e,dt,wall=null){
+  if(game.api.underPaper(e))return 0;
   let dps=game.state.stats.wallDamage;
 
   if(game.state.synergies.has('Ring of Fire')&&wall&&wall.closed){
@@ -534,6 +537,7 @@ function applyChaosContact(e,dt){
 }
 
 function applyOneInk(kind,e,dt,chaos=false){
+  if(game.api.underPaper(e))return;
   const n=chaos?Math.max(1,game.state.inks.chaos):1;
   if(kind==='fire'&&e.immunity!=='fire'){e.burn=Math.max(e.burn,1.8);e.burnDps=Math.max(e.burnDps,6+n)}
   if(kind==='frost'&&e.immunity!=='frost')e.freeze=Math.max(e.freeze,(.3+Math.min(.3,.03*n))*(isInkBoss(e)?.5:1));
@@ -558,7 +562,7 @@ function electricTuning(level){
   return {damage:3+1.2*power,count:Math.min(6,1+Math.floor(level/3)),range:Math.min(190,110+level*12),radius:360,cooldown:Math.max(.8,1.15-level*.025),stun:Math.min(.18,.09+level*.01),fieldDps:2+power*.9};
 }
 function chainLightning(source,level){
-  if(source.hp<=0||(source.chainCd||0)>0)return;
+  if(source.hp<=0||game.api.underPaper(source)||(source.chainCd||0)>0)return;
   const t=electricTuning(level);let {count,range}=t,mult=1;
   if(game.state.synergies.has('Cryoshock')&&source.freeze>0){range+=25;count++;mult+=.15}
   if(game.state.synergies.has('Tesla Well')&&game.api.gravityWallHit(source)){range+=20;count++;mult+=.1}
@@ -568,7 +572,7 @@ function chainLightning(source,level){
   for(let hop=0;hop<count;hop++){
     let next=null,best=range*range;
     for(const e of game.state.enemies){
-      if(e.hp<=0||visited.has(e)||(e.chainCd||0)>0||e.immunity==='electric'||Math.hypot(e.x-source.x,e.y-source.y)>t.radius)continue;
+      if(e.hp<=0||game.api.underPaper(e)||visited.has(e)||(e.chainCd||0)>0||e.immunity==='electric'||Math.hypot(e.x-source.x,e.y-source.y)>t.radius)continue;
       const d=(e.x-from.x)**2+(e.y-from.y)**2;
       if(d<=best&&(!next||d<best)){next=e;best=d}
     }

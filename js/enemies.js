@@ -255,7 +255,8 @@ function updateProjectiles(dt){
     p.x+=dx/d*p.speed*dt;p.y+=dy/d*p.speed*dt;
     if(d<10+p.target.r){
       game.api.playSound('rock');
-      game.api.dealDamage(p.target,p.damage,'physical');
+      game.api.dealDamage(p.target,p.damage,'physical',{rock:true});
+      if(game.api.underPaper(p.target)){game.api.burst(p.target.x,p.target.y,'#b6a387',4);game.state.projectiles=game.state.projectiles.filter(q=>q!==p);continue;}
       if(game.state.synergies.has('Hot Rocks')){
         p.target.burn=Math.max(p.target.burn,2);
         p.target.burnDps=Math.max(p.target.burnDps,8+game.state.inks.fire*3);
@@ -309,6 +310,7 @@ function updateEnemyShots(dt){
       if(shot.reflected){
         const distance=Math.hypot(owner.x-shot.x,owner.y-shot.y),travel=245*Math.min(dt,Math.max(0,shot.life));
         if(distance<=travel+owner.r+shot.r){
+          if(game.api.underPaper(owner)){game.api.burst(shot.x,shot.y,'#cbbba4',3);continue;}
           owner.returnHits=(owner.returnHits||0)+1;
           game.api.dealDamage(owner,owner.maxHp/owner.returnHitsNeeded,'reflected');
           if(owner.returnHits>=owner.returnHitsNeeded&&owner.hp>0)game.api.dealDamage(owner,owner.hp,'reflected');
@@ -489,7 +491,7 @@ function updateFeast(e,dt){
  if(e.feastPhase==='idle'){
   e.feastCd=Math.max(0,e.feastCd-dt);
   if(e.feastCd>0||e.x<e.r+12||e.x>game.state.W-e.r-12||e.y<e.r+12||e.y>game.state.H-e.r-12||game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y)<130)return;
-  const guests=game.state.enemies.filter(a=>a!==e&&a.hp>0&&!a.waveBoss&&!game.catalog.enemyDefs[a.type]?.boss&&!['boss','eraser','basil'].includes(a.type)&&!a.flight&&!a.feastHost&&!(a.feastRush>0)&&game.api.dist(e.x,e.y,a.x,a.y)<=170).sort((a,b)=>game.api.dist(e.x,e.y,a.x,a.y)-game.api.dist(e.x,e.y,b.x,b.y)).slice(0,6);
+  const guests=game.state.enemies.filter(a=>a!==e&&a.hp>0&&!game.api.underPaper(a)&&!a.waveBoss&&!game.catalog.enemyDefs[a.type]?.boss&&!['boss','eraser','basil'].includes(a.type)&&!a.flight&&!a.feastHost&&!(a.feastRush>0)&&game.api.dist(e.x,e.y,a.x,a.y)<=170).sort((a,b)=>game.api.dist(e.x,e.y,a.x,a.y)-game.api.dist(e.x,e.y,b.x,b.y)).slice(0,6);
   if(!guests.length){e.feastCd=1;return;}
   for(const a of guests)a.feastHost=e;
   e.feastPhase='gather';e.feastLeft=3;game.api.floatText(e.x,e.y-25,'FANCY FEAST!','#60904c');return;
@@ -538,7 +540,7 @@ function updateEnemyBehavior(e,dt){
     let healing=false;
     if(e.hp>0&&e.stun<=0&&e.freeze<=0){
       for(const ally of game.state.enemies){
-        if(ally!==e&&ally.hp>0&&ally.hp<ally.maxHp&&game.api.withinRadius(e.x,e.y,ally.x,ally.y,95)){
+        if(ally!==e&&!game.api.underPaper(ally)&&ally.hp>0&&ally.hp<ally.maxHp&&game.api.withinRadius(e.x,e.y,ally.x,ally.y,95)){
           ally.hp=Math.min(ally.maxHp,ally.hp+3*dt);
           healing=true;
         }
@@ -685,6 +687,7 @@ function steerBounce(e,dt){
 
 // Forced motion must respect live barriers just like bouncer path checks.
 function moveEnemySafely(e,dx,dy){
+  if(game.api.underPaper(e))return false;
   const x=e.x+dx,y=e.y+dy;
   if(game.api.isWobbleBoss(e)){if(!game.api.wobbleMoveClear(e,x,y))return false;e.x=x;e.y=y;return true}
   if(e.waveBoss?!game.api.bossMoveClear(e,x,y):!game.api.bouncePathClear(e,x,y,0))return false;
@@ -698,7 +701,7 @@ function damageStevie(damage,source,impact=game.state.player){
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }
 function contactStevie(e){
-  if(e.hp<=0||e.flight||!game.state.enemies.includes(e)||e.type==='splitter'&&e.twiceyDizzy>0||e.type==='scrubber')return false;
+  if(e.hp<=0||e.flight||game.api.underPaper(e)||!game.state.enemies.includes(e)||e.type==='splitter'&&e.twiceyDizzy>0||e.type==='scrubber')return false;
   const player=game.state.player;
   if(!game.api.touchesRefuge(e))return false;
   if(e.type==='wobble-tooth')return false; // Its own warned bite handles Stevie; cover still uses wall contact.

@@ -8,7 +8,7 @@ function radius(p,age=p.age){return settings.startRadius+(settings.maxRadius-set
 function resetPlaguefire(){patches=[];scars=[];serial=0}
 function dropPlaguefire(enemy){
   if(!game.state.synergies.has('Plaguefire')||enemy.burn<=0||enemy.poison<=0||enemy.immunity==='fire'||enemy.immunity==='poison'||patches.length>=settings.maxPatches)return;
-  if(!Number.isFinite(enemy.x)||!Number.isFinite(enemy.y))return;
+  if(game.api.underPaper(enemy)||!Number.isFinite(enemy.x)||!Number.isFinite(enemy.y))return;
   patches.push({x:enemy.x,y:enemy.y,age:0,life:settings.life,seed:++serial,
     fireDps:4+2*game.state.inks.fire,poisonDps:3+1.5*game.state.inks.poison});
 }
@@ -18,6 +18,7 @@ function updatePlaguefire(dt){
   // monsters drop new patches through the normal kill/reward path afterward.
   const fields=patches.map(p=>{const active=Math.min(dt,Math.max(0,p.life-p.age));return {p,active,r:radius(p,Math.min(p.life,p.age+active))};});
   for(const enemy of game.state.enemies){
+    if(game.api.underPaper(enemy))continue;
     if(enemy.hp<=0)continue;
     let fire=0,poison=0;
     for(const {p,active,r} of fields){

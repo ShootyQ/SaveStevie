@@ -13,7 +13,7 @@ function update(dt){
   if(game.api.synergyRevealActive()||game.api.beginSynergyReveal())return;
   if(game.api.bossEntranceActive()){game.api.updateBossEntrance(dt);game.api.updateUI();return}
   if((game.state.wave===5||game.state.wave===10)&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
-  game.api.updateRefuge(dt);
+  game.api.updateRefuge(dt);game.api.updatePaper(dt);
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
   game.state.waveElapsed+=dt;
   if(game.state.wave%5!==0||game.api.bossWavePhase()==='timed'){
@@ -50,6 +50,7 @@ function update(dt){
 
     if(game.state.synergies.has('Gravity Trap')||game.state.synergies.has('THE BLACK HOLE')){
       for(const e of game.state.enemies){
+        if(game.api.underPaper(e))continue;
         if(game.api.bossFriendHeld(e)||game.api.isFirstBoss(e))continue;
         if(game.api.withinRadius(e.x,e.y,cx,cy,game.api.supportInkTuning(game.state.inks.gravity).gravityRange)){
           const dx=cx-e.x,dy=cy-e.y,m=Math.hypot(dx,dy)||1;
@@ -62,6 +63,7 @@ function update(dt){
 
     if(game.state.synergies.has('Ring of Fire')){
       for(const e of game.state.enemies){
+        if(game.api.underPaper(e))continue;
         if(game.api.withinRadius(e.x,e.y,cx,cy,115)){
           e.burn=Math.max(e.burn,1.4);
           e.burnDps=Math.max(e.burnDps,5+game.state.inks.fire*2.5);
@@ -71,6 +73,7 @@ function update(dt){
 
     if(game.state.synergies.has('TESLA CAGE')&&w.intersections>0){
       for(const e of game.state.enemies){
+        if(game.api.underPaper(e))continue;
         if(!teslaHits.has(e)&&game.api.withinRadius(e.x,e.y,cx,cy,145)){
           teslaHits.add(e);
           game.api.dealDamage(e,game.api.electricTuning(game.state.inks.electric).fieldDps*dt,'electric');
@@ -83,6 +86,7 @@ function update(dt){
   // Parallel-wall field synergies.
   if(game.state.synergies.has('Ice Corridor')||game.state.synergies.has('Power Lines')||game.state.synergies.has('ABSOLUTE ZERO')){
     for(const e of game.state.enemies){
+        if(game.api.underPaper(e))continue;
       if(game.api.wallNear(e.x,e.y,42)){
         if(game.state.synergies.has('Ice Corridor')||game.state.synergies.has('ABSOLUTE ZERO')){
           e.gravitySlow=Math.max(e.gravitySlow,.42);
@@ -104,6 +108,7 @@ function update(dt){
     if(game.api.waveFinaleActive())break;
     if(!game.state.enemies.includes(e))continue;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
+    if(game.api.updatePaperEnemy(e,dt))continue;
     if(e.shockRest>0)e.shockRest=Math.max(0,e.shockRest-dt);e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
     game.api.updateSupportInkEnemy(e,dt);
@@ -116,7 +121,7 @@ function update(dt){
     }
     if(e.charged>0&&game.state.synergies.has('Rail Ink')){
       for(const n of game.state.enemies){
-        if(n!==e&&!railHits.has(n)&&game.api.withinRadius(n.x,n.y,e.x,e.y,38)){
+        if(n!==e&&!game.api.underPaper(n)&&!railHits.has(n)&&game.api.withinRadius(n.x,n.y,e.x,e.y,38)){
           railHits.add(n);const damage=game.api.electricTuning(game.state.inks.electric).fieldDps*dt;game.api.dealDamage(n,damage,'electric');
           if(!railHits.has(e)){railHits.add(e);game.api.dealDamage(e,damage*.5,'electric')}
           if(Math.random()<1.5*dt)game.api.burst(n.x,n.y,'#91b6ff',2)
