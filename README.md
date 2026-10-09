@@ -1077,3 +1077,7 @@ Refill Practice grants +1 starting ink/second per rank (three ranks costing 5, 1
 ### Synergy reveals
 
 Newly activated synergies queue an animated notebook-paper reveal with their ingredient artwork and description. At the next combat start, gameplay waits until **Cool—let’s go!** is pressed. Multiple unlocks show individually; reactivations during the same run use a short message. Removed combinations are dropped from the pending queue; fresh runs reset discovery presentation. Keyboard focus stays on Continue, Escape acknowledges, and reduced motion disables the reveal animations. Check desktop and phone layouts with `node tests/browser-synergy-reveal.cjs`.
+
+## Steam page preparation
+
+See the [Steam asset checklist](docs/steam-assets.md) for required sizes, formats and reference templates. Artwork preparation is pending; screenshots are deferred.
