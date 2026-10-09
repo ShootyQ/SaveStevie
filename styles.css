@@ -975,3 +975,34 @@ html.native-app input,html.native-app textarea{user-select:text;-webkit-user-sel
 .tool-rank-comparison .instrument-hero{width:100%;margin:4px 0 0}
 .tool-rank-art .socket-plus{line-height:1}
 .tool-rank-comparison .socket-plus{font-size:11px;line-height:1}
+
+/* Little cover routines reuse the combat drawings, with no gameplay state. */
+.splash-grunt{position:absolute;aspect-ratio:1;overflow:hidden;animation:splashGribbleRoutine 7s ease-in-out infinite}
+.splash-art .splash-grunt-frames{width:400%;max-width:none;left:0;top:0;animation:splashGribbleFrames 7s step-end infinite}
+@keyframes splashGribbleRoutine{
+  0%,100%{transform:rotate(-8deg)}
+  25%{transform:translate(15%,-3%) rotate(2deg)}
+  40%{transform:translate(22%,0) rotate(6deg) scale(1.08,.92)}
+  48%{transform:translate(14%,-9%) rotate(-9deg) scale(.94,1.06)}
+  60%{transform:translate(14%,0) rotate(-5deg)}
+  80%{transform:translate(0,-2%) rotate(-8deg)}
+}
+@keyframes splashGribbleFrames{
+  0%,100%{transform:translate(0,0)}
+  5%,65%{transform:translate(-25%,0)}10%,70%{transform:translate(-50%,0)}15%,75%{transform:translate(-75%,0)}
+  20%,80%{transform:translate(0,-25%)}25%,85%{transform:translate(-25%,-25%)}30%,90%{transform:translate(-50%,-25%)}
+  35%{transform:translate(0,-50%)}38%{transform:translate(-25%,-50%)}41%{transform:translate(-50%,-50%)}44%{transform:translate(-75%,-50%)}
+  47%{transform:translate(0,-75%)}50%{transform:translate(-25%,-75%)}53%{transform:translate(-50%,-75%)}56%{transform:translate(-75%,-75%)}
+}
+.splash-splitter{position:absolute;right:7%;aspect-ratio:200 / 153;animation:splashTwiceyRoutine 6.5s ease-in-out infinite}
+.splash-art .splash-splitter img{width:100%;left:0;top:0;transform-origin:50% 85%}
+.splash-twin-left{clip-path:inset(0 50% 0 0);animation:splashTwinLeft 6.5s ease-in-out infinite}
+.splash-twin-right{clip-path:inset(0 0 0 50%);animation:splashTwinRight 6.5s ease-in-out infinite}
+@keyframes splashTwiceyRoutine{0%,100%{transform:rotate(-5deg)}20%{transform:scale(1.09,.91) rotate(-5deg)}35%{transform:translateY(-10%) rotate(3deg)}60%{transform:scale(.92,1.08)}70%{transform:scale(1.08,.92)}85%{transform:rotate(-5deg)}}
+@keyframes splashTwinLeft{0%,20%,68%,100%{transform:translate(0,0)}35%{transform:translate(-18%,-8%) rotate(-12deg)}50%{transform:translate(-18%,0) rotate(7deg)}60%{transform:translate(-8%,-12%) rotate(-5deg)}}
+@keyframes splashTwinRight{0%,20%,68%,100%{transform:translate(0,0)}35%{transform:translate(12%,0) rotate(12deg)}50%{transform:translate(12%,-10%) rotate(-7deg)}60%{transform:translate(6%,-4%) rotate(5deg)}}
+.splash-flame{transform-origin:0 0;animation:splashFlameDance .55s ease-in-out infinite alternate}
+.splash-embers{animation:splashEmberRise .85s ease-out infinite}
+@keyframes splashFlameDance{from{transform:skewX(-6deg) scale(.95,1)}to{transform:skewX(5deg) scale(1.05,1.12)}}
+@keyframes splashEmberRise{0%{opacity:0;transform:translate(0,4px)}25%{opacity:1}100%{opacity:0;transform:translate(3px,-13px)}}
+@media(prefers-reduced-motion:reduce){.splash-grunt,.splash-splitter{transform:rotate(-5deg)}.splash-embers{display:none}}
