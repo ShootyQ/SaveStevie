@@ -872,7 +872,15 @@ function draw(){
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }
 }
-const api = { drawStapleHelper:()=>drawDoodleEnemy({type:'jamling',r:10,hp:1,maxHp:1},1,false), enemyFacing, enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+function drawPaperDoodle(e,pose){
+ if(!pose||pose.visible<=0)return;
+ const ctx=game.dom.ctx;ctx.save();ctx.translate(e.x,e.y);
+ // The lower body disappears below the torn rim; emergence reverses the mask.
+ ctx.beginPath();ctx.rect(-e.r*3,-e.r*4,e.r*6,e.r*4+e.r*(pose.reduced?4:pose.visible));ctx.clip();
+ ctx.globalAlpha=pose.reduced?pose.visible:1;ctx.translate(0,pose.y);ctx.rotate(pose.angle);ctx.scale(pose.sx,pose.sy);
+ drawDoodleEnemy(e,game.api.clamp(e.hp/e.maxHp,0,1),false);ctx.restore();
+}
+const api = { drawPaperDoodle,drawStapleHelper:()=>drawDoodleEnemy({type:'jamling',r:10,hp:1,maxHp:1},1,false), enemyFacing, enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 updateMenuPencil(0);
 return api;
