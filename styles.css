@@ -658,7 +658,7 @@ html.native-app .bottom{position:absolute;z-index:8;left:0;right:0;bottom:0;heig
 html.native-app .bottom button{flex:1;min-width:0;height:44px;min-height:44px;padding:2px;font-size:10px;border-radius:7px;box-shadow:none}
 html.native-app .bottom #fullscreenBtn{display:none}
 html.native-app .bottom #musicBtn{flex:0 0 40px}
-html.native-app.menu-view .bottom{display:none}
+html.native-app .menu-view .bottom{display:none}
 html.native-app #upgradeList,html.native-app #inkTags{display:none}
 html.native-app #chapterPaper{top:calc(48px + var(--native-top) + var(--dev-inset,0px))}
 html.native-app #freehandMeter{top:calc(52px + var(--native-top) + var(--dev-inset,0px))!important;left:calc(6px + var(--native-left))!important;padding:3px 5px!important;width:140px!important}
@@ -694,9 +694,11 @@ button.paper-slip:focus-visible{outline:3px dashed #3562be;outline-offset:3px}
 #startOverlay .splash-box{width:min(100%,820px);max-height:100%;padding:24px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:'art title' 'art tagline' 'art start' 'art hub' 'art settings' 'footer footer';gap:14px 32px;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:auto;align-items:center;transform:none}
 #startOverlay .splash-box::before{display:none}
 #startOverlay .splash-art{grid-area:art;width:100%;height:auto;aspect-ratio:440 / 250;margin:0;align-self:center}
-#startOverlay .splash-title{grid-area:title;display:block;transform:none;line-height:1.05;margin:0;padding:0;font-size:clamp(48px,7vw,72px);letter-spacing:-1px;color:#fff4dc;text-align:center}
-#startOverlay .splash-title span{color:#bedcff;background:transparent}
-#startOverlay .splash-tagline{grid-area:tagline;transform:none;text-align:center;font-size:20px!important;line-height:1.2;padding:0;margin:0 0 8px;color:#e9dfcc}
+#startOverlay{--cover-title:#fff4dc;--cover-accent:#bedcff;--cover-copy:#e9dfcc;--cover-footer:#d3c9b7}
+html.native-app #startOverlay{--cover-title:#26333c;--cover-accent:#2856a6;--cover-copy:#414a43;--cover-footer:#514c40}
+#startOverlay .splash-title{grid-area:title;display:block;transform:none;line-height:1.05;margin:0;padding:0;font-size:clamp(48px,7vw,72px);letter-spacing:-1px;color:var(--cover-title);text-align:center}
+#startOverlay .splash-title span{color:var(--cover-accent);background:transparent}
+#startOverlay .splash-tagline{grid-area:tagline;transform:none;text-align:center;font-size:20px!important;line-height:1.2;padding:0;margin:0 0 8px;color:var(--cover-copy)}
 #startOverlay button.paper-slip{--tilt:0deg;min-height:54px;margin:0;padding:12px 20px;font-size:27px;color:#315d8c}
 #startOverlay button.paper-slip::before{filter:drop-shadow(1px 4px 2px #65583f55)}
 #startOverlay #startBtn{grid-area:start;--tilt:-1deg;color:#305e39;font-size:32px;min-height:64px}
@@ -705,7 +707,8 @@ button.paper-slip:focus-visible{outline:3px dashed #3562be;outline-offset:3px}
 #startOverlay #splashHubBtn{grid-area:hub}
 #startOverlay #splashOptionsBtn{grid-area:settings}
 #startOverlay .splash-footer{grid-area:footer;justify-self:center;width:auto;max-width:100%;margin:12px 0 0;padding:0;transform:none;line-height:1.15}
-#startOverlay .copyright-notice{font-family:'Stevie Pencil',cursive;font-size:12px;margin:0;color:#d3c9b7}
+#startOverlay .copyright-notice{font-family:'Trebuchet MS',system-ui,sans-serif;font-size:12px;line-height:1.4;margin:4px 0 0;color:var(--cover-footer)}
+#startOverlay .alpha-version{display:block;font-family:'Trebuchet MS',system-ui,sans-serif;font-size:14px;font-weight:700;line-height:1.4;color:var(--cover-copy)}
 /* Only these two controls remain on the live paper. */
 .bottom{height:52px;flex:0 0 52px;justify-content:flex-end;flex-wrap:nowrap;background:transparent;border:0;box-shadow:none;padding:4px 6px;gap:9px}
 .bottom button{flex:0 0 104px;max-width:140px;min-height:44px;height:44px;flex-direction:row;gap:7px;font-family:'Stevie Pencil',cursive;font-weight:400;font-size:21px;border-width:1px}

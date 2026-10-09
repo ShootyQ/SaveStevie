@@ -1,6 +1,6 @@
 // Optional browser check; Playwright/Chromium are developer tools, not game dependencies.
 const {chromium}=require('playwright'),assert=require('assert'),fs=require('fs'),path=require('path');
-const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
+const root=path.resolve(process.argv[2]||path.join(__dirname,'..')),native=process.env.NATIVE_APP==='1';
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});
  for(const viewport of [{width:1280,height:900},{width:393,height:851},{width:360,height:640},{width:851,height:393}]){
@@ -10,13 +10,23 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.route('http://127.0.0.1:8001/**',route=>{
    const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;
    try{body=fs.readFileSync(path.join(root,name))}catch{return route.fulfill({status:404,body:''})}
+   if(name==='index.html'&&native)body=body.toString('utf8').replace('<html lang="en">','<html class="native-app" lang="en">');
    if(name==='game.js')body=body.toString('utf8').replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');
    return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
   });
   await page.goto('http://127.0.0.1:8001/');await page.click('#startBtn');
   await page.waitForFunction(()=>testGame.api.artworkReady());
   await page.evaluate(()=>testGame.api.returnToMenu());
-  await page.screenshot({path:'/tmp/main-menu-'+viewport.width+'.png'});
+  await page.screenshot({path:'/tmp/'+(native?'android-':'web-')+'main-menu-'+viewport.width+'.png'});
+  assert.equal(await page.textContent('#appVersion'),'Alpha '+require(path.join(root,'package.json')).version);
+  for(const selector of ['.splash-title','.splash-title span','.splash-tagline','#appVersion','.copyright-notice']){
+   const contrast=await page.locator('#startOverlay '+selector).evaluate((el,native)=>{
+    const rgb=getComputedStyle(el).color.match(/\d+/g).slice(0,3).map(Number),bg=native?[247,241,223]:[48,70,86];
+    const light=rgb=>rgb.map(v=>{v/=255;return v<=.04045?v/12.92:Math.pow((v+.055)/1.055,2.4)}).reduce((s,v,i)=>s+v*[.2126,.7152,.0722][i],0);
+    const a=light(rgb),b=light(bg);return (Math.max(a,b)+.05)/(Math.min(a,b)+.05);
+   },native);assert(contrast>=4.5,'readable cover text '+selector+' contrast '+contrast);
+  }
+  const footer=await page.locator('.splash-footer').boundingBox();assert(footer.y>=0&&footer.y+footer.height<=viewport.height+1,'Alpha footer fits');
   assert.equal(await page.locator('#startOverlay').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
   assert.equal(await page.locator('.bottom').isVisible(),false);
   assert.deepEqual(await page.locator('#startOverlay button:visible').allTextContents(),['Play →','Notebook','Settings']);
@@ -28,7 +38,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.screenshot({path:'/tmp/notebook-hub-'+viewport.width+'.png'});
   await page.click('#closeHubBtn');assert.equal(await page.locator('#startOverlay').isVisible(),true);assert.equal(await page.evaluate(()=>testGame.state.paused),false);assert.equal(await page.evaluate(()=>document.activeElement.id),'splashHubBtn');
   await page.click('#startBtn');assert.equal(await page.locator('.bottom').isVisible(),true);
-  assert.deepEqual(await page.locator('.bottom button').evaluateAll(buttons=>buttons.filter(b=>getComputedStyle(b).display!=='none').map(b=>b.id)),['fullscreenBtn','pauseBtn']);
+  assert.deepEqual(await page.locator('.bottom button').evaluateAll(buttons=>buttons.filter(b=>getComputedStyle(b).display!=='none').map(b=>b.id)),native?['pauseBtn']:['fullscreenBtn','pauseBtn']);
 
   await page.evaluate(()=>window.dispatchEvent(new Event('savestevie:background')));
   assert.equal(await page.locator('#pauseOverlay').isVisible(),true,'backgrounding pauses combat');

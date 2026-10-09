@@ -99,6 +99,10 @@ After the workflow reaches the repository's default branch, open GitHub
 upload the AAB to a new Play internal-testing release. Testers get an app update.
 There is no automatic Play upload or production rollout.
 
+The menu displays the Alpha version from the current update (for example,
+Alpha 0.1.1). Android versionName defaults to that package version with an
+`-alpha` suffix. Rebuild and reinstall the APK to get a new menu or game update.
+
 The workflow assigns an increasing versionCode from its run number. Every Play
 upload must have a code higher than the last uploaded version. For local builds,
 set `ANDROID_VERSION_CODE` and optionally `ANDROID_VERSION_NAME` in your shell

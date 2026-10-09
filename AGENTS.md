@@ -16,3 +16,11 @@ Start each new change on a fresh descriptive feature branch from current `main`.
 Push that branch and create a pull request into `main`, providing its direct link
 for the user to review and merge. Continue on an existing feature branch when
 updating its open PR. Do not merge or deploy automatically.
+
+For every new player-facing update, increment the patch version in `package.json`
+and the root package versions in `package-lock.json`, and update the main-menu
+`#appVersion` label in `index.html` to `Alpha X.Y.Z`. Use that version in the
+newest changelog heading. Refine the same version when updating an unmerged PR.
+Keep the Alpha label until the user requests a different release stage. Android
+versionName reads this package version automatically; preserve its increasing
+versionCode and any explicit release overrides.

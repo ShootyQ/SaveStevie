@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 
+def alphaVersion = new groovy.json.JsonSlurper().parse(rootProject.file('../package.json')).version + '-alpha'
+
 android {
     namespace = "com.shootyq.savestevie"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -8,7 +10,7 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode Integer.parseInt(System.getenv("ANDROID_VERSION_CODE") ?: "1")
-        versionName System.getenv("ANDROID_VERSION_NAME") ?: "0.1.0-test"
+        versionName System.getenv("ANDROID_VERSION_NAME") ?: alphaVersion
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
