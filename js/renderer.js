@@ -200,6 +200,9 @@ function updateEnemyAnimations(dt){
     }
     if(e.type==='jamling'){if(moving){p.y-=Math.abs(step)*2;p.angle+=step*.16;p.sx+=step*.08;p.sy-=step*.08}if(e.jamWarning>0){p.sx+=e.jamWarning*.18;p.sy-=e.jamWarning*.14;p.angle+=Math.sin(motionTime*15)*.05}}
     if(moving&&e.type==='flanker'){p.angle+=m.facing*.12;p.y-=Math.abs(step)*1.6;p.sx+=step*.06;p.sy-=step*.04}
+    if(e.type==='splitter'){p.angle+=Math.sin(motionTime*5+m.phase)*.08;p.sx+=Math.abs(Math.sin(motionTime*3+m.phase))*.1;if(e.twiceyDizzy>0){p.y+=3;p.angle+=Math.sin(motionTime*12)*.16;p.sy-=.12;}}
+    if(e.twicey?.phase==='warn'){p.sx+=.18;p.sy-=.14;p.angle-=m.facing*.15;}
+    if(e.twicey?.phase==='dash'){p.angle+=m.facing*.25;p.sx+=.2;p.sy-=.12;}
     if(moving&&(e.type==='fast'||e.type==='mini')){p.angle+=m.facing*.09;p.sx+=step*.05;p.sy-=step*.05;}
     if(moving&&e.type==='grunt'&&!doodles['grunt-frame-0']){p.sx+=step*.035;p.sy-=step*.035;}
     if(e.type==='boss'&&game.api.isFirstBoss(e)){
@@ -330,14 +333,56 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const foot=top+height;ctx.translate(0,foot);ctx.scale(pose.sx,pose.sy);ctx.translate(0,-foot);
   if(profileDirections[e.type]&&!name.startsWith('fast-frame-')&&enemyFacing(e)!==profileDirections[e.type])ctx.scale(-1,1);
   // Damage never fades the body: health belongs in the separate bar.
-  if(e.type==='tank'&&e.chonks&&!motionReduced)drawChonksBody(ctx,tintedDoodle(name,colors),e,left,top,width,height);
+  if(e.type==='splitter'||e.type==='mini'&&e.twicey)drawTwiceyBody(ctx,e,left,top,width,height,colors);
+  else if(e.type==='tank'&&e.chonks&&!motionReduced)drawChonksBody(ctx,tintedDoodle(name,colors),e,left,top,width,height);
   else ctx.drawImage(tintedDoodle(name,colors),left,top,width,height);
   if(e.waveBoss&&e.type==='stapler'&&e.hp/e.maxHp<=.35){ctx.strokeStyle='#4b3228';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,-e.r);ctx.lineTo(2,-e.r+12);ctx.lineTo(-4,-e.r+18);ctx.lineTo(8,-e.r+30);ctx.stroke()}
   ctx.restore();
   if(showHealth)drawEnemyHealthBar(e,hpRatio,colors);
   if(e.type==='tank'&&e.chonks)drawChonksWarning(e);
+  if(e.type==='splitter'||e.twicey)drawTwiceyCue(e);
   return true;
 }
+// Twicey's original two-eyed doodle becomes two expressive, independent halves.
+function drawTwiceyBody(ctx,e,left,top,width,height,colors){
+ const image=tintedDoodle('splitter',e.twicey?.role==='runner'&&!colors.length?['#d35451']:colors),iw=image.naturalWidth||image.width,ih=image.naturalHeight||image.height;
+ const active=!motionReduced&&e.freeze<=0&&e.stun<=0,t=active?motionTime:0;
+ if(e.type==='splitter'){
+  for(let i=0;i<2;i++){
+   const side=i?1:-1,wriggle=active?Math.sin(t*6+i*Math.PI)*1.7:0,gap=active?Math.abs(Math.sin(t*3))*2:0;
+   ctx.save();ctx.translate(side*gap,wriggle);ctx.rotate(active?side*Math.sin(t*4)*.045:0);
+   ctx.drawImage(image,i*iw/2,0,iw/2,ih,left+i*width/2,top,width/2,height);ctx.restore();
+  }
+  ctx.strokeStyle='#f6e5a0';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);ctx.beginPath();ctx.moveTo(0,-e.r*.85);ctx.lineTo(0,e.r*.85);ctx.stroke();ctx.setLineDash([]);
+ }else{
+  const runner=e.twicey.role==='runner',i=runner?0:1;
+  ctx.drawImage(image,i*iw/2,0,iw/2,ih,-width*.4,top,width*.8,height);
+  ctx.strokeStyle=runner?'#b84439':'#673596';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(0,0,e.r+2,0,Math.PI*2);ctx.stroke();
+  // Mouths make the roles readable without depending solely on color.
+  ctx.beginPath();if(runner){ctx.arc(0,e.r*.5,3,0,Math.PI);ctx.stroke();}
+  else{ctx.moveTo(-4,e.r*.4);ctx.lineTo(-2,e.r*.7);ctx.lineTo(0,e.r*.4);ctx.lineTo(2,e.r*.7);ctx.lineTo(4,e.r*.4);ctx.stroke();}
+  if(e.twicey.phase==='reunite'){
+   const wave=active?Math.sin(t*13)*3:0;ctx.beginPath();ctx.moveTo(width*.35,0);ctx.lineTo(width*.65,-5);ctx.lineTo(width*.7+wave,-11);ctx.stroke();
+  }
+ }
+}
+function drawTwiceyCue(e){
+ const ctx=game.dom.ctx,c=e.twicey;ctx.save();ctx.lineWidth=2;
+ if(c?.phase==='warn'){
+  ctx.strokeStyle='#b84439';ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(c.dx*65,c.dy*65);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(0,0,e.r+6,0,Math.PI*2*(1-c.timer/.7));ctx.stroke();
+ }
+ if(c?.phase==='reunite'&&c.role==='runner'){
+  const partner=game.api.twiceyPartner(e);
+  if(partner){ctx.strokeStyle='#754a9a';ctx.setLineDash([3,5]);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(partner.x-e.x,partner.y-e.y);ctx.stroke();ctx.setLineDash([]);}
+ }
+ if(e.twiceyDizzy>0){
+  ctx.strokeStyle='#b08a27';for(let i=0;i<3;i++){const a=i*Math.PI*2/3+(motionReduced?0:motionTime*4),x=Math.cos(a)*(e.r+4),y=-e.r-9+Math.sin(a)*3;ctx.beginPath();ctx.moveTo(x-2,y);ctx.lineTo(x+2,y);ctx.moveTo(x,y-2);ctx.lineTo(x,y+2);ctx.stroke();}
+ }
+ ctx.restore();
+}
+
 // Separate feet from the same doodle so the heavy waddle has real alternating steps.
 function drawChonksBody(ctx,image,e,left,top,width,height){
  const m=enemyMotion.get(e),c=e.chonks,phase=m?.phase||0,walking=c.phase==='walk'&&m?.cue==='waddle',recover=c.phase==='recover';

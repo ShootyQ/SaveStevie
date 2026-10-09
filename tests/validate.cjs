@@ -2195,3 +2195,31 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const render=JSON.stringify(late.g.state);late.g.api.draw();assert.equal(JSON.stringify(late.g.state),render,'animation rendering never changes combat');
  console.log('PASS: Chonks earned/capped momentum, weak early interception, warned single hits, layered-wall flop, vulnerable recovery, freeze/stun/erase interruption, pause and pure rendering.');
 }
+
+// Twicey's structural conversions preserve health, walls and run rewards.
+{
+ const env=load(true,{images:true}),g=env.sandbox.testGame;
+ function setup(){g.api.resetRun();g.state.wave=8;g.state.W=800;g.state.H=700;g.state.player.x=700;g.state.player.y=600;g.state.timeLeft=300;g.state.spawnTimer=9999;g.state.stats.rockDamage=0;g.state.stats.wallDamage=0;return g.api.spawnEnemy(false,200,200,'splitter');}
+ const stroke=()=>[{x:170,y:200},{x:230,y:200}],wall=x=>({pts:[{x,y:100},{x,y:300}],thick:8,hp:10000,maxHp:10000,life:1000,maxLife:1000});
+ let e=setup();const hp=e.hp,kills=g.state.kills;
+ g.state.stats.ink=0;g.api.createWall(stroke());assert.equal(g.state.enemies[0],e,'unpaid stroke cannot split');
+ g.state.stats.ink=100;g.api.createWall([{x:180,y:170},{x:230,y:170}]);assert.equal(g.state.enemies[0],e,'grazing line cannot split');g.state.walls=[];
+ e.burn=2;e.burnDps=3;g.api.createWall(stroke());assert.equal(g.state.enemies.length,2);assert.equal(g.state.kills,kills,'cut is not a kill/reward');
+ let [runner,chewer]=g.state.enemies;assert.equal(runner.twicey.role,'runner');assert.equal(chewer.twicey.role,'chewer');assert.equal(runner.hp+chewer.hp,hp);assert.equal(runner.burn,2);assert.equal(chewer.burnDps,3);
+ g.state.walls=[];runner.x=200;runner.y=200;chewer.x=230;chewer.y=200;runner.burn=chewer.burn=0;runner.twicey.timer=0;
+ g.api.updateTwicey(runner,.01);assert.equal(runner.twicey.phase,'warn');const start=runner.x;g.api.updateTwicey(runner,.6);assert.equal(runner.x,start,'dash warns without advancing');g.api.updateTwicey(runner,.11);assert.equal(runner.twicey.phase,'dash');assert(runner.x>start,'warned dash advances');
+ runner.freeze=1;const age=runner.twicey.age;g.api.updateTwicey(runner,.2);assert.equal(runner.twicey.age,age,'freeze holds reunion clock');assert.equal(runner.twicey.phase,'walk','freeze cancels dash');runner.freeze=0;
+ runner.x=200;runner.y=200;chewer.x=240;chewer.y=200;runner.twicey.age=chewer.twicey.age=6;g.state.walls=[wall(220)];
+ for(let i=0;i<30;i++){g.api.updateTwicey(runner,.03);g.api.updateTwicey(chewer,.03);}
+ assert.equal(g.state.enemies.length,2,'separating wall prevents reunion');assert(runner.x<220&&chewer.x>220,'neither half crosses wall');assert(g.state.walls[0].hp<10000,'halves chew blocking walls');
+ g.state.walls=[];runner.x=200;chewer.x=210;runner.hp-=4;chewer.hp-=3;const remaining=runner.hp+chewer.hp;
+ g.api.updateTwicey(runner,.02);assert.equal(g.state.enemies.length,1);e=g.state.enemies[0];assert.equal(e.type,'splitter');assert.equal(e.hp,remaining,'reunion never heals');assert(e.stun>=1.5);assert.equal(g.state.kills,kills,'reunion cannot award kills');
+ const oldX=e.x,oldY=e.y,playerHp=g.state.player.hp;e.x=g.state.player.x;e.y=g.state.player.y;assert.equal(g.api.contactStevie(e),false,'dizzy Twicey cannot hit Stevie');assert.equal(g.state.player.hp,playerHp);e.x=oldX;e.y=oldY;
+ const snapshot=JSON.stringify(g.state);g.state.paused=true;const paused=JSON.stringify(g.state);g.api.update(.2);assert.equal(JSON.stringify(g.state),paused);g.state.paused=false;g.api.updateEnemyAnimations(.1);g.api.draw();assert.equal(JSON.stringify(g.state),snapshot,'drawing is pure');
+ g.api.killEnemy(e);assert.equal(g.state.enemies.length,2,'one normal death split remains');[runner,chewer]=g.state.enemies;runner.x=200;runner.y=200;chewer.x=210;chewer.y=200;runner.twicey.age=chewer.twicey.age=6;g.api.updateTwicey(runner,.02);e=g.state.enemies[0];assert.equal(e.type,'splitter');const afterKill=g.state.kills;g.api.killEnemy(e);assert.equal(g.state.enemies.length,0,'death children cannot generate endless death splits');assert.equal(g.state.kills,afterKill+1);
+ e=setup();e.x=g.state.player.x;e.y=g.state.player.y;g.api.contactStevie(e);assert.equal(g.state.enemies.length,0,'contact never releases children');
+ e=setup();g.state.stats.ink=6;g.state.stats.lineCost=1;g.api.createWall(stroke());assert.equal(g.state.enemies[0],e,'unaffordable end of stroke cannot split');
+ e=setup();g.state.stats.doubleLine=true;g.api.createWall([{x:170,y:200},{x:200,y:200},{x:230,y:200}]);assert.equal(g.state.enemies.length,2,'sampled seam and copy strokes create exactly one pair');assert(Math.hypot(g.state.enemies[0].x-g.state.enemies[1].x,g.state.enemies[0].y-g.state.enemies[1].y)>15,'cut halves separate visibly');
+ e=setup();g.api.splitTwicey(e);[runner,chewer]=g.state.enemies;g.api.killEnemy(chewer);runner.twicey.age=10;g.api.updateTwicey(runner,.1);assert.equal(g.state.enemies.length,1,'orphan never reunites with another family');g.api.resetRun();assert(!g.state.enemies.some(n=>n.twicey));
+ console.log('PASS: paid seam cuts, distinct warned dash/chew halves, health/status/reward preservation, solid-wall reunion blocking, frozen clocks, dizzy opening, bounded death splitting, contact, orphan/reset and pure rendering.');
+}

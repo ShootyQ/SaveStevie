@@ -136,13 +136,90 @@ function killEnemy(e){
     game.api.animateEnemySplit(e);
     game.api.animateSplitChild(game.api.spawnEnemy(false,e.x+10,e.y,'splitter'));game.api.animateSplitChild(game.api.spawnEnemy(false,e.x-10,e.y,'splitter'));
   }
-  if(e.type==='splitter'){
-    game.api.animateEnemySplit(e);
-    game.api.animateSplitChild(game.api.spawnEnemy(false,e.x+6,e.y+3,'mini'));game.api.animateSplitChild(game.api.spawnEnemy(false,e.x-6,e.y-3,'mini'));
-  }
+  if(e.type==='splitter'&&!e.twiceyDeathSplitUsed)splitTwicey(e,true);
   game.api.dropPlaguefire(e);
   game.state.enemies=game.state.enemies.filter(x=>x!==e);
   if(!game.api.wobbleRepairActive?.())game.api.beginWaveFinale(e);
+}
+
+// Pair IDs keep combat state serializable; no enemy references survive a reset.
+let twiceySerial=0;
+function twiceyPartner(e){return game.state.enemies.find(n=>n!==e&&n.hp>0&&n.twicey?.pair===e.twicey?.pair&&e.twicey)}
+function splitTwicey(e,defeated=false,normal={x:1,y:.28}){
+ if(!game.state.enemies.includes(e)||(!defeated&&(e.hp<=0||e.flight))||game.state.enemies.length+1>pressure.maxEnemies)return false;
+ const pair=++twiceySerial,hp=defeated?defs.mini.hp*game.api.enemyHpScale()*game.state.stats.enemyScale:e.hp/2;
+ game.api.animateEnemySplit(e);
+ game.state.enemies=game.state.enemies.filter(n=>n!==e);
+ for(let i=0;i<2;i++){
+  // Separate along the seam without teleporting through nearby walls.
+  const child=game.api.spawnEnemy(false,e.x,e.y,'mini');
+  const side=i?1:-1;game.api.moveEnemySafely(child,side*normal.x*(e.r+5),side*normal.y*(e.r+5));
+  child.hp=hp;child.maxHp=defeated?hp:e.maxHp/2;
+  child.twicey={pair,role:i?'chewer':'runner',age:0,phase:'walk',timer:1.3,dx:0,dy:0,parentMax:e.maxHp,deathSplitUsed:defeated||!!e.twiceyDeathSplitUsed};
+  if(!defeated)for(const key of ['burn','burnDps','poison','poisonDps','freeze','stun','charged','gravitySlow'])child[key]=e[key];
+  game.api.animateSplitChild(child);
+ }
+ game.api.floatText(e.x,e.y-20,'TWO TROUBLES!','#8456c9');return true;
+}
+function cutTwiceyStroke(points){
+ for(const e of [...game.state.enemies]){
+  if(e.type!=='splitter'||e.hp<=0||e.flight||e.stun>0)continue;
+  // A real crossing of the center seam, rather than a tap or a grazing wall.
+  let left=false,right=false,cross=false,normal;
+  for(const p of points){if(p.x<e.x-4)left=true;if(p.x>e.x+4)right=true;}
+  for(let i=1;i<points.length;i++){
+   const a=points[i-1],b=points[i],dx=b.x-a.x;if(Math.abs(dx)<.001)continue;
+   const t=(e.x-a.x)/dx;
+   if(t>=0&&t<=1&&Math.abs(a.y+(b.y-a.y)*t-e.y)<e.r*.95){cross=true;const dy=b.y-a.y,len=Math.hypot(dx,dy);normal={x:-dy/len,y:dx/len};}
+  }
+  if(left&&right&&cross)splitTwicey(e,false,normal);
+ }
+}
+function reuniteTwicey(e,other){
+ const x=(e.x+other.x)/2,y=(e.y+other.y)/2,hp=e.hp+other.hp,maxHp=e.twicey.parentMax;
+ game.state.enemies=game.state.enemies.filter(n=>n!==e&&n!==other);
+ const parent=game.api.spawnEnemy(false,x,y,'splitter');parent.hp=Math.min(maxHp,hp);parent.maxHp=maxHp;
+ parent.twiceyDeathSplitUsed=e.twicey.deathSplitUsed;parent.stun=1.6;parent.twiceyDizzy=1.6;
+ for(const key of ['burn','burnDps','poison','poisonDps','freeze','charged','gravitySlow'])parent[key]=Math.max(e[key],other[key]);
+ game.api.animateSplitChild(parent);game.api.floatText(x,y-20,'BONK!','#8456c9');game.api.burst(x,y,'#b295d9',8);
+}
+function updateTwicey(e,dt){
+ if(e.type==='splitter'){e.twiceyDizzy=Math.max(0,(e.twiceyDizzy||0)-dt);return false;}
+ const c=e.twicey;if(!c||e.type!=='mini')return false;
+ const partner=twiceyPartner(e);let hit=game.api.nearestWallHit(e)||game.api.gravityWallHit(e);
+ if(!hit)for(const wall of game.state.walls){const p=game.api.nearestPointOnWall(e,wall);if(Math.hypot(p.x-e.x,p.y-e.y)<=e.r+wall.thick/2+1.5){hit={wall};break;}}
+ if(hit){game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');if(e.hp<=0)return true;}
+ if(e.stun>0||e.freeze>0){c.phase='walk';c.timer=Math.max(c.timer,.75);return true;}
+ if(game.api.feastHost(e))return false;
+ c.age+=dt;
+ let target=game.state.player,speed=e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7));
+ if(partner&&c.age>=5.5){
+  c.phase='reunite';target=partner;speed*=1.25;
+  if(!hit&&!game.api.nearestWallHit(partner)&&partner.twicey.age>=5.5&&!partner.flight&&partner.stun<=0&&partner.freeze<=0&&Math.hypot(e.x-partner.x,e.y-partner.y)<=e.r+partner.r+3&&game.api.bouncePathClear(e,partner.x,partner.y,0)){
+   reuniteTwicey(e,partner);return true;
+  }
+ }else if(c.role==='runner'){
+  c.timer-=dt;
+  if(c.phase==='walk'&&c.timer<=0){
+   const dx=target.x-e.x,dy=target.y-e.y,len=Math.hypot(dx,dy)||1;c.dx=dx/len;c.dy=dy/len;c.phase='warn';c.timer=.7;
+  }else if(c.phase==='warn'&&c.timer<=0){c.phase='dash';c.timer=.55;}
+  else if(c.phase==='dash'&&c.timer<=0){c.phase='walk';c.timer=2.1;}
+  if(c.phase==='warn')return true;
+  if(c.phase==='dash'){target={x:e.x+c.dx*100,y:e.y+c.dy*100};speed*=2.1;}
+ }else{
+  let best=Infinity;
+  for(const w of game.state.walls){const p=game.api.nearestPointOnWall(e,w),d=Math.hypot(p.x-e.x,p.y-e.y);if(d<best){best=d;target=p;}}
+ }
+ if(hit){
+  e.attackCd-=dt;
+  if(e.attackCd<=0){game.api.damageWall(hit.wall,e.dmg*(c.role==='chewer'?1.4:1),e.x,e.y);e.attackCd=c.role==='chewer'?.55:.8;game.api.animateEnemyAction(e,'bite',game.api.nearestPointOnWall(e,hit.wall));}
+  if(c.phase==='dash'){c.phase='walk';c.timer=2.1;}
+ }
+ const dx=target.x-e.x,dy=target.y-e.y,len=Math.hypot(dx,dy)||1,travel=Math.min(len,speed*dt);
+ const nx=e.x+dx/len*travel,ny=e.y+dy/len*travel,ahead=game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r+1},nx,ny);
+ if(ahead&&!hit){const step=Math.max(0,ahead.t-.001);e.x+=(nx-e.x)*step;e.y+=(ny-e.y)*step;}
+ else game.api.moveEnemySafely(e,dx/len*travel,dy/len*travel);
+ game.api.contactStevie(e);return true;
 }
 
 function nearestEnemy(x,y,maxD){
@@ -595,7 +672,7 @@ function damageStevie(damage,source,impact=game.state.player){
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }
 function contactStevie(e){
-  if(e.hp<=0||e.flight||!game.state.enemies.includes(e))return false;
+  if(e.hp<=0||e.flight||!game.state.enemies.includes(e)||e.type==='splitter'&&e.twiceyDizzy>0)return false;
   const player=game.state.player;
   if(!game.api.touchesRefuge(e))return false;
   if(e.type==='wobble-tooth')return false; // Its own warned bite handles Stevie; cover still uses wall contact.
@@ -618,7 +695,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };
