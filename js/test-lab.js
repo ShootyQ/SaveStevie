@@ -53,6 +53,7 @@ function startTestRun(config=readSetup()){
  if(effects.size>tools[config.toolRank].slots){notice('This tool has '+tools[config.toolRank].slots+' effect slots. Remove an effect or choose a larger tool.');return false}
  // Validation is complete before replacing the current run. Saved perks stay intact.
  game.api.setDevMode(true);game.api.resetRun({skipNotebook:!config.notebook,skipIntro:true});active=true;
+ game.state.stats.wallHp+=(config.toolRank-game.state.tool.rank)*8;
  game.state.tool={...tools[config.toolRank],rank:config.toolRank};
  for(const entry of entries){const base=game.catalog.upgrades.find(u=>u.name===entry.name);for(let i=0;i<entry.copies;i++)if(!game.api.applyUpgrade({...base,rarity:entry.rarity}))break}
  game.state.wave=config.wave;game.state.endless=config.wave>20;game.state.player.hp=game.state.player.maxHp;

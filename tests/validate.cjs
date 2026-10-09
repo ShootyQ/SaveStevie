@@ -669,8 +669,8 @@ assert.ok(Number(stored.get('doodleDefenderBestV4'))>=15,'existing best never er
 const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:2000,lifetimeScraps:2000,levels:{}}):null,setItem(){}};
 const rich=load(true,{storage:richStore}).sandbox.testGame;
 for(const p of rich.catalog.notebookPerks){for(let rank=0;rank<p.max;rank++)assert.equal(rich.api.buyNotebookPerk(p.id),true);assert.equal(rich.api.buyNotebookPerk(p.id),false,'rank cap')}
-assert.equal(rich.api.notebookSnapshot().scraps,1242,'all rank prices charged exactly');
-rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,8);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);rich.api.rollCards();assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,97,107,9,1.3,2,8]);
+assert.equal(rich.api.notebookSnapshot().scraps,1323,'all rank prices charged exactly');
+rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,8);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);rich.api.rollCards();assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,145,107,9,1.3,2,8]);
 rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.3,'rock unlock preserves faster starter throws');assert.equal(rich.state.stats.rockDamage,13);
 const dirty=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:-5,lifetimeScraps:'oops',levels:{inkTank:999,health:-2,rocks:1.5,luck:'4'}}):null,setItem(){}}}).sandbox.testGame;
 assert.equal(dirty.api.notebookSnapshot().scraps,0);dirty.api.resetRun();assert.equal(dirty.state.stats.maxInk,260);assert.equal(dirty.state.player.maxHp,75);assert.equal(dirty.state.stats.rockDamage,0);assert.equal(dirty.state.stats.luck,0);
@@ -836,7 +836,7 @@ console.log('PASS: five soundtrack loops, intro autoplay with manual retry, chap
  for(const [rank,name,slots] of [[0,'Pencil',2],[3,'Mechanical Pencil',2],[6,'Simple Pen',3],[10,'Scented Sharpie',4]]){
   const store={getItem:k=>k===key?JSON.stringify({version:1,scraps:10,levels:{tool:rank,inkTank:2,pencil:1}}):null,setItem(){}};
   const tool=load(true,{storage:store}).sandbox.testGame;tool.api.resetRun();
-  assert.equal(tool.state.tool.name,name);assert.equal(tool.state.tool.slots,slots);assert.equal(tool.state.stats.maxInk,200);assert.equal(tool.state.stats.wallHp,73);
+  assert.equal(tool.state.tool.name,name);assert.equal(tool.state.tool.slots,slots);assert.equal(tool.state.stats.maxInk,200);assert.equal(tool.state.stats.wallHp,65+rank*8);
   assert.equal(tool.api.buyNotebookPerk('tool'),false,'cannot buy while playing');
   for(const effect of tool.catalog.upgrades.filter(u=>u.cat==='ink').slice(0,slots))tool.api.chooseUpgrade(effect);
   assert.equal(tool.api.equippedEffects().length,slots,'all unlocked slots can be filled');
@@ -1053,7 +1053,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  g.api.getUpgrade=get;g.api.resetRun();assert.equal(g.api.devRunActive(),false);g.api.awardScraps(1);assert.equal(g.api.notebookSnapshot().scraps,43,'new normal run earns progress');
  g.api.setDevMode(true);assert.equal(g.api.devRunActive(),true,'enabling mid-run marks the whole remaining run');g.api.setDevMode(false);g.api.awardScraps(10);assert.equal(g.api.notebookSnapshot().scraps,43);g.state.wave=60;g.api.gameOver();assert.equal(g.state.best,1);
  const reload=load(true,{storage}).sandbox.testGame;assert.equal(reload.api.devModeEnabled(),false,'reload defaults to normal rewards');
- for(const [rank,slots] of [[0,2],[3,2],[6,3],[10,4]]){g.state.tool={rank,slots,name:'Test'};g.api.renderTool('buildTool');const html=env.node('buildTool').innerHTML;assert.match(html,/tool-tiers.png/);assert.equal((html.match(/class="tool-socket"/g)||[]).length,slots);assert.ok(!html.includes('undefined%'));}
+ for(const [rank,slots] of [[0,2],[3,2],[6,3],[10,4]]){g.state.tool={rank,slots,name:'Test'};g.api.renderTool('buildTool');const html=env.node('buildTool').innerHTML;assert.match(html,/tool-ranks.png/);assert.equal((html.match(/class="tool-socket"/g)||[]).length,slots);assert.ok(!html.includes('undefined%'));}
  console.log('PASS: deterministic selected rarity rewards, full-slot replacement/cancel, unchanged normal RNG, session-only dev mode, persistent unranked runs, protected scraps/records, restored normal progress and all tool socket tiers.');
 }
 
@@ -2392,4 +2392,18 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  assert(new Set(poses).size>=4,'distinct tumble, wriggle, dive and spring poses');
  const reduced=load(true,{images:true,reduced:true}).sandbox.testGame;const n={type:'bouncer',r:12,paperTunnel:{phase:'enter',entryTimer:.25}};const pose=reduced.api.paperTransitionPose(n);assert.equal(pose.angle,0);assert.equal(pose.sx,1);assert.equal(pose.sy,1);assert(pose.reduced);
  console.log('PASS: one 30% decision per encounter, leaving/reentering rearm, off-angle closer exits, all boss exclusions without RNG, paused entry and distinct pure early-monster entry/emergence poses with reduced motion.');
+}
+
+{
+ const key='saveStevieNotebookV1',saved=new Map([[key,JSON.stringify({version:1,scraps:100,lifetimeScraps:500,scrapTutorialDone:true,levels:{tool:5,pencil:4,inkTank:2,starterEraser:1}})],['doodleDefenderBestV4','17']]);
+ const storage={getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v))};let g=load(true,{storage}).sandbox.testGame;
+ assert.equal(g.api.notebookSnapshot().scraps,181,'refund actual old rank costs 5+12+24+40');assert.equal(g.api.notebookSnapshot().lifetimeScraps,500);assert.equal(g.api.notebookSnapshot().version,2);assert(!('pencil' in g.api.notebookSnapshot().levels));assert(!g.catalog.notebookPerks.some(p=>p.id==='pencil'));assert.equal(g.api.buyNotebookPerk('pencil'),false);assert.equal(saved.get('doodleDefenderBestV4'),'17');
+ g=load(true,{storage}).sandbox.testGame;assert.equal(g.api.notebookSnapshot().scraps,181,'reload cannot refund twice');g.api.renderNotebook();assert.match(g.dom.$('notebookLoadout').textContent,/105 wall HP/);assert.equal(g.api.buyNotebookPerk('tool'),true);assert.equal(g.api.notebookSnapshot().scraps,157);g.api.resetRun();assert.equal(g.state.stats.wallHp,113);assert.equal(g.state.tool.slots,3);g.api.createWall([{x:100,y:180},{x:280,y:180}]);assert.equal(g.state.walls[0].maxHp,113);g.api.resetRun();assert.equal(g.state.stats.wallHp,113,'new runs do not duplicate HP');
+ for(let rank=0;rank<=10;rank++){
+  const env=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:2,scraps:0,lifetimeScraps:500,levels:{tool:rank}}):null,setItem(){}}}),game=env.sandbox.testGame;game.api.resetRun();assert.equal(game.state.stats.wallHp,65+rank*8);assert.equal(game.state.tool.slots,rank===10?4:rank>=6?3:2);
+  const art=game.api.toolIllustration(rank);assert.match(art,new RegExp('data-tool-rank="'+rank+'"'));assert.match(art,/tool-ranks.png/);assert.equal((art.match(/class="tool-socket"/g)||[]).length,game.state.tool.slots);
+ }
+ const blocked=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:100,lifetimeScraps:500,levels:{pencil:4}}):null,setItem(){throw Error('blocked')}}}).sandbox.testGame;assert.equal(blocked.api.notebookSnapshot().scraps,181);assert(blocked.api.notebookSnapshot().storageIssue);
+ const noRepeat=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:2,scraps:100,levels:{pencil:4}}):null,setItem(){}}}).sandbox.testGame;assert.equal(noRepeat.api.notebookSnapshot().scraps,100,'new save ignores removed perk');
+ console.log('PASS: eleven ranked tool artworks/slots, +8 HP at every rank and real wall creation/reset, retired Fresh Pencil, one-time exact refund/persisted migration, protected lifetime/best/perks and blocked storage.');
 }
