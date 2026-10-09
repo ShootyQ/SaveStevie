@@ -1,0 +1,1548 @@
+{
+  "version": "0.1.7",
+  "legendaryPlan": {
+    "chance": 0.3333333333333333,
+    "firstWave": 1,
+    "lastWave": 19
+  },
+  "notes": [
+    "Catalog descriptions and requirements are exported from game code; mechanics and review notes are maintained alongside them. Suggestions are proposals, not shipped changes.",
+    "Only Quick Sketch has been explicitly flagged by the player in this conversation; other candidates are hypotheses, not pick-rate data.",
+    "About one in three campaigns reserves at most one Legendary offer after waves 1–19. Runs ending early may never see their offer; this is not a guarantee every third run.",
+    "One-time upgrades award one unlock regardless of rarity; stackable upgrades generally award 1/2/3/4 levels, subject to caps.",
+    "Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-upgrade-workbook.py (requires openpyxl)."
+  ],
+  "upgrades": [
+    {
+      "name": "Bigger Ink Tank",
+      "category": "Drawing / ink economy",
+      "effect": "+35 max ink.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Quick Refill",
+      "category": "Drawing / ink economy",
+      "effect": "Adds ink regeneration: +2 ink/s first pick, smaller bonuses on repeats.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Repeat level n adds 2 / (1 + 0.4 × (n−1)) ink/s.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Thick Ink",
+      "category": "Walls / shapes",
+      "effect": "+20 base wall durability. Long strokes multiply this further.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "First Aid",
+      "category": "Stevie / rocks / survival",
+      "effect": "+18 max HP and heal 18.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Fine Tip",
+      "category": "Drawing / ink economy",
+      "effect": "Lines cost 12% less ink.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Each level multiplies ink cost by 0.88; a paid stroke still costs at least 6 ink.",
+      "synergies": [
+        "Needlepoint"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Fat Marker",
+      "category": "Walls / shapes",
+      "effect": "+2 line width and +15 wall HP.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Heavy Artillery"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Lucky Scribble",
+      "category": "Rewards / recovery",
+      "effect": "+8 Luck: improves rarity odds for future upgrades and rerolls.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Clean Erasing",
+      "category": "Rewards / recovery",
+      "effect": "Recover 10 percentage points more paid ink from healthy erased walls per level, up to 60%. Damaged walls return less; free lines and copies return nothing.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Erased paid-ink recovery capped at 60%; damaged sections return less; no free/copy refunds.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Recycling",
+      "category": "Rewards / recovery",
+      "effect": "Kills refund 5 ink, sharing an 8 ink/s refill budget.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Shared kill-ink recovery budget: 8 ink/s.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Closed Loop",
+      "category": "Walls / shapes",
+      "effect": "Closed shapes gain +40% durability. First loop-utility level: 15% paid ink back, repair nearby walls by 15% of missing HP, and +10% damage inside. Later levels have diminishing gains; repair is capped by ink spent.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Shares diminishing loop utility with Fortress Geometry; refunds/repair depend on paid ink; utility overlaps do not stack.",
+      "synergies": [
+        "Gravity Trap",
+        "Ring of Fire",
+        "THE BLACK HOLE",
+        "TESLA CAGE"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Architect",
+      "category": "Walls / shapes",
+      "effect": "Each wall intersection adds 15% durability.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Circuit Board",
+        "Demolition Grid",
+        "TESLA CAGE"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Patchwork",
+      "category": "Walls / shapes",
+      "effect": "Drawing across an old wall repairs 18 HP.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Blood Patch"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Double Stroke",
+      "category": "Drawing / ink economy",
+      "effect": "Each stroke adds a parallel wall with 60% of the original durability.",
+      "rarities": "Common / Uncommon / Rare",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "One-time unlock; disabled when parallel walls are already unlocked.",
+      "synergies": [
+        "Ice Corridor",
+        "ABSOLUTE ZERO"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Quick Sketch",
+      "category": "Drawing / ink economy",
+      "effect": "Your first stroke every wave is free.",
+      "rarities": "Common / Uncommon / Rare",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "One-time unlock; first valid stroke each wave only. Free strokes have no erasure/closure ink refund.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Patch Job",
+      "category": "Walls / shapes",
+      "effect": "Every kill repairs walls by up to 3 HP each, sharing a 12 wall HP/s budget.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Shared repair-on-kill budget: 12 wall HP/s across all walls.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Freehand",
+      "category": "Drawing / ink economy",
+      "effect": "Spend 80 real ink to charge a limited free-ink bank. Stacking increases the free bank.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Charges from real paid ink, not free strokes/copies; threshold 80; initial bank 40, +20 per extra level.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Living Fountain Pen",
+      "category": "Drawing / ink economy",
+      "effect": "35% faster ink regeneration on the first pick; smaller multipliers on repeats.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Repeat level n multiplies regeneration by 1 + 0.35 / (1 + 0.5 × (n−1)).",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Triple Stroke",
+      "category": "Drawing / ink economy",
+      "effect": "Every stroke adds TWO parallel walls, each with 60% durability.",
+      "rarities": "legendary",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "Legendary-only, one-time unlock; two copies replace the single Double Stroke copy.",
+      "synergies": [
+        "Ice Corridor",
+        "Power Lines",
+        "ABSOLUTE ZERO"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Bottomless Pen",
+      "category": "Drawing / ink economy",
+      "effect": "Per level: +40 max ink and +2 ink/s at first, with smaller regeneration bonuses on repeats.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Each level adds 40 max ink; regeneration repeats use 2 / (1 + 0.4 × (n−1)).",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Fortress Geometry",
+      "category": "Walls / shapes",
+      "effect": "Per level: +50% closed-shape durability. Shares Closed Loop’s diminishing ink refund, completion repair and enclosed-enemy damage bonus (15% / 15% / 10% at the first utility level).",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Shares diminishing loop utility with Closed Loop; free strokes/copies do not earn ink refunds.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Bandages",
+      "category": "Stevie / rocks / survival",
+      "effect": "Heal 8 extra HP between waves.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Helmet",
+      "category": "Stevie / rocks / survival",
+      "effect": "Stevie takes 10% less contact damage.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Damage reduction capped at 55%; awarded levels respect remaining cap.",
+      "synergies": [
+        "Human Pinball"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Pocket Rocks",
+      "category": "Stevie / rocks / survival",
+      "effect": "Unlock rock throwing: +4 first-level damage, later gains grow to +9. Throws every 1.6s; preserves faster throws.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Hot Rocks",
+        "Snowball Fight",
+        "Thunderstones"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Better Rocks",
+      "category": "Stevie / rocks / survival",
+      "effect": "+6 first-level rock damage, later gains grow to +12. Each level shortens throws by 0.08s, down to 0.65s.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Emergency Medicine",
+      "category": "Stevie / rocks / survival",
+      "effect": "Heal 2 HP per kill, sharing the 6 HP/s combat healing budget.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Shared combat-healing budget: 6 HP/s.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Really Good Rocks",
+      "category": "Stevie / rocks / survival",
+      "effect": "+12 first-level rock damage, later gains grow to +24. Each level shortens throws by 0.08s, down to 0.55s.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Stevie Has Had Enough",
+      "category": "Stevie / rocks / survival",
+      "effect": "+8 first-level rock damage, later gains grow to +15. Each level shortens throws by 0.14s, down to 0.45s.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Stevie the Unreasonable"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Loaded Deck",
+      "category": "Rewards / recovery",
+      "effect": "Future normal rewards cannot roll below Uncommon.",
+      "rarities": "Common / Uncommon / Rare",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "One-time unlock; ordinary rewards only, no extra Legendary chances.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Reroll Coupon",
+      "category": "Rewards / recovery",
+      "effect": "+2 rerolls immediately.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Stored rerolls capped at 5; awarded levels respect remaining cap.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Collector",
+      "category": "Rewards / recovery",
+      "effect": "Slightly favors upgrades you have not taken yet.",
+      "rarities": "Common / Uncommon / Rare",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "One-time unlock; unowned card weights multiplied by 1.8.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Greedy Goblin",
+      "category": "Rewards / recovery",
+      "effect": "Normal rewards show a fourth choice.",
+      "rarities": "Common / Uncommon / Rare",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "One-time unlock; disabled if a fourth reward choice already exists.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Fire Ink",
+      "category": "Ink effects",
+      "effect": "Wall contact ignites enemies for damage over time.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Plaguefire",
+        "Thermal Shock",
+        "Napalm Scribbles",
+        "Ring of Fire",
+        "Hot Rocks",
+        "INFERNO"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Frost Ink",
+      "category": "Ink effects",
+      "effect": "Slows on contact from level one. Sustained contact builds a guaranteed freeze; bosses freeze for half as long.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Cryoshock",
+        "Black Ice",
+        "Thermal Shock",
+        "Venom Ice",
+        "Ice Corridor",
+        "Snowball Fight",
+        "THE STORM",
+        "ABSOLUTE ZERO"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Poison Ink",
+      "category": "Ink effects",
+      "effect": "Enemies build stacking poison while touching walls.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Plaguefire",
+        "Leech Ink",
+        "Venom Ice",
+        "Needlepoint",
+        "NECROTIC ENGINE"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Repulsion Ink",
+      "category": "Ink effects",
+      "effect": "Timed contact pulses deal impact damage, shove enemies safely away from Stevie and briefly stagger them.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Black Ice",
+        "Cannon Ink",
+        "Rail Ink",
+        "Human Pinball",
+        "INFERNO",
+        "ABSOLUTE ZERO"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Electric Ink",
+      "category": "Ink effects",
+      "effect": "Wall contact sparks a fading chain with brief shock. Shared recovery prevents overlapping zaps; every three levels add a jump, with capped reach and targets.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Cryoshock",
+        "Tesla Well",
+        "Rail Ink",
+        "Circuit Board",
+        "Power Lines",
+        "Thunderstones",
+        "THE STORM",
+        "TESLA CAGE"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Blast Ink",
+      "category": "Ink effects",
+      "effect": "Destroyed walls explode and damage nearby enemies.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Singularity Ink",
+        "Cannon Ink",
+        "Napalm Scribbles",
+        "Demolition Grid",
+        "Heavy Artillery",
+        "INFERNO"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Vampire Ink",
+      "category": "Ink effects",
+      "effect": "Deals life-drain damage on contact and heals for 25% of damage dealt, sharing the 6 HP/s healing budget.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Shared combat-healing budget: 6 HP/s; no healing at full health.",
+      "synergies": [
+        "Leech Ink",
+        "Blood Patch",
+        "Stevie the Unreasonable",
+        "NECROTIC ENGINE"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Gravity Ink",
+      "category": "Ink effects",
+      "effect": "Tugs nearby enemies toward wall segments without slowing movement or wall bites. Tight reach; King Doodle resists the pull, but his returnable shots bend slightly toward nearby walls.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Singularity Ink",
+        "Tesla Well",
+        "Event Horizon",
+        "Gravity Trap",
+        "THE STORM",
+        "THE BLACK HOLE",
+        "NECROTIC ENGINE"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Void Ink",
+      "category": "Ink effects",
+      "effect": "Deals steady Void damage on contact and executes weakened ordinary enemies; bosses cannot be executed.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [
+        "Event Horizon",
+        "THE BLACK HOLE"
+      ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Chaos Ink",
+      "category": "Ink effects",
+      "effect": "Sustained contact guarantees timed random ink rolls. Every roll has a working effect and extra impact damage.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Death Ink",
+      "category": "Ink effects",
+      "effect": "Per level: +5 base wall damage per second. Physical hits deal bonus damage against enemies at half health or lower.",
+      "rarities": "Common / Uncommon / Rare / Legendary",
+      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
+      "stacking": "Repeatable; caps/diminishing returns may apply",
+      "limits": "Uses an effect slot even though its per-level gain changes base wall DPS.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    }
+  ],
+  "synergies": [
+    {
+      "name": "Plaguefire",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Fire Ink",
+        "Poison Ink"
+      ],
+      "effect": "Defeated burning, poisoned enemies leave growing ten-second Plaguefire pools that scorch holes in the paper."
+    },
+    {
+      "name": "Cryoshock",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Frost Ink",
+        "Electric Ink"
+      ],
+      "effect": "Frozen enemies conduct boosted chain lightning."
+    },
+    {
+      "name": "Singularity Ink",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Gravity Ink",
+        "Blast Ink"
+      ],
+      "effect": "Broken walls pull enemies inward before exploding."
+    },
+    {
+      "name": "Black Ice",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Repulsion Ink",
+        "Frost Ink"
+      ],
+      "effect": "Frozen enemies are shoved harder and stay slowed."
+    },
+    {
+      "name": "Leech Ink",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Vampire Ink",
+        "Poison Ink"
+      ],
+      "effect": "Poison damage slowly heals Stevie."
+    },
+    {
+      "name": "Thermal Shock",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Fire Ink",
+        "Frost Ink"
+      ],
+      "effect": "Burning frozen enemies crack for burst damage and stun."
+    },
+    {
+      "name": "Tesla Well",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Electric Ink",
+        "Gravity Ink"
+      ],
+      "effect": "Gravity-packed enemies amplify electric chaining."
+    },
+    {
+      "name": "Event Horizon",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Void Ink",
+        "Gravity Ink"
+      ],
+      "effect": "Enemies near gravity walls have much higher Void proc chance."
+    },
+    {
+      "name": "Cannon Ink",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Blast Ink",
+        "Repulsion Ink"
+      ],
+      "effect": "Explosions send ordinary monsters flying, with safe landings, fall damage and a 1.2s stun. Bosses resist launches."
+    },
+    {
+      "name": "Napalm Scribbles",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Fire Ink",
+        "Blast Ink"
+      ],
+      "effect": "Destroyed Fire + Blast walls leave four-second burning scribbles; overlapping patches do not stack damage."
+    },
+    {
+      "name": "Venom Ice",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Poison Ink",
+        "Frost Ink"
+      ],
+      "effect": "Poison decays much more slowly while enemies are chilled."
+    },
+    {
+      "name": "Rail Ink",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Electric Ink",
+        "Repulsion Ink"
+      ],
+      "effect": "Repelled enemies become charged and zap nearby targets."
+    },
+    {
+      "name": "Gravity Trap",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Gravity Ink",
+        "Closed Loop"
+      ],
+      "effect": "Closed loops pull nearby enemies toward their perimeter."
+    },
+    {
+      "name": "Ring of Fire",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Fire Ink",
+        "Closed Loop"
+      ],
+      "effect": "Closed loops radiate heat and ignite enemies nearby."
+    },
+    {
+      "name": "Circuit Board",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Electric Ink",
+        "Architect"
+      ],
+      "effect": "Wall intersections become electrical nodes."
+    },
+    {
+      "name": "Demolition Grid",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Blast Ink",
+        "Architect"
+      ],
+      "effect": "Intersections make wall explosions larger and stronger."
+    },
+    {
+      "name": "Ice Corridor",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Frost Ink",
+        "Double Stroke (or Triple Stroke)"
+      ],
+      "effect": "The space between parallel walls chills nearby enemies."
+    },
+    {
+      "name": "Power Lines",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Electric Ink",
+        "Triple Stroke"
+      ],
+      "effect": "Triple walls pulse electricity into enemies caught nearby."
+    },
+    {
+      "name": "Blood Patch",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Vampire Ink",
+        "Patchwork"
+      ],
+      "effect": "Repairing walls also heals Stevie."
+    },
+    {
+      "name": "Needlepoint",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Poison Ink",
+        "Fine Tip"
+      ],
+      "effect": "Cheap thin lines stack poison much faster."
+    },
+    {
+      "name": "Heavy Artillery",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Blast Ink",
+        "Fat Marker"
+      ],
+      "effect": "Thicker walls create larger explosions."
+    },
+    {
+      "name": "Hot Rocks",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Fire Ink",
+        "Pocket Rocks"
+      ],
+      "effect": "Stevie's rocks ignite enemies."
+    },
+    {
+      "name": "Snowball Fight",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Frost Ink",
+        "Pocket Rocks"
+      ],
+      "effect": "Stevie's rocks chill and sometimes freeze enemies."
+    },
+    {
+      "name": "Thunderstones",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Electric Ink",
+        "Pocket Rocks"
+      ],
+      "effect": "Stevie's rocks can chain lightning."
+    },
+    {
+      "name": "Stevie the Unreasonable",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Vampire Ink",
+        "Stevie Has Had Enough"
+      ],
+      "effect": "Stevie heals from his own attacks."
+    },
+    {
+      "name": "Human Pinball",
+      "kind": "Two-part synergy",
+      "requires": [
+        "Repulsion Ink",
+        "Helmet"
+      ],
+      "effect": "Contact explosions knock nearby enemies away from Stevie."
+    },
+    {
+      "name": "THE STORM",
+      "kind": "Major build",
+      "requires": [
+        "Electric Ink",
+        "Frost Ink",
+        "Gravity Ink"
+      ],
+      "effect": "Gravity clusters, frost holds, lightning shreds the whole pack."
+    },
+    {
+      "name": "INFERNO",
+      "kind": "Major build",
+      "requires": [
+        "Fire Ink",
+        "Blast Ink",
+        "Repulsion Ink"
+      ],
+      "effect": "Burning explosions hurl ordinary monsters farther, with harder landings and a 1.6s stun; leave stronger four-second fire patches. Bosses resist launches."
+    },
+    {
+      "name": "THE BLACK HOLE",
+      "kind": "Major build",
+      "requires": [
+        "Gravity Ink",
+        "Void Ink",
+        "Closed Loop"
+      ],
+      "effect": "Closed loops become miniature event horizons."
+    },
+    {
+      "name": "NECROTIC ENGINE",
+      "kind": "Major build",
+      "requires": [
+        "Poison Ink",
+        "Vampire Ink",
+        "Gravity Ink"
+      ],
+      "effect": "Pinned poisoned enemies continuously feed Stevie health."
+    },
+    {
+      "name": "ABSOLUTE ZERO",
+      "kind": "Major build",
+      "requires": [
+        "Frost Ink",
+        "Repulsion Ink",
+        "Double Stroke (or Triple Stroke)"
+      ],
+      "effect": "Parallel walls become freezing launch rails."
+    },
+    {
+      "name": "TESLA CAGE",
+      "kind": "Major build",
+      "requires": [
+        "Electric Ink",
+        "Architect",
+        "Closed Loop"
+      ],
+      "effect": "Closed intersecting geometry becomes a powered electric circuit."
+    }
+  ],
+  "notebook": [
+    {
+      "name": "Starter Eraser",
+      "effect": "Stevie’s free first purchase. Adds 5 percentage points to ink recovery when erasing; applies to every new run.",
+      "maxRanks": 1,
+      "costs": [
+        0
+      ],
+      "rankOne": "+5% erase recovery · permanent",
+      "atMax": "+5% erase recovery · permanent",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Your Drawing Tool",
+      "effect": "Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Pens unlock a third effect slot; Sharpies unlock a fourth.",
+      "maxRanks": 10,
+      "costs": [
+        5,
+        8,
+        12,
+        16,
+        20,
+        24,
+        30,
+        36,
+        44,
+        55
+      ],
+      "rankOne": "Pencil · 2 effect slots",
+      "atMax": "Scented Sharpie · 4 effect slots",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Bigger Starting Tank",
+      "effect": "+20 starting/max ink per rank.",
+      "maxRanks": 5,
+      "costs": [
+        5,
+        12,
+        24,
+        40,
+        60
+      ],
+      "rankOne": "+20 starting/max ink",
+      "atMax": "+100 starting/max ink",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Refill Practice",
+      "effect": "+1 starting ink regeneration per second per rank. Stacks with run upgrades.",
+      "maxRanks": 3,
+      "costs": [
+        5,
+        12,
+        24
+      ],
+      "rankOne": "+1 starting ink/s",
+      "atMax": "+3 starting ink/s",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Extra Credit",
+      "effect": "Start every run with four reward choices instead of three. Boss rewards already have four.",
+      "maxRanks": 1,
+      "costs": [
+        25
+      ],
+      "rankOne": "4 reward choices from the first wave",
+      "atMax": "4 reward choices from the first wave",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Fresh Pencil",
+      "effect": "+8 starting wall HP per rank.",
+      "maxRanks": 4,
+      "costs": [
+        5,
+        12,
+        24,
+        40
+      ],
+      "rankOne": "+8 base wall HP",
+      "atMax": "+32 base wall HP",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Lunchbox Band-Aids",
+      "effect": "+8 starting/max Stevie HP per rank.",
+      "maxRanks": 4,
+      "costs": [
+        5,
+        12,
+        24,
+        40
+      ],
+      "rankOne": "+8 Stevie HP",
+      "atMax": "+32 Stevie HP",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Pocket Pebbles",
+      "effect": "Start throwing rocks: 3 damage per rank. Higher ranks throw a little faster.",
+      "maxRanks": 3,
+      "costs": [
+        5,
+        12,
+        24
+      ],
+      "rankOne": "3 starting rock damage · 1.5s between throws",
+      "atMax": "9 starting rock damage · 1.3s between throws",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Lunch Money",
+      "effect": "+1 starting reroll per rank. Each cleared wave still supplies a free reroll.",
+      "maxRanks": 2,
+      "costs": [
+        5,
+        12
+      ],
+      "rankOne": "+1 starting rerolls",
+      "atMax": "+2 starting rerolls",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Lucky Eraser",
+      "effect": "+2 starting Luck per rank, improving upgrade rarity odds.",
+      "maxRanks": 4,
+      "costs": [
+        5,
+        12,
+        24,
+        40
+      ],
+      "rankOne": "+2 starting Luck",
+      "atMax": "+8 starting Luck",
+      "source": "js/notebook.js"
+    }
+  ],
+  "mechanics": [
+    {
+      "name": "Drawing",
+      "effect": "A valid segment becomes a working wall while dragging. Paid strokes cost at least 6 ink; default cost is 0.31 ink/pixel. HP = base wall HP × length/180, with loop/intersection bonuses. Growth preserves existing damage and lifetime.",
+      "source": "js/input.js; js/walls.js"
+    },
+    {
+      "name": "Erasing",
+      "effect": "PC: right-drag. Touch: hold Erase with one thumb while the other finger rubs; Settings supports tap-to-toggle and left-side controls. Healthy paid wall sections recover 25% ink, or 30% with Starter Eraser; damage reduces recovery. Only Rubble Ruff can be erased as an enemy.",
+      "source": "js/input.js; js/walls.js"
+    },
+    {
+      "name": "Closed shapes",
+      "effect": "A stroke with more than six points and endpoints less than 22 pixels apart is a closed loop. Closed Loop/Fortress Geometry add durability and paid completion utility; related synergies add effects.",
+      "source": "js/walls.js; js/upgrades.js"
+    },
+    {
+      "name": "Stevie throws rocks",
+      "effect": "Unlocked through rock upgrades or Pocket Pebbles. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies.",
+      "source": "js/enemies.js; js/balance.js"
+    },
+    {
+      "name": "Specialization: Fortress",
+      "effect": "Defense-category upgrade weights ×3. Does not directly add wall HP.",
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Specialization: Ink Alchemist",
+      "effect": "Ink-category upgrade weights ×3. Does not directly add ink levels.",
+      "source": "js/upgrades.js"
+    },
+    {
+      "name": "Specialization: Chaos",
+      "effect": "Adds +12 normal-reward rarity bonus; enemy HP scale ×1.08. No additional Legendary chances.",
+      "source": "js/upgrades.js"
+    }
+  ],
+  "review": [
+    {
+      "name": "Bigger Ink Tank",
+      "category": "Drawing / ink economy",
+      "effect": "+35 max ink.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Quick Refill",
+      "category": "Drawing / ink economy",
+      "effect": "Adds ink regeneration: +2 ink/s first pick, smaller bonuses on repeats.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Thick Ink",
+      "category": "Walls / shapes",
+      "effect": "+20 base wall durability. Long strokes multiply this further.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "First Aid",
+      "category": "Stevie / rocks / survival",
+      "effect": "+18 max HP and heal 18.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Fine Tip",
+      "category": "Drawing / ink economy",
+      "effect": "Lines cost 12% less ink.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Fat Marker",
+      "category": "Walls / shapes",
+      "effect": "+2 line width and +15 wall HP.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Lucky Scribble",
+      "category": "Rewards / recovery",
+      "effect": "+8 Luck: improves rarity odds for future upgrades and rerolls.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Clean Erasing",
+      "category": "Rewards / recovery",
+      "effect": "Recover 10 percentage points more paid ink from healthy erased walls per level, up to 60%. Damaged walls return less; free lines and copies return nothing.",
+      "evidence": "Hypothesis",
+      "priority": "Medium",
+      "idea": "Compare recovered ink in real mobile runs with refill upgrades; verify that recovery is visible and the cap is understood.",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Recycling",
+      "category": "Rewards / recovery",
+      "effect": "Kills refund 5 ink, sharing an 8 ink/s refill budget.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Closed Loop",
+      "category": "Walls / shapes",
+      "effect": "Closed shapes gain +40% durability. First loop-utility level: 15% paid ink back, repair nearby walls by 15% of missing HP, and +10% damage inside. Later levels have diminishing gains; repair is capped by ink spent.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Architect",
+      "category": "Walls / shapes",
+      "effect": "Each wall intersection adds 15% durability.",
+      "evidence": "Hypothesis",
+      "priority": "Medium",
+      "idea": "Check if intersection bonuses and Circuit Board/Demolition Grid are noticeable; consider clearer intersection markers before changing numbers.",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Patchwork",
+      "category": "Walls / shapes",
+      "effect": "Drawing across an old wall repairs 18 HP.",
+      "evidence": "Hypothesis",
+      "priority": "Medium",
+      "idea": "Check whether deliberately redrawing across old walls feels worth the ink; consider clearer repair feedback or a stronger skill-based repair trigger.",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Double Stroke",
+      "category": "Drawing / ink economy",
+      "effect": "Each stroke adds a parallel wall with 60% of the original durability.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Quick Sketch",
+      "category": "Drawing / ink economy",
+      "effect": "Your first stroke every wave is free.",
+      "evidence": "User flagged",
+      "priority": "High",
+      "idea": "Rework candidate: try three discounted opening strokes, or an emergency free stroke earned by erasing. Compare against the value of one long free wall.",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Patch Job",
+      "category": "Walls / shapes",
+      "effect": "Every kill repairs walls by up to 3 HP each, sharing a 12 wall HP/s budget.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Freehand",
+      "category": "Drawing / ink economy",
+      "effect": "Spend 80 real ink to charge a limited free-ink bank. Stacking increases the free bank.",
+      "evidence": "Hypothesis",
+      "priority": "Medium",
+      "idea": "Check whether the charge threshold and bank are understood; strengthen the ready-state cue before changing the economy.",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Living Fountain Pen",
+      "category": "Drawing / ink economy",
+      "effect": "35% faster ink regeneration on the first pick; smaller multipliers on repeats.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Triple Stroke",
+      "category": "Drawing / ink economy",
+      "effect": "Every stroke adds TWO parallel walls, each with 60% durability.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Bottomless Pen",
+      "category": "Drawing / ink economy",
+      "effect": "Per level: +40 max ink and +2 ink/s at first, with smaller regeneration bonuses on repeats.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Fortress Geometry",
+      "category": "Walls / shapes",
+      "effect": "Per level: +50% closed-shape durability. Shares Closed Loop’s diminishing ink refund, completion repair and enclosed-enemy damage bonus (15% / 15% / 10% at the first utility level).",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Bandages",
+      "category": "Stevie / rocks / survival",
+      "effect": "Heal 8 extra HP between waves.",
+      "evidence": "Hypothesis",
+      "priority": "Medium",
+      "idea": "Compare between-wave healing with instant healing and kill healing; consider a useful full-health benefit if it is consistently passed over.",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Helmet",
+      "category": "Stevie / rocks / survival",
+      "effect": "Stevie takes 10% less contact damage.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Pocket Rocks",
+      "category": "Stevie / rocks / survival",
+      "effect": "Unlock rock throwing: +4 first-level damage, later gains grow to +9. Throws every 1.6s; preserves faster throws.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Better Rocks",
+      "category": "Stevie / rocks / survival",
+      "effect": "+6 first-level rock damage, later gains grow to +12. Each level shortens throws by 0.08s, down to 0.65s.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Emergency Medicine",
+      "category": "Stevie / rocks / survival",
+      "effect": "Heal 2 HP per kill, sharing the 6 HP/s combat healing budget.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Really Good Rocks",
+      "category": "Stevie / rocks / survival",
+      "effect": "+12 first-level rock damage, later gains grow to +24. Each level shortens throws by 0.08s, down to 0.55s.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Stevie Has Had Enough",
+      "category": "Stevie / rocks / survival",
+      "effect": "+8 first-level rock damage, later gains grow to +15. Each level shortens throws by 0.14s, down to 0.45s.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Loaded Deck",
+      "category": "Rewards / recovery",
+      "effect": "Future normal rewards cannot roll below Uncommon.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Reroll Coupon",
+      "category": "Rewards / recovery",
+      "effect": "+2 rerolls immediately.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Collector",
+      "category": "Rewards / recovery",
+      "effect": "Slightly favors upgrades you have not taken yet.",
+      "evidence": "Hypothesis",
+      "priority": "Medium",
+      "idea": "Check whether 1.8× weighting toward unowned cards helps or disrupts a focused build; consider a more visible reward-selection benefit.",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Greedy Goblin",
+      "category": "Rewards / recovery",
+      "effect": "Normal rewards show a fourth choice.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Fire Ink",
+      "category": "Ink effects",
+      "effect": "Wall contact ignites enemies for damage over time.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Frost Ink",
+      "category": "Ink effects",
+      "effect": "Slows on contact from level one. Sustained contact builds a guaranteed freeze; bosses freeze for half as long.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Poison Ink",
+      "category": "Ink effects",
+      "effect": "Enemies build stacking poison while touching walls.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Repulsion Ink",
+      "category": "Ink effects",
+      "effect": "Timed contact pulses deal impact damage, shove enemies safely away from Stevie and briefly stagger them.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Electric Ink",
+      "category": "Ink effects",
+      "effect": "Wall contact sparks a fading chain with brief shock. Shared recovery prevents overlapping zaps; every three levels add a jump, with capped reach and targets.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Blast Ink",
+      "category": "Ink effects",
+      "effect": "Destroyed walls explode and damage nearby enemies.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Vampire Ink",
+      "category": "Ink effects",
+      "effect": "Deals life-drain damage on contact and heals for 25% of damage dealt, sharing the 6 HP/s healing budget.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Gravity Ink",
+      "category": "Ink effects",
+      "effect": "Tugs nearby enemies toward wall segments without slowing movement or wall bites. Tight reach; King Doodle resists the pull, but his returnable shots bend slightly toward nearby walls.",
+      "evidence": "Hypothesis",
+      "priority": "Medium",
+      "idea": "Measure whether enemies are held on dangerous wall segments; check readability and synergy payoff before buffing reach.",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Void Ink",
+      "category": "Ink effects",
+      "effect": "Deals steady Void damage on contact and executes weakened ordinary enemies; bosses cannot be executed.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Chaos Ink",
+      "category": "Ink effects",
+      "effect": "Sustained contact guarantees timed random ink rolls. Every roll has a working effect and extra impact damage.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "name": "Death Ink",
+      "category": "Ink effects",
+      "effect": "Per level: +5 base wall damage per second. Physical hits deal bonus damage against enemies at half health or lower.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    }
+  ]
+}
