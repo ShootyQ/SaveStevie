@@ -1,10 +1,10 @@
-# Save Stevie upgrade reference — Alpha 0.1.7
+# Save Stevie upgrade reference — Alpha 0.1.8
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
 Catalog descriptions and requirements are exported from game code; mechanics and review notes are maintained alongside them. Suggestions are proposals, not shipped changes.
 
-Only Quick Sketch has been explicitly flagged by the player in this conversation; other candidates are hypotheses, not pick-rate data.
+Quick Sketch was retired and replaced by Doodle Stitch following player feedback. Other review candidates are hypotheses, not pick-rate data.
 
 About one in three campaigns reserves at most one Legendary offer after waves 1–19. Runs ending early may never see their offer; this is not a guarantee every third run.
 
@@ -29,7 +29,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Architect | Walls / shapes | Each wall intersection adds 15% durability. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Patchwork | Walls / shapes | Drawing across an old wall repairs 18 HP. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Double Stroke | Drawing / ink economy | Each stroke adds a parallel wall with 60% of the original durability. | One-time unlock; One-time unlock; disabled when parallel walls are already unlocked. |
-| Quick Sketch | Drawing / ink economy | Your first stroke every wave is free. | One-time unlock; One-time unlock; first valid stroke each wave only. Free strokes have no erasure/closure ink refund. |
+| Doodle Stitch | Drawing / ink economy | Snap new strokes to open wall endpoints. Connectors add 75%, 50%, then 25% of normal new-length HP; later extensions add none. Pay normal ink; old damage, oldest lifetime and extension history are preserved. | One-time unlock; Endpoint snap reach 16px. New-length HP: 75%, 50%, 25%, then zero. Existing damage, oldest lifetime and summed group histories are preserved; erasing retains history. |
 | Patch Job | Walls / shapes | Every kill repairs walls by up to 3 HP each, sharing a 12 wall HP/s budget. | Repeatable; caps/diminishing returns may apply; Shared repair-on-kill budget: 12 wall HP/s across all walls. |
 | Freehand | Drawing / ink economy | Spend 80 real ink to charge a limited free-ink bank. Stacking increases the free bank. | Repeatable; caps/diminishing returns may apply; Charges from real paid ink, not free strokes/copies; threshold 80; initial bank 40, +20 per extra level. |
 | Living Fountain Pen | Drawing / ink economy | 35% faster ink regeneration on the first pick; smaller multipliers on repeats. | Repeatable; caps/diminishing returns may apply; Repeat level n multiplies regeneration by 1 + 0.35 / (1 + 0.5 × (n−1)). |
@@ -130,7 +130,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Clean Erasing | Hypothesis | Medium | Compare recovered ink in real mobile runs with refill upgrades; verify that recovery is visible and the cap is understood. |
 | Architect | Hypothesis | Medium | Check if intersection bonuses and Circuit Board/Demolition Grid are noticeable; consider clearer intersection markers before changing numbers. |
 | Patchwork | Hypothesis | Medium | Check whether deliberately redrawing across old walls feels worth the ink; consider clearer repair feedback or a stronger skill-based repair trigger. |
-| Quick Sketch | User flagged | High | Rework candidate: try three discounted opening strokes, or an emergency free stroke earned by erasing. Compare against the value of one long free wall. |
+| Doodle Stitch | Implemented replacement | Monitor | Replaces Quick Sketch. Playtest endpoint reach, the three diminishing HP additions, damaged-wall rescue and fourth-plus extensions without new HP. |
 | Freehand | Hypothesis | Medium | Check whether the charge threshold and bank are understood; strengthen the ready-state cue before changing the economy. |
 | Bandages | Hypothesis | Medium | Compare between-wave healing with instant healing and kill healing; consider a useful full-health benefit if it is consistently passed over. |
 | Collector | Hypothesis | Medium | Check whether 1.8× weighting toward unowned cards helps or disrupts a focused build; consider a more visible reward-selection benefit. |

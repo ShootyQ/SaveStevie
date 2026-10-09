@@ -51,7 +51,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>key==='synergySplashTimer'?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>key==='synergySplashTimer'?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
 for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -793,7 +793,7 @@ console.log('PASS: five soundtrack loops, intro autoplay with manual retry, chap
  assert.ok(Math.abs(g.state.walls[0].pts[1].x-100-6/.31)<1e-8,'long segment clips to affordable distance');
  assert.equal(g.state.stats.ink,0);
  g.state.walls=[];g.state.stats.firstFree=true;g.state.stats.firstStrokeUsed=false;g.api.createWall(large);
- assert.equal(g.state.walls.length,1,'Quick Sketch still grants one free stroke');g.api.createWall(small);assert.equal(g.state.walls.length,1);
+ assert.equal(g.state.walls.length,1,'legacy free-stroke hook remains bounded');g.api.createWall(small);assert.equal(g.state.walls.length,1);
  g.state.stats.firstFree=false;g.state.stats.freehandLevel=1;g.state.stats.freehandBank=6;g.api.createWall(small);
  assert.equal(g.state.walls.length,2);assert.equal(g.state.stats.freehandBank,0);g.api.createWall(small);assert.equal(g.state.walls.length,2,'free bank cannot be reused');
  g.api.resetRun();const upgrade=name=>g.catalog.upgrades.find(u=>u.name===name);
@@ -2315,4 +2315,25 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.state.projectiles=[{x:runner.x,y:runner.y,target:runner,speed:290,damage:100,life:1}];g.api.updateProjectiles(.1);assert(runner.hp<=0,'rocks can defeat runner');
  g.state.enemies=[];g.state.walls=[];g.api.createWall([{x:100,y:200},{x:300,y:200}]);const poisoned=g.api.spawnEnemy(false,200,180,'scrubber');g.state.inks.poison=1;g.api.updateScrubber(poisoned,.1);assert(poisoned.poison>0,'elemental wall effects apply');g.state.walls=[];poisoned.burn=1;poisoned.burnDps=1000;g.state.spawnTimer=999;g.api.update(.05);assert(!g.state.enemies.includes(poisoned),'status damage defeats him');
  console.log('PASS: guaranteed wave-two eraser runner, local geometry wiping without refunds, wall/status/rock damage, freeze/stun/pause, player erasing, normal rewards once and non-erasable other monsters.');
+}
+
+// Doodle Stitch connects endpoints with finite, history-preserving durability.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.stats.ink=g.state.stats.maxInk=2000;
+ assert(!g.catalog.upgrades.some(u=>u.name==='Quick Sketch'));const perk=g.catalog.upgrades.find(u=>u.name==='Doodle Stitch');assert(perk);g.api.applyUpgrade({...perk,rarity:'rare'});assert.equal(g.state.stacks['Doodle Stitch'],1);assert.equal(g.state.stats.doodleStitch,true);assert.equal(g.api.upgradeAvailable(perk),false);
+ const draw=(a,b)=>g.api.createWall([{x:a,y:200},{x:b,y:200}]);draw(100,200);const w=g.state.walls[0],oldMax=w.maxHp;w.hp=1;w.life=12;
+ const damage=oldMax-1,initialInk=g.state.stats.ink;let expected=1;
+ for(let i=1;i<=5;i++){draw(200+(i-1)*40,200+i*40);expected+=65*40/180*([.75,.5,.25][i-1]||0);assert.equal(g.state.walls.length,1);assert.equal(g.state.walls[0],w,'target identity retained');assert.ok(Math.abs(w.hp-expected)<1e-8,'connector HP tier '+i);assert.ok(Math.abs(w.maxHp-w.hp-damage)<1e-8,'existing damage retained');assert.equal(w.stitchCount,i);assert.equal(w.life,12);assert.equal(w.pts.at(-1).x,200+i*40);}
+ assert.ok(Math.abs(g.state.stats.ink-(initialInk-5*40*.31))<1e-8,'only new length charged');
+ g.state.walls=[];draw(100,200);const left=g.state.walls[0];draw(100,60);assert.equal(g.state.walls.length,1);assert.equal(left.pts.at(-1).x,60,'start at either endpoint');
+ g.state.walls=[];draw(100,200);const into=g.state.walls[0];into.hp=2;into.life=9;draw(50,100);assert.equal(g.state.walls[0],into);assert.equal(g.state.walls.length,1);assert.ok(Math.abs(into.hp-(2+65*50/180*.75))<1e-8,'ending at wall joins and preserves old damage');assert.equal(into.life,9);
+ g.state.walls=[];draw(100,160);draw(220,280);const a=g.state.walls[0],b=g.state.walls[1];a.stitchCount=2;b.stitchCount=1;a.hp=3;b.hp=4;a.life=20;b.life=7;const combinedMax=a.maxHp+b.maxHp;draw(160,220);assert.equal(g.state.walls.length,1);assert.equal(a.stitchCount,4,'merged histories accumulate');assert.ok(Math.abs(a.hp-7)<1e-8,'fourth connector adds zero HP');assert.equal(a.maxHp,combinedMax);assert.equal(a.life,7);assert.equal(a.pts.at(-1).x,280);
+ g.state.walls=[];draw(100,300);const original=g.state.walls[0];original.stitchCount=3;g.api.eraseWallPath({x:200,y:190},{x:200,y:210},10);assert.equal(g.state.walls.length,2);assert(g.state.walls.every(w=>w.stitchCount===3),'erased fragments retain extension history');const fragment=g.state.walls[0],hp=fragment.hp,tip=fragment.pts.at(-1).x;g.api.createWall([{x:tip,y:200},{x:tip,y:170}]);assert.equal(fragment.stitchCount,4);assert.equal(fragment.hp,hp,'erasing cannot reset capped HP');
+ g.state.walls=[];draw(100,300);draw(200,250);assert.equal(g.state.walls.length,2,'middle of a wall is not an endpoint snap');
+ g.state.walls=[];draw(100,200);const live=g.state.walls[0];live.stitchCount=3;live.hp=6;live.life=8;const c=env.node('game'),event=x=>({clientX:x,clientY:200,pointerId:1,button:0});c.listeners.pointerdown(event(200));c.listeners.pointermove(event(230));assert.equal(g.state.walls[0],live);assert.equal(live.hp,6,'fourth live connector adds no HP');assert.equal(live.pts.at(-1).x,230,'zero-HP contribution still extends active geometry');g.api.damageWall(live,2,220,200);c.listeners.pointermove(event(270));assert.equal(live.hp,4,'growth never resets combat damage');c.listeners.pointerup(event(270));assert.equal(live.stitchCount,4);assert.equal(live.life,8);assert.equal(live.hp,4);
+ g.state.walls=[];draw(100,200);const copiedParent=g.state.walls[0];g.state.stats.doubleLine=true;draw(200,240);assert.equal(g.state.walls.length,2);const copy=g.state.walls.find(w=>w!==copiedParent);assert.ok(Math.abs(copy.maxHp-65*40/180*.75*.6)<1e-8,'copies contain only weaker new connector');assert.equal(copy.stitchCount,1);
+ g.state.stats.doubleLine=false;g.state.walls=[];draw(100,200);const cutPaths=[];g.api.cutWobbleStroke=pts=>cutPaths.push(pts.map(p=>p.x));draw(200,240);assert.deepEqual(cutPaths,[[200,240]],'only the new stroke cuts bosses');
+ g.state.walls=[];draw(100,200);g.state.stats.ink=0;const before=JSON.stringify(g.state.walls);draw(200,240);assert.equal(JSON.stringify(g.state.walls),before,'no ink means no extension or history change');
+ g.api.resetRun();assert.equal(g.state.stats.doodleStitch,false,'run reset clears unlock');
+ console.log('PASS: Doodle Stitch unlock/replacement, both endpoints, live zero-HP extensions, 75/50/25/0 scaling, no damage/lifetime/cost reset, combined and erased histories, separate-wall drawing, weaker copies, new-stroke-only cuts and run reset.');
 }

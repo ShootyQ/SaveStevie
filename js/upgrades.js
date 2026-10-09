@@ -203,7 +203,7 @@ game.catalog.upgrades = [
   {name:'Architect',cat:'defense',desc:'Each wall intersection adds 15% durability.',apply:()=>game.state.stats.intersectBonus+=.15},
   {name:'Patchwork',cat:'defense',desc:'Drawing across an old wall repairs 18 HP.',apply:()=>game.state.stats.repairDraw+=18},
   {name:'Double Stroke',cat:'draw',desc:'Each stroke adds a parallel wall with 60% of the original durability.',apply:()=>game.state.stats.doubleLine=true},
-  {name:'Quick Sketch',cat:'draw',desc:'Your first stroke every wave is free.',apply:()=>game.state.stats.firstFree=true},
+  {name:'Doodle Stitch',cat:'draw',desc:'Snap new strokes to open wall endpoints. Connectors add 75%, 50%, then 25% of normal new-length HP; later extensions add none. Pay normal ink; old damage, oldest lifetime and extension history are preserved.',apply:()=>game.state.stats.doodleStitch=true},
   {name:'Patch Job',cat:'defense',desc:'Every kill repairs walls by up to 3 HP each, sharing a 12 wall HP/s budget.',apply:()=>game.state.stats.repairOnKill+=3},
   {name:'Freehand',cat:'draw',desc:'Spend 80 real ink to charge a limited free-ink bank. Stacking increases the free bank.',apply:()=>{game.state.stats.freehandLevel++;game.state.stats.freehandBankSize=40+(game.state.stats.freehandLevel-1)*20;game.state.stats.freehandCharge=Math.min(game.state.stats.freehandCharge,game.state.stats.freehandThreshold)}},
   {name:'Living Fountain Pen',cat:'draw',desc:'35% faster ink regeneration on the first pick; smaller multipliers on repeats.',apply:()=>game.state.stats.inkRegen*=game.api.regenPick('Living Fountain Pen')},
@@ -240,7 +240,7 @@ game.catalog.upgrades = [
   {name:'Death Ink',cat:'ink',desc:'Per level: +5 base wall damage per second. Physical hits deal bonus damage against enemies at half health or lower.',apply:()=>game.state.stats.wallDamage+=5},
 ];
 
-const oneTimeUpgrades = new Set(['Double Stroke','Triple Stroke','Quick Sketch','Loaded Deck','Collector','Greedy Goblin']);
+const oneTimeUpgrades = new Set(['Double Stroke','Triple Stroke','Doodle Stitch','Loaded Deck','Collector','Greedy Goblin']);
 function upgradeAvailable(u){
   if(oneTimeUpgrades.has(u.name)&&game.state.stacks[u.name])return false;
   if(u.name==='Greedy Goblin'&&game.state.stats.extraChoice)return false;
@@ -279,10 +279,11 @@ function getUpgrade(forceRare=false){
 
 const upgradeArtGroups=[
  ['Fire Ink','Frost Ink','Poison Ink','Repulsion Ink','Electric Ink','Blast Ink','Vampire Ink','Gravity Ink','Void Ink','Chaos Ink','Death Ink','Bigger Ink Tank','Quick Refill','Thick Ink','First Aid','Fine Tip'],
- ['Fat Marker','Lucky Scribble','Recycling','Closed Loop','Architect','Patchwork','Double Stroke','Quick Sketch','Patch Job','Freehand','Living Fountain Pen','Triple Stroke','Bottomless Pen','Fortress Geometry','Bandages','Helmet'],
+ ['Fat Marker','Lucky Scribble','Recycling','Closed Loop','Architect','Patchwork','Double Stroke','Doodle Stitch','Patch Job','Freehand','Living Fountain Pen','Triple Stroke','Bottomless Pen','Fortress Geometry','Bandages','Helmet'],
  ['Pocket Rocks','Better Rocks','Emergency Medicine','Really Good Rocks','Stevie Has Had Enough','Loaded Deck','Reroll Coupon','Collector','Greedy Goblin']
 ];
 function upgradeArtworkInfo(u){
+ if(u.name==='Doodle Stitch')return {file:'assets/art/upgrades/doodle-stitch.svg',grid:1,x:0,y:0};
  if(u.name==='Clean Erasing')return upgradeArtworkInfo({name:'Recycling'});
  for(let sheet=0;sheet<upgradeArtGroups.length;sheet++){const index=upgradeArtGroups[sheet].indexOf(u.name);if(index>=0){const grid=sheet===2?3:4;return {file:'assets/art/upgrades/gallery-'+(sheet+1)+'.png',grid,x:index%grid,y:Math.floor(index/grid)}}}
  return null;

@@ -49,7 +49,7 @@ def sheet(name, headers, rows, widths, editable=()):
     ws.print_title_rows = '1:1'
     return ws
 
-summary = [['Version', 'Alpha ' + DATA['version']], ['Run upgrades', len(DATA['upgrades'])], ['Synergies', len(DATA['synergies'])], ['Permanent perks', len(DATA['notebook'])], ['Legendary campaign chance', DATA['legendaryPlan']['chance']], ['Legendary scheduled reward waves', '1–19; at most one reserved offer per campaign'], ['Yellow review cells', 'Fill in your rating, notes, proposed decision and next playtest.'], ['Quick Sketch status', 'Flagged for review; its gameplay effect is unchanged.']]
+summary = [['Version', 'Alpha ' + DATA['version']], ['Run upgrades', len(DATA['upgrades'])], ['Synergies', len(DATA['synergies'])], ['Permanent perks', len(DATA['notebook'])], ['Legendary campaign chance', DATA['legendaryPlan']['chance']], ['Legendary scheduled reward waves', '1–19; at most one reserved offer per campaign'], ['Yellow review cells', 'Fill in your rating, notes, proposed decision and next playtest.'], ['Doodle Stitch status', 'Implemented replacement for Quick Sketch: endpoint connections with diminishing added HP.']]
 summary.extend(['Reference note', text] for text in DATA['notes'])
 ws = sheet('Read Me', ['Topic', 'Details'], summary, [34, 105])
 ws['B6'].number_format = '0.0%'

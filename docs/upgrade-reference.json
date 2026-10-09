@@ -1,5 +1,5 @@
 {
-  "version": "0.1.7",
+  "version": "0.1.8",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -7,7 +7,7 @@
   },
   "notes": [
     "Catalog descriptions and requirements are exported from game code; mechanics and review notes are maintained alongside them. Suggestions are proposals, not shipped changes.",
-    "Only Quick Sketch has been explicitly flagged by the player in this conversation; other candidates are hypotheses, not pick-rate data.",
+    "Quick Sketch was retired and replaced by Doodle Stitch following player feedback. Other review candidates are hypotheses, not pick-rate data.",
     "About one in three campaigns reserves at most one Legendary offer after waves 1–19. Runs ending early may never see their offer; this is not a guarantee every third run.",
     "One-time upgrades award one unlock regardless of rarity; stackable upgrades generally award 1/2/3/4 levels, subject to caps.",
     "Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-upgrade-workbook.py (requires openpyxl)."
@@ -175,13 +175,13 @@
       "source": "js/upgrades.js"
     },
     {
-      "name": "Quick Sketch",
+      "name": "Doodle Stitch",
       "category": "Drawing / ink economy",
-      "effect": "Your first stroke every wave is free.",
+      "effect": "Snap new strokes to open wall endpoints. Connectors add 75%, 50%, then 25% of normal new-length HP; later extensions add none. Pay normal ink; old damage, oldest lifetime and extension history are preserved.",
       "rarities": "Common / Uncommon / Rare",
       "levels": "One-time: +1 unlock",
       "stacking": "One-time unlock",
-      "limits": "One-time unlock; first valid stroke each wave only. Free strokes have no erasure/closure ink refund.",
+      "limits": "Endpoint snap reach 16px. New-length HP: 75%, 50%, 25%, then zero. Existing damage, oldest lifetime and summed group histories are preserved; erasing retains history.",
       "synergies": [],
       "source": "js/upgrades.js"
     },
@@ -1197,12 +1197,12 @@
       "nextTest": ""
     },
     {
-      "name": "Quick Sketch",
+      "name": "Doodle Stitch",
       "category": "Drawing / ink economy",
-      "effect": "Your first stroke every wave is free.",
-      "evidence": "User flagged",
-      "priority": "High",
-      "idea": "Rework candidate: try three discounted opening strokes, or an emergency free stroke earned by erasing. Compare against the value of one long free wall.",
+      "effect": "Snap new strokes to open wall endpoints. Connectors add 75%, 50%, then 25% of normal new-length HP; later extensions add none. Pay normal ink; old damage, oldest lifetime and extension history are preserved.",
+      "evidence": "Implemented replacement",
+      "priority": "Monitor",
+      "idea": "Replaces Quick Sketch. Playtest endpoint reach, the three diminishing HP additions, damaged-wall rescue and fourth-plus extensions without new HP.",
       "playerRating": "",
       "playerNotes": "",
       "decision": "",

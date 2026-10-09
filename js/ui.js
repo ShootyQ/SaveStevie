@@ -113,7 +113,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Recycling':()=>`+${5*n} ink per kill; shared 8 ink/s budget`, 'Closed Loop':()=>`+${40*n}% closed-wall durability; `+loopDetails(n,'Fortress Geometry'),
     'Architect':()=>`+${15*n}% durability per intersection`, 'Patchwork':()=>`+${18*n} HP per repaired wall`,
     'Double Stroke':()=>`One-time unlock: 2 walls per stroke (3 with Triple Stroke); extra walls have 60% HP`,
-    'Quick Sketch':()=>`One-time unlock: first stroke each wave is free`,
+    'Doodle Stitch':()=>`One-time unlock: connect open wall ends; connector HP 75% / 50% / 25% / then 0%; normal ink cost, old damage and lifetime retained`,
     'Patch Job':()=>`Up to ${3*n} HP per wall per kill; shared 12 HP/s budget`, 'Freehand':()=>`${40+(n-1)*20} free-ink bank; charge with ${s.freehandThreshold} spent ink`,
     'Living Fountain Pen':()=>`×${f(game.api.regenStackEffect('Living Fountain Pen',n))} ink regeneration; diminishing returns`,
     'Triple Stroke':()=>`One-time unlock: 3 walls per stroke; extra walls have 60% HP`,
