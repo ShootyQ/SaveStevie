@@ -141,6 +141,7 @@ function killEnemy(e){
   if(e.type==='splitter'&&!e.twiceyDeathSplitUsed)splitTwicey(e,true);
   game.api.dropPlaguefire(e);
   game.state.enemies=game.state.enemies.filter(x=>x!==e);
+  if(e.type==='scrubber')updateScrubberHint(0);
   if(!game.api.wobbleRepairActive?.())game.api.beginWaveFinale(e);
 }
 
@@ -545,6 +546,16 @@ function updateFeast(e,dt){
 }
 // Rubble Ruff hunts ink instead of attacking the fort. The same swept brush
 // removes wall geometry, but enemy erasing never refunds the player's ink.
+let scrubberHintEnemy=null,scrubberHintAge=0,scrubberHintShown=false;
+function resetScrubberHint(){scrubberHintEnemy=null;scrubberHintAge=0;scrubberHintShown=false;game.dom.$('scrubberHint').hidden=true;game.dom.$('eraserBtn').classList?.remove('scrubber-erase-cue');}
+function scrubberHintSnapshot(){return scrubberHintEnemy&&scrubberHintAge<8&&scrubberHintEnemy.hp>0&&game.state.enemies.includes(scrubberHintEnemy)&&!game.api.underPaper(scrubberHintEnemy)?{x:scrubberHintEnemy.x,y:scrubberHintEnemy.y,age:scrubberHintAge}:null;}
+function updateScrubberHint(dt){
+ if(!scrubberHintShown){const e=game.state.enemies.find(e=>e.type==='scrubber'&&e.hp>0&&!game.api.underPaper(e)&&e.x>=e.r&&e.x<=game.state.W-e.r&&e.y>=80+e.r&&e.y<=game.state.H-e.r);if(e){scrubberHintEnemy=e;scrubberHintAge=0;scrubberHintShown=true;}}
+ else scrubberHintAge+=dt;
+ const visible=!!scrubberHintSnapshot();game.dom.$('scrubberHint').hidden=!visible;game.dom.$('eraserBtn').classList?.toggle('scrubber-erase-cue',visible);
+ if(visible){const touch=document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches;game.dom.$('scrubberHintControl').textContent=touch?(game.api.drawingControls().eraserToggle?'Tap Erase, then rub over HIM!':'Hold Erase; use your other finger to rub over HIM!'):'Right-drag over HIM to erase him!';}
+ if(!visible&&scrubberHintShown)scrubberHintEnemy=null;
+}
 function updateScrubber(e,dt){
  if(e.hp<=0||e.freeze>0||e.stun>0)return;
  e.scrubCd=Math.max(0,(e.scrubCd||0)-dt);
@@ -766,7 +777,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

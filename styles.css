@@ -1045,3 +1045,7 @@ html.native-app input,html.native-app textarea{user-select:text;-webkit-user-sel
 .doodle-choice-grid button{width:100%;min-height:48px;background:#355d43;color:#fffaf0}
 .doodle-choice-grid p{font-size:14px;margin:10px 0 0}#doodleKeep{min-height:44px}
 @media(max-width:480px){.doodle-choice-box{padding:16px}.doodle-choice-grid{grid-template-columns:1fr}.doodle-choice-box h2{font-size:27px}}
+.scrubber-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);z-index:5;max-width:calc(100% - 24px);width:max-content;pointer-events:none;padding:8px 12px;border:2px solid #456238;border-radius:7px;background:#fff4cdf5;box-shadow:2px 3px 0 #283c3130;color:#29462c;font-size:13px;text-align:center;line-height:1.4}
+.scrubber-hint strong,.scrubber-hint span{display:block}.scrubber-hint[hidden]{display:none}
+#eraserBtn.scrubber-erase-cue{outline:3px solid #d59b24;outline-offset:2px;box-shadow:0 0 0 5px #fff3ce}
+html.native-app .scrubber-hint{bottom:calc(66px + var(--native-bottom))}

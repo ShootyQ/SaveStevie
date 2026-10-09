@@ -13,7 +13,7 @@ function update(dt){
   if(game.api.synergyRevealActive()||game.api.beginSynergyReveal())return;
   if(game.api.bossEntranceActive()){game.api.updateBossEntrance(dt);game.api.updateUI();return}
   if((game.state.wave===5||game.state.wave===10)&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
-  game.api.updateRefuge(dt);game.api.updatePaper(dt);if(game.api.updateDoodleScraps(dt))return;
+  game.api.updateRefuge(dt);game.api.updatePaper(dt);game.api.updateScrubberHint(dt);if(game.api.updateDoodleScraps(dt))return;
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
   game.state.waveElapsed+=dt;
   if(game.state.wave%5!==0||game.api.bossWavePhase()==='timed'){

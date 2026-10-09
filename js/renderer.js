@@ -840,6 +840,8 @@ function draw(){
     game.dom.ctx.restore();
   }
 
+  const scrubberCue=game.api.scrubberHintSnapshot();
+  if(scrubberCue){const ctx=game.dom.ctx,x=game.api.clamp(scrubberCue.x,48,game.state.W-48),y=game.api.clamp(scrubberCue.y-50,90,game.state.H-50);ctx.save();ctx.fillStyle='#fff4cd';ctx.strokeStyle='#456238';ctx.lineWidth=2;ctx.fillRect(x-43,y-14,86,25);ctx.strokeRect(x-43,y-14,86,25);ctx.fillStyle='#29462c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('Erase me!',x,y+3);ctx.beginPath();ctx.moveTo(x,y+11);ctx.lineTo(scrubberCue.x,scrubberCue.y-20);ctx.stroke();ctx.restore();}
   for(const p of game.state.projectiles){
     const ctx=game.dom.ctx,color={fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a'}[p.paperElement];
     ctx.save();ctx.translate(p.x,p.y);ctx.fillStyle='#fffaf0';ctx.strokeStyle=color||'#6d655b';ctx.lineWidth=color?2:1.5;ctx.beginPath();ctx.moveTo(-5,-2);ctx.lineTo(-2,-5);ctx.lineTo(3,-4);ctx.lineTo(5,0);ctx.lineTo(2,5);ctx.lineTo(-4,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-3,-2);ctx.lineTo(1,1);ctx.lineTo(3,-2);ctx.moveTo(1,1);ctx.lineTo(0,4);ctx.stroke();ctx.restore();
