@@ -656,7 +656,7 @@ function draw(){
       game.dom.ctx.beginPath();game.dom.ctx.arc(w.pts[0].x,w.pts[0].y,16+Math.sin(performance.now()/180)*4,0,Math.PI*2);game.dom.ctx.stroke();game.dom.ctx.restore()
     }
   }
-  if(game.state.currentWall&&game.state.currentWall.length>1){
+  if(game.state.currentWall&&game.state.currentWall.length>1&&!game.api.liveWallActive()){
     // The preview grows in place; refresh both presentation caches.
     wallSamples.delete(game.state.currentWall);graphiteGrain.delete(game.state.currentWall);
     drawToolStroke(game.state.currentWall,game.state.stats.lineWidth,.72,'#343638');
