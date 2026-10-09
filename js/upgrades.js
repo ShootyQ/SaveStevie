@@ -40,10 +40,12 @@ game.catalog.synergyDefs = [
 // Effect slots belong to this run's permanent tool; utility upgrades stay free.
 const effectKeys={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Repulsion Ink':'repulsion','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Void Ink':'void','Chaos Ink':'chaos','Death Ink':'death'};
 function equippedEffects(){return game.catalog.upgrades.filter(u=>effectKeys[u.name]&&game.state.stacks[u.name]>0);}
+game.catalog.legendaryPlan={chance:1/3,firstWave:1,lastWave:19};
 function resetRewardPlan(){
-  // One reserved offer in 10% of campaigns. Rerolls, Luck and Endless cannot
+  // One reserved offer in roughly one third of campaigns. Rerolls, Luck and Endless cannot
   // create extra legendary chances; short runs may end before the offer.
-  game.state.legendaryWave=Math.random()<.1?1+Math.floor(Math.random()*19):0;
+  const plan=game.catalog.legendaryPlan;
+  game.state.legendaryWave=Math.random()<plan.chance?plan.firstWave+Math.floor(Math.random()*(plan.lastWave-plan.firstWave+1)):0;
   game.state.legendaryOffered=false;
 }
 function removeEffect(u){

@@ -2,6 +2,10 @@
 
 Refactored from doodle_defender_v8.html. Open index.html directly in a modern browser. No installation or build required. Keep the folder together.
 
+## Upgrade reference
+
+Browse the [complete upgrade and ability list](docs/UPGRADE_REFERENCE.md), or download the [Excel reference and retuning checklist](docs/SaveStevie-Upgrade-Reference.xlsx). The workbook includes run upgrades, synergies, permanent perks, mechanics and editable review notes. Regenerate it with `node scripts/build-upgrade-reference.cjs` followed by `python3 scripts/build-upgrade-workbook.py` (requires `openpyxl`).
+
 ## Future design ideas
 
 See the [long-term replayability ideas](docs/replayability/README.md) for shape techniques, post-victory challenges, encounters and progression possibilities. These are design notes, not shipped features.
