@@ -267,10 +267,76 @@ function repairTouchedWalls(points,excluded=null){
 
 function canStartStroke(){const s=game.state.stats;return game.api.wobbleInfiniteInk?.()||(s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6;}
 
+const stitchReach=16;
+function stitchFactor(count){return [.75,.5,.25][count-1]||0;}
+function stitchEndpoint(point,excluded=new Set()){
+ let best=null,distance=stitchReach;
+ for(const wall of game.state.walls){
+  if(excluded.has(wall)||wall.closed||wall.hp<=0||wall.life<=0||wall.pts.length<2)continue;
+  for(const index of [0,wall.pts.length-1]){const p=wall.pts[index],d=Math.hypot(point.x-p.x,point.y-p.y);if(d<=distance){distance=d;best={wall,index,point:{...p}};}}
+ }
+ return best;
+}
+function resizeConnectorHp(t,closed=false){
+ const w=t.base,newHp=game.api.wallHpForLength(t.length,closed,t.newIntersections)*t.factor,maxHp=t.oldMaxHp+newHp;
+ w.hp+=maxHp-w.maxHp;w.maxHp=maxHp;t.connectorHp=newHp;
+ for(const copy of t.copies)if(game.state.walls.includes(copy)){
+  const max=newHp*game.catalog.balance.copyDurability;copy.hp=Math.max(0,copy.hp+max-copy.maxHp);copy.maxHp=max;
+  if(max===0||copy.hp<=0)game.state.walls=game.state.walls.filter(a=>a!==copy);
+ }
+}
+function joinStitchStart(t,end,reverse=false){
+ const fresh=t.base,old=end.wall;
+ if(reverse)t.strokePts=[...t.strokePts].reverse();
+ const prefix=end.index===old.pts.length-1?[...old.pts]:[...old.pts].reverse();
+ t.startCount=old.stitchCount||0;t.factor=stitchFactor(t.startCount+1);t.oldMaxHp=old.maxHp;t.oldIntersections=old.intersections||0;t.prefix=prefix;
+ const hp=game.api.wallHpForLength(t.length,false,t.newIntersections)*t.factor,damage=fresh.maxHp-fresh.hp;
+ old.hp+=Math.max(0,hp-damage);old.maxHp+=hp;old.eraseInk=(old.eraseInk||0)+(fresh.eraseInk||0);
+ old.life=Math.min(old.life,fresh.life);old.maxLife=Math.min(old.maxLife,fresh.maxLife);
+ old.pts=prefix.concat(t.strokePts.slice(1));old.closed=false;old.intersections=t.oldIntersections+t.newIntersections;
+ old.stitchCount=t.startCount+1;old.stitchPoints=[...(old.stitchPoints||[]),{...end.point}];
+ game.state.walls=game.state.walls.filter(w=>w!==fresh);t.base=old;t.connectorHp=hp;
+ for(const copy of t.copies)copy.stitchCount=old.stitchCount;
+ resizeConnectorHp(t);
+}
+function finishStitch(t){
+ if(!game.state.stats.doodleStitch)return;
+ const excluded=new Set([t.base,...t.copies]),last=t.strokePts.at(-1),previous=t.strokePts.at(-2);
+ let end=stitchEndpoint(last,excluded);
+ // An extension can close the original open wall, but never snap to its own tip.
+ if(t.prefix){const p=t.base.pts[0],d=Math.hypot(last.x-p.x,last.y-p.y);if(d<=stitchReach&&(!end||d<Math.hypot(last.x-end.point.x,last.y-end.point.y)))end={wall:t.base,index:0,point:{...p}};}
+ if(!end)return;
+ const extra=Math.hypot(previous.x-end.point.x,previous.y-end.point.y)-Math.hypot(previous.x-last.x,previous.y-last.y),length=t.length+extra;
+ if(length<8)return;
+ const cost=Math.max(6,length*game.state.stats.lineCost),delta=t.free?0:Math.max(0,cost-t.cost),bank=game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0;
+ if(delta>game.state.stats.ink+bank+1e-8)return; // A snapped bridge must be affordable too.
+ const used=Math.min(delta,bank),paid=delta-used;game.state.stats.freehandBank-=used;game.state.stats.ink=Math.max(0,game.state.stats.ink-paid);t.paid+=paid;t.base.eraseInk+=paid;t.cost=Math.max(t.cost,cost);t.length=length;
+ t.strokePts=t.strokePts.map((p,i)=>i===t.strokePts.length-1?{...end.point}:p);
+ t.base.pts=t.prefix?t.prefix.concat(t.strokePts.slice(1)):t.strokePts;
+ resizeConnectorHp(t);
+ if(!t.prefix){joinStitchStart(t,end,true);return;}
+ const w=t.base,other=end.wall;
+ if(other===w){w.stitchPoints.push({...end.point});return;}
+ const tail=end.index===0?[...other.pts]:[...other.pts].reverse();
+ w.pts=w.pts.concat(tail.slice(1));w.hp+=other.hp;w.maxHp+=other.maxHp;t.oldMaxHp+=other.maxHp;t.oldIntersections+=other.intersections||0;
+ w.life=Math.min(w.life,other.life);w.maxLife=Math.min(w.maxLife,other.maxLife);w.eraseInk+=(other.eraseInk||0);
+ w.stitchCount=t.startCount+(other.stitchCount||0)+1;t.factor=stitchFactor(w.stitchCount);w.intersections=t.oldIntersections+t.newIntersections;
+ w.stitchPoints=[...(w.stitchPoints||[]),...(other.stitchPoints||[]),{...end.point}];
+ game.state.walls=game.state.walls.filter(a=>a!==other);resizeConnectorHp(t);
+ for(const copy of t.copies)copy.stitchCount=w.stitchCount;
+}
+function closeCreatedWall(t){
+ const w=t.base;w.closed=game.api.dist(w.pts[0].x,w.pts[0].y,w.pts.at(-1).x,w.pts.at(-1).y)<22&&w.pts.length>6;
+ resizeConnectorHp(t,w.closed);
+ if(w.hp<=0)game.state.walls=game.state.walls.filter(a=>a!==w);
+}
+
 let liveStroke=null;
 function wallHpForLength(length,closed=false,intersections=0){return game.state.stats.wallHp*(length/180)*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);}
 function createWall(points,options={}){
   if(points.length<2)return;
+  const start=game.state.stats.doodleStitch?stitchEndpoint(points[0]):null;
+  if(start)points=points.map((p,i)=>i===0?{...start.point}:{...p});
   let length=0;
   for(let i=1;i<points.length;i++)length+=game.api.dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
   if(length<8)return;
@@ -303,8 +369,8 @@ function createWall(points,options={}){
   game.state.stats.strokeCount++;
   game.state.stats.firstStrokeUsed=true;
 
-  const closed=!options.live&&game.api.dist(points[0].x,points[0].y,points.at(-1).x,points.at(-1).y)<22&&points.length>6;
-  const intersections=game.api.countIntersections(points);
+  const closed=!options.live&&!start&&game.api.dist(points[0].x,points[0].y,points.at(-1).x,points.at(-1).y)<22&&points.length>6;
+  const intersections=game.api.countIntersections(points,start?new Set([start.wall]):null);
 
   // Longer doodles are sturdier. Tiny lines are quick emergency barriers;
   // long strokes cost more ink but can take much more punishment.
@@ -329,9 +395,10 @@ function createWall(points,options={}){
     }
   }
   if(infinite){const bumpers=game.state.walls.filter(w=>w.wobbleBumper);if(bumpers.length>40){const remove=new Set(bumpers.slice(0,bumpers.length-40));game.state.walls=game.state.walls.filter(w=>!remove.has(w))}}
-  if(!options.live)finishWallEffects(base,actualPaid,copies);
-  game.api.updateUI();
-  return {base,copies,free:firstStrokeFree,infinite,cost,paid:actualPaid,length};
+  const t={base,copies,free:firstStrokeFree,infinite,cost,paid:actualPaid,length,strokePts:base.pts,prefix:null,oldMaxHp:0,oldIntersections:0,newIntersections:intersections,factor:1};
+  if(start)joinStitchStart(t,start);
+  if(!options.live){finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,copies,t.strokePts);}
+  game.api.updateUI();return t;
 }
 function chargeFreehand(actualPaid){
   if(game.state.stats.freehandLevel>0&&actualPaid>=5){
@@ -345,8 +412,7 @@ function chargeFreehand(actualPaid){
   }
 
 }
-function finishWallEffects(base,actualPaid,copies=[]){
-  const points=base.pts;chargeFreehand(actualPaid);
+function finishWallEffects(base,actualPaid,copies=[],points=base.pts){chargeFreehand(actualPaid);
   game.api.repairTouchedWalls(points,new Set([base,...copies]));
 
   game.api.cutWobbleStroke(points);
@@ -356,7 +422,7 @@ function finishWallEffects(base,actualPaid,copies=[]){
 // A held stroke owns real wall objects. Growing changes those objects, rather
 // than replacing them, so combat damage and remaining lifetime are retained.
 function updateLiveWall(points){
- if(!liveStroke){liveStroke=createWall(points,{live:true})||null;return liveStroke?.base.pts||points;}
+ if(!liveStroke){liveStroke=createWall(points,{live:true})||null;return liveStroke?.strokePts||points;}
  const t=liveStroke,w=t.base;
  if(!game.state.walls.includes(w)||w.hp<=0)return null;
  let remaining=t.free?Infinity:(t.cost+Math.max(0,game.state.stats.ink)+(game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0))/game.state.stats.lineCost;
@@ -365,26 +431,24 @@ function updateLiveWall(points){
   const a=points[i-1],b=points[i],d=game.api.dist(a.x,a.y,b.x,b.y);if(d<=0)continue;
   const used=Math.min(d,remaining);clipped.push({x:a.x+(b.x-a.x)*used/d,y:a.y+(b.y-a.y)*used/d});length+=used;remaining-=used;
  }
- if(length<=t.length)return w.pts;
+ if(length<=t.length)return t.strokePts;
  const cost=Math.max(6,length*game.state.stats.lineCost),delta=t.free?0:Math.max(0,cost-t.cost),bank=game.state.stats.freehandLevel>0?Math.min(delta,game.state.stats.freehandBank):0,paid=delta-bank;
  game.state.stats.freehandBank-=bank;game.state.stats.ink=t.infinite?game.state.stats.maxInk:Math.max(0,game.state.stats.ink-paid);
  t.cost=cost;t.paid+=paid;t.length=length;w.eraseInk+=paid;
- const excluded=new Set([w,...t.copies]),intersections=Math.max(w.intersections,game.api.countIntersections(clipped,excluded)),hp=game.api.wallHpForLength(length,false,intersections);
- w.hp=Math.max(0,w.hp+hp-w.maxHp);w.maxHp=hp;w.pts=clipped;w.intersections=intersections;
+ const excluded=new Set([w,...t.copies]);t.newIntersections=Math.max(t.newIntersections,game.api.countIntersections(clipped,excluded));
+ t.strokePts=clipped;w.pts=t.prefix?t.prefix.concat(clipped.slice(1)):clipped;w.intersections=t.oldIntersections+t.newIntersections;resizeConnectorHp(t);
+
  for(let c=0;c<t.copies.length;c++){
   const copy=t.copies[c];if(!game.state.walls.includes(copy))continue;
   copy.pts=clipped.map((p,i)=>{const a=i<clipped.length-1?p:clipped[i-1],b=i<clipped.length-1?clipped[i+1]:p,dx=b.x-a.x,dy=b.y-a.y,m=Math.hypot(dx,dy)||1;return {x:p.x+dy/m*12*(c+1),y:p.y-dx/m*12*(c+1)}});
-  const maxHp=hp*game.catalog.balance.copyDurability;copy.hp=Math.max(0,copy.hp+maxHp-copy.maxHp);copy.maxHp=maxHp;
+
  }
- game.api.updateUI();return w.pts;
+ game.api.updateUI();return t.strokePts;
 }
 function finishLiveWall(){
  const t=liveStroke;liveStroke=null;if(!t)return false;
  const w=t.base;if(game.state.walls.includes(w)&&w.hp>0){
-  w.closed=game.api.dist(w.pts[0].x,w.pts[0].y,w.pts.at(-1).x,w.pts.at(-1).y)<22&&w.pts.length>6;
-  const hp=game.api.wallHpForLength(t.length,w.closed,w.intersections);w.hp+=hp-w.maxHp;w.maxHp=hp;
-  for(const copy of t.copies)if(game.state.walls.includes(copy)){const maxHp=hp*game.catalog.balance.copyDurability;copy.hp+=maxHp-copy.maxHp;copy.maxHp=maxHp;}
-  finishWallEffects(w,t.paid,t.copies);game.api.updateUI();
+  finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,t.copies,t.strokePts);game.api.updateUI();
  }else chargeFreehand(t.paid);
  return true;
 }
@@ -561,7 +625,7 @@ function applySynergies(e,dt){
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
-const api = { wallHpForLength,updateLiveWall,finishLiveWall,cancelLiveWall,liveWallActive,eraserIntervals, eraseWallPath, flingBossFriend, launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
+const api = { stitchFactor,wallHpForLength,updateLiveWall,finishLiveWall,cancelLiveWall,liveWallActive,eraserIntervals, eraseWallPath, flingBossFriend, launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
 Object.assign(game.api, api);
 return api;
 };

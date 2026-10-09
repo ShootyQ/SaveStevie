@@ -436,7 +436,7 @@ function resize(){
   if(dx||dy){
     // Keep combat distances unchanged through browser chrome/fullscreen changes.
     const move=p=>{p.x+=dx;p.y+=dy;if(Number.isFinite(p.originX))p.originX+=dx;if(Number.isFinite(p.originY))p.originY+=dy};
-    for(const wall of game.state.walls)wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));
+    for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
     game.api.moveLaunchEffects(dx,dy);
@@ -641,6 +641,7 @@ function draw(){
     drawToolStroke(w.pts,w.thick,.08+.92*visualRatio,col);
 
     drawWallTextures(w.pts,w.thick,.08+.92*visualRatio);
+    if(w.stitchPoints){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b37b32';ctx.lineWidth=2;ctx.globalAlpha=.85;for(const p of w.stitchPoints){if(!w.pts.slice(1).some((q,i)=>game.api.pointSegDist(p.x,p.y,w.pts[i].x,w.pts[i].y,q.x,q.y)<2))continue;ctx.beginPath();ctx.moveTo(p.x-4,p.y-5);ctx.lineTo(p.x+4,p.y+5);ctx.moveTo(p.x+4,p.y-5);ctx.lineTo(p.x-4,p.y+5);ctx.stroke();}ctx.restore();}
     if(w.sealAge!==undefined&&w.sealAge<.65){
       const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#638466';ctx.globalAlpha=(1-w.sealAge/.65)*.65;ctx.lineWidth=w.thick+3;ctx.lineCap='round';
       ctx.beginPath();ctx.moveTo(w.pts[0].x,w.pts[0].y);

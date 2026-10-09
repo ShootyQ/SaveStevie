@@ -99,7 +99,7 @@ function resetRun(options={}){
     maxInk:160,ink:160,inkRegen:5,eraseRefund:.25,wallHp:65,wallDamage:8,wallSlow:0,wallStun:0,
     refund:0,luck:0,playerRegen:0,doubleLine:false,tripleLine:false,explode:false,
     repairOnKill:0,freehandLevel:0,freehandCharge:0,freehandThreshold:80,freehandBank:0,freehandBankSize:40,strokeCount:0,closedBonus:1,killHeal:0,
-    lineCost:.31,lineWidth:8,wallLife:72,intersectBonus:0,repairDraw:0,firstFree:false,
+    lineCost:.31,lineWidth:8,wallLife:72,intersectBonus:0,repairDraw:0,doodleStitch:false,firstFree:false,
     firstStrokeUsed:false,playerArmor:0,rockDamage:0,rockRate:0,enemyScale:1,
     extraChoice:false,uncommonFloor:false,newCardBias:false
   });
