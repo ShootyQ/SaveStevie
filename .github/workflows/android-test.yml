@@ -18,7 +18,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ANDROID_VERSION_CODE: ${{ github.run_number }}
-      ANDROID_VERSION_NAME: 0.1.0-test.${{ github.run_number }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

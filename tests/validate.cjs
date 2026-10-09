@@ -173,8 +173,8 @@ bg.api.resetRun();bg.api.renderBuild();assert.match(build.node('buildUpgrades').
 choose('Fire Ink');choose('Poison Ink');bg.api.renderBuild();assert.match(build.node('buildSynergies').innerHTML,/Plaguefire/);
 for(const u of bg.catalog.upgrades)assert.ok(bg.api.upgradeEffect(u.name,2).length>0,u.name+' has an effect summary');
 const title=fs.readFileSync(path.join(root,'index.html'),'utf8');
-assert.match(title,/<title>Save Stevie - In Development<\/title>/);
-assert.match(title,/<title>Save Stevie - In Development<\/title>/);
+assert.match(title,/<title>Save Stevie - Alpha<\/title>/);
+assert.ok(title.includes('class="alpha-version">Alpha '+JSON.parse(fs.readFileSync(path.join(root,'package.json'),'utf8')).version+'</span>'),'menu update number matches package version');
 console.log('PASS: additive/multiplicative stacks, ink levels, one-time unlocks, caps, rock speed, build review, pause restoration, synergies, and branding.');
 
 const pressureEnv=load(true),pg=pressureEnv.sandbox.testGame;
