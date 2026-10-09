@@ -277,6 +277,7 @@ function createWall(points){
   }
   if(infinite){const bumpers=game.state.walls.filter(w=>w.wobbleBumper);if(bumpers.length>40){const remove=new Set(bumpers.slice(0,bumpers.length-40));game.state.walls=game.state.walls.filter(w=>!remove.has(w))}}
   game.api.cutWobbleStroke(base.pts);
+  game.api.cutTwiceyStroke(base.pts);
   if(base.closed)rewardClosedLoop(base,actualPaid);
   game.api.updateUI();
 }
