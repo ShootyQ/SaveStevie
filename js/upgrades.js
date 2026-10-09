@@ -55,14 +55,13 @@ function removeEffect(u){
   delete game.state.stacks[u.name];
 }
 function toolArt(rank){
-  if(rank>=10)return {offset:69.3359375,height:250,y:51.2,sockets:[32.5,44,55.5,66.9]};
-  if(rank>=6)return {offset:48.828125,height:230,y:55.65,sockets:[36.5,51.9,67.4]};
-  if(rank>=3)return {offset:26.5625,height:230,y:55.65,sockets:[44.1,64.9]};
-  return {offset:3.90625,height:230,y:56.52,sockets:[44.1,64.9]};
+  rank=game.api.clamp(Math.floor(rank)||0,0,10);const row=Math.floor(rank/3);
+  return {rank,col:rank%3,row,y:[62.5,52.3,46.1,37.5][row],sockets:rank>=10?[32,47,62,77]:rank>=6?[42,56,70]:[48,65]};
 }
-function toolIllustration(rank,sockets=''){
-  const version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
-  return `<div class="instrument-hero tool-tier-art" style="--art-offset:${toolArt(rank).offset}%;--art-height:${toolArt(rank).height};--art-image-height:${1024/toolArt(rank).height*100}%" aria-hidden="true"><img class="instrument-art" src="assets/art/tools/tool-tiers.png${query}" alt="">${sockets}</div>`;
+function toolIllustration(rank,sockets=null){
+  const version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'',art=toolArt(rank);
+  if(sockets===null)sockets=art.sockets.map(x=>`<span class="tool-socket" style="--socket-x:${x}%;--socket-y:${art.y}%"><span class="socket-plus">+</span></span>`).join('');
+  return `<div class="instrument-hero tool-rank-art" data-tool-rank="${art.rank}" style="--rank-x:${art.col/3*100}%;--rank-y:${art.row/4*100}%" aria-hidden="true"><img class="instrument-art" src="assets/art/tools/tool-ranks.png${query}" alt="">${sockets}</div>`;
 }
 function renderTool(id){
   const tool=game.state.tool,effects=equippedEffects();
@@ -74,7 +73,7 @@ function renderTool(id){
     const u=effects[i];return `<span class="tool-socket" style="--socket-x:${toolArt(tool.rank).sockets[i]}%;--socket-y:${toolArt(tool.rank).y}%">${u?`${upgradeArtworkMarkup(u,24)}<span class="socket-level">${game.state.stacks[u.name]}</span>`:'<span class="socket-plus">+</span>'}</span>`;
   }).join('');
   const synergies=game.catalog.synergyDefs.filter(d=>d.req()).map(d=>d.name).join(' · ');
-  game.dom.$(id).innerHTML=`<div class="tool-heading"><div><span class="section-kicker">YOUR DRAWING TOOL</span><strong>${tool.name}</strong></div><span class="tool-rank">Rank ${tool.rank} · ${effects.length}/${tool.slots} effects</span></div>${toolIllustration(tool.rank,sockets)}<div class="tool-slots">${slots}</div><p class="tool-synergies">${synergies?'✦ Active synergies: '+synergies:'Two compatible effects can unlock a synergy. Make this pencil yours.'}</p>`;bindArtworkFallback(game.dom.$(id));
+  game.dom.$(id).innerHTML=`<div class="tool-heading"><div><span class="section-kicker">YOUR DRAWING TOOL</span><strong>${tool.name}</strong></div><span class="tool-rank">Rank ${tool.rank} · +${tool.rank*8} wall HP · ${effects.length}/${tool.slots} effects</span></div>${toolIllustration(tool.rank,sockets)}<div class="tool-slots">${slots}</div><p class="tool-synergies">${synergies?'✦ Active synergies: '+synergies:'Two compatible effects can unlock a synergy. Make this pencil yours.'}</p>`;bindArtworkFallback(game.dom.$(id));
 }
 const rarityLevels={common:1,uncommon:2,rare:3,legendary:4};
 function upgradeLevels(u){

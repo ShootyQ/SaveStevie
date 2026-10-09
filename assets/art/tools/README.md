@@ -1,17 +1,22 @@
-# Socketed drawing tools
+# Ranked drawing tools
 
-`tool-tiers.png` is original generated artwork for Save Stevie, produced with
-OpenAI image generation. It contains four isolated transparent drawing tools:
-Pencil (two sockets), Mechanical Pencil (two), Simple Pen (three), and Scented
-Sharpie (four). The hand-drawn outlines and colored-pencil texture match the
-notebook interface. The image is 1536 × 1024; no remote asset service is needed.
+`tool-ranks.png` is original OpenAI-generated colored-pencil artwork, based on
+Save Stevie's existing tool style. It is a transparent 1536 × 1024 atlas with
+three columns and four rows of 512 × 256 cells. Eleven occupied cells represent
+ranks 0–10; the last cell is empty.
 
-`toolArt` in `js/upgrades.js` records the crop and socket centers for each tier.
-The renderer displays the atlas through CSS cropping and places the actual
-owned effect icons and level badges inside its drawn sockets. The same artwork
-appears in rewards, Tool/Build and the Notebook tool purchase card. Deployment
-packaging versions the asset URL along with the rest of the site.
+Ranks 0–2: yellow, orange, and red wooden pencils.
+Ranks 3–5: turquoise, green, and purple mechanical pencils.
+Ranks 6–9: blue and magenta ballpoints, jade and constellation fountain pens.
+Rank 10: a decorated plum/gold Scented Sharpie.
 
-Ranks 0–2 share Pencil artwork, 3–5 Mechanical Pencil, 6–9 Simple Pen and rank
-10 Scented Sharpie. Existing SVG icons and `slot-pencil.png` remain available
-for historical references.
+`toolArt` in `js/upgrades.js` specifies each crop and socket positions. Real
+owned effect icons appear in cream socket overlays; Notebook previews display
+empty sockets. Current/next art appears beside the permanent upgrade, and the
+same rank art appears in reward and Tool/Build screens. Resources are versioned
+by the normal site/Android packaging. No remote asset service is used at runtime.
+
+Each paid rank grants +8 base wall HP; effect slots remain two through rank 5,
+three at ranks 6–9, and four at rank 10. Legacy Fresh Pencil purchases are refunded
+once through Notebook save-version migration. Previous `tool-tiers.png`, SVG
+icons and `slot-pencil.png` remain available for historical references.
