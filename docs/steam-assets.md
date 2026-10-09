@@ -11,9 +11,9 @@ Reference: [Store Graphical Assets Details & Templates](https://partner.steamgam
 | Header Capsule | Required | 920 × 430 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#header_capsule) | [Prepared PNG](../assets/steam/header-capsule-920x430.png) |
 | Small Capsule | Required | 462 × 174 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#small_capsule) | [Prepared PNG](../assets/steam/small-capsule-462x174.png) |
 | Main Capsule | Required | 1232 × 706 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#main_capsule) | [Prepared PNG](../assets/steam/main-capsule-1232x706.png) |
-| Vertical Capsule | Required | 748 × 896 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#hero_capsule) | To prepare |
+| Vertical Capsule | Required | 748 × 896 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/standard#hero_capsule) | [Prepared PNG](../assets/steam/vertical-capsule-748x896.png) |
 | Screenshots | Required | Minimum 1920 × 1080 px or larger; 16:9 | Gameplay screenshots | [Details](https://partner.steamgames.com/doc/store/assets/standard#screenshots) | Deferred — ignore for now |
-| Page Background | Optional | 1438 × 810 px | Subtle artwork, not too bright | [Details](https://partner.steamgames.com/doc/store/assets/standard#page_background) | Optional; to decide |
+| Page Background | Optional | 1438 × 810 px | Subtle artwork, not too bright | [Details](https://partner.steamgames.com/doc/store/assets/standard#page_background) | [Prepared PNG](../assets/steam/page-background-1438x810.png) |
 | Bundle Images | Required if setting up a bundle | See templates | Bundle assets | [Details](https://partner.steamgames.com/doc/store/assets/standard#bundles) | Conditional; to decide |
 
 ## Community and client icons
@@ -22,7 +22,7 @@ Reference: [Community and Client Icons Details & Templates](https://partner.stea
 
 | Asset | Requirement | Dimensions | Content / format | Status |
 | --- | --- | --- | --- | --- |
-| Shortcut Icon | Required | 256 × 256 px | .ico or .png; game logo and artwork only. Steam generates an .ico if a PNG is provided. | To prepare |
+| Shortcut Icon | Required | 256 × 256 px | .ico or .png; game logo and artwork only. Steam generates an .ico if a PNG is provided. | [Prepared PNG](../assets/steam/shortcut-icon-256x256.png) |
 | App Icon | Required | 184 × 184 px | .jpg; small game logo or representative icon | To prepare |
 
 ## Library assets
