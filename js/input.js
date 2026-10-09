@@ -12,7 +12,7 @@ function syncDrawingControls(){
  game.dom.canvas.style.cursor=active?'none':'crosshair';
 }
 function finishStroke(commit=true){
- if(commit&&game.state.drawing&&game.state.currentWall)game.api.createWall(game.state.currentWall);
+ if(commit){if(!game.api.finishLiveWall()&&game.state.drawing&&game.state.currentWall)game.api.createWall(game.state.currentWall);}else game.api.cancelLiveWall();
  game.state.drawing=false;game.state.currentWall=null;game.api.stopSoundEffects('scribble');
  const id=strokePointer;strokePointer=null;rightDrag=false;lastPoint=null;cursor=null;
  if(id!==null&&game.dom.canvas.hasPointerCapture?.(id))game.dom.canvas.releasePointerCapture(id);
@@ -27,7 +27,7 @@ function endDraw(){
 function changeEraserMode(change){
  const before=eraserActive();change();const after=eraserActive();
  if(before!==after&&strokePointer!==null&&canPaint()){
-  if(after){if(game.state.currentWall)game.api.createWall(game.state.currentWall);game.state.currentWall=null;game.api.stopSoundEffects('scribble');cursor={...lastPoint,r:20};game.api.eraseWallPath(lastPoint,lastPoint,20);}
+  if(after){if(!game.api.finishLiveWall()&&game.state.currentWall)game.api.createWall(game.state.currentWall);game.state.currentWall=null;game.api.stopSoundEffects('scribble');cursor={...lastPoint,r:20};game.api.eraseWallPath(lastPoint,lastPoint,20);}
   else{cursor=null;game.state.currentWall=game.api.canStartStroke()?[{...lastPoint}]:null;}
  }
  if(!before&&after&&window.matchMedia?.('(pointer: coarse)').matches)globalThis.navigator?.vibrate?.(12);
@@ -110,7 +110,7 @@ game.dom.canvas.addEventListener('pointermove',e=>{
  if(!canPaint()){cancelDrawingInput();return;}
  const p=game.api.pointerPos(e);
  if(eraserActive()){game.api.eraseWallPath(lastPoint,p,20);cursor={...p,r:20};}
- else if(game.state.currentWall){const q=game.state.currentWall.at(-1);if(game.api.dist(p.x,p.y,q.x,q.y)>6){game.state.currentWall.push(p);game.api.playSound('scribble');}}
+ else if(game.state.currentWall){const q=game.state.currentWall.at(-1);if(game.api.dist(p.x,p.y,q.x,q.y)>6){game.state.currentWall.push(p);game.state.currentWall=game.api.updateLiveWall(game.state.currentWall);game.api.playSound('scribble');}}
  lastPoint=p;
 });
 game.dom.canvas.addEventListener('pointerup',e=>{if(e.pointerId!==strokePointer)return;if(canPaint())finishStroke();else cancelDrawingInput();});

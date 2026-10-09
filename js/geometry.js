@@ -56,10 +56,11 @@ function segmentIntersection(a,b,c,d){
   return t>0&&t<1&&u>0&&u<1;
 }
 
-function countIntersections(points){
+function countIntersections(points,excluded=null){
   let n=0;
   if(!game.state.stats.intersectBonus)return 0;
   for(const w of game.state.walls){
+    if(excluded?.has(w))continue;
     for(let i=1;i<points.length;i++){
       for(let j=1;j<w.pts.length;j++){
         if(game.api.segmentIntersection(points[i-1],points[i],w.pts[j-1],w.pts[j]))n++;

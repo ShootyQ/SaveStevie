@@ -3,7 +3,7 @@ DoodleDefender.systems.firstLessons=function(game){
  const key='saveStevieLessonsV1';let seen={draw:false,erase:false},enabled=true,kind=null,step=0,points=[],removed=new Set(),practiced=false,pointer=null,last=null,held=false,modifier=null;
  try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(!saved&&game.api.notebookSnapshot().lifetimeScraps>0)seen={draw:true,erase:true};if(saved&&typeof saved==='object')for(const k of ['draw','erase'])seen[k]=saved[k]===true;}catch{}
  const drawSteps=[
-  ['Psst! Help me keep my page safe.','I’m Stevie! Draw walls between my doodles and me. Monsters touching your walls take damage, and their attacks wear the walls down. Everything is paused while we practice.'],
+  ['Psst! Help me keep my page safe.','I’m Stevie! Draw walls between my doodles and me. Monsters touching your walls take damage, and their attacks wear the walls down. Your wall is active while you draw, so it can block attacks before you lift your finger. Everything is paused while we practice.'],
   ['Try drawing a little wall.','Drag across the practice paper below. Short lines use less ink but have less durability (wall HP). Longer lines cost more and stand up to more hits. Every line costs at least 6 ink.'],
   ['This is our ink well.','The INK bar tells you how much drawing ink is left. It refills while we play. If you have less than 6 ink, give it a moment to refill before starting another line.'],
   ['Keep an eye on me!','STEVIE is my health bar. Monsters that reach my fort can hurt me. If it empties, this adventure ends—but our earned scraps stay saved.'],
@@ -59,7 +59,7 @@ DoodleDefender.systems.firstLessons=function(game){
  canvas.addEventListener('pointermove',e=>{if(e.pointerId!==pointer||!firstLessonActive())return;const p=pos(e);if(kind==='draw'){points.push(p);paintPractice();}else if(held||e.buttons===2)erasePractice(last,p);last=p;});
  canvas.addEventListener('pointerup',e=>{
   if(e.pointerId!==pointer)return;pointer=null;
-  if(kind==='draw'){let length=0;for(let i=1;i<points.length;i++)length+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);if(length>=16){practicedEnough();game.dom.$('lessonFeedback').textContent='That wall costs about '+Math.max(6,length*.31).toFixed(1)+' ink and has '+Math.round(65*game.api.clamp(length/180,.35,2.4))+' HP. Try another length!';}}
+  if(kind==='draw'){let length=0;for(let i=1;i<points.length;i++)length+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);if(length>=16){practicedEnough();game.dom.$('lessonFeedback').textContent='That wall costs about '+Math.max(6,length*.31).toFixed(1)+' ink and has '+game.api.wallHpForLength(length).toFixed(1)+' HP. Try another length!';}}
  });
  canvas.addEventListener('pointercancel',()=>{pointer=null;held=false;modifier=null;});
  button.addEventListener('pointerdown',e=>{if(game.api.drawingControls().eraserToggle)return;e.preventDefault?.();held=true;modifier=e.pointerId;button.setPointerCapture(e.pointerId);});
