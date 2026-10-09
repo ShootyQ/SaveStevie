@@ -450,7 +450,7 @@ function resize(){
     for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.rockCharge&&!movedCharges.has(wall.rockCharge)){movedCharges.add(wall.rockCharge);wall.rockCharge.x+=dx;wall.rockCharge.y+=dy;}if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
-    game.api.moveLaunchEffects(dx,dy);game.api.movePaper(dx,dy);
+    game.api.moveLaunchEffects(dx,dy);game.api.movePaper(dx,dy);game.api.moveDoodleScraps(dx,dy);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
@@ -640,7 +640,7 @@ function draw(){
   game.dom.ctx.strokeStyle='rgba(212,76,76,.35)';game.dom.ctx.lineWidth=2;
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
 
-  game.api.drawPaper();
+  game.api.drawPaper();game.api.drawDoodleScraps();
   game.api.drawPlaguefire();
   game.api.drawLaunchGround();
 
@@ -841,7 +841,8 @@ function draw(){
   }
 
   for(const p of game.state.projectiles){
-    game.dom.ctx.fillStyle=p.electricLevel>0?'#6595e6':'#5f5a53';game.dom.ctx.beginPath();game.dom.ctx.arc(p.x,p.y,4,0,Math.PI*2);game.dom.ctx.fill();if(p.electricLevel>0){game.dom.ctx.strokeStyle='#e6f1ff';game.dom.ctx.lineWidth=1.5;game.dom.ctx.beginPath();game.dom.ctx.moveTo(p.x-2,p.y-5);game.dom.ctx.lineTo(p.x+2,p.y);game.dom.ctx.lineTo(p.x-1,p.y+4);game.dom.ctx.stroke()}
+    const ctx=game.dom.ctx,color={fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a'}[p.paperElement];
+    ctx.save();ctx.translate(p.x,p.y);ctx.fillStyle='#fffaf0';ctx.strokeStyle=color||'#6d655b';ctx.lineWidth=color?2:1.5;ctx.beginPath();ctx.moveTo(-5,-2);ctx.lineTo(-2,-5);ctx.lineTo(3,-4);ctx.lineTo(5,0);ctx.lineTo(2,5);ctx.lineTo(-4,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-3,-2);ctx.lineTo(1,1);ctx.lineTo(3,-2);ctx.moveTo(1,1);ctx.lineTo(0,4);ctx.stroke();ctx.restore();
   }
   for(const p of game.state.particles){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1

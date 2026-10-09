@@ -18,10 +18,10 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   for(const powered of [false,true]){
    const result=await page.evaluate(powered=>{
     const g=testGame;g.api.resetRun();g.state.timeLeft=60;g.state.enemies=[];
-    g.catalog.upgrades.find(u=>u.name==='Electric Rocks').apply();g.state.inks.electric=powered?1:0;
+    g.state.stats.electricRocks=1;g.state.stats.rockDamage=4;g.state.stats.rockRate=1.6;g.state.inks.electric=powered?1:0;
     const x=g.state.player.x,y=g.state.player.y;
     g.api.createWall([{x:x+55,y:y-105},{x:x+55,y:y-15}]);
-    const e=g.api.spawnEnemy('grunt');e.x=x+120;e.y=y-110;e.hp=e.maxHp=100;e.chainCd=0;
+    const e=g.api.spawnEnemy(false,null,null,'grunt');e.x=x+120;e.y=y-110;e.hp=e.maxHp=100;e.chainCd=0;
     g.api.updateStevie(.1);g.api.updateProjectiles(.3);
     const snapshot=JSON.stringify(g.state);g.api.draw();
     return {pure:snapshot===JSON.stringify(g.state),charge:g.state.walls[0].rockCharge?.life,cd:g.state.walls[0].rockPulseCd,hp:e.hp,rocks:g.state.projectiles.length,blue:g.state.projectiles[0]?.electricLevel};

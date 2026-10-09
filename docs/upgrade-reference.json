@@ -280,17 +280,6 @@
       "source": "js/upgrades.js"
     },
     {
-      "name": "Electric Rocks",
-      "category": "Stevie / rocks / survival",
-      "effect": "Unlock 4-damage rocks if needed. Rocks charge a short wall section for 2.4s, or burst sparks from Electric Ink walls. Sparks hit up to 8 nearby monsters for 4–9 damage. Each wall recovers for 1.1s. Max 6 levels.",
-      "rarities": "Common / Uncommon / Rare / Legendary",
-      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
-      "stacking": "Repeatable; caps/diminishing returns may apply",
-      "limits": "Max 6 levels. First wall crossed per rock; 2.4s charge within 48px of impact. Electric Ink burst reaches 103–118px, hits up to 8 surface monsters for 4–9 electric damage, and shares enemy electric recovery; 1.1s wall cooldown. Rocks keep flying. Thunderstones also enables this wall reaction.",
-      "synergies": [],
-      "source": "js/upgrades.js"
-    },
-    {
       "name": "Pocket Rocks",
       "category": "Stevie / rocks / survival",
       "effect": "Unlock rock throwing: +4 first-level damage, later gains grow to +9. Throws every 1.6s; preserves faster throws.",
@@ -887,6 +876,17 @@
       "source": "js/notebook.js"
     },
     {
+      "name": "Doodle Scraps",
+      "effect": "Unlock mysterious paper drops in future runs, from any wave. Draw through one and choose a temporary element for Stevie’s paper balls. Finds last only for that run.",
+      "maxRanks": 1,
+      "costs": [
+        25
+      ],
+      "rankOne": "Doodle Scraps can drop from wave 1",
+      "atMax": "Doodle Scraps can drop from wave 1",
+      "source": "js/notebook.js"
+    },
+    {
       "name": "Your Drawing Tool",
       "effect": "Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Every rank has its own artwork and adds +8 base wall HP. Pens unlock a third effect slot; Sharpies unlock a fourth.",
       "maxRanks": 10,
@@ -960,16 +960,16 @@
       "source": "js/notebook.js"
     },
     {
-      "name": "Pocket Pebbles",
-      "effect": "Start throwing rocks: 3 damage per rank. Higher ranks throw a little faster.",
+      "name": "Paper Ball Practice",
+      "effect": "Start throwing crumpled paper: 3 damage per rank. Higher ranks throw a little faster.",
       "maxRanks": 3,
       "costs": [
         5,
         12,
         24
       ],
-      "rankOne": "3 starting rock damage · 1.5s between throws",
-      "atMax": "9 starting rock damage · 1.3s between throws",
+      "rankOne": "3 starting paper-ball damage · 1.5s between throws",
+      "atMax": "9 starting paper-ball damage · 1.3s between throws",
       "source": "js/notebook.js"
     },
     {
@@ -1026,9 +1026,14 @@
       "source": "js/walls.js; js/upgrades.js"
     },
     {
-      "name": "Stevie throws rocks",
-      "effect": "Unlocked through rock upgrades or Pocket Pebbles. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies.",
+      "name": "Stevie throws paper balls",
+      "effect": "Unlocked through throwing upgrades, Paper Ball Practice or a Doodle Scrap discovery. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies.",
       "source": "js/enemies.js; js/balance.js"
+    },
+    {
+      "name": "Doodle Scraps",
+      "effect": "Permanent Notebook unlock costs 25 saved scraps. From wave 1, eligible normal kills have an 8% drop chance; first drop guaranteed by eight eligible kills. Minimum 20 combat seconds between drops, one ground pickup at a time, max four per run; drops last 45 combat seconds. Finish a drawing through a pickup to reel it in and pause for two random elements. Fire, electric, poison, frost and eraser paper replace the current element and last only for the run; no wave-reward or ink slots used. Choosing an element unlocks 4-damage, 1.6s throws if needed. Bosses/helpers and development tests do not drop discoveries.",
+      "source": "js/doodle-scraps.js; js/notebook.js"
     },
     {
       "name": "Specialization: Fortress",
@@ -1303,18 +1308,6 @@
       "name": "Helmet",
       "category": "Stevie / rocks / survival",
       "effect": "Stevie takes 10% less contact damage.",
-      "evidence": "Not rated",
-      "priority": "Unrated",
-      "idea": "",
-      "playerRating": "",
-      "playerNotes": "",
-      "decision": "",
-      "nextTest": ""
-    },
-    {
-      "name": "Electric Rocks",
-      "category": "Stevie / rocks / survival",
-      "effect": "Unlock 4-damage rocks if needed. Rocks charge a short wall section for 2.4s, or burst sparks from Electric Ink walls. Sparks hit up to 8 nearby monsters for 4–9 damage. Each wall recovers for 1.1s. Max 6 levels.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",

@@ -7,7 +7,7 @@ DoodleDefender.systems.firstLessons=function(game){
   ['One little line. Big help!','Drag across the practice paper. Your wall works as soon as you draw. Try a short line, then a longer one: more length uses more ink and adds more wall HP.'],
   ['Ink is your drawing fuel.','Watch the INK bar above. Every line needs at least 6 ink to start. Ink refills during play, so leave yourself enough for the next monster! Short walls help when ink is low.'],
   ['That health bar is me!','Keep monsters away from my fort. They attack your walls to get through, and monsters touching walls take damage. If my health runs out, the run ends. Scraps you earned are still yours.'],
-  ['Survive. Clear. Upgrade!','The timer counts down until new monsters stop arriving. Then clear the remaining doodles to finish the wave and pick an upgrade. I throw rocks to help! You can pause any time. Ready?']
+  ['Survive. Clear. Upgrade!','The timer counts down until new monsters stop arriving. Then clear the remaining doodles to finish the wave and pick an upgrade. Throwing upgrades let me toss paper balls to help! You can pause any time. Ready?']
  ];
  const eraseSteps=[
   ['Make room for a better wall.','A wall in the wrong place? Erase a section to open a gap and recover some ink. You normally get back 25% of its paid ink; damaged walls return less. Let’s try it safely.'],
@@ -47,7 +47,7 @@ DoodleDefender.systems.firstLessons=function(game){
   game.dom.$('lessonPauseNote').textContent='Take your time — the game is paused.';
   game.dom.$('lessonTrack').textContent=steps().map((_,i)=>i===step?'●':'○').join(' ');
   game.dom.$('lessonBack').hidden=step===0;
-  const tip=kind==='draw'?['Draw between a doodle and Stevie.','Short = less ink, less HP. Long = more ink, more HP.','Save a little ink for surprises.','Walls buy time. Stevie’s rocks help finish the job.','After every wave, choose a new upgrade.'][step]:['Erase a little. Recover a little ink.','Hold or switch to Erase, then rub.','Look for the doodle carrying an eraser.','Quick corrections keep the page intact.'][step];
+  const tip=kind==='draw'?['Draw between a doodle and Stevie.','Short = less ink, less HP. Long = more ink, more HP.','Save a little ink for surprises.','Walls buy time. Stevie’s paper balls help finish the job.','After every wave, choose a new upgrade.'][step]:['Erase a little. Recover a little ink.','Hold or switch to Erase, then rub.','Look for the doodle carrying an eraser.','Quick corrections keep the page intact.'][step];
   game.dom.$('lessonTakeaway').textContent=tip;
   game.dom.$('lessonPortrait').src=kind==='erase'&&step===2?'assets/art/scrubber.png':'assets/art/stevie-cheer-a.png';
   game.dom.$('lessonPortrait').alt=kind==='erase'&&step===2?'Rubble Ruff':'Stevie';

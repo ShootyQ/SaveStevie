@@ -150,7 +150,7 @@ function renderBuild(){
     ['Wall damage',f(s.wallDamage)+' /s'],['Base wall HP',s.wallHp],['Wall lifetime',s.wallLife+'s'],['Line width',s.lineWidth+'px'],
     ['Closed-wall multiplier','×'+f(s.closedBonus)],['Intersection bonus',f(s.intersectBonus*100)+'% each'],
     ['Stevie max HP',game.state.player.maxHp],['Damage reduction',f(s.playerArmor*100)+'%'],
-    ['Rock damage',s.rockDamage],['Throw interval',s.rockRate?s.rockRate+'s':'Not unlocked'],
+    ['Paper-ball element',game.api.paperElementName()],['Paper-ball damage',s.rockDamage],['Throw interval',s.rockRate?s.rockRate+'s':'Not unlocked'],
     ['Walls per stroke',s.tripleLine?3:s.doubleLine?2:1],['Erase recovery',Math.round(s.eraseRefund*100)+'%'],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
     ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','6 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','12 HP/s shared']];
   game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
@@ -162,7 +162,7 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
-const infoButtons={lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(game.api.wobbleRepairActive?.())return;
@@ -192,6 +192,7 @@ function closeInfo(back=true){
   const kind=activeInfo,goBack=back&&returnInfo;returnInfo=null;activeInfo=null;game.state.paused=pausedBeforeInfo;
   game.dom.$(kind+'Overlay').style.display='none';
   if(kind==='lesson')game.api.dismissFirstLesson?.();
+  if(kind==='doodle')game.api.dismissDoodleChoice?.();
   game.dom.$('pauseBtn').textContent='Pause';
   if(goBack){openInfo(goBack);return}
   game.api.syncScrapTutorial();

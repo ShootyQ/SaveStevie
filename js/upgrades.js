@@ -215,7 +215,6 @@ game.catalog.upgrades = [
   // Stevie
   {name:'Bandages',cat:'stevie',desc:'Heal 8 extra HP between waves.',apply:()=>game.state.stats.playerRegen+=8},
   {name:'Helmet',cat:'stevie',desc:'Stevie takes 10% less contact damage.',apply:()=>game.state.stats.playerArmor=Math.min(.55,game.state.stats.playerArmor+.1)},
-  {name:'Electric Rocks',cat:'stevie',desc:'Unlock 4-damage rocks if needed. Rocks charge a short wall section for 2.4s, or burst sparks from Electric Ink walls. Sparks hit up to 8 nearby monsters for 4–9 damage. Each wall recovers for 1.1s. Max 6 levels.',apply:()=>{game.state.stats.electricRocks=Math.min(6,(game.state.stats.electricRocks||0)+1);if(!game.state.stats.rockRate){game.state.stats.rockDamage=Math.max(4,game.state.stats.rockDamage);game.state.stats.rockRate=1.6;}}},
   {name:'Pocket Rocks',cat:'stevie',desc:'Unlock rock throwing: +4 first-level damage, later gains grow to +9. Throws every 1.6s; preserves faster throws.',apply:()=>game.api.applyRockUpgrade('Pocket Rocks')},
   {name:'Better Rocks',cat:'stevie',desc:'+6 first-level rock damage, later gains grow to +12. Each level shortens throws by 0.08s, down to 0.65s.',apply:()=>game.api.applyRockUpgrade('Better Rocks')},
   {name:'Emergency Medicine',cat:'stevie',desc:'Heal 2 HP per kill, sharing the 6 HP/s combat healing budget.',apply:()=>game.state.stats.killHeal+=2},

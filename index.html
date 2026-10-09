@@ -186,6 +186,7 @@
         <div class="cardactions"><button class="gold" id="deathNotebookBtn">Spend Scraps</button><button id="againBtn">Return to main menu</button></div>
       </div>
     </div>
+<div id="doodleOverlay" class="overlay build-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="doodleTitle"><div class="cardbox build-box doodle-choice-box"><div class="lesson-heading"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="68"><div><span class="section-kicker">Doodle Scraps · game paused</span><h2 id="doodleTitle" tabindex="-1">Ooh! What’s on this paper?</h2></div></div><p id="doodleCurrent"></p><div class="doodle-choice-grid"><article><button id="doodleChoice0"></button><p id="doodleDescription0"></p></article><article><button id="doodleChoice1"></button><p id="doodleDescription1"></p></article></div><button id="doodleKeep" class="secondary">Keep ordinary paper</button></div></div>
 <div id="lessonOverlay" class="overlay build-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="lessonTitle">
  <div class="cardbox build-box lesson-box" id="lessonCard">
   <div class="lesson-heading"><img id="lessonPortrait" src="assets/art/stevie-cheer-a.png" alt="Stevie" width="72" height="72"><div><span id="lessonProgress" class="section-kicker"></span><h2 id="lessonTitle" tabindex="-1"></h2></div></div>
@@ -342,7 +343,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
-      <article class="build-entry"><h3>Alpha 0.1.13 · Stevie’s lessons and electric rocks</h3><p>Stevie’s beginner lessons now have clear steps, a notebook practice page, live ink and wall-HP estimates, a Back button and short reminders. Wave 2 teaches erasing, Rubble Ruff and paper holes one idea at a time. His scrap trail shows all three steps to the free Starter Eraser. Practice keeps combat paused and uses no real ink. Electric Rocks briefly charges a wall section or releases a lightning burst when crossing an Electric Ink wall. Thunderstones gains the same wall reaction; rocks keep flying toward their target.</p></article>
+      <article class="build-entry"><h3>Alpha 0.1.13 · Lessons, paper balls and Doodle Scraps</h3><p>Stevie’s beginner lessons now have clear steps, a notebook practice page, live ink and wall-HP estimates, a Back button and short reminders. Wave 2 teaches erasing, Rubble Ruff and paper holes one idea at a time. His scrap trail shows all three steps to the free Starter Eraser. Practice keeps combat paused and uses no real ink. Buy Doodle Scraps in the Notebook for 25 saved scraps to unlock run-only discoveries from wave 1. Draw through a dropped scrap and choose between two elements for Stevie’s crumpled paper balls: fire, electric, poison, frost or eraser. New discoveries replace the current element. Thunderstones retains its wall-charging and burst reaction.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.12 · Doodles play on the cover</h3><p>Gribble waddles up for a playful chomp, Twicey separates and springs back together, and fire pops onto the freshly drawn menu barrier with little sparks. Reduced-motion settings keep the cover still.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.11 · A tool worth upgrading</h3><p>Every drawing-tool rank now has its own colored-pencil artwork, with current and next-rank previews in the Notebook. Each purchased rank adds +8 base wall HP to every new run, up to +80 at rank 10. The third and fourth effect slots still unlock at ranks 6 and 10. Fresh Pencil has been retired; scraps spent on its ranks are refunded once when your saved Notebook is updated.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.10 · A few sneaky doodles</h3><p>Monsters take a valid paper shortcut only 30% of the time, with one decision per hole encounter. Exits must be meaningfully closer to Stevie; they need not line up with the approach. Bosses never burrow. Gribbles tumble in, Rubble Ruff wriggles, Zoom Nugget and Crash Dash dive, and Boingus squashes into the hole and springs out. Emergence keeps its warning and daze; reduced motion uses a simple fade.</p></article>
@@ -599,6 +600,7 @@
 <script src="js/wobblechomp-preview.js"></script>
 <script src="js/first-lessons.js"></script>
 <script src="js/paper.js"></script>
+<script src="js/doodle-scraps.js"></script>
 <script src="js/loop.js"></script>
 <script src="js/input.js"></script>
 <script src="game.js"></script>

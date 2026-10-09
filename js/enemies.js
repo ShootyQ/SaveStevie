@@ -128,7 +128,7 @@ function killEnemy(e){
   if(!game.state.enemies.includes(e))return;
   game.api.playSound('defeated');
   game.state.kills++;game.state.waveKills++;game.state.score+=10;
-  game.api.awardKillScraps(e);
+  game.api.awardKillScraps(e);game.api.dropDoodleScrap(e);
   game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
   if(e.waveBoss){if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
   game.api.burst(e.x,e.y,e.color,12);
@@ -234,7 +234,7 @@ function nearestEnemy(x,y,maxD){
 }
 
 // A rock interacts with the first live wall along its swept path, then keeps flying.
-function rockElectricLevel(){return Math.max(game.state.stats.electricRocks||0,game.state.synergies.has('Thunderstones')?game.state.inks.electric:0);}
+function rockElectricLevel(){return Math.max(game.state.stats.electricRocks||0,game.api.paperElement?.()==='electric'?1:0,game.state.synergies.has('Thunderstones')?game.state.inks.electric:0);}
 function rockWallReaction(p,a,b){
  if(!(p.electricLevel>0)||p.wallReacted)return false;
  let hit=null;
@@ -278,7 +278,7 @@ function updateStevie(dt){
   if(game.state.player.rockCd<=0){
     const e=game.api.nearestEnemy(game.state.player.x,game.state.player.y,210);
     if(e){
-      game.state.projectiles.push({x:game.state.player.x,y:game.state.player.y-8,target:e,speed:290,damage:game.state.stats.rockDamage,life:1.2,electricLevel:rockElectricLevel()});
+      game.state.projectiles.push({x:game.state.player.x,y:game.state.player.y-8,target:e,speed:290,damage:game.state.stats.rockDamage,life:1.2,electricLevel:rockElectricLevel(),paperElement:game.api.paperElement()});
       game.api.startStevieThrow(e);
       game.state.player.rockCd=game.state.stats.rockRate;
     }
@@ -306,7 +306,8 @@ function updateProjectiles(dt){
         p.target.gravitySlow=Math.max(p.target.gravitySlow,.35);
         if(Math.random()<.22)p.target.freeze=Math.max(p.target.freeze,.55);
       }
-      if(game.state.synergies.has('Thunderstones'))game.api.chainLightning(p.target,Math.max(1,game.state.inks.electric));
+      game.api.applyDoodleHit(p.target,p.paperElement);
+      if(game.state.synergies.has('Thunderstones')&&p.paperElement!=='electric')game.api.chainLightning(p.target,Math.max(1,game.state.inks.electric));
       if(game.state.synergies.has('Stevie the Unreasonable'))game.api.healStevie(p.damage*.08);
       game.api.burst(p.target.x,p.target.y,'#5f5a53',5);
       game.state.projectiles=game.state.projectiles.filter(q=>q!==p)
