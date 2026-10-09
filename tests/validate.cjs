@@ -529,9 +529,9 @@ const storage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>{saved.set
 const env=load(true,{intros:true,storage}),g=env.sandbox.testGame;
 assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
-assert.equal(g.catalog.monsters.length,25);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,25);
+assert.equal(g.catalog.monsters.length,26);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,26);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],2:['fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],2:['scrubber','fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -551,14 +551,14 @@ g.api.resetRun();env.node('hideMonsterIntros').checked=true;g.api.continueMonste
 assert.equal(saved.get('saveStevieMonsterIntros'),'off');assert.equal(g.api.monsterIntrosEnabled(),false);assert.equal(saved.get('doodleDefenderBestV4'),'14');
 g.api.resetRun();assert.equal(g.api.infoOpen(),false,'disabled setting survives new runs');g.state.wave=20;g.api.startWave();assert.equal(g.api.infoOpen(),false);
 const reloaded=load(true,{intros:true,storage});assert.equal(reloaded.sandbox.testGame.api.monsterIntrosEnabled(),false,'disabled setting survives page reload');
-g.state.paused=false;for(const m of g.catalog.monsters)g.api.discoverMonster(m.type);g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,25);
+g.state.paused=false;for(const m of g.catalog.monsters)g.api.discoverMonster(m.type);g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,26);
 const before=JSON.stringify(g.state);g.api.update(.2);assert.equal(JSON.stringify(g.state),before);
 g.api.closeCompendium();assert.equal(g.state.paused,false);g.state.paused=true;g.api.openCompendium();g.api.closeCompendium();assert.equal(g.state.paused,true);
 g.api.setMonsterIntrosEnabled(true);assert.equal(saved.get('saveStevieMonsterIntros'),'on');g.api.resetRun();assert.equal(g.api.infoOpen(),true,'setting can be re-enabled');
 g.api.resetRun();assert.equal(g.state.paused,true,'reset replaces an open introduction safely');g.api.handleInfoKey({key:'Escape',preventDefault(){}});assert.equal(g.state.paused,false,'Escape explicitly continues the introduction');
 const blocked={getItem(k){if(k==='saveStevieAudioV1')throw Error('blocked');return null},setItem(k){if(k==='saveStevieAudioV1')throw Error('blocked')}};const fallback=load(true,{intros:true,storage:{getItem:key=>key==='doodleDefenderBestV4'?null:blocked.getItem(),setItem:blocked.setItem}}).sandbox.testGame;
 fallback.api.setMonsterIntrosEnabled(false);fallback.api.resetRun();assert.equal(fallback.state.paused,false,'blocked preference storage does not prevent gameplay');
-console.log('PASS: all 25 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
+console.log('PASS: all 26 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
 }
 
 
@@ -2301,4 +2301,18 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.api.resetRun();g.state.stats.freehandLevel=1;g.state.stats.freehandBank=10;c.listeners.pointerdown(event(100,200));c.listeners.pointermove(event(120,200));c.listeners.pointermove(event(160,200));c.listeners.pointerup(event(160,200));assert.ok(Math.abs(g.state.stats.ink-(160-(60*.31-10)))<1e-8);assert.ok(Math.abs(g.state.stats.freehandCharge-(60*.31-10))<1e-8,'Freehand counts total paid ink exactly once');assert.ok(Math.abs(g.state.walls[0].eraseInk-(60*.31-10))<1e-8,'bank-funded portion cannot refund');
  g.api.resetRun();g.state.stats.doubleLine=true;g.state.stats.closedBonus=1.4;g.state.stacks['Closed Loop']=1;c.listeners.pointerdown(event(100,200));for(const [x,y] of [[125,200],[150,200],[150,225],[150,250],[125,250],[100,250],[100,225],[100,200]])c.listeners.pointermove(event(x,y));const unclosed=g.state.walls[0];assert.equal(unclosed.closed,false);const beforeRelease=g.state.stats.ink;c.listeners.pointerup(event(100,200));assert.equal(unclosed.closed,true);assert.ok(Math.abs(unclosed.maxHp-(65*200/180*1.4))<1e-8);assert.ok(Math.abs(g.state.stats.ink-(beforeRelease+62*.15))<1e-8,'loop refund happens once on finish');assert.ok(Math.abs(g.state.walls[1].maxHp-unclosed.maxHp*g.catalog.balance.copyDurability)<1e-8);assert.equal(g.state.stats.strokeCount,1);
  console.log('PASS: smooth short/long HP scaling, live projectile cover, incremental cost/clipping, preserved damage/lifetime, single release payment, copies, free strokes, destruction and cancellation.');
+}
+
+// Rubble Ruff removes geometry without refunds and is himself erasable.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=2;g.api.startWave();g.state.spawnTimer=0;g.api.spawnWaveEnemies(0);assert(g.state.enemies.some(e=>e.type==='scrubber'),'guaranteed wave-two eraser');
+ g.state.enemies=[];g.api.createWall([{x:100,y:200},{x:300,y:200}]);const balance=g.state.stats.ink,e=g.api.spawnEnemy(false,200,180,'scrubber'),hp=e.hp;g.api.updateScrubber(e,.1);assert.equal(g.state.walls.length,2,'scrubs a local gap');assert.equal(g.state.stats.ink,balance,'enemy wiping never refunds ink');assert(e.hp<hp,'wall contact damages scrubber');assert.equal(g.state.walls[0].closed,false);
+ const wallState=JSON.stringify(g.state.walls);e.freeze=1;g.api.updateScrubber(e,1);assert.equal(JSON.stringify(g.state.walls),wallState,'freeze stops scrubbing');e.freeze=0;e.stun=1;g.api.updateScrubber(e,1);assert.equal(JSON.stringify(g.state.walls),wallState,'stun stops scrubbing');e.stun=0;
+ const kills=g.state.kills;assert(g.api.eraseWallPath({x:180,y:180},{x:220,y:180},12));assert(!g.state.enemies.includes(e));assert.equal(g.state.kills,kills+1,'erase kill rewards once');g.api.eraseWallPath({x:180,y:180},{x:220,y:180},12);assert.equal(g.state.kills,kills+1);
+ const ordinary=g.api.spawnEnemy(false,200,180,'grunt');g.api.eraseWallPath({x:180,y:180},{x:220,y:180},12);assert(g.state.enemies.includes(ordinary),'other monsters cannot be erased');
+ g.state.enemies=[];g.state.walls=[];const runner=g.api.spawnEnemy(false,100,100,'scrubber');const position={x:runner.x,y:runner.y},playerHp=g.state.player.hp;g.api.updateScrubber(runner,.2);assert.notEqual(runner.x,position.x,'runs while no walls exist');runner.x=g.state.player.x;runner.y=g.state.player.y;assert.equal(g.api.contactStevie(runner),false);assert.equal(g.state.player.hp,playerHp);
+ const before=JSON.stringify(g.state);g.state.paused=true;const paused=JSON.stringify(g.state);g.api.update(.5);assert.equal(JSON.stringify(g.state),paused,'paused update freezes runner');g.state.paused=false;
+ g.state.projectiles=[{x:runner.x,y:runner.y,target:runner,speed:290,damage:100,life:1}];g.api.updateProjectiles(.1);assert(runner.hp<=0,'rocks can defeat runner');
+ g.state.enemies=[];g.state.walls=[];g.api.createWall([{x:100,y:200},{x:300,y:200}]);const poisoned=g.api.spawnEnemy(false,200,180,'scrubber');g.state.inks.poison=1;g.api.updateScrubber(poisoned,.1);assert(poisoned.poison>0,'elemental wall effects apply');g.state.walls=[];poisoned.burn=1;poisoned.burnDps=1000;g.state.spawnTimer=999;g.api.update(.05);assert(!g.state.enemies.includes(poisoned),'status damage defeats him');
+ console.log('PASS: guaranteed wave-two eraser runner, local geometry wiping without refunds, wall/status/rock damage, freeze/stun/pause, player erasing, normal rewards once and non-erasable other monsters.');
 }

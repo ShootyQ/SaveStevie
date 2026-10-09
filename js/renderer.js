@@ -7,7 +7,7 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const doodleNames=['scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
 if(typeof Image!=='undefined')for(const name of doodleNames){
   const image=new Image();image.decoding='async';
   image.onload=()=>{
@@ -142,7 +142,7 @@ function enemySpriteFrame(e){
 }
 // Native profile direction: Staple Snack's open jaws point left; the other
 // profile monsters point right. Front-facing silhouettes keep their artwork.
-const profileDirections={fast:1,sprinter:1,flanker:1,mini:1,basil:1,jamling:1,sniper:1,stapler:-1};
+const profileDirections={scrubber:1,fast:1,sprinter:1,flanker:1,mini:1,basil:1,jamling:1,sniper:1,stapler:-1};
 function enemyFacing(e){
   const m=enemyMotion.get(e);
   if(e.type==='sniper'&&(m?.action==='fire'&&m.actionAge<.3||e.shootCd<=.6&&game.api.sniperCanAim(e)))return game.state.player.x<e.x?-1:1;
@@ -179,6 +179,7 @@ function updateEnemyAnimations(dt){
     const p=m.pose;p.x=0;p.y=-hop-birth*5;p.angle=step*(heavy?.035:.055);
     p.sx=1+hit+birth*.14;p.sy=1-hit-birth*.1;
     m.sprite=null;
+    if(e.type==='scrubber'&&e.freeze<=0&&e.stun<=0&&m.action==='strike'&&m.actionAge<.3){p.x+=Math.sin(m.actionAge*60)*3;p.angle+=Math.sin(m.actionAge*40)*.12;}
     if(e.freeze<=0&&e.stun<=0){
       if(e.type==='sniper'){
         if(m.action==='fire'&&m.actionAge<.2)m.sprite='sniper-fire';
@@ -325,7 +326,7 @@ function tintedDoodle(name,colors){
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const action=enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
   const framed=/^(grunt|fast|sniper)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
-  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:framed?3.25:e.type==='sniper'?3.4:2.7),height=width*base.naturalHeight/base.naturalWidth;
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
