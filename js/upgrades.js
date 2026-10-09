@@ -103,6 +103,7 @@ function upgradePreview(u){
     'Fine Tip':()=>pair('Stroke cost',s.lineCost,s.lineCost*Math.pow(.88,levels),' ink/px'),
     'Fat Marker':()=>pair('Line width',s.lineWidth,s.lineWidth+2*levels,' px'),
     'Lucky Scribble':()=>pair('Luck',s.luck,s.luck+8*levels),
+    'Clean Erasing':()=>pair('Erase recovery',Math.round(s.eraseRefund*100),Math.round(Math.min(.6,s.eraseRefund+.1*levels)*100),'%'),
     'Recycling':()=>pair('Ink per kill',s.refund,s.refund+5*levels),
     'Closed Loop':()=>loopPreview(.4),
     'Architect':()=>pair('Durability per intersection',s.intersectBonus*100,(s.intersectBonus+.15*levels)*100,'%'),
@@ -194,6 +195,7 @@ game.catalog.upgrades = [
   {name:'Fine Tip',cat:'draw',desc:'Lines cost 12% less ink.',apply:()=>game.state.stats.lineCost*=.88},
   {name:'Fat Marker',cat:'defense',desc:'+2 line width and +15 wall HP.',apply:()=>{game.state.stats.lineWidth+=2;game.state.stats.wallHp+=15}},
   {name:'Lucky Scribble',cat:'economy',desc:'+8 Luck: improves rarity odds for future upgrades and rerolls.',apply:()=>game.state.stats.luck+=8},
+  {name:'Clean Erasing',cat:'economy',desc:'Recover 10 percentage points more paid ink from healthy erased walls per level, up to 60%. Damaged walls return less; free lines and copies return nothing.',apply:()=>game.state.stats.eraseRefund=Math.min(.6,game.state.stats.eraseRefund+.1)},
   {name:'Recycling',cat:'economy',desc:'Kills refund 5 ink, sharing an 8 ink/s refill budget.',apply:()=>game.state.stats.refund+=5},
   {name:'Closed Loop',cat:'defense',desc:'Closed shapes gain +40% durability. First loop-utility level: 15% paid ink back, repair nearby walls by 15% of missing HP, and +10% damage inside. Later levels have diminishing gains; repair is capped by ink spent.',apply:()=>game.state.stats.closedBonus+=.4},
   {name:'Architect',cat:'defense',desc:'Each wall intersection adds 15% durability.',apply:()=>game.state.stats.intersectBonus+=.15},
@@ -241,6 +243,7 @@ function upgradeAvailable(u){
   if(oneTimeUpgrades.has(u.name)&&game.state.stacks[u.name])return false;
   if(u.name==='Greedy Goblin'&&game.state.stats.extraChoice)return false;
   if(u.name==='Double Stroke'&&game.state.stats.doubleLine)return false;
+  if(u.name==='Clean Erasing'&&game.state.stats.eraseRefund>=.6)return false;
   if(u.name==='Helmet'&&game.state.stats.playerArmor>=.55)return false;
   if(u.name==='Reroll Coupon'&&game.state.rerolls>=5)return false;
   return true;
@@ -278,10 +281,12 @@ const upgradeArtGroups=[
  ['Pocket Rocks','Better Rocks','Emergency Medicine','Really Good Rocks','Stevie Has Had Enough','Loaded Deck','Reroll Coupon','Collector','Greedy Goblin']
 ];
 function upgradeArtworkInfo(u){
+ if(u.name==='Clean Erasing')return upgradeArtworkInfo({name:'Recycling'});
  for(let sheet=0;sheet<upgradeArtGroups.length;sheet++){const index=upgradeArtGroups[sheet].indexOf(u.name);if(index>=0){const grid=sheet===2?3:4;return {file:'assets/art/upgrades/gallery-'+(sheet+1)+'.png',grid,x:index%grid,y:Math.floor(index/grid)}}}
  return null;
 }
 function legacyUpgradeArtwork(u){
+ if(u.name==='Clean Erasing')return 'assets/art/upgrades/recycling.svg';
  const existing={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos','Fine Tip':'pencil','Stevie Has Had Enough':'pencil'};
  return existing[u.name]?'assets/art/'+existing[u.name]+'.png':'assets/art/upgrades/'+u.name.toLowerCase().replaceAll(' ','-')+'.svg';
 }

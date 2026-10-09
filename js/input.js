@@ -50,6 +50,7 @@ function enterScreen(){
   try{const request=document.documentElement.requestFullscreen();request?.catch(()=>{});}catch{}
 }
 function startRun(){
+  if(game.api.scrapLessonPending()){game.api.openInfo('hub');return;}
   game.api.startMusic('margin-mischief');
   if(window.matchMedia?.('(pointer: coarse)').matches)enterScreen();
   game.api.resetRun();
@@ -82,6 +83,7 @@ game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
 game.dom.$('resetNotebookBtn').onclick=game.api.resetNotebookProgress;
 window.addEventListener('keydown',game.api.handleInfoKey);
 window.addEventListener('savestevie:background',()=>{
+  if(game.api.firstLessonActive?.()){game.api.cancelLessonGesture();game.api.stopSoundEffects();return;}
   if(game.api.wobbleRepairActive()){game.api.stopSoundEffects();return;}
   if(game.state.running&&!game.api.infoOpen()&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec)game.api.openInfo('pause');
   game.api.stopSoundEffects();
@@ -119,7 +121,9 @@ syncDrawingControls();
 game.dom.$('startBtn').onclick=startRun;
 game.dom.$('againBtn').onclick=game.api.returnToMenu;
 game.dom.$('scrapGuideShow').onclick=()=>game.api.openInfo('hub');
-for(const id of ['scrapGuideSkip','scrapGuideHubSkip','scrapGuideDone'])game.dom.$(id).onclick=game.api.finishScrapTutorial;
+game.dom.$('scrapGuideSkip').onclick=()=>game.api.openInfo('hub');
+game.dom.$('scrapGuideHubSkip').onclick=game.api.openNotebook;
+game.dom.$('scrapGuideDone').onclick=()=>game.api.buyNotebookPerk('starterEraser');
 game.dom.$('newRunBtn').onclick=startRun;
 game.dom.$('continueBtn').onclick=game.api.proceedAfterWave;
 game.dom.$('rerollBtn').onclick=game.api.reroll;

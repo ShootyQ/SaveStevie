@@ -1,0 +1,37 @@
+// First-play lessons, native/desktop practice and required starter purchase.
+const {chromium}=require('playwright'),assert=require('assert'),fs=require('fs'),path=require('path');
+const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
+(async()=>{
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||(fs.existsSync('/usr/bin/chromium')?'/usr/bin/chromium':undefined),args:['--no-sandbox']});
+ try{
+ for(const viewport of [{width:1280,height:900},{width:393,height:851},{width:360,height:640},{width:851,height:393}]){
+  const page=await browser.newPage({viewport,hasTouch:viewport.width<600}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');Object.defineProperty(Element.prototype,'requestFullscreen',{value:undefined});});
+  await page.route('http://127.0.0.1:8001/**',route=>{
+   const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;
+   try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}
+   if(name==='index.html'&&viewport.width<600)body=body.toString('utf8').replace('<html lang="en">','<html class="native-app" lang="en">');
+   if(name==='game.js')body=body.toString('utf8').replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');
+   return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
+  });
+  await page.goto('http://127.0.0.1:8001/');await page.waitForFunction(()=>testGame.api.artworkReady(),null,{polling:50});await page.click('#startBtn');
+  assert.equal(await page.locator('#lessonOverlay').isVisible(),true);assert.equal(await page.evaluate(()=>testGame.state.paused),true);
+  const initial=await page.evaluate(()=>JSON.stringify(testGame.state));await page.evaluate(()=>testGame.api.update(5));assert.equal(await page.evaluate(()=>JSON.stringify(testGame.state)),initial);
+  await page.click('#lessonNext');assert.equal(await page.locator('#lessonNext').isDisabled(),true);await page.locator('#lessonCanvas').scrollIntoViewIfNeeded();let canvas=await page.locator('#lessonCanvas').boundingBox();
+  await page.mouse.move(canvas.x+canvas.width*.25,canvas.y+canvas.height*.5);await page.mouse.down();await page.mouse.move(canvas.x+canvas.width*.7,canvas.y+canvas.height*.5,{steps:10});await page.mouse.up();assert.equal(await page.locator('#lessonNext').isDisabled(),false);
+  assert.equal(await page.evaluate(()=>JSON.stringify(testGame.state)),initial,'practice preserves arena');await page.screenshot({path:'/tmp/lesson-draw-'+viewport.width+'.png'});
+  await page.click('#lessonNext');assert.equal(await page.locator('.inkbox').evaluate(e=>e.classList.contains('lesson-spotlight')),true);assert.equal(await page.locator('.hud').evaluate(e=>getComputedStyle(e).zIndex),'41');await page.screenshot({path:'/tmp/lesson-ink-'+viewport.width+'.png'});
+  await page.click('#lessonNext');assert.equal(await page.locator('.hpbox').evaluate(e=>e.classList.contains('lesson-spotlight')),true);await page.click('#lessonNext');assert.equal(await page.locator('.timer').evaluate(e=>e.classList.contains('lesson-spotlight')),true);await page.click('#lessonNext');assert.equal(await page.evaluate(()=>testGame.state.paused),false);
+  await page.evaluate(()=>{const g=testGame;g.state.timeLeft=0;g.state.enemies=[];g.api.waveComplete();g.api.proceedAfterWave();g.api.chooseUpgrade({...g.catalog.upgrades.find(u=>u.name==='Thick Ink'),rarity:'common'});});
+  assert.equal(await page.evaluate(()=>testGame.api.lessonSnapshot().kind),'erase');assert.equal(await page.evaluate(()=>testGame.state.paused),true);await page.click('#lessonNext');await page.locator('#lessonCanvas').scrollIntoViewIfNeeded();canvas=await page.locator('#lessonCanvas').boundingBox();
+  if(viewport.width<600){
+   assert.match(await page.textContent('#lessonText'),/thumb/);const cdp=await page.context().newCDPSession(page),button=await page.locator('#lessonErase').boundingBox(),thumb={x:button.x+button.width/2,y:button.y+button.height/2,id:2},finger={x:canvas.x+canvas.width*.5,y:canvas.y+canvas.height*.5,id:1};
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[thumb]});await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[thumb,finger]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[thumb,{...finger,x:finger.x+canvas.width*.15}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  }else{assert.match(await page.textContent('#lessonText'),/right mouse/);await page.mouse.move(canvas.x+canvas.width*.5,canvas.y+canvas.height*.5);await page.mouse.down({button:'right'});await page.mouse.move(canvas.x+canvas.width*.65,canvas.y+canvas.height*.5,{steps:5});await page.mouse.up({button:'right'});}
+  assert.equal(await page.locator('#lessonNext').isDisabled(),false);await page.screenshot({path:'/tmp/lesson-erase-'+viewport.width+'.png'});await page.click('#lessonNext');assert.equal(await page.evaluate(()=>testGame.state.paused),false);
+  await page.evaluate(()=>testGame.api.gameOver());await page.click('#againBtn');assert.equal(await page.locator('#startBtn').isDisabled(),true);await page.click('#scrapGuideShow');await page.click('#scrapGuideHubSkip');assert.equal(await page.locator('#notebookBuy-starterEraser').isDisabled(),false);const scraps=await page.evaluate(()=>testGame.api.notebookSnapshot().scraps);await page.screenshot({path:'/tmp/lesson-shop-'+viewport.width+'.png'});await page.click('#scrapGuideDone');assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),scraps);assert.equal(await page.locator('#scrapGuideShop').isVisible(),false);
+  await page.reload();assert.equal(await page.locator('#startBtn').isDisabled(),false);await page.click('#startBtn');assert.equal(await page.locator('#lessonOverlay').isVisible(),false);assert.equal(await page.evaluate(()=>testGame.state.stats.eraseRefund),.3);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);console.log('PASS: first draw/HUD tour, arena pause, real platform erase practice, wave progression, required free purchase, permanent buff and saved replay suppression at',viewport.width);await page.close();
+ }
+ }finally{await browser.close()}
+})().catch(error=>{console.error(error);process.exitCode=1});

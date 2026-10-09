@@ -8,7 +8,7 @@ const root=path.resolve(__dirname,'..');
    if(process.env.GALLERY_WIDTH&&viewport.width!==Number(process.env.GALLERY_WIDTH))continue;
    const touch=viewport.width<600,page=await browser.newPage({viewport,hasTouch:touch,isMobile:touch}),errors=[];let failArt=false;
    page.on('pageerror',e=>errors.push(e.message));
-   await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');});
+   await page.addInitScript(()=>{localStorage.setItem('saveStevieLessonsV1',JSON.stringify({draw:true,erase:true}));requestAnimationFrame=()=>0;localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');});
    await page.route('http://127.0.0.1:8001/**',route=>{
     const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;
     if(failArt&&/gallery-\d\.png/.test(name))return route.fulfill({status:404,body:''});
