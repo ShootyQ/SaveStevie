@@ -957,3 +957,8 @@ html.native-app .bottom #eraserBtn{flex:0 1 108px;font-size:21px}
 .hud:has(.lesson-spotlight){z-index:41;pointer-events:none}.hud .lesson-spotlight{outline:4px solid #d89b23;outline-offset:3px;box-shadow:0 0 0 7px #fffaf0cc}
 #scrapGuideCover,#scrapGuideHub,#scrapGuideShop{border:3px solid #a77a22}.notebook-perk.scrap-guide-target{outline:3px solid #a77a22;background:#fff1c9}
 @media(max-height:500px){#lessonOverlay{padding-top:80px}.lesson-heading img{width:48px;height:48px}.lesson-heading h2{font-size:24px}.lesson-box p{font-size:14px}}
+
+/* Game controls stay touch targets during long presses and two-finger erasing. */
+button,button *,.bottom,.bottom *{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html.native-app body{user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html.native-app input,html.native-app textarea{user-select:text;-webkit-user-select:text}
