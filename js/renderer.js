@@ -439,7 +439,7 @@ function resize(){
     for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
-    game.api.moveLaunchEffects(dx,dy);
+    game.api.moveLaunchEffects(dx,dy);game.api.movePaper(dx,dy);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
@@ -629,6 +629,7 @@ function draw(){
   game.dom.ctx.strokeStyle='rgba(212,76,76,.35)';game.dom.ctx.lineWidth=2;
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
 
+  game.api.drawPaper();
   game.api.drawPlaguefire();
   game.api.drawLaunchGround();
 
@@ -666,10 +667,11 @@ function draw(){
   }
 
   // Ranged threats are readable before and after firing.
+  game.api.drawSparkGaps();
   game.api.drawWallExplosions();
   drawSplitAnimations();
   for(const e of game.state.enemies){
-    if(e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0||e.shootCd>.6||
+    if(game.api.underPaper(e)||e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0||e.shootCd>.6||
       !game.api.sniperCanAim(e))continue;
     const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#3562be';ctx.lineWidth=2;ctx.globalAlpha=.65;
     ctx.setLineDash([5,7]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();
@@ -726,6 +728,7 @@ function draw(){
   game.dom.ctx.restore();
 
   for(const e of game.state.enemies){
+    if(game.api.underPaper(e)){game.api.drawPaperBump(e);continue;}
     if(e.bossWindup>0){
       game.dom.ctx.save();game.dom.ctx.strokeStyle=e.type==='stapler'?'#a56a16':'#9354b9';game.dom.ctx.lineWidth=3;
       game.dom.ctx.setLineDash([5,4]);game.dom.ctx.beginPath();
@@ -816,6 +819,7 @@ function draw(){
         game.dom.ctx.beginPath();game.dom.ctx.moveTo(-e.r-4,0);game.dom.ctx.lineTo(-e.r-9,-5);game.dom.ctx.moveTo(-e.r-4,0);game.dom.ctx.lineTo(-e.r-9,5);game.dom.ctx.stroke()
       }
     }
+    if(e.eraseStumble>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle="#a56930";ctx.lineWidth=2;for(let i=0;i<3;i++){const angle=i*Math.PI*2/3;ctx.beginPath();ctx.arc(Math.cos(angle)*(e.r+6),-e.r-7+Math.sin(angle)*4,2,0,Math.PI*2);ctx.stroke();}ctx.restore();}
     drawEnemyActionMarks(e);
     game.dom.ctx.restore();
   }

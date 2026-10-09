@@ -51,7 +51,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>key==='synergySplashTimer'?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>key==='synergySplashTimer'?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
 for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -2336,4 +2336,38 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.state.walls=[];draw(100,200);g.state.stats.ink=0;const before=JSON.stringify(g.state.walls);draw(200,240);assert.equal(JSON.stringify(g.state.walls),before,'no ink means no extension or history change');
  g.api.resetRun();assert.equal(g.state.stats.doodleStitch,false,'run reset clears unlock');
  console.log('PASS: Doodle Stitch unlock/replacement, both endpoints, live zero-HP extensions, 75/50/25/0 scaling, no damage/lifetime/cost reset, combined and erased histories, separate-wall drawing, weaker copies, new-stroke-only cuts and run reset.');
+}
+
+{
+ const env=load(true),g=env.sandbox.testGame;
+ const fresh=()=>{g.api.resetRun({skipIntro:true,skipNotebook:true});g.state.enemies=[];g.state.spawnTimer=9999;g.state.timeLeft=300;g.state.stats.ink=g.state.stats.maxInk=1000;};
+ const rub=(x,y,seconds)=>{for(let i=0;i<Math.round(seconds/.05);i++){g.api.queuePaperRub({x,y},{x:x+10,y},20);g.api.updatePaper(.05);}};
+ fresh();g.api.queuePaperRub({x:100,y:180},{x:100,y:180});g.api.updatePaper(8);assert.equal(g.state.paper.holes.length,0,'stationary eraser never wears paper');
+ rub(100,180,6.95);assert.equal(g.state.paper.holes.length,0);rub(100,180,.05);assert.equal(g.state.paper.holes.length,1,'seven seconds opens one local hole');
+ rub(112,185,7);assert.equal(g.state.paper.holes.length,1,'holes cannot stack');rub(g.state.player.x,g.state.player.y,7);assert.equal(g.state.paper.holes.length,1,'fort stays intact');
+ g.state.paused=true;rub(240,220,8);assert.equal(g.state.paper.holes.length,1);g.state.paused=false;rub(240,220,7);assert.equal(g.state.paper.holes.length,2);
+ const holes=JSON.stringify(g.state.paper.holes);g.state.wave=2;g.api.startWave({skipIntro:true});assert.equal(JSON.stringify(g.state.paper.holes),holes,'holes persist across waves');
+ const enemy=()=>{const e=g.api.spawnEnemy(false,100,180,'grunt');e.x=100;e.y=180;e.hp=e.maxHp=100;return e;};
+ let e=enemy();e.burn=3;e.poison=2;e.charged=2;assert(g.api.updatePaperEnemy(e,.05));assert.equal(e.paperTunnel.exit.x,240);assert.equal(e.burn,0);assert.equal(e.poison,0);
+ const hp=e.hp,x=e.x;g.api.dealDamage(e,30,'physical');g.api.dealDamage(e,30,'electric');assert.equal(e.hp,hp,'surface physical and elemental damage blocked');assert.equal(g.api.moveEnemySafely(e,50,0),false);assert.equal(e.x,x);assert.equal(g.api.launchEnemy(e,200,200),false);assert.equal(g.api.applyInkContact(e,.1),0);
+ g.state.projectiles=[{x:e.x,y:e.y,target:e,speed:290,damage:9,life:1.2}];g.state.synergies.add('Hot Rocks');g.state.synergies.add('Snowball Fight');g.api.updateProjectiles(.01);assert.equal(e.hp,hp-9,'real rocks hit underground');assert.equal(e.burn,0,'rock effects remain on surface');assert.equal(e.freeze,0);g.state.synergies.clear();const lightningHp=e.hp;g.state.inks.electric=1;g.api.chainLightning(e,1);assert.equal(e.hp,lightningHp);assert.equal(e.stun,0);const sniper=g.api.spawnEnemy(false,e.x,e.y,'sniper');sniper.paperTunnel=e.paperTunnel;g.state.enemyShots=[{x:sniper.x,y:sniper.y,r:3,life:1,sniperOwner:sniper,reflected:true}];g.api.updateEnemyShots(.1);assert.equal(sniper.returnHits||0,0,'surface returns do not count through the paper');g.state.enemies=g.state.enemies.filter(n=>n!==sniper);
+ e.x=170;e.y=190;
+ for(let i=0;i<39;i++){g.api.queuePaperRub({x:e.x-5,y:e.y},{x:e.x+10,y:e.y});g.api.updatePaper(.05);g.api.updatePaperEnemy(e,.05);}
+ assert.equal(e.paperTunnel.phase,'travel','less than two seconds cannot force emergence');g.api.queuePaperRub({x:e.x-5,y:e.y},{x:e.x+10,y:e.y});g.api.updatePaper(.05);assert.equal(e.paperTunnel.phase,'emerge');const warning=e.paperTunnel.warning;g.state.paused=true;g.api.update(.3);assert.equal(e.paperTunnel.warning,warning);g.state.paused=false;
+ for(let i=0;i<15;i++)g.api.updatePaperEnemy(e,.05);assert.equal(e.paperTunnel,undefined);assert(e.stun>1);assert.equal(g.api.updatePaperEnemy(e,.01),false,'emerged monster cannot immediately burrow again');
+ e=enemy();g.api.updatePaperEnemy(e,.05);for(let i=0;i<300&&e.paperTunnel?.phase==='travel';i++)g.api.updatePaperEnemy(e,.05);assert.equal(e.paperTunnel.phase,'emerge');assert.equal(e.x,240);assert.equal(e.y,220,'committed natural exit');
+ const wrong=enemy();wrong.x=240;wrong.y=220;assert.equal(g.api.updatePaperEnemy(wrong,.05),false,'no shortcut toward a farther hole');wrong.waveBoss=true;wrong.x=100;wrong.y=180;assert.equal(g.api.updatePaperEnemy(wrong,.05),false,'boss never burrows');
+ const snapshot=JSON.stringify(g.state);const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('paper rendering consumed RNG')};g.api.drawPaper();g.api.drawPaperBump(e);g.api.drawSparkGaps();env.sandbox.Math.random=random;assert.equal(JSON.stringify(g.state),snapshot,'paper rendering pure');
+ g.api.movePaper(20,10);assert.equal(e.paperTunnel.exit.x,260);assert.equal(g.state.paper.holes[0].x,120);g.api.resetRun({skipIntro:true});assert.equal(g.state.paper.holes.length,0);assert.equal(g.state.paper.patches.length,0,'new run clears all wear');
+ fresh();g.state.enemyShots=[{x:100,y:180,r:3,damage:7},{x:100,y:180,r:3,reflected:true},{x:100,y:180,r:10},{x:100,y:180,r:3,owner:{}}];g.state.stats.ink=0;g.api.eraseWallPath({x:90,y:180},{x:110,y:180},20);assert.equal(g.state.enemyShots.length,3,'small hostile shot erased without ink, returned/boss shots retained');
+ fresh();g.state.inks.electric=1;g.api.createWall([{x:80,y:180},{x:280,y:180}]);const wall=g.state.walls[0];e=enemy();e.x=180;e.y=180;g.api.eraseWallPath({x:180,y:175},{x:180,y:185},20);assert(e.hp<100,'gap discharges into nearby monster');assert.equal(g.state.paper.arcs.length,1);assert(g.state.walls.every(w=>w.sparkReadyAt===.8));const after=e.hp;g.api.eraseWallPath({x:205,y:175},{x:205,y:185},20);assert.equal(e.hp,after,'fragment shares discharge cooldown');
+ fresh();g.state.inks.electric=1;g.state.walls=[{pts:[{x:80,y:180},{x:280,y:180}],hp:60,maxHp:60,thick:8,life:50,maxLife:50,eraseInk:0}];e=enemy();e.x=180;e.y=180;g.api.eraseWallPath({x:180,y:175},{x:180,y:185},20);assert.equal(e.hp,100,'free/copy ink cannot generate a discharge');
+ for(const type of ['tank','bouncer']){
+  fresh();g.api.createWall([{x:100,y:140},{x:100,y:240}]);const w=g.state.walls[0],n=g.api.spawnEnemy(false,78,180,type);n.x=78;n.y=180;n.hp=n.maxHp=100;
+  if(type==='tank'){n.chonks.phase='windup';n.chonks.target=w;n.chonks.momentum=1;}else{n.bounceTime=1;n.bounceKick=.2;}
+  g.api.eraseWallPath({x:100,y:175},{x:100,y:185},20);assert.equal(n.stun,1.4,type+' support cut stumbles');assert.equal(n.eraseStumbleCooldown,6);if(type==='tank')assert.equal(n.chonks.momentum,0);
+  n.stun=0;g.api.createWall([{x:100,y:140},{x:100,y:240}]);if(type==='tank'){n.chonks.phase='windup';n.chonks.target=g.state.walls.at(-1);}else{n.bounceTime=1;n.bounceKick=.2;}
+  g.api.eraseWallPath({x:100,y:175},{x:100,y:185},20);assert.equal(n.stun,0,'draw/erase spam does not repeat a stumble');
+ }
+ console.log('PASS: timed local paper wear, stationary/pause/fort guards, persistent spaced holes, closer-exit commitment, underground surface immunity and real rocks, two-second forced and warned natural emergence, reentry cooldown, pure/reduced rendering and resize/reset; projectile erasing, paid electric gaps/fragment cooldown and committed Chonks/Boingus stumbles.');
 }

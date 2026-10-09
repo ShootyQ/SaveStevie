@@ -86,6 +86,7 @@ function waveDuration(){
 }
 
 function resetRun(options={}){
+  game.api.resetPaper();
   game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
   game.api.resetSynergyReveals();
