@@ -23,7 +23,7 @@ Reference: [Community and Client Icons Details & Templates](https://partner.stea
 | Asset | Requirement | Dimensions | Content / format | Status |
 | --- | --- | --- | --- | --- |
 | Shortcut Icon | Required | 256 × 256 px | .ico or .png; game logo and artwork only. Steam generates an .ico if a PNG is provided. | [Prepared PNG](../assets/steam/shortcut-icon-256x256.png) |
-| App Icon | Required | 184 × 184 px | .jpg; small game logo or representative icon | To prepare |
+| App Icon | Required | 184 × 184 px | .jpg; small game logo or representative icon | [Prepared JPG](../assets/steam/app-icon-184x184.jpg) |
 
 ## Library assets
 
@@ -31,10 +31,10 @@ Reference: [Library Assets Details & Templates](https://partner.steamgames.com/d
 
 | Asset | Requirement | Dimensions | Content / format | Reference | Status |
 | --- | --- | --- | --- | --- | --- |
-| Library Capsule | Required | 600 × 900 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/libraryassets#capsule) | To prepare |
-| Library Hero | Required | 3840 × 1240 px | .png; game artwork only | [Details](https://partner.steamgames.com/doc/store/assets/libraryassets#hero) | To prepare |
-| Library Logo | Required | 1280 px wide and/or 720 px tall | .png; game logo only, displayed over the Hero graphic | [Details](https://partner.steamgames.com/doc/store/assets/libraryassets#logo) | To prepare |
-| Library Header Capsule | Required | 920 × 430 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/libraryassets#header_capsule) | To prepare |
+| Library Capsule | Required | 600 × 900 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/libraryassets#capsule) | [Prepared PNG](../assets/steam/library-capsule-600x900.png) |
+| Library Hero | Required | 3840 × 1240 px | .png; game artwork only | [Details](https://partner.steamgames.com/doc/store/assets/libraryassets#hero) | [Prepared PNG](../assets/steam/library-hero-3840x1240.png) |
+| Library Logo | Required | 1280 px wide and/or 720 px tall | .png; game logo only, displayed over the Hero graphic | [Details](https://partner.steamgames.com/doc/store/assets/libraryassets#logo) | [Prepared PNG](../assets/steam/library-logo-1280x720.png) |
+| Library Header Capsule | Required | 920 × 430 px | Game logo and artwork only | [Details](https://partner.steamgames.com/doc/store/assets/libraryassets#header_capsule) | [Prepared PNG](../assets/steam/library-header-capsule-920x430.png) |
 
 ## Event assets
 
@@ -44,8 +44,8 @@ Reference: [Event Graphical Assets Details & Templates](https://partner.steamgam
 
 | Asset | Requirement | Dimensions | Content / format | Reference | Status |
 | --- | --- | --- | --- | --- | --- |
-| Event Cover | Required for an event / announcement | 800 × 450 px | Artwork and marketing copy for that event or announcement | [Details](https://partner.steamgames.com/doc/store/assets/eventassets#cover) | When needed |
-| Event Header | Optional | 1920 × 622 px | Event artwork and logo; consult template for clipping requirements | [Details](https://partner.steamgames.com/doc/store/assets/eventassets#header) | Optional; when needed |
+| Event Cover | Required for an event / announcement | 800 × 450 px | Artwork and marketing copy for that event or announcement | [Details](https://partner.steamgames.com/doc/store/assets/eventassets#cover) | [Prepared PNG](../assets/steam/event-cover-800x450.png) — reusable generic artwork |
+| Event Header | Optional | 1920 × 622 px | Event artwork and logo; consult template for clipping requirements | [Details](https://partner.steamgames.com/doc/store/assets/eventassets#header) | [Prepared PNG](../assets/steam/event-header-1920x622.png) — reusable generic artwork |
 
 ## Art direction carried forward
 
