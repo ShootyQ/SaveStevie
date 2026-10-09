@@ -811,7 +811,7 @@ console.log('PASS: five soundtrack loops, intro autoplay with manual retry, chap
  const counts={owned:0,new:0};for(let i=0;i<1000;i++){const u=g.api.getUpgrade();if(g.state.stacks[u.name])counts.owned++;else counts.new++;}
  assert.ok(counts.new>counts.owned,'new upgrades outnumber repeats while equipped effects remain favored individually');
  let tickets=0;for(let i=0;i<20000;i++){g.api.resetRewardPlan();if(g.state.legendaryWave){tickets++;assert.ok(g.state.legendaryWave>=1&&g.state.legendaryWave<=19);}}
- assert.ok(tickets>1800&&tickets<2200,'seeded campaign chance is approximately 10%: '+tickets);
+ assert.ok(tickets>6300&&tickets<7000,'seeded campaign chance is approximately one third: '+tickets);
  g.state.wave=7;g.state.legendaryWave=7;g.state.legendaryOffered=false;g.state.stats.luck=1000;g.state.specialization='chaos';
  const cards=()=>{env.node('cards').children=[];g.api.rollCards();return env.node('cards').children;};
  assert.equal(cards().filter(c=>c.className.includes('legendary')).length,1);
@@ -843,7 +843,7 @@ console.log('PASS: five soundtrack loops, intro autoplay with manual retry, chap
   tool.api.resetRun();assert.equal(tool.api.equippedEffects().length,0,'new run resets effects but retains tool');assert.equal(tool.state.tool.slots,slots);
  }
 }
-console.log('PASS: minimum ink and affordable clipping, free-stroke limits, 2–4 tool slots, replacement/cancellation and synergy cleanup, owned-effect weighting, 10% campaign legendary plans, and full-campaign scrap persistence.');
+console.log('PASS: minimum ink and affordable clipping, free-stroke limits, 2–4 tool slots, replacement/cancellation and synergy cleanup, owned-effect weighting, one-third campaign legendary plans, and full-campaign scrap persistence.');
 
 // Personality motion is driven by real combat actions and lives outside state.
 {
