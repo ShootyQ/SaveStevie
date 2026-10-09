@@ -35,6 +35,7 @@ for(const p of perks)progress.levels[p.id]??=0;
 function saveNotebook(){
   try{localStorage.setItem(key,JSON.stringify(progress));storageIssue=false}catch{storageIssue=true}
 }
+function adoptNotebookBackup(saved){progress={...saved,levels:{...saved.levels}};storageIssue=false;migrationRefund=0;runScraps=0;killScraps=0;runActive=false;updateScrapCounters();}
 function notebookSnapshot(){return {...progress,levels:{...progress.levels},runScraps,runActive,storageIssue}}
 function updateScrapCounters(){
   for(const id of ['splashScraps','buildScraps','deathBankScraps','victoryBankScraps','notebookBank'])game.dom.$(id).textContent=progress.scraps;
@@ -135,6 +136,6 @@ function syncScrapTutorial(){
 function finishScrapTutorial(){if(!progress.levels.starterEraser)return false;progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial();return true;}
 function openNotebook(){game.api.openInfo('notebook')}
 function closeNotebook(){game.api.closeInfo()}
-const api={scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
+const api={adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;
 };

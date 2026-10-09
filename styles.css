@@ -1055,3 +1055,5 @@ html.native-app .scrubber-hint{bottom:calc(66px + var(--native-bottom))}
 .report-book .cardactions{flex-wrap:wrap}
 .report-link{display:inline-block;padding:12px 16px;border:2px solid #456238;border-radius:8px;background:#dbead5;color:#29462c;font-weight:700;text-align:center;text-decoration:none}
 .report-link:focus-visible{outline:3px solid #3268b8;outline-offset:3px}
+.report-book input[type="file"]{max-width:100%;color:#26333c;font:13px system-ui,sans-serif}
+#backupPerkChanges{padding-left:22px;color:#29462c;font:14px/1.6 system-ui,sans-serif;text-align:left}

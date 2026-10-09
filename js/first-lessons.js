@@ -96,5 +96,5 @@ DoodleDefender.systems.firstLessons=function(game){
  function cancelLessonGesture(){held=false;modifier=null;pointer=null;last=null;syncPracticeTool();}
  function dismissFirstLesson(){cancelLessonGesture();spotlight();kind=null;}
  window.addEventListener('blur',cancelLessonGesture);window.addEventListener('resize',cancelLessonGesture);
- const api={dismissFirstLesson,cancelLessonGesture,beginFirstLesson,finishFirstLesson,firstLessonActive,lessonSnapshot,resetFirstLessons,setFirstLessonsEnabled:value=>{enabled=!!value;}};Object.assign(game.api,api);return api;
+ const api={adoptLessonBackup:value=>{seen={draw:value.draw,erase:value.erase};},dismissFirstLesson,cancelLessonGesture,beginFirstLesson,finishFirstLesson,firstLessonActive,lessonSnapshot,resetFirstLessons,setFirstLessonsEnabled:value=>{enabled=!!value;}};Object.assign(game.api,api);return api;
 };

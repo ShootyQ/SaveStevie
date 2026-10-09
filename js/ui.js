@@ -162,7 +162,7 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
-const infoButtons={report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(game.api.wobbleRepairActive?.())return;
@@ -180,6 +180,7 @@ function openInfo(kind){
   if(kind==='notebook')game.api.renderNotebook();
   if(kind==='options')game.api.renderOptions();
   if(kind==='report')game.api.renderProblemReport();
+  if(kind==='backup')game.api.renderSaveBackup();
   if(kind==='statistics')game.api.renderStatistics();
   game.dom.$(kind+'Overlay').style.display='grid';
   game.api.syncScrapTutorial();

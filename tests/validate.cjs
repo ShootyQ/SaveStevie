@@ -2462,3 +2462,20 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const reload=load(true,{storage});assert.equal(reload.sandbox.testGame.api.doodleScrapsSnapshot().unlocked,true);assert.equal(reload.sandbox.testGame.api.paperElement(),null);assert.equal(reload.sandbox.testGame.api.notebookSnapshot().scraps,0);
  console.log('PASS: paid permanent discovery unlock, no locked RNG, first-wave drops/guarantee, paused real paid-stroke pickup, two distinct choices without wave slots, replacement, five basic effects, surface immunity, captured projectiles, boss exclusion and run/reset persistence.');
 }
+// Portable progress rejects bad files before writes, and restores as a transaction.
+{
+ const key='saveStevieNotebookV1',saved=new Map([[key,JSON.stringify({version:2,scraps:12,lifetimeScraps:40,scrapTutorialDone:true,levels:{starterEraser:1,tool:2}})],['doodleDefenderBestV4','6']]);let writes=0,failAt=0;
+ const storage={getItem:k=>saved.get(k)??null,setItem(k,v){writes++;if(writes===failAt)throw Error('quota');saved.set(k,v)},removeItem:k=>saved.delete(k)};
+ const env=load(true,{storage}),g=env.sandbox.testGame,original=g.api.saveBackupText(),data=JSON.parse(original);
+ assert.equal(data.format,'SaveStevieBackup');assert.equal(data.progress.notebook.scraps,12);assert.equal(data.progress.bestWave,6);
+ const initial=JSON.stringify([...saved]);for(const text of ['',JSON.stringify({...data,version:2}),JSON.stringify({...data,format:'other-game'}),'x'.repeat(65537)])assert.throws(()=>g.api.validateSaveBackup(text));
+ for(const change of [p=>p.notebook.scraps=-1,p=>p.notebook.scraps=1.5,p=>p.notebook.levels.tool=11,p=>p.bestWave=0,p=>p.notebook.lifetimeScraps=0,p=>p.lessons.draw='yes',p=>p.discoveries=['unknown'],p=>p.notebook.levels.futurePerk=1]){const d=JSON.parse(original);change(d.progress);assert.throws(()=>g.api.validateSaveBackup(JSON.stringify(d)));}assert.equal(JSON.stringify([...saved]),initial);
+ data.progress.notebook.scraps=8;data.progress.notebook.levels.tool=3;data.progress.bestWave=10;data.progress.lessons={draw:true,erase:false};data.progress.discoveries=['grunt','scrubber'];const text=JSON.stringify(data);
+ g.state.running=true;assert(g.api.previewSaveBackup(text));assert.equal(g.api.restoreSaveBackup(),false);assert.equal(JSON.stringify([...saved]),initial);g.state.running=false;
+ for(const failure of [1,3,5]){writes=0;failAt=failure;assert.equal(g.api.restoreSaveBackup(),false);assert.equal(JSON.stringify([...saved]),initial);assert.equal(g.api.notebookSnapshot().scraps,12);assert.equal(g.state.best,6);}
+ writes=0;failAt=0;assert.equal(g.api.restoreSaveBackup(),true);assert.equal(g.api.notebookSnapshot().scraps,8);assert.equal(g.state.best,10);assert.equal(g.api.lessonSnapshot().seen.erase,false);assert.deepEqual(Array.from(g.api.discoveredMonsterTypes()),['grunt','scrubber']);assert.equal(JSON.parse(saved.get('saveStevieBeforeRestoreV1')).progress.notebook.scraps,12);
+ const reloaded=load(true,{storage}).sandbox.testGame;assert.equal(reloaded.state.best,10);assert.equal(reloaded.api.notebookSnapshot().levels.tool,3);assert.equal(reloaded.api.lessonSnapshot().seen.erase,false);assert.deepEqual(Array.from(reloaded.api.discoveredMonsterTypes()),['grunt','scrubber']);
+ assert(g.api.previewSaveBackup(saved.get('saveStevieBeforeRestoreV1')));assert(g.api.restoreSaveBackup());assert.equal(g.api.notebookSnapshot().scraps,12);assert.equal(g.state.best,6);assert.equal(g.api.notebookSnapshot().levels.tool,2);
+ g.api.resetRun();assert.equal(g.state.stats.wallHp,81);assert.equal(g.state.stats.maxInk,160);assert.equal(g.api.notebookSnapshot().scraps,12);
+ console.log('PASS: portable progress roundtrip, bad/foreign/future backups, rank/number/schema limits, no active-run restore, partial-write rollback, durable reload, recovery copy and next-run loadout.');
+}
