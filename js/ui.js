@@ -91,7 +91,7 @@ function beginSynergyReveal(){
   game.dom.$('synergySplashDesc').textContent=d.desc;
   game.dom.$('synergyRevealLabel').textContent=d.major?'MAJOR SYNERGY!':'NEW SYNERGY!';
   const def=game.catalog.synergyDefs.find(x=>x.name===d.name),source=String(def?.req||'');
-  const ingredients=game.catalog.upgrades.filter(u=>{const key={'Fire Ink':'fire','Frost Ink':'frost','Electric Ink':'electric','Poison Ink':'poison','Gravity Ink':'gravity','Blast Ink':'blast','Vampire Ink':'vampire','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos'}[u.name];return key?source.includes('inks.'+key):source.includes("stacks['"+u.name+"']")||u.name==='Double Stroke'&&source.includes('stats.doubleLine')});
+  const ingredients=game.catalog.upgrades.filter(u=>{const key={'Fire Ink':'fire','Frost Ink':'frost','Electric Ink':'electric','Poison Ink':'poison','Gravity Ink':'gravity','Blast Ink':'blast','Vampire Ink':'vampire','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos'}[u.name];return key?source.includes('inks.'+key):source.includes("stacks['"+u.name+"']")});
   game.dom.$('synergyRevealArt').innerHTML=ingredients.map(u=>'<div class="synergy-ingredient">'+game.api.upgradeArtworkMarkup(u)+'<span>'+u.name+'</span></div>').join('<b aria-hidden="true">+</b>');
   box.dataset.major=String(d.major);box.style.display='grid';game.api.endDraw?.();game.api.stopSoundEffects();
   game.dom.$('continueSynergyBtn').focus?.();return true;
@@ -112,11 +112,9 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Clean Erasing':()=>`+${10*n} percentage points to erasing recovery; 60% cap, reduced by wall damage`,
     'Recycling':()=>`+${5*n} ink per kill; shared 8 ink/s budget`, 'Closed Loop':()=>`+${40*n}% closed-wall durability; `+loopDetails(n,'Fortress Geometry'),
     'Architect':()=>`+${15*n}% durability per intersection`, 'Patchwork':()=>`+${18*n} HP per repaired wall`,
-    'Double Stroke':()=>`One-time unlock: 2 walls per stroke (3 with Triple Stroke); extra walls have 60% HP`,
     'Doodle Stitch':()=>`One-time unlock: connect open wall ends; connector HP 75% / 50% / 25% / then 0%; normal ink cost, old damage and lifetime retained`,
     'Patch Job':()=>`Up to ${3*n} HP per wall per kill; shared 12 HP/s budget`, 'Freehand':()=>`${40+(n-1)*20} free-ink bank; charge with ${s.freehandThreshold} spent ink`,
     'Living Fountain Pen':()=>`×${f(game.api.regenStackEffect('Living Fountain Pen',n))} ink regeneration; diminishing returns`,
-    'Triple Stroke':()=>`One-time unlock: 3 walls per stroke; extra walls have 60% HP`,
     'Bottomless Pen':()=>`+${40*n} max ink; +${f(game.api.regenStackEffect('Bottomless Pen',n))} ink/s; diminishing returns`, 'Fortress Geometry':()=>`+${50*n}% closed-wall durability; `+loopDetails(n,'Closed Loop'),
     'Bandages':()=>`+${8*n} HP healed between waves`, 'Helmet':()=>`${f(Math.min(.55,.1*n)*100)}% damage reduction (cap 55%)`,
     'Electric Rocks':()=>`Level ${Math.min(6,n)}: rocks charge a 48px wall patch for 2.4s; Electric Ink bursts hit up to 8 monsters for ${3+Math.min(6,n)} damage, with 1.1s wall recovery`,
@@ -151,7 +149,7 @@ function renderBuild(){
     ['Closed-wall multiplier','×'+f(s.closedBonus)],['Intersection bonus',f(s.intersectBonus*100)+'% each'],
     ['Stevie max HP',game.state.player.maxHp],['Damage reduction',f(s.playerArmor*100)+'%'],
     ['Doodle Scraps',game.api.paperElementName()],['Throw reach',Math.round(game.api.paperRange())+'px'],['Paper-ball damage',s.rockDamage],['Throw interval',s.rockRate?f(game.api.paperThrowInterval())+'s':'Not unlocked'],
-    ['Walls per stroke',s.tripleLine?3:s.doubleLine?2:1],['Erase recovery',Math.round(s.eraseRefund*100)+'%'],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
+    ['Walls per stroke',1],['Erase recovery',Math.round(s.eraseRefund*100)+'%'],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
     ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','6 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','12 HP/s shared']];
   game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
   game.dom.$('buildStats').innerHTML=totals.map(([name,value])=>`<div class="build-stat">${name}<strong>${value}</strong></div>`).join('');

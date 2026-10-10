@@ -51,7 +51,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>key==='synergySplashTimer'?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['doubleLine','tripleLine','paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>['doubleLine','tripleLine','synergySplashTimer'].includes(key)?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
 for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -158,9 +158,8 @@ assert.equal(bg.state.inks.fire,2);assert.match(bg.api.upgradeEffect('Fire Ink')
 choose('Pocket Rocks');choose('Better Rocks');const rate=bg.state.stats.rockRate;
 choose('Pocket Rocks');assert.equal(bg.state.stats.rockRate,rate,'repeated Pocket Rocks preserves faster throws');
 assert.equal(bg.state.stats.rockDamage,15);
-choose('Double Stroke');choose('Double Stroke');
-assert.equal(bg.state.stacks['Double Stroke'],1,'one-time unlock cannot be wasted twice');
-choose('Triple Stroke');assert.equal(bg.api.upgradeAvailable(bg.catalog.upgrades.find(u=>u.name==='Double Stroke')),false);
+choose('Doodle Stitch');choose('Doodle Stitch');
+assert.equal(bg.state.stacks['Doodle Stitch'],1,'one-time unlock cannot be wasted twice');
 for(let i=0;i<6;i++)choose('Helmet');
 assert.equal(bg.state.stats.playerArmor,.55);
 assert.equal(bg.api.upgradeAvailable(bg.catalog.upgrades.find(u=>u.name==='Helmet')),false);
@@ -623,10 +622,10 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 // Wobblechomp sweeps carried cover during the roar without upgrade destruction procs.
 {
  const g=load(true).sandbox.testGame;g.api.resetRun({skipIntro:true});g.api.setSynergyRevealsEnabled(false);g.state.wave=10;g.api.startWave({skipIntro:true});g.state.enemies=[];
- g.state.stats.doubleLine=true;g.state.inks.fire=2;g.state.inks.blast=2;g.state.synergies.add('INFERNO');g.api.createWall([{x:100,y:180},{x:280,y:180}]);assert.equal(g.state.walls.length,2);
+ g.state.stats.doubleLine=true;g.state.inks.fire=2;g.state.inks.blast=2;g.state.synergies.add('INFERNO');g.api.createWall([{x:100,y:180},{x:280,y:180}]);assert.equal(g.state.walls.length,1);
  g.state.stats.ink=37;g.state.timeLeft=0;const hp=g.state.player.hp,kills=g.state.kills;
- g.api.update(.01);assert(g.api.bossEntranceActive());g.api.update(3.374);assert.equal(g.state.walls.length,2,'walls survive stomp so the roar visibly sweeps them');
- g.state.paused=true;g.api.update(2);assert.equal(g.state.walls.length,2,'paused entrance does not sweep');g.state.paused=false;
+ g.api.update(.01);assert(g.api.bossEntranceActive());g.api.update(3.374);assert.equal(g.state.walls.length,1,'walls survive stomp so the roar visibly sweeps them');
+ g.state.paused=true;g.api.update(2);assert.equal(g.state.walls.length,1,'paused entrance does not sweep');g.state.paused=false;
  const damage=g.api.damageWall,explosion=g.api.animateWallExplosion;g.api.damageWall=()=>{throw Error('Entrance destroyed upgraded wall instead of clearing it')};g.api.animateWallExplosion=()=>{throw Error('Entrance triggered blast')};
  g.api.update(.002);assert.equal(g.state.walls.length,0);assert.equal(g.state.stats.ink,37);assert.equal(g.state.kills,kills);assert.equal(g.state.player.hp,hp);assert.equal(g.state.inks.fire,2);assert.equal(g.state.stats.doubleLine,true);
  g.api.update(2.756);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1);assert.equal(g.state.walls.length,0,'fight starts without inherited cover');
@@ -791,10 +790,10 @@ g.api.resetRun();const choose=name=>g.api.chooseUpgrade(g.catalog.upgrades.find(
 choose('Quick Refill');assert.equal(g.state.stats.inkRegen,7);choose('Quick Refill');assert.ok(Math.abs(g.state.stats.inkRegen-(7+2/1.4))<1e-10);assert.match(g.api.upgradeEffect('Quick Refill'),/3.43/);
 const before=g.state.stats.inkRegen;choose('Living Fountain Pen');choose('Living Fountain Pen');assert.ok(Math.abs(g.state.stats.inkRegen-before*1.35*(1+.35/1.5))<1e-10);
 const preBottomless=g.state.stats.inkRegen;choose('Bottomless Pen');choose('Bottomless Pen');assert.ok(Math.abs(g.state.stats.inkRegen-preBottomless-2-2/1.4)<1e-10);
-g.api.resetRun();g.state.stats.tripleLine=true;g.api.createWall([{x:100,y:100},{x:280,y:100}]);assert.equal(g.state.walls.length,3);assert.equal(g.state.walls[1].maxHp,g.state.walls[0].maxHp*.6);
+g.api.resetRun();g.state.stats.tripleLine=true;g.state.stats.doubleLine=true;g.api.createWall([{x:100,y:100},{x:280,y:100}]);assert.equal(g.state.walls.length,1,'retired flags never generate copies');
 g.api.resetRun();for(let i=1;i<=12;i++){g.state.kills=i*25;g.api.awardKillScraps()}assert.equal(g.api.notebookSnapshot().runScraps,8,'kill scraps capped across a run');g.api.resumeScrapRun();g.state.kills=325;g.api.awardKillScraps();assert.equal(g.api.notebookSnapshot().runScraps,8,'endless cannot reset kill cap');
 g.api.resetRun();for(let wave=1;wave<=20;wave++){g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;if(wave%5===0)g.api.killEnemy(g.api.spawnEnemy(true,0,0));g.api.waveComplete();g.state.betweenWaves=false}assert.equal(g.api.notebookSnapshot().runScraps,61,'20 clears + chapter milestones + victory');
-console.log('PASS: HP curve, gentler opening, timed/capped groups, untimed required boss/contact/early kills, shared sustain budgets, pause/death protection, diminishing returns, thinner copies, and capped/milestone scraps.');
+console.log('PASS: HP curve, gentler opening, timed/capped groups, untimed required boss/contact/early kills, shared sustain budgets, pause/death protection, diminishing returns, single-wall strokes, and capped/milestone scraps.');
 }
 
 {
@@ -1300,11 +1299,12 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  env.sandbox.Math.random=random;console.log('PASS: twenty-seven decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
 })().catch(error=>{console.error(error);process.exitCode=1});
 {
- const env=load(true),g=env.sandbox.testGame;g.api.resetRun();const triple=g.catalog.upgrades.find(u=>u.name==='Triple Stroke');assert.equal(triple.exclusiveRarity,'legendary');
- for(const rarity of ['common','uncommon','rare']){g.api.rarityRoll=()=>rarity;for(let i=0;i<200;i++)assert.notEqual(g.api.getUpgrade().name,'Triple Stroke');const wave=g.state.wave;g.api.chooseUpgrade({...triple,rarity});assert.equal(g.state.stats.tripleLine,false);assert.equal(g.state.wave,wave,'lower-tier Triple cannot be applied');}
- g.api.weightedPick=pool=>pool.find(u=>u.name==='Triple Stroke')||pool[0];g.state.legendaryWave=g.state.wave;g.state.legendaryOffered=false;g.api.rollCards();assert.match(env.node('cards').children[0].innerHTML,/Triple Stroke/);assert.match(env.node('cards').children[0].className,/legendary/);
- g.api.chooseUpgrade({...triple,rarity:'legendary'});assert.equal(g.state.stats.tripleLine,true);assert.equal(g.state.stacks['Triple Stroke'],1);assert.equal(g.api.upgradeAvailable(triple),false);
- console.log('PASS: Triple Stroke excluded from all ordinary tiers, available in reserved Legendary pool, lower-tier application rejected and unlock remains one-time.');
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
+ for(const name of ['Double Stroke','Triple Stroke'])assert(!g.catalog.upgrades.some(u=>u.name===name),'retired wall copies cannot be offered');
+ for(const name of ['Ice Corridor','Power Lines','ABSOLUTE ZERO'])assert(!g.catalog.synergyDefs.some(u=>u.name===name),'dependent synergies are retired');
+ for(const rarity of ['common','uncommon','rare']){g.api.rarityRoll=()=>rarity;for(let i=0;i<100;i++)assert(!/Double Stroke|Triple Stroke/.test(g.api.getUpgrade().name));}
+ g.state.legendaryWave=g.state.wave;g.state.legendaryOffered=false;g.api.rollCards();assert.match(env.node('cards').children[0].className,/legendary/);
+ console.log('PASS: duplicate-wall abilities and dependent synergies retired; reserved Legendary offers remain.');
 }
 
 {
@@ -1361,7 +1361,7 @@ const boss=g.api.spawnEnemy(true,150,150);g.api.bossBrain(boss).enclosed=true;co
 g.state.walls[1].hp=0;g.state.walls[2].life=0;assert.equal(g.api.loopDamageMultiplier(enemy),1,'dead/expired loops do not boost');
 g.state.walls=[];g.state.stats.ink=1000;g.state.stats.firstFree=true;g.state.stats.firstStrokeUsed=false;g.api.createWall(pts);assert.equal(g.state.stats.ink,1000);assert.equal(g.state.walls[0].sealAge,undefined,'free stroke earns no completion reward');
 g.state.walls=[];g.state.stats.firstFree=false;g.state.stats.freehandLevel=1;g.state.stats.freehandBank=124;g.api.createWall(pts);assert.equal(g.state.stats.ink,1000,'bank-only stroke earns no refund');
-g.state.walls=[];g.state.stats.freehandBank=0;g.state.stats.tripleLine=true;g.api.createWall(pts);assert.equal(g.state.walls.length,3);assert.equal(g.state.walls.filter(w=>w.sealAge===0).length,1,'copies do not reward again');
+g.state.walls=[];g.state.stats.freehandBank=0;g.state.stats.tripleLine=true;g.api.createWall(pts);assert.equal(g.state.walls.length,1);assert.equal(g.state.walls.filter(w=>w.sealAge===0).length,1,'one stroke rewards once');
 const p=g.api.upgradePreview({...g.catalog.upgrades.find(u=>u.name==='Fortress Geometry'),rarity:'legendary'});assert.match(p.afterDetail,/damage inside/);
 for(const n of [2,4,20,100]){const t=g.api.loopUtilityTuning(n);assert.ok(t.refund<=.35&&t.damage<=.25&&t.repair<=.3)}
 console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss limits, expired loops, free/banked ink, copied strokes, diminishing caps and previews.');
@@ -1460,9 +1460,9 @@ console.log('PASS: three first-boss attacks, sideways curved flight, swept wall 
 {
  const saved=new Map([['doodleDefenderBestV4','7'],['saveStevieNotebookV1',JSON.stringify({version:1,scraps:90,lifetimeScraps:100,levels:{tool:6,inkTank:2,health:1}})]]),storage={getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v))};
  const env=load(true,{storage}),g=env.sandbox.testGame,original=[...saved];
- const base={wave:20,phase:'boss',toolRank:6,notebook:false,upgrades:[{name:'Fire Ink',rarity:'rare',copies:2},{name:'Poison Ink',rarity:'uncommon',copies:3},{name:'Pocket Rocks',rarity:'common',copies:2},{name:'Triple Stroke',rarity:'legendary',copies:1}]};
+ const base={wave:20,phase:'boss',toolRank:6,notebook:false,upgrades:[{name:'Fire Ink',rarity:'rare',copies:2},{name:'Poison Ink',rarity:'uncommon',copies:3},{name:'Pocket Rocks',rarity:'common',copies:2},{name:'Doodle Stitch',rarity:'rare',copies:1}]};
  assert.equal(g.api.startTestRun(base),true);assert.equal(g.state.wave,20);assert.equal(g.state.timeLeft,0);assert.equal(g.state.enemies.length,1);assert.equal(g.state.enemies[0].type,'eraser');assert.ok(g.state.enemies[0].x>0&&g.state.enemies[0].x<g.state.W&&g.state.enemies[0].y>0&&g.state.enemies[0].y<g.state.H,'boss-only test starts with a visible boss');assert.equal(g.api.bossWavePhase(),'fight');assert.equal(g.api.devRunActive(),true);assert.equal(g.api.testLabActive(),true);
- assert.equal(g.state.stacks['Fire Ink'],6);assert.equal(g.state.stacks['Poison Ink'],6);assert.equal(g.state.stacks['Pocket Rocks'],2);assert.equal(g.state.stats.tripleLine,true);assert.ok(g.state.synergies.has('Plaguefire'));assert.equal(g.state.tool.slots,3);assert.equal(g.state.player.maxHp,75);assert.equal(g.state.stats.maxInk,160);assert.deepEqual([...saved],original,'setup does not write progression');
+ assert.equal(g.state.stacks['Fire Ink'],6);assert.equal(g.state.stacks['Poison Ink'],6);assert.equal(g.state.stacks['Pocket Rocks'],2);assert.equal(g.state.stacks['Doodle Stitch'],1);assert.ok(g.state.synergies.has('Plaguefire'));assert.equal(g.state.tool.slots,3);assert.equal(g.state.player.maxHp,75);assert.equal(g.state.stats.maxInk,160);assert.deepEqual([...saved],original,'setup does not write progression');
  const snapshot=JSON.stringify(g.state);assert.equal(g.api.startTestRun({...base,wave:19}),false);assert.equal(JSON.stringify(g.state),snapshot,'invalid boss selection leaves the live run intact');assert.equal(g.api.startTestRun({...base,toolRank:0,upgrades:[...base.upgrades,{name:'Electric Ink',rarity:'common',copies:1}]}),false);assert.equal(JSON.stringify(g.state),snapshot,'slot overflow is rejected before reset');assert.equal(g.api.startTestRun({...base,upgrades:[{name:'Triple Stroke',rarity:'common',copies:1}]}),false);assert.equal(g.api.startTestRun({...base,upgrades:[{name:'Loaded Deck',rarity:'common',copies:2}]}),false);
  g.state.player.hp=1;g.state.inks.fire=99;env.node('repeatTestBtn').onclick();assert.equal(g.state.player.hp,75);assert.equal(g.state.inks.fire,6);assert.equal(g.state.wave,20);assert.equal(g.state.enemies.length,1);
  g.api.openInfo('pause');env.node('pauseRestartTestBtn').onclick();assert(!g.state.paused&&g.state.running);assert.equal(g.state.inks.fire,6);
@@ -1673,7 +1673,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  assert.equal(env.node('upgradeDetails').hidden,true);card.onclick();assert.equal(env.node('upgradeDetails').hidden,true,'removed offers cannot reopen inspection');g.api.takeInspectedReward();assert.equal(JSON.stringify(g.state),before,'changed dev choice invalidates old confirmation');
  env.sandbox.Math.random=random;
  env.node('cards').children[0].onclick();env.node('takeUpgradeBtn').onclick();assert.equal(g.state.inks.frost,3);assert.equal(g.state.inks.fire,0);const wave=g.state.wave;g.api.takeInspectedReward();assert.equal(g.state.wave,wave,'confirmation cannot advance twice');
- const cells=g.catalog.upgrades.map(u=>{const a=g.api.upgradeArtworkInfo(u);assert.ok(a&&a.x<a.grid&&a.y<a.grid);return a.file+':'+a.x+':'+a.y;});assert.equal(new Set(cells).size,41);
+ const cells=g.catalog.upgrades.map(u=>{const a=g.api.upgradeArtworkInfo(u);assert.ok(a&&a.x<a.grid&&a.y<a.grid);return a.file+':'+a.x+':'+a.y;});assert.equal(new Set(cells).size,39);
  console.log('PASS: reward inspection/close are read-only without RNG; stale dev choices cannot reopen/commit; explicit confirmation applies once and every upgrade has distinct artwork.');
 }
 
@@ -2326,11 +2326,11 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const paid=g.state.stats.ink;c.listeners.pointerup(event(160,200));assert.equal(g.state.walls.length,1);assert.equal(g.state.stats.ink,paid,'release does not charge again');assert.equal(g.state.stats.strokeCount,1);
  g.api.resetRun();g.state.stats.ink=10;c.listeners.pointerdown(event(100,200));c.listeners.pointermove(event(120,200));c.listeners.pointermove(event(300,200));assert.ok(Math.abs(g.state.walls[0].pts.at(-1).x-(100+10/.31))<1e-8);assert.ok(g.state.stats.ink<1e-8,'live stroke clips to ink budget');c.listeners.pointerup(event(300,200));
  g.api.resetRun();c.listeners.pointerdown(event(100,200));c.listeners.pointermove(event(120,200));const destroyed=g.state.walls[0];g.api.damageWall(destroyed,999,110,200);const ink=g.state.stats.ink;c.listeners.pointermove(event(160,200));c.listeners.pointerup(event(160,200));assert.equal(g.state.walls.length,0,'destroyed held wall is not resurrected');assert.equal(g.state.stats.ink,ink);
- g.api.resetRun();g.state.stats.doubleLine=true;c.listeners.pointerdown(event(100,200));c.listeners.pointermove(event(140,200));assert.equal(g.state.walls.length,2);const copy=g.state.walls[1];g.api.damageWall(copy,2,120,188);c.listeners.pointermove(event(180,200));assert.equal(g.state.walls[1],copy);assert.ok(Math.abs(copy.hp-(65*80/180*g.catalog.balance.copyDurability-2))<1e-8);assert.equal(copy.eraseInk,undefined,'free copy has no recovery budget');c.listeners.pointerup(event(180,200));
+ g.api.resetRun();g.state.stats.doubleLine=true;c.listeners.pointerdown(event(100,200));c.listeners.pointermove(event(140,200));assert.equal(g.state.walls.length,1,'live strokes ignore retired copy flags');const single=g.state.walls[0];g.api.damageWall(single,2,120,200);c.listeners.pointermove(event(180,200));assert.equal(g.state.walls[0],single);assert.ok(Math.abs(single.hp-(65*80/180-2))<1e-8,'growing a single wall retains damage');c.listeners.pointerup(event(180,200));
  g.api.resetRun();g.state.stats.firstFree=true;c.listeners.pointerdown(event(100,200));c.listeners.pointermove(event(130,200));c.listeners.pointermove(event(230,200));c.listeners.pointerup(event(230,200));assert.equal(g.state.stats.ink,160);assert.equal(g.state.walls[0].eraseInk,0);assert.equal(g.state.stats.strokeCount,1);
  g.api.resetRun();c.listeners.pointerdown(event(100,200));c.listeners.pointermove(event(130,200));const drawn=g.state.walls[0],balance=g.state.stats.ink;c.listeners.pointercancel(event(130,200));assert.equal(g.state.walls[0],drawn,'cancelling keeps already-active ink');assert.equal(g.state.stats.ink,balance);assert.equal(g.api.liveWallActive(),false);
  g.api.resetRun();g.state.stats.freehandLevel=1;g.state.stats.freehandBank=10;c.listeners.pointerdown(event(100,200));c.listeners.pointermove(event(120,200));c.listeners.pointermove(event(160,200));c.listeners.pointerup(event(160,200));assert.ok(Math.abs(g.state.stats.ink-(160-(60*.31-10)))<1e-8);assert.ok(Math.abs(g.state.stats.freehandCharge-(60*.31-10))<1e-8,'Freehand counts total paid ink exactly once');assert.ok(Math.abs(g.state.walls[0].eraseInk-(60*.31-10))<1e-8,'bank-funded portion cannot refund');
- g.api.resetRun();g.state.stats.doubleLine=true;g.state.stats.closedBonus=1.4;g.state.stacks['Closed Loop']=1;c.listeners.pointerdown(event(100,200));for(const [x,y] of [[125,200],[150,200],[150,225],[150,250],[125,250],[100,250],[100,225],[100,200]])c.listeners.pointermove(event(x,y));const unclosed=g.state.walls[0];assert.equal(unclosed.closed,false);const beforeRelease=g.state.stats.ink;c.listeners.pointerup(event(100,200));assert.equal(unclosed.closed,true);assert.ok(Math.abs(unclosed.maxHp-(65*200/180*1.4))<1e-8);assert.ok(Math.abs(g.state.stats.ink-(beforeRelease+62*.15))<1e-8,'loop refund happens once on finish');assert.ok(Math.abs(g.state.walls[1].maxHp-unclosed.maxHp*g.catalog.balance.copyDurability)<1e-8);assert.equal(g.state.stats.strokeCount,1);
+ g.api.resetRun();g.state.stats.doubleLine=true;g.state.stats.closedBonus=1.4;g.state.stacks['Closed Loop']=1;c.listeners.pointerdown(event(100,200));for(const [x,y] of [[125,200],[150,200],[150,225],[150,250],[125,250],[100,250],[100,225],[100,200]])c.listeners.pointermove(event(x,y));const unclosed=g.state.walls[0];assert.equal(unclosed.closed,false);const beforeRelease=g.state.stats.ink;c.listeners.pointerup(event(100,200));assert.equal(unclosed.closed,true);assert.ok(Math.abs(unclosed.maxHp-(65*200/180*1.4))<1e-8);assert.ok(Math.abs(g.state.stats.ink-(beforeRelease+62*.15))<1e-8,'loop refund happens once on finish');assert.equal(g.state.walls.length,1);assert.equal(g.state.stats.strokeCount,1);
  console.log('PASS: smooth short/long HP scaling, live projectile cover, incremental cost/clipping, preserved damage/lifetime, single release payment, copies, free strokes, destruction and cancellation.');
 }
 
@@ -2392,7 +2392,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.state.walls=[];draw(100,300);const original=g.state.walls[0];original.stitchCount=3;g.api.eraseWallPath({x:200,y:190},{x:200,y:210},10);assert.equal(g.state.walls.length,2);assert(g.state.walls.every(w=>w.stitchCount===3),'erased fragments retain extension history');const fragment=g.state.walls[0],hp=fragment.hp,tip=fragment.pts.at(-1).x;g.api.createWall([{x:tip,y:200},{x:tip,y:170}]);assert.equal(fragment.stitchCount,4);assert.equal(fragment.hp,hp,'erasing cannot reset capped HP');
  g.state.walls=[];draw(100,300);draw(200,250);assert.equal(g.state.walls.length,2,'middle of a wall is not an endpoint snap');
  g.state.walls=[];draw(100,200);const live=g.state.walls[0];live.stitchCount=3;live.hp=6;live.life=8;const c=env.node('game'),event=x=>({clientX:x,clientY:200,pointerId:1,button:0});c.listeners.pointerdown(event(200));c.listeners.pointermove(event(230));assert.equal(g.state.walls[0],live);assert.equal(live.hp,6,'fourth live connector adds no HP');assert.equal(live.pts.at(-1).x,230,'zero-HP contribution still extends active geometry');g.api.damageWall(live,2,220,200);c.listeners.pointermove(event(270));assert.equal(live.hp,4,'growth never resets combat damage');c.listeners.pointerup(event(270));assert.equal(live.stitchCount,4);assert.equal(live.life,8);assert.equal(live.hp,4);
- g.state.walls=[];draw(100,200);const copiedParent=g.state.walls[0];g.state.stats.doubleLine=true;draw(200,240);assert.equal(g.state.walls.length,2);const copy=g.state.walls.find(w=>w!==copiedParent);assert.ok(Math.abs(copy.maxHp-65*40/180*.75*.6)<1e-8,'copies contain only weaker new connector');assert.equal(copy.stitchCount,1);
+ g.state.walls=[];draw(100,200);const copiedParent=g.state.walls[0];g.state.stats.doubleLine=true;draw(200,240);assert.equal(g.state.walls.length,1,'extension joins the original wall without copies');assert.equal(copiedParent.stitchCount,1);
  g.state.stats.doubleLine=false;g.state.walls=[];draw(100,200);const cutPaths=[];g.api.cutWobbleStroke=pts=>cutPaths.push(pts.map(p=>p.x));draw(200,240);assert.deepEqual(cutPaths,[[200,240]],'only the new stroke cuts bosses');
  g.state.walls=[];draw(100,200);g.state.stats.ink=0;const before=JSON.stringify(g.state.walls);draw(200,240);assert.equal(JSON.stringify(g.state.walls),before,'no ink means no extension or history change');
  g.api.resetRun();assert.equal(g.state.stats.doodleStitch,false,'run reset clears unlock');

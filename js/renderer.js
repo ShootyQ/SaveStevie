@@ -510,22 +510,23 @@ function resize(){
 /* Sample by stroke distance, not pointer-event count. Cache outside game state:
    rendering never spends ink, changes collisions, or consumes combat randomness. */
 const wallSamples = new WeakMap();
-function textureSamples(points){
-  if(wallSamples.has(points))return wallSamples.get(points);
+function textureSamples(points,count){
+  if(wallSamples.get(points)?.count===count)return wallSamples.get(points).samples;
   let length=0;
   const segments=[];
   for(let i=1;i<points.length;i++){
     const a=points[i-1],b=points[i],len=Math.hypot(b.x-a.x,b.y-a.y);
     if(len>0){segments.push({a,b,len,start:length});length+=len;}
   }
-  const samples=[],spacing=Math.min(length,Math.max(32,length/96));
+  const samples=[],spacing=length/count;
   let segment=0;
-  for(let d=spacing/2;d<length;d+=spacing){
+  for(let i=0;i<count&&length>0;i++){
+    const d=(i+.5)*spacing;
     while(segment<segments.length-1&&d>segments[segment].start+segments[segment].len)segment++;
     const s=segments[segment],t=(d-s.start)/s.len;
     samples.push({x:s.a.x+(s.b.x-s.a.x)*t,y:s.a.y+(s.b.y-s.a.y)*t,angle:Math.atan2(s.b.y-s.a.y,s.b.x-s.a.x)});
   }
-  wallSamples.set(points,samples);
+  wallSamples.set(points,{count,length,samples});
   return samples;
 }
 // Glyphs are reused across walls; only animated phases need separate sprites.
@@ -609,16 +610,21 @@ function drawWallTextures(points,thick,opacity){
   const inks=game.state.inks,active=Object.keys(inks).filter(k=>inks[k]>0);
   if(!active.length)return;
   const ctx=game.dom.ctx,time=(game.state.waveElapsed||0)*3;
-  const samples=textureSamples(points);
+  const length=wallSamples.get(points)?.length??points.reduce((sum,p,i)=>sum+(i?Math.hypot(p.x-points[i-1].x,p.y-points[i-1].y):0),0);
+  // Longer walls repeat each element at most three times, with eighteen glyphs
+  // total. Space elements along the stroke instead of piling them at each mark.
+  const repeats=Math.min(3,Math.max(1,Math.ceil(Math.sqrt(length/200))));
+  const samples=textureSamples(points,Math.max(active.length,Math.min(18,active.length*repeats)));
   ctx.save();ctx.globalAlpha=opacity;ctx.lineCap='round';ctx.lineJoin='round';
   for(let i=0;i<samples.length;i++){
     const p=samples[i];
-    for(let k=0;k<active.length;k++){
+    {
+      const k=i%active.length;
       const kind=active[k],level=Math.min(3,inks[kind]);
       // Stagger each element along the stroke, then alternate its side.
       ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);
-      ctx.translate((k-(active.length-1)/2)*Math.min(5,24/active.length),(k+i)%2?thick/2+3:-thick/2-3);
-      if((k+i)%2===0)ctx.rotate(Math.PI);
+      ctx.translate(0,i%2?thick/2+3:-thick/2-3);
+      if(i%2===0)ctx.rotate(Math.PI);
       ctx.lineWidth=1.6;
       const pulse=Math.sin(time+i*1.7+k),size=1+level*.1;
       ctx.scale(size,size);

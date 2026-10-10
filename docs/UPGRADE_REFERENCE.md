@@ -1,10 +1,10 @@
-# Save Stevie upgrade reference — Alpha 0.1.20
+# Save Stevie upgrade reference — Alpha 0.1.22
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
 Catalog descriptions and requirements are exported from game code; mechanics and review notes are maintained alongside them. Suggestions are proposals, not shipped changes.
 
-Fresh Pencil was retired; legacy paid ranks receive a one-time scrap refund. Every Drawing Tool rank adds +8 base wall HP. Quick Sketch was retired and replaced by Doodle Stitch following player feedback. Other review candidates are hypotheses, not pick-rate data.
+Fresh Pencil was retired; legacy paid ranks receive a one-time scrap refund. Every Drawing Tool rank adds +8 base wall HP. Quick Sketch was retired and replaced by Doodle Stitch following player feedback. Double Stroke, Triple Stroke and their parallel-wall synergies were retired to reduce clutter; one stroke creates one wall. Other review candidates are hypotheses, not pick-rate data.
 
 About one in three campaigns reserves at most one Legendary offer after waves 1–19. Runs ending early may never see their offer; this is not a guarantee every third run.
 
@@ -28,12 +28,10 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Closed Loop | Walls / shapes | Closed shapes gain +40% durability. First loop-utility level: 15% paid ink back, repair nearby walls by 15% of missing HP, and +10% damage inside. Later levels have diminishing gains; repair is capped by ink spent. | Repeatable; caps/diminishing returns may apply; Shares diminishing loop utility with Fortress Geometry; refunds/repair depend on paid ink; utility overlaps do not stack. |
 | Architect | Walls / shapes | Each wall intersection adds 15% durability. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Patchwork | Walls / shapes | Drawing across an old wall repairs 18 HP. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
-| Double Stroke | Drawing / ink economy | Each stroke adds a parallel wall with 60% of the original durability. | One-time unlock; One-time unlock; disabled when parallel walls are already unlocked. |
 | Doodle Stitch | Drawing / ink economy | Snap new strokes to open wall endpoints. Connectors add 75%, 50%, then 25% of normal new-length HP; later extensions add none. Pay normal ink; old damage, oldest lifetime and extension history are preserved. | One-time unlock; Endpoint snap reach 16px. New-length HP: 75%, 50%, 25%, then zero. Existing damage, oldest lifetime and summed group histories are preserved; erasing retains history. |
 | Patch Job | Walls / shapes | Every kill repairs walls by up to 3 HP each, sharing a 12 wall HP/s budget. | Repeatable; caps/diminishing returns may apply; Shared repair-on-kill budget: 12 wall HP/s across all walls. |
 | Freehand | Drawing / ink economy | Spend 80 real ink to charge a limited free-ink bank. Stacking increases the free bank. | Repeatable; caps/diminishing returns may apply; Charges from real paid ink, not free strokes/copies; threshold 80; initial bank 40, +20 per extra level. |
 | Living Fountain Pen | Drawing / ink economy | 35% faster ink regeneration on the first pick; smaller multipliers on repeats. | Repeatable; caps/diminishing returns may apply; Repeat level n multiplies regeneration by 1 + 0.35 / (1 + 0.5 × (n−1)). |
-| Triple Stroke | Drawing / ink economy | Every stroke adds TWO parallel walls, each with 60% durability. | One-time unlock; Legendary-only, one-time unlock; two copies replace the single Double Stroke copy. |
 | Bottomless Pen | Drawing / ink economy | Per level: +40 max ink and +2 ink/s at first, with smaller regeneration bonuses on repeats. | Repeatable; caps/diminishing returns may apply; Each level adds 40 max ink; regeneration repeats use 2 / (1 + 0.4 × (n−1)). |
 | Fortress Geometry | Walls / shapes | Per level: +50% closed-shape durability. Shares Closed Loop’s diminishing ink refund, completion repair and enclosed-enemy damage bonus (15% / 15% / 10% at the first utility level). | Repeatable; caps/diminishing returns may apply; Shares diminishing loop utility with Closed Loop; free strokes/copies do not earn ink refunds. |
 | Bandages | Stevie / rocks / survival | Heal 8 extra HP between waves. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
@@ -79,8 +77,6 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Ring of Fire | Fire Ink + Closed Loop | Closed loops radiate heat and ignite enemies nearby. |
 | Circuit Board | Electric Ink + Architect | Wall intersections become electrical nodes. |
 | Demolition Grid | Blast Ink + Architect | Intersections make wall explosions larger and stronger. |
-| Ice Corridor | Frost Ink + Double Stroke (or Triple Stroke) | The space between parallel walls chills nearby enemies. |
-| Power Lines | Electric Ink + Triple Stroke | Triple walls pulse electricity into enemies caught nearby. |
 | Blood Patch | Vampire Ink + Patchwork | Repairing walls also heals Stevie. |
 | Needlepoint | Poison Ink + Fine Tip | Cheap thin lines stack poison much faster. |
 | Heavy Artillery | Blast Ink + Fat Marker | Thicker walls create larger explosions. |
@@ -93,7 +89,6 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | INFERNO | Fire Ink + Blast Ink + Repulsion Ink | Burning explosions hurl ordinary monsters farther, with harder landings and a 1.6s stun; leave stronger four-second fire patches. Bosses resist launches. |
 | THE BLACK HOLE | Gravity Ink + Void Ink + Closed Loop | Closed loops become miniature event horizons. |
 | NECROTIC ENGINE | Poison Ink + Vampire Ink + Gravity Ink | Pinned poisoned enemies continuously feed Stevie health. |
-| ABSOLUTE ZERO | Frost Ink + Repulsion Ink + Double Stroke (or Triple Stroke) | Parallel walls become freezing launch rails. |
 | TESLA CAGE | Electric Ink + Architect + Closed Loop | Closed intersecting geometry becomes a powered electric circuit. |
 
 ## Permanent Notebook perks

@@ -46,7 +46,7 @@ function startTestRun(config=readSetup()){
  const entries=[],effects=new Set(),once=new Set();
  for(const entry of config.upgrades){
   const base=game.catalog.upgrades.find(u=>u.name===entry?.name);
-  if(!base||!rarities.includes(entry.rarity)||!Number.isInteger(entry.copies)||entry.copies<1||entry.copies>25||base.exclusiveRarity&&entry.rarity!==base.exclusiveRarity){notice('Check your upgrade rarities and copies. Triple Stroke is Legendary.');return false}
+  if(!base||!rarities.includes(entry.rarity)||!Number.isInteger(entry.copies)||entry.copies<1||entry.copies>25||base.exclusiveRarity&&entry.rarity!==base.exclusiveRarity){notice('Check your upgrade names, rarities and copies. Retired upgrades cannot be selected.');return false}
   if(base.cat==='ink')effects.add(base.name);
   if(game.api.isOneTimeUpgrade(base.name)){if(once.has(base.name)||entry.copies!==1){notice('One-time unlocks can only be included once.');return false}once.add(base.name)}
   entries.push({...entry});
