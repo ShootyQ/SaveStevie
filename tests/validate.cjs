@@ -623,7 +623,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 // A mixed-status crowd must reuse its tinted sprites instead of allocating each frame.
 {
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
-const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['basil','wobblechomp','wobble-tooth'].includes(type));
+const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['basil','scrubber','wobblechomp','wobble-tooth'].includes(type));
 for(let i=0;i<76;i++){
  const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][Math.floor(i/types.length)%4];
  e.burn=mask&1?2:0;e.poison=mask&2?2:0;e.freeze=mask&4?2:0;e.charged=mask&8?2:0;e.gravitySlow=mask&16?.4:0;
@@ -2319,6 +2319,33 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.state.projectiles=[{x:runner.x,y:runner.y,target:runner,speed:290,damage:100,life:1}];g.api.updateProjectiles(.1);assert(runner.hp<=0,'rocks can defeat runner');
  g.state.enemies=[];g.state.walls=[];g.api.createWall([{x:100,y:200},{x:300,y:200}]);const poisoned=g.api.spawnEnemy(false,200,180,'scrubber');g.state.inks.poison=1;g.api.updateScrubber(poisoned,.1);assert(poisoned.poison>0,'elemental wall effects apply');g.state.walls=[];poisoned.burn=1;poisoned.burnDps=1000;g.state.spawnTimer=999;g.api.update(.05);assert(!g.state.enemies.includes(poisoned),'status damage defeats him');
  console.log('PASS: guaranteed wave-two eraser runner, local geometry wiping without refunds, wall/status/rock damage, freeze/stun/pause, player erasing, normal rewards once and non-erasable other monsters.');
+}
+
+// Paper rubbing must track real active time across differing event/frame rates.
+{
+ for(const [fps,events] of [[120,30],[60,20],[30,30],[60,120]]){
+  const g=load(true).sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.enemies=[];
+  let last=100,nextEvent=0;
+  for(let frame=0;frame<Math.ceil(fps*2.5);frame++){
+   const now=frame/fps;
+   while(nextEvent<=now+1e-8){const x=last===100?160:100;g.api.queuePaperRub({x:last,y:180},{x,y:180},20);last=x;nextEvent+=1/events;}
+   g.api.updatePaper(1/fps);
+   if(frame<Math.floor(fps*2.4))assert.equal(g.state.paper.holes.length,0,'no premature tear');
+  }
+  assert.equal(g.state.paper.holes.length,1,`${fps} FPS / ${events} movement events: local back-and-forth tears at 2.5 seconds`);
+ }
+ const g=load(true).sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.enemies=[];
+ g.api.queuePaperRub({x:100,y:180},{x:110,y:180});for(let i=0;i<600;i++)g.api.updatePaper(1/60);
+ assert.equal(g.state.paper.holes.length,0,'one move followed by holding still cannot tear');assert(g.state.paper.patches[0].wear<=.100001);
+ const before=g.state.paper.patches[0].wear;g.api.queuePaperRub({x:100,y:180},{x:110,y:180});g.api.cancelPaperRub();g.api.updatePaper(.05);assert.equal(g.state.paper.patches[0].wear,before,'release cancels event gap grace');
+ g.api.queuePaperRub({x:100,y:180},{x:110,y:180});g.state.paused=true;g.api.updatePaper(.05);g.state.paused=false;g.api.updatePaper(.05);assert.equal(g.state.paper.patches[0].wear,before,'pause cancels stale rubbing');
+ const ruffs=[];for(let i=0;i<3;i++)ruffs.push(g.api.spawnEnemy(false,100+i*20,180,'scrubber'));
+ ruffs[0].paperTunnel={};assert.equal(g.api.spawnEnemy(false,200,180,'scrubber'),null,'underground Ruff still counts toward three-alive cap');
+ g.api.eraseScrubber(ruffs[1]);assert.equal(g.api.spawnEnemy(false,200,180,'scrubber'),null,'partially erased Ruff still counts');
+ g.api.dealDamage(ruffs[1],999,'physical');g.api.killEnemy(ruffs[1]);assert(g.api.spawnEnemy(false,200,180,'scrubber'),'defeating one frees a slot');
+ assert.equal(g.api.spawnEnemy(false,200,180,'scrubber'),null);assert(g.api.spawnEnemy(false,200,180,'grunt'),'cap does not block other monsters');
+ g.api.resetRun({skipIntro:true});assert(g.api.spawnEnemy(false,200,180,'scrubber'),'new run clears slots');
+ console.log('PASS: paper timing at 30/60/120 FPS and 20/30/120 pointer rates, overlapping local patches, stationary/release/pause guards and global three-alive Ruff cap including underground/damaged enemies and freed slots.');
 }
 
 // Doodle Stitch connects endpoints with finite, history-preserving durability.
