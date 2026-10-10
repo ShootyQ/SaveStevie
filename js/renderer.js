@@ -240,6 +240,7 @@ function updateEnemyAnimations(dt){
       }else if(e.type==='medic'&&m.action==='heal'&&m.actionAge<.1)m.sprite=motionTime% .6<.3?'medic-ready':'medic-heal';
     }
     m.cue=null;m.cueProgress=0;
+    if(e.eraseStumble>0&&e.freeze<=0&&!motionReduced){const skid=game.api.clamp(e.eraseStumble/1.4,0,1);p.angle+=m.facing*.7*skid;p.y+=4*skid;p.sx+=.15*skid;p.sy-=.15*skid;}
     if(e.freeze>0||e.stun>0)continue;
     // Distinct silhouettes reuse the existing art. These offsets never touch
     // enemy coordinates, attack timers, damage, or the combat random stream.

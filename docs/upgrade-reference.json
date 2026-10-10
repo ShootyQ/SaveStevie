@@ -1,5 +1,5 @@
 {
-  "version": "0.1.22",
+  "version": "0.1.23",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -1126,7 +1126,7 @@
     },
     {
       "name": "Erase combat",
-      "effect": "Erase small hostile pencils/spikes, sacrificing return damage. Erasing paid electric ink between surviving wall ends discharges up to 12 + 2 × Electric Ink level damage, limited to 0.8 × removed paid ink, with a 0.8-second wall cooldown retained by fragments. Erase Chonks’s recovery support or Boingus’s fresh rebound support to stun for 1.4 seconds; each monster has a 6-second stumble cooldown.",
+      "effect": "Erase small hostile pencils/spikes, sacrificing return damage. Erasing paid electric ink between surviving wall ends discharges up to 12 + 2 × Electric Ink level damage, limited to 0.8 × removed paid ink, with a 0.8-second wall cooldown retained by fragments. Erase Chonks’s recovery support or Boingus’s fresh rebound support to stun for 1.4 seconds; each monster has a 6-second stumble cooldown. Trip Line: erase a wall within 0.45 seconds of Crash Dash or a moving Chonks reaching it to earn a safe skid and 1.4-second stumble. Bosses and airborne enemies are excluded. Firebreak: erase strips through existing Napalm/Plaguefire patches; cleared ground remains excluded from that patch’s visuals and damage, including later growth. New patches can reignite it.",
       "source": "js/paper.js; js/walls.js"
     },
     {
