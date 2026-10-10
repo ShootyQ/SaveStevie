@@ -15,6 +15,15 @@ const root=path.resolve(__dirname,'..');
   });
   await page.goto('http://stevie.test/');await page.waitForFunction(()=>testGame.api.artworkReady());await page.click('#startBtn');
 
+  const cleanFrames=await page.evaluate(()=>{
+   const g=testGame,counts=[];
+   for(let i=0;i<16;i++){
+    const frame=g.api.doodleArtwork('boss-frame-'+i),d=frame.getContext('2d').getImageData(0,0,frame.width,20).data;let red=0;
+    for(let j=0;j<d.length;j+=4)if(d[j]>140&&d[j+1]<110&&d[j+2]<110&&d[j+3]>128)red++;
+    counts.push(red);
+   }
+   return counts;
+  });assert(cleanFrames.every(n=>n<=4),'all King frames keep previous-row red feet out of the top gutter: '+cleanFrames.join(','));
   const points=await page.evaluate(()=>{
    const g=testGame;g.api.resetRun({skipIntro:true});g.state.enemies=[];g.state.spawnTimer=999;
    const r=g.dom.canvas.getBoundingClientRect(),x=g.state.W/2;
