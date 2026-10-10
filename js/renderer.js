@@ -7,7 +7,7 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const doodleNames=['boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
 const coreArtwork=new Set(['paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
 const artworkLoads=new Map(),artworkSupported=typeof Image!=='undefined';
 function artworkStatus(){const loaded=[...coreArtwork].filter(name=>!!doodles[name]).length;return {ready:!artworkSupported||loaded===coreArtwork.size,loaded,total:coreArtwork.size,failed:[...artworkLoads].filter(([,r])=>r.failed).map(([name])=>name),loading:[...artworkLoads].filter(([,r])=>r.loading).map(([name])=>name)};}
@@ -36,13 +36,13 @@ function loadDoodle(name,retry=false){
       }
       doodles['scrubber-wiped-'+stage]=frame;
     }
-    const sheet=name==='grunt-animations'?{type:'grunt',rows:4,count:16}:name==='fast-animations'?{type:'fast',rows:2,count:8}:name==='sniper-animations'?{type:'sniper',rows:3,count:12}:null;
+    const sheet=name==='boss-animations'?{type:'boss',rows:4,count:16}:name==='grunt-animations'?{type:'grunt',rows:4,count:16}:name==='fast-animations'?{type:'fast',rows:2,count:8}:name==='sniper-animations'?{type:'sniper',rows:3,count:12}:null;
     if(sheet){
       // Crop equal cells once at load; draw/tint cached frames without allocations.
       for(let i=0;i<sheet.count;i++){
-        const frame=document.createElement('canvas');frame.width=frame.height=160;
-        frame.naturalWidth=frame.naturalHeight=160;
-        frame.getContext('2d').drawImage(image,(i%4)*image.naturalWidth/4,Math.floor(i/4)*image.naturalHeight/sheet.rows,image.naturalWidth/4,image.naturalHeight/sheet.rows,0,0,160,160);
+        const frame=document.createElement('canvas');frame.width=160;frame.height=sheet.type==='boss'?Math.round(160*image.naturalHeight/image.naturalWidth):160;
+        frame.naturalWidth=frame.width;frame.naturalHeight=frame.height;
+        frame.getContext('2d').drawImage(image,(i%4)*image.naturalWidth/4,Math.floor(i/4)*image.naturalHeight/sheet.rows,image.naturalWidth/4,image.naturalHeight/sheet.rows,0,0,frame.width,frame.height);
         doodles[sheet.type+'-frame-'+i]=frame;
       }
     }
@@ -147,7 +147,7 @@ function motionFor(e){
   let m=enemyMotion.get(e);
   if(!m){
     const heavy=['tank','brute','bulwark','boss','stapler','crayon','eraser'].includes(e.type);
-    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='basil'?3.2:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,walkAge:0,gruntFrame:0,runDistance:0,fastFrame:0,sniperFrame:8,action:null,readyUntil:-1,sprite:null,facing:game.state.player.x<e.x?-1:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
+    m={x:e.x,y:e.y,phase:(motionSerial++%13)*.47,heavy,hop:heavy?.7:e.type==='basil'?3.2:e.type==='fast'||e.type==='mini'?2.8:1.5,hitAge:1,lastHit:-1,birthAge:1,actionAge:1,walkAge:0,gruntFrame:0,runDistance:0,fastFrame:0,sniperFrame:8,kingFrame:0,action:null,readyUntil:-1,sprite:null,facing:game.state.player.x<e.x?-1:1,actionFacing:1,cue:null,cueProgress:0,pose:{...stillEnemyPose}};enemyMotion.set(e,m);
   }
   return m;
 }
@@ -174,6 +174,7 @@ function prepareSapperStrike(e){if(!motionReduced)motionFor(e).readyUntil=motion
 function enemyActionCue(e){return motionReduced?null:(enemyMotion.get(e)?.cue||null)}
 function enemyActionFrame(e){return motionReduced?null:(enemyMotion.get(e)?.sprite||null)}
 function enemySpriteFrame(e){
+  if(game.api.isFirstBoss(e)&&doodles['boss-frame-0'])return motionReduced?null:'boss-frame-'+(enemyMotion.get(e)?.kingFrame||0);
   if(e.type==='sniper'&&doodles['sniper-frame-0'])return 'sniper-frame-'+(motionReduced?8:(enemyMotion.get(e)?.sniperFrame??8));
   if(e.type==='fast'&&doodles['fast-frame-0']){const m=enemyMotion.get(e),facing=m?.facing??(game.state.player.x<e.x?-1:1);return 'fast-frame-'+((facing<0?4:0)+(motionReduced?0:(m?.fastFrame||0)))}
   if(e.type==='grunt'&&doodles['grunt-frame-0'])return 'grunt-frame-'+(motionReduced?0:(enemyMotion.get(e)?.gruntFrame||0));
@@ -210,6 +211,14 @@ function updateEnemyAnimations(dt){
     if(e.type==='sniper'&&e.freeze<=0&&e.stun<=0){
       if(moving)m.runDistance=(m.runDistance+Math.min(distance,e.r*2))%48;
       m.sniperFrame=m.action==='fire'&&m.actionAge<.3?(m.actionAge<.09?6:7):e.shootCd<=.6&&game.api.sniperCanAim(e)?(e.shootCd<.25?5:4):moving?Math.floor(m.runDistance/12):8;
+    }
+    if(game.api.isFirstBoss(e)&&e.freeze<=0&&e.stun<=0){
+      const b=game.api.bossBrain(e);
+      if(m.action==='king-return'&&m.actionAge<1.25)m.kingFrame=12+Math.min(3,Math.floor(m.actionAge/1.25*4));
+      else if(b.cast){const t=game.api.clamp(1-b.cast.left/(b.cast.duration||1.2),0,1);m.kingFrame=4+Math.min(3,Math.floor(t*4));}
+      else if(b.action&&['mirror-orb','arc-fan','paper-lob','friend-fling'].includes(b.action.kind)&&b.action.age<.48)m.kingFrame=8+Math.min(3,Math.floor(b.action.age/.48*4));
+      else if(moving){m.runDistance=(m.runDistance+Math.min(distance,e.r*2))%(e.r*2);m.kingFrame=Math.floor(m.runDistance/(e.r*.5));}
+      else m.kingFrame=0;
     }
     if(moving)m.phase=(m.phase+Math.min(distance,e.r)* (heavy?.16:.27))%(Math.PI*2);
     const step=moving?Math.sin(m.phase):0,hop=moving?Math.abs(step)*m.hop:0;
@@ -364,8 +373,8 @@ function tintedDoodle(name,colors){
 }
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
-  const framed=/^(grunt|fast|sniper)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
-  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
+  const framed=/^(grunt|fast|sniper|boss)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
