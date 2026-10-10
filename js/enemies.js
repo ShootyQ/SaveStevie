@@ -2,6 +2,8 @@
 DoodleDefender.systems.enemies = function createEnemiesSystem(game) {
 const defs=game.catalog.enemyDefs={
     grunt:{r:11,hp:20,speed:30,dmg:6,color:'#cf5b51'},
+    wallpuller:{r:15,hp:52,speed:34,dmg:6,color:'#3bbcb8'},
+    papertearer:{r:15,hp:60,speed:30,dmg:6,color:'#9d66cb'},
     scrubber:{r:11,hp:18,speed:70,dmg:0,color:'#89ad3f'},
     fast:{r:8,hp:18,speed:60,dmg:7,color:'#d8893c'},
     bouncer:{r:10,hp:28,speed:44,dmg:8,color:'#2e9f92'},
@@ -38,7 +40,7 @@ function enemyType(){
   for(const m of game.catalog.monsters){
     if(m.wave<=game.state.wave&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser'].includes(m.type))pool.push(m.type);
   }
-  return game.api.pick(pool.filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
+  return game.api.pick(pool.filter(type=>!['wallpuller','papertearer'].includes(type)||!game.state.enemies.some(e=>e.type===type&&e.hp>0)).filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
 }
 
 function bossTypeForWave(wave=game.state.wave){
@@ -101,6 +103,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   let type=typeOverride||game.api.enemyType();
   if(forceBoss)type=game.api.bossTypeForWave();
   const scale=game.api.enemyHpScale()*game.state.stats.enemyScale;
+  if(['wallpuller','papertearer'].includes(type)&&game.state.enemies.some(e=>e.type===type&&e.hp>0))return null;
   if(type==='scrubber'&&game.state.enemies.filter(e=>e.type==='scrubber'&&e.hp>0).length>=3)return null;
   if(type==='basil'&&game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length>=2)return null;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
@@ -425,7 +428,7 @@ function eraserAttack(e,dt){
 }
 
 let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,introducedSpawned=0,bossPhase='timed',arrival=null;
-function resetEnemyWave(){game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;game.api.resetBossEncounters()}
+function resetEnemyWave(){game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;game.api.resetBossEncounters()}
 function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
