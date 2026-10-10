@@ -93,25 +93,65 @@ function eraseProjectiles(a,b,r){
   game.api.erasedDoodleShot(s);game.api.burst(s.x,s.y,'#cbbba4',4);changed=true;return false;
  });return changed;
 }
+// Firebreaks are an 8px grid local to each existing ground patch. Shared
+// geometry keeps cleared pixels and damage in agreement, with no render RNG.
+const fireCell=8;
+function clearFirePatch(p,a,b,r,bounds,contains){
+ const o=p.fireOrigin||{x:p.x??bounds.minX,y:p.y??bounds.minY},loX=Math.max(bounds.minX,Math.min(a.x,b.x)-r),hiX=Math.min(bounds.maxX,Math.max(a.x,b.x)+r),loY=Math.max(bounds.minY,Math.min(a.y,b.y)-r),hiY=Math.min(bounds.maxY,Math.max(a.y,b.y)+r);
+ let changed=false;
+ for(let x=Math.floor((loX-o.x)/fireCell);x<=Math.floor((hiX-o.x)/fireCell);x++)for(let y=Math.floor((loY-o.y)/fireCell);y<=Math.floor((hiY-o.y)/fireCell);y++){
+  const px=o.x+(x+.5)*fireCell,py=o.y+(y+.5)*fireCell;
+  if(game.api.pointSegDist(px,py,a.x,a.y,b.x,b.y)>r||!contains(px,py))continue;
+  const key=x+','+y;p.fireOrigin??=o;p.fireKeys??=new Set();if(p.fireKeys.has(key))continue;
+  p.fireKeys.add(key);(p.fireCells??=[]).push({x,y});changed=true;
+ }
+ return changed;
+}
+function firePatchCleared(p,x,y){const o=p.fireOrigin;return !!o&&!!p.fireKeys?.has(Math.floor((x-o.x)/fireCell)+','+Math.floor((y-o.y)/fireCell));}
+function clipFirePatch(ctx,p){
+ if(!p.fireCells?.length)return;
+ const o=p.fireOrigin;ctx.beginPath();ctx.rect(-100000,-100000,200000,200000);
+ for(const cell of p.fireCells)ctx.rect(o.x+cell.x*fireCell,o.y+cell.y*fireCell,fireCell,fireCell);
+ ctx.clip('evenodd');
+}
+function moveFirePatch(p,dx,dy){if(p.fireOrigin){p.fireOrigin.x+=dx;p.fireOrigin.y+=dy;}}
+function updateEraseSlide(e,dt){
+ const s=e.eraseSlide;if(!s)return false;
+ if(e.freeze>0||e.flight||underPaper(e)){delete e.eraseSlide;return false;}
+ const step=s.distance*Math.min(dt,s.left)/.25,x=e.x+s.dx*step,y=e.y+s.dy*step,b=game.api.refugeBounds();
+ // A successful counter never slides a monster into Stevie or through cover.
+ const fort=game.api.pointSegDist(game.state.player.x,game.state.player.y,e.x,e.y,x,y)<=Math.hypot(b.halfWidth,b.halfHeight)+e.r+3;
+ if(!fort&&x>=e.r&&x<=game.state.W-e.r&&y>=e.r&&y<=game.state.H-e.r)game.api.moveEnemySafely(e,s.dx*step,s.dy*step);
+ s.left-=dt;if(s.left<=0)delete e.eraseSlide;return true;
+}
 function eraseWallReaction(wall,pieces,a,b,r,removedInk){
  const clock=game.state.paper.clock;
  if(game.state.inks.electric>0&&removedInk>0&&clock>=(wall.sparkReadyAt||0)){
   wall.sparkReadyAt=clock+.8;for(const p of pieces)p.sparkReadyAt=wall.sparkReadyAt;
   const ends=pieces.flatMap(p=>[p.pts[0],p.pts.at(-1)]).filter(p=>game.api.pointSegDist(p.x,p.y,a.x,a.y,b.x,b.y)<=r+wall.thick+2);
-  if(ends.length>=2){let pair=[ends[0],ends[1]],best=0;for(const x of ends)for(const y of ends){const d=Math.hypot(x.x-y.x,x.y-y.y);if(d>best&&d<=r*2+wall.thick*2+30){best=d;pair=[x,y];}}
-   const damage=Math.min(12+game.state.inks.electric*2,removedInk*.8);game.state.paper.arcs.push({a:{...pair[0]},b:{...pair[1]},life:.25});if(game.state.paper.arcs.length>16)game.state.paper.arcs.shift();
+  if(ends.length>=2){let pair=null,best=0;for(const x of ends)for(const y of ends){const d=Math.hypot(x.x-y.x,x.y-y.y);if(d>best&&d<=r*2+wall.thick*2+30){best=d;pair=[x,y];}}
+   if(pair){
+   const damage=Math.min(12+game.state.inks.electric*2,removedInk*.8);game.state.paper.arcs.push({a:{...pair[0]},b:{...pair[1]},life:.45});
+   game.api.floatText((pair[0].x+pair[1].x)/2,(pair[0].y+pair[1].y)/2-18,'SPARK GAP!','#315fd2');game.api.playSound('electric');if(game.state.paper.arcs.length>16)game.state.paper.arcs.shift();
    for(const e of [...game.state.enemies])if(!underPaper(e)&&e.hp>0&&game.api.pointSegDist(e.x,e.y,pair[0].x,pair[0].y,pair[1].x,pair[1].y)<=e.r+12){game.api.dealDamage(e,damage,'electric');if(e.hp<=0)game.api.killEnemy(e);}
+   }
   }
  }
  for(const e of game.state.enemies){
-  if(e.hp<=0||underPaper(e)||e.freeze>0||e.stun>0||e.eraseStumbleCooldown>clock)continue;
+  if(e.hp<=0||underPaper(e)||e.flight||e.freeze>0||e.stun>0||e.eraseStumbleCooldown>clock)continue;
   const chonk=e.type==='tank'&&e.chonks?.phase==='recover'&&e.chonks.target===wall,boing=e.type==='bouncer'&&e.bounceTime>0&&e.bounceKick>0;
-  if(!chonk&&!boing)continue;
-  const q=game.api.nearestPointOnWall(e,wall);if(!q||Math.hypot(q.x-e.x,q.y-e.y)>e.r+wall.thick/2+10||!rubTouches(q,[{a,b,r}]))continue;
+  const rushing=e.type==='sprinter'&&!e.hurdle&&!e.dashLanding||e.type==='tank'&&e.chonks?.phase==='walk'&&e.chonks.momentum>=.2;
+  if(!chonk&&!boing&&!rushing||e.waveBoss||game.api.abilityImmune(e))continue;
+  const q=game.api.nearestPointOnWall(rushing?{x:(a.x+b.x)/2,y:(a.y+b.y)/2}:e,wall),target=game.api.enemyTarget(e),dx=target.x-e.x,dy=target.y-e.y,d=Math.hypot(dx,dy)||1,distance=q?Math.hypot(q.x-e.x,q.y-e.y):Infinity;
+  if(!q||!rubTouches(q,[{a,b,r}]))continue;
+  if(rushing){
+   if(distance>e.r+wall.thick/2+e.speed*game.api.enemyMoveScale(e)*.45||(q.x-e.x)*dx+(q.y-e.y)*dy<=0||game.api.pointSegDist(q.x,q.y,e.x,e.y,target.x,target.y)>e.r+wall.thick/2)continue;
+  }else if(distance>e.r+wall.thick/2+10)continue;
   if(pieces.some(p=>{const near=game.api.nearestPointOnWall(e,p);return near&&Math.hypot(near.x-e.x,near.y-e.y)<=e.r+p.thick/2+2;}))continue;
+  if(rushing)e.eraseSlide={dx:dx/d,dy:dy/d,left:.25,distance:Math.min(55,distance+15)};
   e.eraseStumbleCooldown=clock+6;e.eraseStumble=1.4;e.stun=1.4;e.bounceTime=0;e.bounceKick=0;
-  if(chonk){e.chonks.phase='recover';e.chonks.recovery=e.chonks.recoveryTotal=1.4;e.chonks.momentum=0;e.chonks.target=null;}
-  game.api.floatText(e.x,e.y-25,'WHOOPS!','#a56930');game.api.animateEnemyAction(e,'bounce');
+  if(e.type==='tank'){e.chonks.phase='recover';e.chonks.recovery=e.chonks.recoveryTotal=1.4;e.chonks.momentum=0;e.chonks.target=null;}
+  game.api.floatText(e.x,e.y-25,rushing?'TRIPPED!':'WHOOPS!','#a56930');game.api.animateEnemyAction(e,'bounce');
  }
 }
 function movePaper(dx,dy){const p=game.state.paper;for(const q of [...p.holes,...p.patches]){q.x+=dx;q.y+=dy;}for(const arc of p.arcs)for(const q of [arc.a,arc.b]){q.x+=dx;q.y+=dy;}for(const e of game.state.enemies)if(e.paperTunnel){e.paperTunnel.exit.x+=dx;e.paperTunnel.exit.y+=dy;if(e.paperTunnel.entry){e.paperTunnel.entry.x+=dx;e.paperTunnel.entry.y+=dy;}if(e.paperTunnel.hole){e.paperTunnel.hole.x+=dx;e.paperTunnel.hole.y+=dy;}}pending=[];recentPaths=[];rubGrace=0;}
@@ -142,7 +182,7 @@ function drawPaperBump(e){
  if(t.phase==='emerge'){ctx.beginPath();ctx.moveTo(e.x-r*.6,e.y);ctx.lineTo(e.x-3,e.y-5);ctx.lineTo(e.x+3,e.y+4);ctx.lineTo(e.x+r*.6,e.y-2);ctx.stroke();}
  ctx.restore();if(t.phase==='emerge')game.api.drawPaperDoodle(e,paperTransitionPose(e));
 }
-function drawSparkGaps(){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#315fd2';ctx.lineWidth=3;for(const arc of game.state.paper.arcs){const dx=arc.b.x-arc.a.x,dy=arc.b.y-arc.a.y,d=Math.hypot(dx,dy)||1;ctx.globalAlpha=arc.life/.25;ctx.beginPath();ctx.moveTo(arc.a.x,arc.a.y);for(let i=1;i<6;i++){const offset=(i%2?1:-1)*4;ctx.lineTo(arc.a.x+dx*i/6-dy/d*offset,arc.a.y+dy*i/6+dx/d*offset);}ctx.lineTo(arc.b.x,arc.b.y);ctx.stroke();}ctx.restore();}
+function drawSparkGaps(){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#315fd2';ctx.lineWidth=3;for(const arc of game.state.paper.arcs){const dx=arc.b.x-arc.a.x,dy=arc.b.y-arc.a.y,d=Math.hypot(dx,dy)||1;ctx.globalAlpha=Math.min(1,arc.life/.45);ctx.beginPath();ctx.moveTo(arc.a.x,arc.a.y);for(let i=1;i<6;i++){const offset=(i%2?1:-1)*4;ctx.lineTo(arc.a.x+dx*i/6-dy/d*offset,arc.a.y+dy*i/6+dx/d*offset);}ctx.lineTo(arc.b.x,arc.b.y);ctx.strokeStyle='#b9eaff';ctx.lineWidth=6;ctx.stroke();ctx.strokeStyle='#315fd2';ctx.lineWidth=2;ctx.stroke();}ctx.restore();}
 resetPaper();
-const api={paperTuning:()=>({...tuning}),paperTransitionPose,paperActive,resetPaper,cancelPaperRub,queuePaperRub,updatePaper,updatePaperEnemy,underPaper,eraseProjectiles,eraseWallReaction,movePaper,drawPaper,drawPaperBump,drawSparkGaps};Object.assign(game.api,api);return api;
+const api={clearFirePatch,firePatchCleared,clipFirePatch,moveFirePatch,updateEraseSlide,paperTuning:()=>({...tuning}),paperTransitionPose,paperActive,resetPaper,cancelPaperRub,queuePaperRub,updatePaper,updatePaperEnemy,underPaper,eraseProjectiles,eraseWallReaction,movePaper,drawPaper,drawPaperBump,drawSparkGaps};Object.assign(game.api,api);return api;
 };

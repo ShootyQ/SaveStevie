@@ -2574,3 +2574,22 @@ require('./wobblechomp-rework.cjs')(load);
  g.api.resetRun();assert.equal(g.state.stats.wallHp,81);assert.equal(g.state.stats.maxInk,160);assert.equal(g.api.notebookSnapshot().scraps,12);
  console.log('PASS: portable progress roundtrip, bad/foreign/future backups, rank/number/schema limits, no active-run restore, partial-write rollback, durable reload, recovery copy and next-run loadout.');
 }
+
+// Erase counters need actual, timely wall removal; ground erasing stays local.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun({skipIntro:true});
+ const wall=()=>g.api.createWall([{x:150,y:240},{x:150,y:360}]);
+ const dash=g.api.spawnEnemy(false,100,300,'sprinter');wall();
+ assert(g.api.eraseWallPath({x:150,y:300},{x:150,y:300},20));assert.equal(dash.stun,1.4);assert.equal(dash.eraseStumbleCooldown,6);assert(dash.eraseSlide);const before=dash.x;g.api.updateEraseSlide(dash,.1);assert(dash.x>before,'counter skids forward through the opened gap');assert(!g.api.touchesRefuge(dash));
+ g.state.enemies=[];g.state.walls=[];g.state.stats.ink=160;wall();g.api.eraseWallPath({x:150,y:300},{x:150,y:300});const late=g.api.spawnEnemy(false,100,300,'sprinter');assert(!late.eraseSlide,'old gaps do not trip new arrivals');
+ g.state.walls=[];g.state.stats.ink=160;const far=g.api.spawnEnemy(false,20,300,'sprinter');wall();g.api.eraseWallPath({x:150,y:300},{x:150,y:300});assert(!far.eraseSlide,'early cuts do not trip distant runners');
+ g.state.enemies=[];g.state.walls=[];g.state.stats.ink=160;const chonk=g.api.spawnEnemy(false,120,300,'tank');chonk.chonks.momentum=.6;wall();g.api.eraseWallPath({x:150,y:300},{x:150,y:300});assert(chonk.eraseSlide);assert.equal(chonk.chonks.momentum,0);assert.equal(chonk.chonks.phase,'recover');
+ const snapshot=JSON.stringify(g.state);g.state.paused=true;assert.equal(g.api.eraseWallPath({x:150,y:300},{x:150,y:300}),false);g.state.paused=false;assert.equal(JSON.stringify(g.state),snapshot);
+ g.api.resetRun();g.state.inks.electric=1;g.api.createWall([{x:100,y:200},{x:300,y:200}]);g.api.eraseWallPath({x:200,y:200},{x:200,y:200});assert.equal(g.state.paper.arcs.length,1);assert.equal(g.state.paper.arcs[0].life,.45);assert(g.state.floaters.some(f=>f.text==='SPARK GAP!'));g.state.walls=[];g.state.stats.ink=160;g.api.createWall([{x:100,y:200},{x:300,y:200}]);g.api.eraseWallPath({x:0,y:200},{x:400,y:200});assert.equal(g.state.paper.arcs.length,1,'erasing whole wall cannot arc');
+ g.api.resetRun();g.state.inks.fire=2;g.state.inks.blast=1;g.state.synergies.add('Napalm Scribbles');const w={pts:[{x:100,y:250},{x:300,y:250}],hp:1,maxHp:1,thick:8,life:72,maxLife:72};g.state.walls=[w];g.api.damageWall(w,2,150,250);const enemy=g.api.spawnEnemy(false,200,250,'grunt');enemy.hp=1000;
+ g.api.eraseWallPath({x:200,y:225},{x:200,y:275},12);g.api.updateLaunchEffects(.05);assert.equal(enemy.burn,0,'Napalm strip does not ignite enemies');enemy.x=260;g.api.updateLaunchEffects(.05);assert(enemy.burn>0,'uncleared Napalm still burns');
+ g.api.resetRun();g.state.inks.fire=g.state.inks.poison=1;g.state.synergies.add('Plaguefire');g.api.dropPlaguefire({x:200,y:250,burn:1,poison:1});const safe=g.api.spawnEnemy(false,200,250,'grunt');safe.hp=1000;g.api.eraseWallPath({x:200,y:210},{x:200,y:290},12);g.api.updatePlaguefire(5);assert.equal(safe.hp,1000,'growth never reclaims erased strip');safe.x=220;g.api.updatePlaguefire(.1);assert(safe.hp<1000,'pool outside the strip still deals damage');
+ g.api.movePlaguefire(20,30);safe.x=220;safe.y=280;safe.hp=1000;g.api.updatePlaguefire(.1);assert.equal(safe.hp,1000,'cleared geometry follows page translation');g.api.dropPlaguefire({x:220,y:280,burn:1,poison:1});g.api.updatePlaguefire(.1);assert(safe.hp<1000,'fresh fire can reignite erased ground');
+ const renderState=JSON.stringify(g.state),patches=JSON.stringify(g.api.plaguefireSnapshot());g.api.draw();g.api.draw();assert.equal(JSON.stringify(g.state),renderState);assert.equal(JSON.stringify(g.api.plaguefireSnapshot()),patches,'firebreak render is pure');
+ console.log('PASS: timely Trip Line skids/cooldown/safe geometry, old/distant gaps, Chonks momentum reset, pause, surviving-end Spark Gap and local Napalm/Plaguefire Firebreak growth/translation/reignition/pure rendering.');
+}

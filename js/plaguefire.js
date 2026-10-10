@@ -12,6 +12,11 @@ function dropPlaguefire(enemy){
   patches.push({x:enemy.x,y:enemy.y,age:0,life:settings.life,seed:++serial,
     fireDps:4+2*game.state.inks.fire,poisonDps:3+1.5*game.state.inks.poison});
 }
+function erasePlaguefire(a,b,r){
+ let changed=false;
+ for(const p of patches){const max=settings.maxRadius;changed=game.api.clearFirePatch(p,a,b,r,{minX:p.x-max,maxX:p.x+max,minY:p.y-max,maxY:p.y+max},(x,y)=>Math.hypot(x-p.x,y-p.y)<=max)||changed;}
+ if(changed)game.api.burst(b.x,b.y,'#cbbba4',4);return changed;
+}
 function updatePlaguefire(dt){
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.state.player.hp<=0)return;
   // Process only patches that existed at the start of this frame. Defeated
@@ -23,7 +28,7 @@ function updatePlaguefire(dt){
     let fire=0,poison=0;
     for(const {p,active,r} of fields){
       // End-of-frame radius gives smooth growth; clip damage at burnout time.
-      if(game.api.withinRadius(enemy.x,enemy.y,p.x,p.y,r)){
+      if(!game.api.firePatchCleared(p,enemy.x,enemy.y)&&game.api.withinRadius(enemy.x,enemy.y,p.x,p.y,r)){
         fire=Math.max(fire,p.fireDps*active);poison=Math.max(poison,p.poisonDps*active);
       }
     }
@@ -41,7 +46,7 @@ function updatePlaguefire(dt){
   }
   patches=patches.filter(p=>p.age<p.life);
 }
-function movePlaguefire(dx,dy){for(const p of [...patches,...scars]){p.x+=dx;p.y+=dy}}
+function movePlaguefire(dx,dy){for(const p of [...patches,...scars]){game.api.moveFirePatch(p,dx,dy);p.x+=dx;p.y+=dy}}
 function plaguefireSnapshot(){return {patches:patches.map(p=>({...p,r:radius(p)})),scars:scars.map(p=>({...p}))}}
 function outline(ctx,r,seed){
   ctx.beginPath();
@@ -88,7 +93,7 @@ function drawPlaguefire(){
   for(const p of patches){
     const r=radius(p),fade=Math.min(1,(p.life-p.age)/.8),phase=reduced?0:p.age;
     if(p.age>p.life-.8)drawScorch(ctx,{...p,r},1-fade);
-    ctx.save();ctx.translate(p.x,p.y);ctx.globalAlpha=fade;ctx.lineJoin='round';
+    ctx.save();game.api.clipFirePatch(ctx,p);ctx.translate(p.x,p.y);ctx.globalAlpha=fade;ctx.lineJoin='round';
     outline(ctx,r+3,p.seed);ctx.fillStyle='#765235';ctx.fill();
     outline(ctx,r,p.seed);ctx.fillStyle='#3a682e';ctx.fill();ctx.strokeStyle='#183e24';ctx.lineWidth=2;ctx.stroke();
     outline(ctx,r*.83,p.seed);ctx.fillStyle='#82b93f';ctx.fill();
@@ -110,6 +115,6 @@ function drawPlaguefire(){
     ctx.restore();
   }
 }
-const api={drawDeskGrain,dropPlaguefire,updatePlaguefire,resetPlaguefire,movePlaguefire,plaguefireSnapshot,drawPlaguefire};
+const api={erasePlaguefire,drawDeskGrain,dropPlaguefire,updatePlaguefire,resetPlaguefire,movePlaguefire,plaguefireSnapshot,drawPlaguefire};
 Object.assign(game.api,api);return api;
 };

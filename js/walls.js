@@ -80,6 +80,9 @@ function eraseWallPath(a,b,r=20,options={}){
  }
  if(changed){game.state.walls=result;game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+recovered);game.api.updateUI();}
  if(!options.enemy){
+  const ground=eraseBurningGround(a,b,r),plague=game.api.erasePlaguefire(a,b,r);
+  if((ground||plague)&&game.state.paper.clock>=(game.state.paper.firebreakCueAt??0)){game.state.paper.firebreakCueAt=game.state.paper.clock+.7;game.api.floatText(b.x,b.y-20,'FIREBREAK!','#a56930');}
+  changed=ground||plague||changed;
   changed=game.api.eraseProjectiles(a,b,r)||changed;
   changed=game.api.eraseDoodlePath(a,b,r)||changed;
   for(const e of [...game.state.enemies])if(e.type==='scrubber'&&!game.api.underPaper(e)&&e.hp>0){
@@ -175,24 +178,29 @@ function leaveNapalm(wall){
  napalm.push({points,minX:bounds.minX,maxX:bounds.maxX,minY:bounds.minY,maxY:bounds.maxY,age:0,life:4,r:18,dps:(10+game.state.inks.fire*4)*(game.state.synergies.has('INFERNO')?1.25:1)});
  if(napalm.length>12)napalm.shift();
 }
+function eraseBurningGround(a,b,r){
+ let changed=false;
+ for(const p of napalm)changed=game.api.clearFirePatch(p,a,b,r,{minX:p.minX-p.r,maxX:p.maxX+p.r,minY:p.minY-p.r,maxY:p.maxY+p.r},(x,y)=>p.points.some(q=>Math.hypot(q.x-x,q.y-y)<=p.r))||changed;
+ if(changed)game.api.burst(b.x,b.y,'#cbbba4',4);return changed;
+}
 function updateLaunchEffects(dt){
  for(const p of napalm)p.age+=dt;napalm=napalm.filter(p=>p.age<p.life);
  for(const p of landingPuffs)p.age+=dt;landingPuffs=landingPuffs.filter(p=>p.age<.45);
  for(const e of game.state.enemies){
   if(e.hp<=0||e.flight||game.api.abilityImmune(e))continue;
-  let dps=0;for(const patch of napalm)if(e.x>=patch.minX-patch.r-e.r&&e.x<=patch.maxX+patch.r+e.r&&e.y>=patch.minY-patch.r-e.r&&e.y<=patch.maxY+patch.r+e.r&&patch.points.some(p=>(p.x-e.x)**2+(p.y-e.y)**2<(patch.r+e.r)**2))dps=Math.max(dps,patch.dps);
+  let dps=0;for(const patch of napalm)if(!game.api.firePatchCleared(patch,e.x,e.y)&&e.x>=patch.minX-patch.r-e.r&&e.x<=patch.maxX+patch.r+e.r&&e.y>=patch.minY-patch.r-e.r&&e.y<=patch.maxY+patch.r+e.r&&patch.points.some(p=>(p.x-e.x)**2+(p.y-e.y)**2<(patch.r+e.r)**2))dps=Math.max(dps,patch.dps);
   if(dps){e.burn=Math.max(e.burn,.5);e.burnDps=Math.max(e.burnDps,dps)}
  }
 }
 function moveLaunchEffects(dx,dy){
- for(const patch of napalm){patch.minX+=dx;patch.maxX+=dx;patch.minY+=dy;patch.maxY+=dy;for(const p of patch.points){p.x+=dx;p.y+=dy}}
+ for(const patch of napalm){game.api.moveFirePatch(patch,dx,dy);patch.minX+=dx;patch.maxX+=dx;patch.minY+=dy;patch.maxY+=dy;for(const p of patch.points){p.x+=dx;p.y+=dy}}
  for(const p of landingPuffs){p.x+=dx;p.y+=dy}
  for(const e of game.state.enemies)if(e.flight){e.flight.startX+=dx;e.flight.targetX+=dx;e.flight.startY+=dy;e.flight.targetY+=dy}
 }
 function drawLaunchGround(){
  const ctx=game.dom.ctx,reduced=game.api.enemyMotionReduced();
  for(const patch of napalm){
-  ctx.save();ctx.globalAlpha=Math.min(1,(patch.life-patch.age)*2);ctx.lineWidth=2;
+  ctx.save();game.api.clipFirePatch(ctx,patch);ctx.globalAlpha=Math.min(1,(patch.life-patch.age)*2);ctx.lineWidth=2;
   patch.points.forEach((p,i)=>{
    ctx.fillStyle='#72523d';ctx.beginPath();ctx.ellipse(p.x,p.y,patch.r,6,0,0,Math.PI*2);ctx.fill();
    const h=reduced?12:12+Math.sin(patch.age*11+i*2.4)*5;

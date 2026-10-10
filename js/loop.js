@@ -141,6 +141,7 @@ function update(dt){
     }
     if(e.type==='scrubber'){game.api.updateScrubber(e,dt);continue;}
     if(e.type==='jamling'&&game.api.jamlingContact(e,dt))continue;
+    if(game.api.updateEraseSlide(e,dt))continue;
     if(game.api.contactStevie(e))continue;
     const immobilized=e.stun>0||e.freeze>0;
     game.api.pullGravity(e,dt,immobilized);
