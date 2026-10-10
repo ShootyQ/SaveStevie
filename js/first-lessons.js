@@ -1,103 +1,212 @@
-/* Stevie's first-run lessons pause real combat; practice uses a separate page. */
+/* Stevie teaches on the real page. Combat stays paused; only the guided tool is live. */
 DoodleDefender.systems.firstLessons=function(game){
- const key='saveStevieLessonsV1';let seen={draw:false,erase:false},enabled=true,kind=null,step=0,points=[],removed=new Set(),practiced=false,pointer=null,last=null,held=false,modifier=null,cursor=null,exampleCursor=false,rightErase=false;
+ const $=game.dom.$,key='saveStevieLessonsV1';
+ let seen={draw:false,erase:false},enabled=true,kind=null,step=0,practiced=false,pointer=null,modifier=null,held=false,toggled=false,rightErase=false,cursor=null,points=[],last=null,baseline=null,eraseSeeded=false,seedCenter=null,scrapStage=null,lastScrapTarget=null;
  try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(!saved&&game.api.notebookSnapshot().lifetimeScraps>0)seen={draw:true,erase:true};if(saved&&typeof saved==='object')for(const k of ['draw','erase'])seen[k]=saved[k]===true;}catch{}
  const drawSteps=[
-  ['Hey! I’m Stevie.','My doodles have come to life! Draw a wall between them and me to keep me safe. We’ll try it together first. Nothing moves or hurts you while this lesson is open.'],
-  ['One little line. Big help!','Drag across the practice paper. Your wall works as soon as you draw. Try a short line, then a longer one: more length uses more ink and adds more wall HP.'],
-  ['Ink is your drawing fuel.','Watch the INK bar above. Every line needs at least 6 ink to start. Ink refills during play, so leave yourself enough for the next monster! Short walls help when ink is low.'],
-  ['That health bar is me!','Keep monsters away from my fort. They attack your walls to get through, and monsters touching walls take damage. If my health runs out, the run ends. Scraps you earned are still yours.'],
-  ['Survive. Clear. Upgrade!','The timer counts down until new monsters stop arriving. Then clear the remaining doodles to finish the wave and pick an upgrade. Throwing upgrades let me toss paper balls to help! You can pause any time. Ready?']
+  ['Hey! I’m Stevie.','My doodles have come to life! You draw the walls; I try very hard not to get eaten. Let’s practice right here on our page.'],
+  ['Draw me some cover!','Drag across the marked paper. Watch your real ink bar change! Short walls cost less ink and have less HP; longer walls use more ink and have more HP.'],
+  ['This is your ink.','See this bar? Every new line needs at least 6 ink. Ink refills during play. Save a little for surprises—my doodles are terrible at following plans.'],
+  ['That health bar is me!','Keep the doodles away from my fort. They hurt walls to get through; your walls hurt them back. If my health runs out, our run ends—but earned scraps stay yours.'],
+  ['Watch the wave timer.','When this reaches zero, new doodles stop arriving. Clear the rest, then choose an upgrade! Your practice wall stays as cover. Ready for the real thing?']
  ];
  const eraseSteps=[
-  ['Make room for a better wall.','A wall in the wrong place? Erase a section to open a gap and recover some ink. You normally get back 25% of its paid ink; damaged walls return less. Let’s try it safely.'],
-  ['Your turn: rub out a gap.','Rub across the middle of this wall. '],
-  ['Meet Rubble Ruff!','This little rascal carries an eraser and wipes out your walls. Here’s the trick: YOU can erase HIM! Rub directly over him three times: each pass wipes off a chunk! Lift your finger or mouse button between rubs. Rocks and wall effects also hurt him. You can also erase small hostile pencils and spikes; walls can reflect Pew Pew’s pencils back at him.'],
-  ['Go easy on the paper.','Rubbing the same spot for about 1 second makes a hole. Every wave starts with fresh paper, so smudges and holes reset. Make two holes: some monsters enter the farther one and slip underneath to the one closer to me. See a moving bump? Rub near it for 2 seconds to force it back up. For now, a quick erase is all you need!']
+  ['Meet your eraser.','Wrong wall? Open a gap and recover some ink. Here’s the actual Erase control you’ll use. I’ll reset our practice ink before the wave starts.'],
+  ['Erase this bit of wall.','Rub through the marked wall on our real page. Healthy paid walls return 25% of their ink; damaged walls return less.'],
+  ['YOU can erase HIM!','Rubble Ruff carries an eraser and wipes out your walls. Rub over HIM three separate times to wipe off his chunks. Lift between passes. Paper balls and wall effects also hurt him.'],
+  ['Careful: this is paper!','About 1 second of rubbing one spot makes a hole. Two holes can make a shortcut: some monsters go in the farther one and pop out closer to me. Rub a moving bump for 2 seconds to bring it up. Each wave gets fresh paper.']
  ];
- function steps(){return kind==='draw'?drawSteps:eraseSteps;}
- function practiceLength(){let n=0;for(let i=1;i<points.length;i++)n+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);return n;}
- function practiceReadout(){
-  const length=practiceLength(),ink=length?Math.max(6,length*.31):0;
-  const refund=removed.size*8*.31*(game.state.stats.eraseRefund??.25);
-  game.dom.$('lessonMetrics').textContent=kind==='draw'?'Ink used: '+ink.toFixed(1)+' · Wall HP: '+game.api.wallHpForLength(length).toFixed(1):'Ink recovered: '+refund.toFixed(1)+' · Your real ink is unchanged';
- }
- function syncPracticeTool(){const active=kind==='erase'&&(held||rightErase);button.textContent=active?'Erasing':'Erase';button.setAttribute?.('aria-pressed',String(active));button.classList?.toggle('is-erasing',active);game.dom.$('lessonCanvas').style.cursor=active?'none':'crosshair';}
+ function firstLessonActive(){return kind!==null&&$('lessonOverlay').style.display==='grid';}
+ function lessonCanPaint(tool=kind){return firstLessonActive()&&step===1&&tool===kind&&!document.hidden;}
+ function lessonSnapshot(){return {seen:{...seen},kind,step,practiced,eraserCursor:cursor?{...cursor}:null,active:firstLessonActive(),practice:practiceZone(),scrapStage};}
  function touchDevice(){return document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches;}
- function eraseInstruction(practice=false){if(practice&&touchDevice())return game.api.drawingControls().eraserToggle?'Tap Erase, then rub the wall. Tap again to draw.':'Hold Erase with one thumb; rub the wall with your other finger.';return touchDevice()?(game.api.drawingControls().eraserToggle?'Tap Erase to switch tools, rub the wall, then tap it again to draw.':'Hold Erase with one thumb and rub a wall with your other finger. Release your thumb to draw again, even during the same stroke.'):'Hold the right mouse button and drag to erase. Left-drag draws. You can also use the Erase button.';}
- function firstLessonActive(){return game.dom.$('lessonOverlay').style.display==='grid';}
- function lessonSnapshot(){return {seen:{...seen},kind,step,practiced,eraserCursor:cursor?{...cursor}:null,active:firstLessonActive()};}
+ function instruction(){return !touchDevice()?'Right-drag to erase; left-drag draws.':game.api.drawingControls().eraserToggle?'Tap Erase, then rub the wall. Tap again to draw.':'Hold Erase with one thumb and rub the wall with your other finger.';}
+ function practiceZone(){
+  const {W,H,player}=game.state,short=(window.innerHeight||H)<500,width=Math.min(short?Math.min(180,W*.25):240,W-60),y=game.api.clamp(player.y-110,96,Math.max(96,H-90));
+  return {x:(W-width)/2,y,width,height:64};
+ }
+ function canvasRect(p){const r=game.dom.canvas.getBoundingClientRect();return {left:r.left+p.x,top:r.top+p.y,width:p.width,height:p.height};}
  function spotlight(selector=null){
-  for(const name of ['.inkbox','.hpbox','.timer'])document.querySelector?.(name)?.classList.remove('lesson-spotlight');
+  for(const name of ['.inkbox','.hpbox','.timer','#eraserBtn'])document.querySelector?.(name)?.classList.remove('lesson-spotlight');
   if(selector)document.querySelector?.(selector)?.classList.add('lesson-spotlight');
  }
- function paintPractice(){
-  const canvas=game.dom.$('lessonCanvas'),ctx=canvas.getContext('2d');ctx.clearRect(0,0,420,150);ctx.fillStyle='#fffaf0';ctx.fillRect(0,0,420,150);ctx.strokeStyle='#d1dde0';ctx.lineWidth=1;
-  for(let y=22;y<150;y+=24){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(420,y);ctx.stroke();}
-  ctx.strokeStyle='#c98482';ctx.beginPath();ctx.moveTo(38,0);ctx.lineTo(38,150);ctx.stroke();
-  if(kind==='draw'&&points.length<2){ctx.save();ctx.setLineDash?.([6,7]);ctx.strokeStyle='#a99e89';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(100,75);ctx.lineTo(320,75);ctx.stroke();ctx.restore();ctx.fillStyle='#647466';ctx.font='14px sans-serif';ctx.fillText('Try a line across here',115,112);}
-  ctx.strokeStyle='#41483e';ctx.lineWidth=8;ctx.lineCap='round';
-  for(let i=1;i<points.length;i++)if(!removed.has(i)){ctx.beginPath();ctx.moveTo(points[i-1].x,points[i-1].y);ctx.lineTo(points[i].x,points[i].y);ctx.stroke();}
-  if(kind==='erase'&&cursor){ctx.save();ctx.fillStyle='#f7d5dc44';ctx.strokeStyle='#793a51';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cursor.x,cursor.y,24,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle='#fffaf0';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cursor.x,cursor.y,26,0,Math.PI*2);ctx.stroke();ctx.restore();}
-  practiceReadout();
+ function guideTarget(){
+  if(step===1)return canvasRect(practiceZone());
+  const selector=kind==='draw'?{2:'.inkbox',3:'.hpbox',4:'.timer'}[step]:step<=2?'#eraserBtn':null;
+  const node=selector?document.querySelector?.(selector):null;
+  if(node)return node.getBoundingClientRect();
+  const p=game.state.player;return canvasRect({x:p.x-40,y:p.y-45,width:80,height:90});
+ }
+ // One spotlight/arrow layout is shared by combat lessons and the menu trail.
+ function placeGuide(id,target,extra=[]){
+  const layer=$(id),card=$(id==='lessonOverlay'?'lessonCard':'scrapCoachCard');
+  if(layer.style.display!=='grid'||!target)return;
+  const W=window.innerWidth||game.state.W,H=window.innerHeight||game.state.H,margin=10,pad=5;
+  const normalize=r=>{const left=game.api.clamp(r.left-pad,0,W),top=game.api.clamp(r.top-pad,0,H);return {left,top,right:game.api.clamp(r.left+r.width+pad,0,W),bottom:game.api.clamp(r.top+r.height+pad,0,H)};};
+  const focus=normalize(target),holes=[focus,...extra.map(normalize)];
+  const rect=r=>'M '+r.left+' '+r.top+' H '+r.right+' V '+r.bottom+' H '+r.left+' Z';
+  $(id+'Shade').setAttribute?.('d','M 0 0 H '+W+' V '+H+' H 0 Z '+holes.map(rect).join(' '));
+  $(id+'Focus').setAttribute?.('d',holes.map(rect).join(' '));
+  const gap=22;
+  const belowLimit=Math.min(H-margin,...extra.filter(r=>r.top>focus.bottom).map(r=>r.top-10)),available=belowLimit-focus.bottom-gap;
+  const maxHeight=W<600&&available>=140?available+'px':'';
+  if(card.style.maxHeight!==maxHeight)card.style.maxHeight=maxHeight;
+  const box=card.getBoundingClientRect(),w=box.width||340,h=box.height||220;
+  const cx=(focus.left+focus.right)/2,cy=(focus.top+focus.bottom)/2;
+  const candidates=[
+   {x:focus.right+gap,y:game.api.clamp(cy-h/2,margin,Math.max(margin,H-h-margin))},{x:focus.left-gap-w,y:game.api.clamp(cy-h/2,margin,Math.max(margin,H-h-margin))},
+   {x:cx-w/2,y:focus.bottom+gap},{x:cx-w/2,y:focus.top-gap-h}
+  ];
+  let p=candidates.find(p=>p.x>=margin&&p.y>=margin&&p.x+w<=W-margin&&p.y+h<=H-margin&&!holes.slice(1).some(r=>p.x<r.right&&p.x+w>r.left&&p.y<r.bottom&&p.y+h>r.top));
+  if(!p)p={x:game.api.clamp(cx-w/2,margin,Math.max(margin,W-w-margin)),y:focus.bottom+h+gap<H?focus.bottom+gap:Math.max(margin,focus.top-h-gap)};
+  card.style.left=p.x+'px';card.style.top=p.y+'px';card.classList?.toggle('coach-points-right',cx>p.x+w/2);
+  // The leader starts beside Stevie's raised hand and lands on the real target.
+  const start={x:cx>p.x+w/2?p.x+w-18:p.x+28,y:p.y+Math.min(h-16,35)};
+  const end={x:game.api.clamp(start.x,focus.left,focus.right),y:game.api.clamp(start.y,focus.top,focus.bottom)};
+  const dx=end.x-start.x,dy=end.y-start.y,d=Math.hypot(dx,dy)||1,tx=dx/d,ty=dy/d;
+  $(id+'Arrow').setAttribute?.('d','M '+start.x+' '+start.y+' Q '+(start.x+dx*.45)+' '+(start.y+dy*.15)+' '+end.x+' '+end.y+' M '+(end.x-tx*12-ty*6)+' '+(end.y-ty*12+tx*6)+' L '+end.x+' '+end.y+' L '+(end.x-tx*12+ty*6)+' '+(end.y-ty*12-tx*6));
+ }
+ function updateStevieGuides(){
+  if(firstLessonActive()){
+   const extra=[];
+   if(lessonCanPaint('erase'))extra.push($('eraserBtn').getBoundingClientRect());
+   if(step===1&&(window.innerHeight||game.state.H)>=500){const ink=document.querySelector?.('.inkbox');if(ink)extra.push(ink.getBoundingClientRect());}
+   placeGuide('lessonOverlay',guideTarget(),extra);
+  }
+  if(scrapStage){const target=$(lastScrapTarget);placeGuide('scrapCoach',target.getBoundingClientRect());}
+ }
+ function showScrapCoach(stage){
+  scrapStage=stage;
+  if(!stage){$('scrapCoach').style.display='none';lastScrapTarget=null;return;}
+  const data={cover:['splashHubBtn','Our scraps are safe!','Tap Notebook right here. I saved you a free first upgrade!'],hub:['hubNotebookBtn','This page is for permanent upgrades.','Tap Spend scraps. These upgrades stay with us between adventures.'],shop:['notebookBuy-starterEraser','Your first purchase!','Tap this highlighted Buy button to claim the Starter Eraser. It costs 0 scraps and helps every future run recover more ink.']};
+  const [target,title,text]=data[stage];$('scrapCoachTitle').textContent=title;$('scrapCoachText').textContent=text;$('scrapCoachProgress').textContent='Stevie’s scrap trail · '+({cover:1,hub:2,shop:3}[stage])+' of 3';$('scrapCoach').style.display='grid';
+  if(lastScrapTarget!==target){lastScrapTarget=target;$(target).scrollIntoView?.({block:'center',behavior:'instant'});$(target).focus?.({preventScroll:true});}
+  updateStevieGuides();
+ }
+ function rememberPractice(){baseline={walls:JSON.parse(JSON.stringify(game.state.walls)),stats:{...game.state.stats}};}
+ function restorePractice(){
+  game.api.finishLiveWall();game.state.currentWall=null;game.state.drawing=false;
+  if(baseline){game.state.walls=JSON.parse(JSON.stringify(baseline.walls));Object.assign(game.state.stats,baseline.stats);}
+  eraseSeeded=false;seedCenter=null;game.api.updateUI();
+ }
+ function seedEraseWall(){
+  const z=practiceZone(),y=z.y+z.height/2;
+  const t=game.api.createWall([{x:z.x+10,y},{x:z.x+z.width-10,y}]);
+  if(t){t.base.lessonSeed=true;seedCenter={x:z.x+z.width/2,y};}
+  // The real wall uses normal paid-ink/refund calculations during the warm-up.
+  eraseSeeded=true;game.api.updateUI();
+ }
+ function readout(){
+  const used=Math.max(0,(baseline?.stats.ink??game.state.stats.ink)-game.state.stats.ink),wall=game.state.walls.at(-1);
+  $('lessonMetrics').textContent=kind==='draw'?'Real ink used: '+used.toFixed(1)+(wall?' · Wall HP: '+wall.maxHp.toFixed(1):''):'Real ink: '+game.state.stats.ink.toFixed(1)+' / '+game.state.stats.maxInk;
  }
  function renderLesson(){
-  practiced=false;pointer=null;rightErase=false;last=null;held=false;modifier=null;cursor=null;exampleCursor=false;removed=new Set();points=[];const practice=step===1;
-  let [heading,body]=steps()[step];if(kind==='erase'&&step<=1)body+=' '+eraseInstruction(step===1);
-  game.dom.$('lessonTitle').textContent=heading;game.dom.$('lessonText').textContent=body;game.dom.$('lessonProgress').textContent='Stevie’s '+(kind==='draw'?'drawing':'erasing')+' lesson · '+(step+1)+' of '+steps().length;
-  game.dom.$('lessonPauseNote').textContent='Take your time — the game is paused.';
-  game.dom.$('lessonTrack').textContent=steps().map((_,i)=>i===step?'●':'○').join(' ');
-  game.dom.$('lessonBack').hidden=step===0;
-  const tip=kind==='draw'?['Draw between a doodle and Stevie.','Short = less ink, less HP. Long = more ink, more HP.','Save a little ink for surprises.','Walls buy time. Stevie’s paper balls help finish the job.','After every wave, choose a new upgrade.'][step]:['Erase a little. Recover a little ink.','Hold or switch to Erase, then rub.','Look for the doodle carrying an eraser.','Quick corrections keep the page intact.'][step];
-  game.dom.$('lessonTakeaway').textContent=tip;
-  game.dom.$('lessonPortrait').src=kind==='erase'&&step===2?'assets/art/scrubber.png':'assets/art/stevie-cheer-a.png';
-  game.dom.$('lessonPortrait').alt=kind==='erase'&&step===2?'Rubble Ruff':'Stevie';
-  game.dom.$('lessonPractice').hidden=!practice;game.dom.$('lessonExample').hidden=!practice;game.dom.$('lessonErase').hidden=kind!=='erase';game.dom.$('lessonFeedback').textContent=kind==='draw'?'Follow the dotted guide, or draw your own wall.':'Erase just a piece; you don’t need to erase the whole wall.';
-  game.dom.$('lessonNext').disabled=practice;game.dom.$('lessonNext').textContent=step===steps().length-1?'Let’s play!':step===0?'Show me →':practice?'Nice! Next →':'Got it →';
-  syncPracticeTool();
-  if(kind==='erase')for(let i=0;i<=30;i++)points.push({x:90+i*8,y:75});
-  spotlight(kind==='draw'?{2:'.inkbox',3:'.hpbox',4:'.timer'}[step]:null);paintPractice();
+  cancelLessonGesture();const steps=kind==='draw'?drawSteps:eraseSteps,[heading,text]=steps[step];
+  $('lessonTitle').textContent=heading;$('lessonText').textContent=text+(kind==='erase'&&step<=1?' '+instruction():'');
+  $('lessonProgress').textContent='Stevie’s '+(kind==='draw'?'drawing':'erasing')+' lesson · '+(step+1)+' of '+steps.length;
+  $('lessonPauseNote').textContent='Game paused · take your time';
+  $('lessonBack').hidden=step===0;$('lessonMetrics').hidden=step!==1;$('lessonFeedback').hidden=step!==1;
+  $('lessonFeedback').textContent=practiced?'Nice! You used the real controls.':'Your turn—use the highlighted part of the page.';
+  $('lessonNext').disabled=step===1&&!practiced;$('lessonNext').textContent=step===steps.length-1?'Let’s play!':step===1?'Nice! Next →':'Got it →';
+  $('lessonRetry').hidden=step!==1;
+  spotlight(kind==='draw'?{2:'.inkbox',3:'.hpbox',4:'.timer'}[step]:step<=2?'#eraserBtn':null);
+  readout();updateStevieGuides();game.api.draw?.();
  }
  function beginFirstLesson(){
   const type=game.state.wave===1?'draw':game.state.wave===2?'erase':null;
   if(!enabled||!type||seen[type]||game.api.devRunActive()||game.api.devModeEnabled()||game.api.testLabActive?.())return false;
-  kind=type;step=0;renderLesson();game.api.openInfo('lesson');return true;
+  kind=type;step=0;practiced=false;eraseSeeded=false;rememberPractice();game.api.openInfo('lesson');renderLesson();return true;
  }
  function finishFirstLesson(){
-  if(!firstLessonActive())return;seen[kind]=true;try{localStorage.setItem(key,JSON.stringify(seen));}catch{}
-  spotlight();held=false;modifier=null;pointer=null;rightErase=false;kind=null;game.api.closeInfo(false);game.api.introduceWave();
+  if(!firstLessonActive())return;cancelLessonGesture();if(kind==='erase')restorePractice();
+  seen[kind]=true;try{localStorage.setItem(key,JSON.stringify(seen));}catch{}
+  spotlight();kind=null;baseline=null;game.api.closeInfo(false);game.api.introduceWave();
  }
- function nextLesson(){if(!firstLessonActive()||game.dom.$('lessonNext').disabled)return;if(step===steps().length-1){finishFirstLesson();return;}step++;renderLesson();game.dom.$('lessonTitle').focus?.();game.dom.$('lessonCard').scrollTop=0;}
+ function nextLesson(){
+  if(!firstLessonActive()||$('lessonNext').disabled||pointer!==null)return;
+  const steps=kind==='draw'?drawSteps:eraseSteps;
+  if(step===steps.length-1){finishFirstLesson();return;}
+  step++;if(kind==='erase'&&step===1&&!eraseSeeded)seedEraseWall();renderLesson();$('lessonTitle').focus?.({preventScroll:true});
+ }
+ function practicedEnough(text){practiced=true;$('lessonNext').disabled=false;$('lessonFeedback').textContent=text;readout();game.api.updateUI();}
+ function pos(e){const r=game.dom.canvas.getBoundingClientRect();return {x:game.api.clamp(e.clientX-r.left,0,game.state.W),y:game.api.clamp(e.clientY-r.top,0,game.state.H)};}
+ function length(){return points.slice(1).reduce((n,p,i)=>n+Math.hypot(p.x-points[i].x,p.y-points[i].y),0);}
+ function erase(a,b){
+  cursor={...b,r:20};
+  if(game.api.eraseWallPath(a,b,20,{lesson:true}))practicedEnough('A real gap! Watch ink return to the INK bar.');readout();game.api.draw?.();
+ }
+ function lessonPointerDown(e){
+  if(!lessonCanPaint()||pointer!==null||e.button!==0&&e.button!==2)return;
+  if(kind==='draw'&&e.button!==0)return;
+  if(kind==='erase'&&e.button!==2&&!held&&!toggled)return;
+  const p=pos(e),z=practiceZone();if(p.x<z.x||p.x>z.x+z.width||p.y<z.y||p.y>z.y+z.height)return;
+  if(kind==='draw'&&!game.api.canStartStroke()){$('lessonFeedback').textContent='Out of ink? Tap Try again for a fresh practice.';return;}
+  e.preventDefault?.();pointer=e.pointerId;rightErase=e.button===2;last=p;points=[p];game.dom.canvas.setPointerCapture?.(pointer);syncTool();
+  if(kind==='draw'){game.state.drawing=true;game.state.currentWall=points;}else erase(p,p);
+ }
+ function lessonPointerMove(e){
+  if(!lessonCanPaint())return;
+  if(pointer===null){if(kind==='erase'&&(held||toggled)){cursor={...pos(e),r:20};game.api.draw?.();}return;}
+  if(e.pointerId!==pointer)return;
+  const p=pos(e);
+  if(kind==='draw'){if(Math.hypot(p.x-last.x,p.y-last.y)>3){points.push(p);points=game.api.updateLiveWall(points);game.state.currentWall=points;readout();game.api.updateUI();game.api.draw?.();}}
+  else if(held||toggled||rightErase)erase(last,p);
+  last=p;
+ }
+ function lessonPointerUp(e){
+  if(e.pointerId!==pointer)return;
+  if(kind==='draw'){game.api.finishLiveWall();game.state.currentWall=null;game.state.drawing=false;if(length()>=24)practicedEnough('That’s real cover! It stays on the page when we start.');}
+  const id=pointer;pointer=null;rightErase=false;cursor=null;last=null;
+  if(game.dom.canvas.hasPointerCapture?.(id))game.dom.canvas.releasePointerCapture(id);
+  syncTool();readout();game.api.draw?.();
+ }
+ function lessonEraserDown(e){
+  if(!lessonCanPaint('erase')||modifier!==null||game.api.drawingControls().eraserToggle||e.button>0)return;
+  e.preventDefault?.();held=true;modifier=e.pointerId;$('eraserBtn').setPointerCapture?.(modifier);syncTool();
+ }
+ function lessonEraserUp(e){if(e.pointerId!==modifier)return;modifier=null;held=false;cursor=null;syncTool();game.api.draw?.();}
+ function lessonEraserClick(e){if(lessonCanPaint('erase')&&(game.api.drawingControls().eraserToggle||e.detail===0)){toggled=!toggled;cursor=null;syncTool();}}
+ function syncTool(){const active=held||toggled||rightErase;game.dom.canvas.style.cursor=active?'none':'crosshair';$('eraserBtn').textContent=active?'Erasing':'Erase';$('eraserBtn').setAttribute?.('aria-pressed',String(active));$('eraserBtn').classList?.toggle('is-erasing',active);}
+ function cancelLessonGesture(){
+  if(kind===null)return;
+  const id=pointer;pointer=null;game.api.finishLiveWall();game.state.currentWall=null;game.state.drawing=false;held=toggled=rightErase=false;modifier=null;cursor=null;last=null;
+  if(id!==null&&game.dom.canvas.hasPointerCapture?.(id))game.dom.canvas.releasePointerCapture(id);
+  syncTool();
+ }
+ function moveFirstLesson(dx,dy){
+  if(kind===null)return;
+  if(baseline)for(const wall of baseline.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.rockCharge){wall.rockCharge.x+=dx;wall.rockCharge.y+=dy;}if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
+  if(seedCenter){
+   const z=practiceZone(),next={x:z.x+z.width/2,y:z.y+z.height/2},sx=next.x-seedCenter.x-dx,sy=next.y-seedCenter.y-dy;
+   for(const wall of game.state.walls)if(wall.lessonSeed)wall.pts=wall.pts.map(p=>({x:p.x+sx,y:p.y+sy}));
+   seedCenter=next;
+  }
+  updateStevieGuides();
+ }
+ function drawFirstLesson(){
+  if(!firstLessonActive()||step!==1)return;
+  const ctx=game.dom.ctx,z=practiceZone();ctx.save();ctx.strokeStyle='#417b64';ctx.lineWidth=2;ctx.setLineDash([5,7]);ctx.beginPath();ctx.moveTo(z.x+10,z.y+z.height/2);ctx.lineTo(z.x+z.width-10,z.y+z.height/2);ctx.stroke();ctx.setLineDash([]);
+  if(cursor){ctx.strokeStyle='#793a51';ctx.fillStyle='#f7d5dc44';ctx.beginPath();ctx.arc(cursor.x,cursor.y,20,0,Math.PI*2);ctx.fill();ctx.stroke();}
+  ctx.restore();
+ }
+ function dismissFirstLesson(){cancelLessonGesture();if(kind==='erase')restorePractice();spotlight();kind=null;baseline=null;}
  function resetFirstLessons(){seen={draw:false,erase:false};try{localStorage.setItem(key,JSON.stringify(seen));}catch{}spotlight();}
- function practicedEnough(){practiced=true;game.dom.$('lessonNext').disabled=false;}
- function pos(e){const r=game.dom.$('lessonCanvas').getBoundingClientRect();return {x:game.api.clamp((e.clientX-r.left)*420/r.width,0,420),y:game.api.clamp((e.clientY-r.top)*150/r.height,0,150)};}
- function erasePractice(a,b){
-  cursor={x:b.x,y:b.y};
-  for(let i=1;i<points.length;i++)if(game.api.eraserIntervals(points[i-1],points[i],a,b,24).length)removed.add(i);
-  if(removed.size>=3){practicedEnough();game.dom.$('lessonFeedback').textContent='Nice! A gap and '+(removed.size*8*.31*(game.state.stats.eraseRefund??.25)).toFixed(1)+' ink recovered in our practice.';}paintPractice();
+ function handleStevieGuideKey(e){
+  if(scrapStage){if(e.key==='Tab'){e.preventDefault?.();$(lastScrapTarget).focus?.();return true;}if(e.key==='Escape'){e.preventDefault?.();return true;}}
+  if(firstLessonActive()&&e.key==='Tab'){
+   const controls=Array.from($('lessonOverlay').querySelectorAll?.('button:not([disabled]):not([hidden])')||[]);
+   if(lessonCanPaint('erase'))controls.push($('eraserBtn'));
+   const i=controls.indexOf(document.activeElement);e.preventDefault?.();controls[(i+(e.shiftKey?-1:1)+controls.length)%controls.length]?.focus?.();return true;
+  }
+  return false;
  }
- const canvas=game.dom.$('lessonCanvas'),button=game.dom.$('lessonErase');
- canvas.addEventListener('contextmenu',e=>e.preventDefault());
- canvas.addEventListener('pointerdown',e=>{
-  if(!firstLessonActive()||step!==1||pointer!==null||e.button!==0&&e.button!==2)return;
-  if(kind==='erase'&&e.button!==2&&!held)return;
-  e.preventDefault?.();pointer=e.pointerId;rightErase=kind==='erase'&&e.button===2;exampleCursor=false;cursor=null;last=pos(e);syncPracticeTool();if(kind==='draw'){points=[last];removed=new Set();}else erasePractice(last,last);canvas.setPointerCapture(e.pointerId);
- });
- canvas.addEventListener('pointermove',e=>{if(!firstLessonActive()||step!==1)return;if(pointer===null){if(kind==='erase'&&held&&e.pointerType==='mouse'){cursor=pos(e);exampleCursor=false;paintPractice();}return;}if(e.pointerId!==pointer)return;const p=pos(e);if(kind==='draw'){points.push(p);paintPractice();if(practiceLength()>=16)practicedEnough();}else if(held||e.buttons===2)erasePractice(last,p);last=p;});
- canvas.addEventListener('pointerup',e=>{
-  if(e.pointerId!==pointer)return;pointer=null;rightErase=false;cursor=null;exampleCursor=false;syncPracticeTool();paintPractice();
-  if(kind==='draw'){let length=0;for(let i=1;i<points.length;i++)length+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);if(length>=16){practicedEnough();game.dom.$('lessonFeedback').textContent='That wall costs about '+Math.max(6,length*.31).toFixed(1)+' ink and has '+game.api.wallHpForLength(length).toFixed(1)+' HP. Try another length!';}}
- });
- canvas.addEventListener('pointercancel',()=>{pointer=null;rightErase=false;held=false;modifier=null;cursor=null;exampleCursor=false;syncPracticeTool();paintPractice();});
- canvas.addEventListener('pointerleave',()=>{if(pointer===null&&!exampleCursor){cursor=null;paintPractice();}});
- button.addEventListener('pointerdown',e=>{if(game.api.drawingControls().eraserToggle)return;e.preventDefault?.();held=true;modifier=e.pointerId;syncPracticeTool();button.setPointerCapture(e.pointerId);});
- const release=e=>{if(e.pointerId===modifier){held=false;modifier=null;cursor=null;exampleCursor=false;syncPracticeTool();paintPractice();}};for(const event of ['pointerup','pointercancel','lostpointercapture'])button.addEventListener(event,release);
- button.onclick=e=>{if(game.api.drawingControls().eraserToggle||e.detail===0){held=!held;if(!held){cursor=null;exampleCursor=false;}syncPracticeTool();paintPractice();}};
- game.dom.$('lessonBack').onclick=()=>{if(!firstLessonActive()||step===0)return;step--;renderLesson();game.dom.$('lessonTitle').focus?.();game.dom.$('lessonCard').scrollTop=0;};
- game.dom.$('lessonNext').onclick=nextLesson;game.dom.$('lessonSkip').onclick=finishFirstLesson;
- game.dom.$('lessonExample').onclick=()=>{if(kind==='draw'){points=[{x:110,y:75},{x:270,y:75}];paintPractice();game.dom.$('lessonFeedback').textContent='Stevie’s example: a wall between the doodles and me. Try your own shorter line, too!';practicedEnough();}else{exampleCursor=true;erasePractice({x:210,y:75},{x:210,y:75});}};
- function cancelLessonGesture(){held=false;modifier=null;pointer=null;rightErase=false;last=null;cursor=null;exampleCursor=false;syncPracticeTool();paintPractice();}
- function dismissFirstLesson(){cancelLessonGesture();spotlight();kind=null;}
- window.addEventListener('blur',cancelLessonGesture);window.addEventListener('resize',cancelLessonGesture);
- const api={adoptLessonBackup:value=>{seen={draw:value.draw,erase:value.erase};},dismissFirstLesson,cancelLessonGesture,beginFirstLesson,finishFirstLesson,firstLessonActive,lessonSnapshot,resetFirstLessons,setFirstLessonsEnabled:value=>{enabled=!!value;}};Object.assign(game.api,api);return api;
+ $('lessonNext').onclick=nextLesson;$('lessonSkip').onclick=finishFirstLesson;
+ $('lessonBack').onclick=()=>{if(!firstLessonActive()||step===0||pointer!==null)return;step--;renderLesson();};
+ $('lessonRetry').onclick=()=>{if(!lessonCanPaint())return;cancelLessonGesture();restorePractice();practiced=false;if(kind==='erase')seedEraseWall();renderLesson();};
+ window.addEventListener('blur',cancelLessonGesture);
+ window.addEventListener('resize',()=>{if(firstLessonActive())cancelLessonGesture();updateStevieGuides();});
+ window.addEventListener('scroll',updateStevieGuides,true);
+ window.visualViewport?.addEventListener('resize',updateStevieGuides);
+ const api={adoptLessonBackup:value=>{seen={draw:value.draw,erase:value.erase};},dismissFirstLesson,cancelLessonGesture,beginFirstLesson,finishFirstLesson,firstLessonActive,lessonSnapshot,resetFirstLessons,lessonCanPaint,lessonPointerDown,lessonPointerMove,lessonPointerUp,lessonEraserDown,lessonEraserUp,lessonEraserClick,drawFirstLesson,moveFirstLesson,showScrapCoach,updateStevieGuides,handleStevieGuideKey,setFirstLessonsEnabled:value=>{enabled=!!value;}};
+ Object.assign(game.api,api);return api;
 };

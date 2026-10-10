@@ -48,7 +48,8 @@ function eraserIntervals(p,q,a,b,r){
  return merged;
 }
 function eraseWallPath(a,b,r=20,options={}){
- if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
+ const lesson=options.lesson===true&&game.api.lessonCanPaint?.('erase');
+ if(!game.state.running||(game.state.paused&&!lesson)||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
  if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
  let changed=false,recovered=0;const result=[];
  for(const wall of game.state.walls){
@@ -75,10 +76,11 @@ function eraseWallPath(a,b,r=20,options={}){
    if(length<2||total<=0)continue;
    const fraction=length/total;kept+=fraction;result.push({...wall,pts,hp:wall.hp*fraction,maxHp:wall.maxHp*fraction,eraseInk:(wall.eraseInk||0)*fraction,closed:false});
   }
-  if(!options.enemy)game.api.eraseWallReaction(wall,result.slice(firstPiece),a,b,r,(wall.eraseInk||0)*Math.max(0,1-kept));
+  if(!options.enemy&&!lesson)game.api.eraseWallReaction(wall,result.slice(firstPiece),a,b,r,(wall.eraseInk||0)*Math.max(0,1-kept));
   if(!options.enemy&&wall.eraseInk>0&&wall.maxHp>0)recovered+=wall.eraseInk*Math.max(0,1-kept)*game.api.clamp(wall.hp/wall.maxHp,0,1)*game.api.clamp(game.state.stats.eraseRefund??.25,0,.6);
  }
  if(changed){game.state.walls=result;game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+recovered);game.api.updateUI();}
+ if(lesson)return changed;
  if(!options.enemy){
   const ground=eraseBurningGround(a,b,r),plague=game.api.erasePlaguefire(a,b,r);
   if((ground||plague)&&game.state.paper.clock>=(game.state.paper.firebreakCueAt??0)){game.state.paper.firebreakCueAt=game.state.paper.clock+.7;game.api.floatText(b.x,b.y-20,'FIREBREAK!','#a56930');}

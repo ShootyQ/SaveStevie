@@ -128,10 +128,10 @@ function syncScrapTutorial(){
  const shop=eligible&&game.dom.$('notebookOverlay').style.display==='grid';
  const hub=eligible&&game.dom.$('hubOverlay').style.display==='grid';
  const cover=eligible&&!game.api.infoOpen()&&game.dom.startOverlay.style.display!=='none';
- game.dom.$('scrapGuideCover').hidden=!cover;game.dom.$('scrapGuideHub').hidden=!hub;game.dom.$('scrapGuideShop').hidden=!shop;
  game.dom.$('startBtn').disabled=eligible||game.api.artworkStatus?.().ready===false;
  game.dom.$('splashHubBtn').classList?.toggle('scrap-guide-target',cover);
  game.dom.$('hubNotebookBtn').classList?.toggle('scrap-guide-target',hub);
+ game.api.showScrapCoach?.(shop?'shop':hub?'hub':cover?'cover':null);
 }
 function finishScrapTutorial(){if(!progress.levels.starterEraser)return false;progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial();return true;}
 function openNotebook(){game.api.openInfo('notebook')}

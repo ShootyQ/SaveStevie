@@ -486,7 +486,7 @@ function drawEnemyFill(e,x,y,width,height){
 }
 
 function resize(){
-  game.api.cancelDrawingInput?.();
+  game.api.cancelLessonGesture?.();game.api.cancelDrawingInput?.();
   const r=game.dom.canvas.getBoundingClientRect();
   game.state.dpr=Math.min(2,window.devicePixelRatio||1);
   game.dom.canvas.width=Math.floor(r.width*game.state.dpr);game.dom.canvas.height=Math.floor(r.height*game.state.dpr);
@@ -506,7 +506,7 @@ function resize(){
     game.api.moveRefuge(dx,dy);game.api.moveSupportInkVisuals(dx,dy);game.api.moveBossFields(dx,dy);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
-  game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;game.api.refreshBossArrival();
+  game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;game.api.refreshBossArrival();game.api.moveFirstLesson?.(dx,dy);
 }
 
 
@@ -942,7 +942,8 @@ function draw(){
   game.api.drawThrowAim?.();
   game.api.drawEraserCursor?.();
   game.api.drawWaveFinale(drawDoodleEnemy);game.dom.ctx.restore();game.api.drawBossVictory();
-  if(game.state.paused){
+  game.api.drawFirstLesson();
+  if(game.state.paused&&!game.api.firstLessonActive()){
     game.dom.ctx.fillStyle='rgba(20,25,28,.38)';game.dom.ctx.fillRect(0,0,game.state.W,game.state.H);
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)
   }

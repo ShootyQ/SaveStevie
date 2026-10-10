@@ -1825,13 +1825,13 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 {
  const saved=new Map(),storage={getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v))};
  const env=load(true,{storage}),g=env.sandbox.testGame;
- assert.equal(env.node('scrapGuideCover').hidden,true,'no guide before earnings');g.api.resetRun();g.api.awardScraps(1);g.api.updateUI();assert.equal(env.node('scrapGuideCover').hidden,true,'earning does not interrupt play');
- g.api.gameOver();assert.equal(env.node('scrapGuideCover').hidden,true);env.node('againBtn').onclick();assert.equal(g.state.running,false);assert.equal(env.node('startOverlay').style.display,'grid');assert.equal(env.node('gameOverOverlay').style.display,'none');assert.equal(env.node('scrapGuideCover').hidden,false);assert.equal(g.api.notebookSnapshot().scraps,1);
- env.node('scrapGuideShow').onclick();assert.equal(env.node('scrapGuideHub').hidden,false);env.node('hubNotebookBtn').onclick();assert.equal(env.node('scrapGuideShop').hidden,false);assert.equal(g.api.buyNotebookPerk('inkTank'),false,'tutorial does not grant money or permit unaffordable purchases');
- env.node('scrapGuideDone').onclick();assert.equal(g.api.notebookSnapshot().scrapTutorialDone,true);assert.equal(env.node('scrapGuideShop').hidden,true);
- const again=load(true,{storage});assert.equal(again.node('scrapGuideCover').hidden,true,'acknowledgement persists across visits');assert.equal(again.sandbox.testGame.api.notebookSnapshot().scraps,1);
+ assert.equal(env.node('scrapCoach').style.display,'none','no guide before earnings');g.api.resetRun();g.api.awardScraps(1);g.api.updateUI();assert.equal(env.node('scrapCoach').style.display,'none','earning does not interrupt play');
+ g.api.gameOver();assert.equal(env.node('scrapCoach').style.display,'none');env.node('againBtn').onclick();assert.equal(g.state.running,false);assert.equal(env.node('startOverlay').style.display,'grid');assert.equal(env.node('gameOverOverlay').style.display,'none');assert.equal(env.node('scrapCoach').style.display,'grid');assert.equal(g.api.notebookSnapshot().scraps,1);
+ env.node('splashHubBtn').onclick();assert.equal(g.api.lessonSnapshot().scrapStage,'hub');env.node('hubNotebookBtn').onclick();assert.equal(g.api.lessonSnapshot().scrapStage,'shop');assert.equal(g.api.buyNotebookPerk('inkTank'),false,'tutorial does not grant money or permit unaffordable purchases');
+ g.api.buyNotebookPerk('starterEraser');assert.equal(g.api.notebookSnapshot().scrapTutorialDone,true);assert.equal(env.node('scrapCoach').style.display,'none');
+ const again=load(true,{storage});assert.equal(again.node('scrapCoach').style.display,'none','acknowledgement persists across visits');assert.equal(again.sandbox.testGame.api.notebookSnapshot().scraps,1);
  const pending=new Map([['saveStevieNotebookV1',JSON.stringify({version:1,scraps:1,lifetimeScraps:1,levels:{}})]]);
- const next=load(true,{storage:{getItem:k=>pending.get(k)||null,setItem:(k,v)=>pending.set(k,v)}});assert.equal(next.node('scrapGuideCover').hidden,false,'next session teaches players with earnings');next.node('scrapGuideSkip').onclick();assert.equal(next.node('scrapGuideCover').hidden,true);assert.equal(next.sandbox.testGame.api.notebookSnapshot().scrapTutorialDone,false,'navigation cannot dismiss purchase lesson');
+ const next=load(true,{storage:{getItem:k=>pending.get(k)||null,setItem:(k,v)=>pending.set(k,v)}});assert.equal(next.node('scrapCoach').style.display,'grid','next session teaches players with earnings');next.node('splashHubBtn').onclick();assert.equal(next.sandbox.testGame.api.lessonSnapshot().scrapStage,'hub');assert.equal(next.sandbox.testGame.api.notebookSnapshot().scrapTutorialDone,false,'navigation cannot dismiss purchase lesson');
  console.log('PASS: defeat returns to menu; scrap guide waits for earnings/menu, follows Notebook/shop, preserves currency, requires a free purchase and persists completion.');
 }
 
@@ -2288,20 +2288,45 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  console.log('PASS: sparse/swept/vertex/closed-wall erasing, proportional durability/lifetime, open collision gap, preserved ink, no refunds/explosions, paused/invalid guards, multi-pointer mid-stroke switching, empty-ink right-drag, sticky/reset behavior and saved controls.');
 }
 
-// The lessons own a pause, not a live drawing gesture or simulated combat.
+// On-page lessons freeze combat but route real tools through a narrow lesson gate.
 {
  const env=load(true,{lessons:true}),g=env.sandbox.testGame;g.api.resetRun();assert(g.api.firstLessonActive());assert.equal(g.state.paused,true);assert.equal(g.api.lessonSnapshot().kind,'draw');
  const before=JSON.stringify(g.state);g.api.update(3);assert.equal(JSON.stringify(g.state),before,'no waves, monsters or ink advance during lesson');
- env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);const canvas=env.node('lessonCanvas');canvas.getBoundingClientRect=()=>({left:0,top:0,width:420,height:150});
- canvas.listeners.pointerdown({pointerId:1,clientX:100,clientY:75,button:0});canvas.listeners.pointermove({pointerId:1,clientX:220,clientY:75});canvas.listeners.pointerup({pointerId:1});assert.equal(env.node('lessonNext').disabled,false);assert.match(env.node('lessonMetrics').textContent,/37.2.*43.3/);assert.equal(JSON.stringify(g.state),before,'practice changes no real walls, health, ink or timer');
- for(let i=0;i<4;i++)env.node('lessonNext').onclick();assert.equal(g.api.firstLessonActive(),false);assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.draw,true);
- g.state.wave=2;g.api.startWave();assert.equal(g.api.lessonSnapshot().kind,'erase');assert.equal(g.state.paused,true);env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);env.node('lessonExample').onclick();assert.equal(env.node('lessonNext').disabled,false);env.node('lessonNext').onclick();assert.equal(g.state.paused,true);assert.equal(g.api.lessonSnapshot().step,2);assert.match(env.node('lessonText').textContent,/erase HIM/);env.node('lessonBack').onclick();assert.equal(g.api.lessonSnapshot().step,1);assert.equal(env.node('lessonNext').disabled,true);env.node('lessonExample').onclick();env.node('lessonNext').onclick();env.node('lessonNext').onclick();assert.match(env.node('lessonText').textContent,/2 seconds/);env.node('lessonNext').onclick();assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.erase,true);
- g.api.resetFirstLessons();g.api.setDrawingControl('eraserToggle',true);g.api.beginFirstLesson();env.node('lessonNext').onclick();env.node('lessonErase').onclick({detail:1});assert.equal(env.node('lessonErase').textContent,'Erasing');const eraseState=JSON.stringify(g.state);canvas.listeners.pointerdown({pointerId:3,clientX:210,clientY:75,button:0});canvas.listeners.pointerup({pointerId:3});assert.equal(env.node('lessonNext').disabled,false,'toggle practice erases with one pointer');assert.equal(JSON.stringify(g.state),eraseState);g.api.cancelLessonGesture();assert.equal(env.node('lessonErase').textContent,'Erase');g.api.finishFirstLesson();g.api.setDrawingControl('eraserToggle',false);g.state.wave=1;g.api.beginFirstLesson();g.api.finishFirstLesson();
- g.api.resetRun();assert.equal(g.api.firstLessonActive(),false,'completed lesson does not repeat');g.api.resetFirstLessons();g.api.setDevMode(true);g.api.resetRun();assert.equal(g.api.firstLessonActive(),false,'dev testing bypasses beginner lessons');
- const store=new Map(),storage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)};const fresh=load(true,{lessons:true,storage});fresh.sandbox.testGame.api.resetRun();fresh.sandbox.testGame.api.finishFirstLesson();const reloaded=load(true,{lessons:true,storage});reloaded.sandbox.testGame.api.resetRun();assert.equal(reloaded.sandbox.testGame.api.firstLessonActive(),false,'completion saves across reload');reloaded.sandbox.testGame.state.wave=2;reloaded.sandbox.testGame.api.startWave();assert.equal(reloaded.sandbox.testGame.api.firstLessonActive(),true,'wave-two lesson remains pending separately');
+ env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);
+ const canvas=env.node('game'),button=env.node('eraserBtn'),z=g.api.lessonSnapshot().practice,y=z.y+z.height/2,event=(id,x,y,button=0)=>({pointerId:id,clientX:x,clientY:y,button,preventDefault(){}});
+ const ink=g.state.stats.ink,hp=g.state.player.hp,time=g.state.timeLeft;
+ canvas.listeners.pointerdown(event(1,z.x+10,y));canvas.listeners.pointermove(event(1,z.x+130,y));
+ assert.equal(g.state.walls.length,1,'real wall is present before releasing');
+ assert(g.state.stats.ink<ink,'real ink bar pays for practice');canvas.listeners.pointerup(event(1,z.x+130,y));
+ assert.equal(env.node('lessonNext').disabled,false);assert.match(env.node('lessonMetrics').textContent,/37.2.*43.3/);
+ assert.equal(g.state.player.hp,hp);assert.equal(g.state.timeLeft,time);assert.equal(g.state.enemies.length,0);
+ const frozen=JSON.stringify(g.state);g.api.update(3);assert.equal(JSON.stringify(g.state),frozen,'combat stays frozen after practice');
+ env.node('lessonRetry').onclick();assert.equal(g.state.stats.ink,ink);assert.equal(g.state.walls.length,0);assert.equal(env.node('lessonNext').disabled,true);
+ canvas.listeners.pointerdown(event(2,z.x+10,y));canvas.listeners.pointermove(event(2,z.x+130,y));canvas.listeners.pointerup(event(2,z.x+130,y));
+ for(let i=0;i<4;i++)env.node('lessonNext').onclick();
+ assert.equal(g.api.firstLessonActive(),false);assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.draw,true);assert.equal(g.state.walls.length,1,'practice cover stays for first wave');
+ g.state.wave=2;g.api.startWave();const fullInk=g.state.stats.ink;assert.equal(g.api.lessonSnapshot().kind,'erase');assert.equal(g.state.paused,true);
+ env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);assert.equal(g.state.walls.length,1,'real paid wall is seeded on the page');env.node('lessonBack').onclick();env.node('lessonNext').onclick();assert.equal(g.state.walls.length,1,'revisiting practice does not buy another seed wall');
+ const ez=g.api.lessonSnapshot().practice,ey=ez.y+ez.height/2,ex=ez.x+ez.width/2,paidInk=g.state.stats.ink;
+ canvas.listeners.pointerdown(event(3,ex,ey,2));canvas.listeners.pointermove(event(3,ex,ey+10,2));assert(g.api.lessonSnapshot().eraserCursor);
+ canvas.listeners.pointerup(event(3,ex,ey+10,2));assert.equal(g.api.lessonSnapshot().eraserCursor,null);
+ assert.equal(env.node('lessonNext').disabled,false);assert(g.state.stats.ink>paidInk,'normal refund reaches the real ink bar');assert.equal(g.state.walls.length,2);
+ assert.equal(g.state.paper.holes.length,0,'lesson eraser cannot tear the paper or hurt monsters');
+ env.node('lessonNext').onclick();assert.match(env.node('lessonText').textContent,/erase HIM|Rub over HIM/);
+ env.node('lessonBack').onclick();assert.equal(g.api.lessonSnapshot().step,1);assert.equal(env.node('lessonNext').disabled,false,'returning to practice remembers the real action');
+ env.node('lessonRetry').onclick();g.api.setDrawingControl('eraserToggle',true);button.onclick({detail:1});assert.equal(button.textContent,'Erasing');
+ canvas.listeners.pointerdown(event(4,ex,ey));canvas.listeners.pointerup(event(4,ex,ey));assert.equal(env.node('lessonNext').disabled,false,'the actual toggle works in lessons');
+ g.api.cancelLessonGesture();assert.equal(button.textContent,'Erase');
+ for(let i=0;i<3;i++)env.node('lessonNext').onclick();
+ assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.erase,true);assert.equal(g.state.stats.ink,fullInk,'erase warm-up restores the wave-two loadout');assert.equal(g.state.walls.length,0);
+ g.state.paused=true;assert.equal(g.api.eraseWallPath({x:ex,y:ey},{x:ex+10,y:ey},20,{lesson:true}),false,'a lesson option cannot bypass pause elsewhere');g.state.paused=false;
+ g.api.resetRun();assert.equal(g.api.firstLessonActive(),false,'completed lesson does not repeat');g.api.resetFirstLessons();g.api.setDevMode(true);g.api.resetRun();assert.equal(g.api.firstLessonActive(),false,'dev testing bypasses lessons');
+ const store=new Map(),storage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)};const fresh=load(true,{lessons:true,storage});fresh.sandbox.testGame.api.resetRun();fresh.sandbox.testGame.api.finishFirstLesson();
+ const reloaded=load(true,{lessons:true,storage});reloaded.sandbox.testGame.api.resetRun();assert.equal(reloaded.sandbox.testGame.api.firstLessonActive(),false);reloaded.sandbox.testGame.state.wave=2;reloaded.sandbox.testGame.api.startWave();assert.equal(reloaded.sandbox.testGame.api.firstLessonActive(),true);
  const blocked=load(true,{lessons:true,storage:{getItem(k){if(k==='saveStevieLessonsV1')throw Error('blocked');return null;},setItem(){throw Error('blocked')}}});blocked.sandbox.testGame.api.resetRun();blocked.sandbox.testGame.api.finishFirstLesson();assert.equal(blocked.sandbox.testGame.state.paused,false,'storage denial cannot trap the lesson');
- console.log('PASS: paused first-wave practice/HUD tour, separate wave-two erasing lesson, no combat changes, acknowledgement, persisted completion, dev exclusion and blocked storage.');
+ console.log('PASS: paused real-paper drawing/ink/HP, retry and retained cover, actual eraser/toggle/refunds, protected paper/monsters, erased warm-up cleanup, saved lessons and dev/storage guards.');
 }
+
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.stats.doubleLine=true;const ink=g.state.stats.ink;g.api.createWall([{x:100,y:200},{x:300,y:200}]);const paid=ink-g.state.stats.ink;assert(paid>0);g.api.eraseWallPath({x:0,y:200},{x:400,y:200},30);assert(Math.abs(g.state.stats.ink-(ink-paid+paid*.25))<1e-8,'paid line returns 25%, copies return nothing');assert.equal(g.state.walls.length,0);const after=g.state.stats.ink;g.api.eraseWallPath({x:0,y:200},{x:400,y:200},30);assert.equal(g.state.stats.ink,after,'removed wall cannot refund twice');
  g.api.resetRun();g.state.stats.firstFree=true;g.api.createWall([{x:100,y:200},{x:300,y:200}]);g.state.stats.ink=10;g.api.eraseWallPath({x:0,y:200},{x:400,y:200},30);assert.equal(g.state.stats.ink,10,'free line has no recovery');

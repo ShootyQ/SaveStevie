@@ -103,13 +103,15 @@ window.addEventListener('savestevie:background',()=>{
 game.dom.canvas.addEventListener('contextmenu',e=>e.preventDefault());
 const eraserButton=game.dom.$('eraserBtn');
 eraserButton.addEventListener('pointerdown',e=>{
+ if(game.api.firstLessonActive()){game.api.lessonEraserDown(e);return;}
  if(!canPaint()||modifierPointer!==null||game.api.drawingControls().eraserToggle||e.button>0)return;
  e.preventDefault?.();modifierPointer=e.pointerId;eraserButton.setPointerCapture(e.pointerId);changeEraserMode(()=>{held=true;});
 });
-const releaseEraser=e=>{if(e.pointerId!==modifierPointer)return;modifierPointer=null;changeEraserMode(()=>{held=false;});};
+const releaseEraser=e=>{if(game.api.firstLessonActive()){game.api.lessonEraserUp(e);return;}if(e.pointerId!==modifierPointer)return;modifierPointer=null;changeEraserMode(()=>{held=false;});};
 for(const event of ['pointerup','pointercancel','lostpointercapture'])eraserButton.addEventListener(event,releaseEraser);
-eraserButton.onclick=e=>{if(canPaint()&&(game.api.drawingControls().eraserToggle||e.detail===0))changeEraserMode(()=>{toggled=!toggled;});};
+eraserButton.onclick=e=>{if(game.api.firstLessonActive()){game.api.lessonEraserClick(e);return;}if(canPaint()&&(game.api.drawingControls().eraserToggle||e.detail===0))changeEraserMode(()=>{toggled=!toggled;});};
 game.dom.canvas.addEventListener('pointerdown',e=>{
+ if(game.api.firstLessonActive()){game.api.lessonPointerDown(e);return;}
  if(!canPaint()||strokePointer!==null||e.button!==0&&e.button!==2)return;
  const erase=e.button===2||eraserActive();
  if(!erase&&!game.api.canStartStroke()){game.api.setMsg('Let your ink refill to 6 before drawing.');return;}
@@ -117,6 +119,7 @@ game.dom.canvas.addEventListener('pointerdown',e=>{
  if(erase){cursor={...lastPoint,r:20};game.api.eraseWallPath(lastPoint,lastPoint,20);}syncDrawingControls();
 });
 game.dom.canvas.addEventListener('pointermove',e=>{
+ if(game.api.firstLessonActive()){game.api.lessonPointerMove(e);return;}
  if(strokePointer===null){if(eraserActive()&&canPaint())cursor={...game.api.pointerPos(e),r:20};return;}
  if(e.pointerId!==strokePointer)return;
  if(!canPaint()){cancelDrawingInput();return;}
@@ -125,18 +128,14 @@ game.dom.canvas.addEventListener('pointermove',e=>{
  else if(game.state.currentWall){const q=game.state.currentWall.at(-1);if(game.api.dist(p.x,p.y,q.x,q.y)>6){game.state.currentWall.push(p);game.state.currentWall=game.api.updateLiveWall(game.state.currentWall);game.api.playSound('scribble');}}
  lastPoint=p;
 });
-game.dom.canvas.addEventListener('pointerup',e=>{if(e.pointerId!==strokePointer)return;if(canPaint())finishStroke();else cancelDrawingInput();});
-game.dom.canvas.addEventListener('pointercancel',e=>{if(e.pointerId===strokePointer)cancelDrawingInput();});
-game.dom.canvas.addEventListener('lostpointercapture',e=>{if(e.pointerId===strokePointer)cancelDrawingInput();});
+game.dom.canvas.addEventListener('pointerup',e=>{if(game.api.firstLessonActive()){game.api.lessonPointerUp(e);return;}if(e.pointerId!==strokePointer)return;if(canPaint())finishStroke();else cancelDrawingInput();});
+game.dom.canvas.addEventListener('pointercancel',e=>{if(game.api.firstLessonActive()){game.api.cancelLessonGesture();return;}if(e.pointerId===strokePointer)cancelDrawingInput();});
+game.dom.canvas.addEventListener('lostpointercapture',e=>{if(game.api.firstLessonActive()){game.api.cancelLessonGesture();return;}if(e.pointerId===strokePointer)cancelDrawingInput();});
 window.addEventListener('blur',cancelDrawingInput);
 syncDrawingControls();
 game.dom.$('startBtn').onclick=startRun;
 game.dom.$('againBtn').onclick=game.api.returnToMenu;
 game.dom.$('deathNewRunBtn').onclick=()=>startRun({fromEnd:true});
-game.dom.$('scrapGuideShow').onclick=()=>game.api.openInfo('hub');
-game.dom.$('scrapGuideSkip').onclick=()=>game.api.openInfo('hub');
-game.dom.$('scrapGuideHubSkip').onclick=game.api.openNotebook;
-game.dom.$('scrapGuideDone').onclick=()=>game.api.buyNotebookPerk('starterEraser');
 game.dom.$('newRunBtn').onclick=startRun;
 game.dom.$('continueBtn').onclick=game.api.proceedAfterWave;
 game.dom.$('rerollBtn').onclick=game.api.reroll;

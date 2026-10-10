@@ -1101,3 +1101,30 @@ html.native-app .scrubber-hint{bottom:calc(66px + var(--native-bottom))}
 @media(max-height:500px) and (min-width:600px){.doodle-choice-box{padding:10px 16px}.doodle-choice-box .lesson-heading img{width:38px;height:40px}.doodle-choice-box h2{font-size:23px;margin:3px 0}.doodle-choice-grid{margin:8px 0}.doodle-choice-grid article{padding:7px}.doodle-note-art{width:40px;height:40px}.doodle-choice-grid p{font-size:12px;margin:6px 0 0}#doodleCurrent{max-height:42px;margin:6px 0}.doodle-choice-box .section-kicker{font-size:10px}}
 
 .doodle-choice-grid button[data-rarity="Legendary"]{border-color:#986515;background:#fff1c9;box-shadow:2px 3px 0 #d6a530}.doodle-choice-grid button[data-rarity="Legendary"] .doodle-note-tier{color:#785016;font-weight:900}
+
+/* Stevie's coach points at the actual screen; only the spotlight is interactive. */
+.stevie-coach{position:fixed;inset:0;z-index:80;display:grid;pointer-events:none;padding:0;isolation:isolate}
+.coach-lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.coach-shade{fill:#14232c9c;pointer-events:fill}
+.coach-focus{fill:none;stroke:#f2c653;stroke-width:3;stroke-linejoin:round}
+.coach-arrow{fill:none;stroke:#fff1b1;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(1px 2px 0 #46361f)}
+.coach-card{position:absolute;pointer-events:auto;width:min(340px,calc(100vw - 20px));max-height:calc(100dvh - 24px);overflow:auto;overscroll-behavior:contain;padding:16px;background:repeating-linear-gradient(transparent 0 27px,#bfd0dc44 27px 28px),#fffaf0;border:2px solid #a68a58;border-radius:4px 12px 6px 10px;box-shadow:4px 5px 0 #71634c;color:#26333c;text-align:left}
+.coach-heading{display:flex;align-items:center;gap:10px}.coach-heading img{object-fit:contain;flex:none}
+.coach-heading h2{font:26px/1.05 'Stevie Pencil',cursive;text-align:left;margin:5px 0}
+.coach-heading .section-kicker{font-size:10px;letter-spacing:.3px;color:#75552a}
+.coach-card p{font-size:15px;line-height:1.4;margin:10px 0}
+.coach-card #lessonPauseNote{font-size:11px;color:#41664a;font-weight:bold;margin:6px 0}
+.coach-card .lesson-metrics,.coach-card #lessonFeedback{font-size:12px;color:#315e47}
+.coach-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.coach-actions button{min-height:42px;padding:8px 10px}.coach-actions button[hidden]{display:none}
+.coach-actions #lessonNext{flex:1;background:#355d43;color:#fffaf0}
+.coach-actions .coach-skip{flex-basis:100%;border:0;box-shadow:none;background:transparent;color:#655b4b;font-size:11px;min-height:28px}
+.coach-action-hint{font-weight:bold;color:#355d43}
+#lessonMetrics[hidden],#lessonFeedback[hidden]{display:none}
+.hud:has(.lesson-spotlight){z-index:auto}
+@media(max-width:480px){.coach-card{padding:12px}.coach-heading img{width:44px;height:48px}.coach-heading h2{font-size:23px}.coach-card p{font-size:14px}}
+@media(max-height:500px){.coach-card{width:clamp(200px,30vw,270px);max-height:calc(100dvh - 80px);padding:10px 12px}.coach-heading img{width:36px;height:40px}.coach-heading h2{font-size:22px}.coach-card p{font-size:13px;margin:6px 0}.coach-actions{margin-top:6px}.coach-actions .coach-skip{min-height:24px}}
+/* Override the retired full-screen lesson dimmer: the SVG leaves a clear window. */
+#lessonOverlay{z-index:80;background:transparent;padding:0;align-items:stretch}
+
+.coach-points-right .coach-heading{flex-direction:row-reverse}

@@ -186,6 +186,7 @@ function openInfo(kind){
   const cards=game.dom.$(kind+'Overlay').querySelector?.('.build-box');
   if(cards)cards.scrollTop=0;
   if(kind==='monsterIntro')game.dom.$('monsterIntroCards').scrollTop=0;
+  game.api.updateStevieGuides?.();
 }
 function closeInfo(back=true){
   if(!activeInfo)return;
@@ -199,6 +200,7 @@ function closeInfo(back=true){
   if(kind==='monsterIntro'||(focusBeforeInfo?.getClientRects&&focusBeforeInfo.getClientRects().length===0))game.dom.$(game.state.running?'pauseBtn':'splashHubBtn').focus?.();else focusBeforeInfo?.focus?.();
 }
 function handleInfoKey(e){
+  if(game.api.handleStevieGuideKey?.(e))return;
   if(game.api.firstLessonActive?.()){if(e.key==='Escape'){e.preventDefault?.();game.api.finishFirstLesson();return;}}
   if(game.api.wobbleRepairActive?.()){if(e.key==='Tab'){const panel=game.dom.$('wobbleRepairOverlay'),buttons=Array.from(panel.querySelectorAll?.('button')||[]).filter(b=>!b.hidden&&!b.disabled&&!b.closest('[hidden]'));const i=buttons.indexOf(document.activeElement);e.preventDefault?.();buttons[(i+(e.shiftKey?-1:1)+buttons.length)%buttons.length]?.focus?.()}return;}
   if(synergyRevealActive()){
