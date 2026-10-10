@@ -124,7 +124,7 @@ function startWave(options={}){
   game.api.resetAbilityEffects();
   game.api.resetLaunchEffects();
   game.api.resetSupportInks();
-  game.api.resetPlaguefire();
+  game.api.resetPlaguefire();game.api.resetPaper();
   game.api.resetSoundEffects();game.api.resetRefuge();game.api.resetEnemyWave();game.api.resetSustain();
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.particles=[];game.state.floaters=[];
   game.state.finalOvertime=false; game.state.finalBossDefeated=false;

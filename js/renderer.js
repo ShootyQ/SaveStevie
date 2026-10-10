@@ -23,6 +23,19 @@ function loadDoodle(name,retry=false){
  const image=new Image();image.decoding='async';image.fetchPriority=coreArtwork.has(name)?'high':'low';
   image.onload=()=>{
     doodles[name]=image;
+    if(name==='scrubber')for(let stage=1;stage<=2;stage++){
+      const frame=document.createElement('canvas');frame.width=384;frame.height=256;
+      frame.naturalWidth=384;frame.naturalHeight=256;
+      const c=frame.getContext('2d');c.drawImage(image,0,0,384,256);c.globalCompositeOperation='destination-out';
+      // First wipe removes the left hand, a foot and a bite of the body.
+      c.beginPath();c.moveTo(0,105);c.lineTo(87,103);c.lineTo(110,136);c.lineTo(96,177);c.lineTo(121,203);c.lineTo(119,256);c.lineTo(0,256);c.closePath();c.fill();
+      if(stage===2){
+        // Second wipe takes the hair and lower body; the face/eraser survive.
+        c.beginPath();c.moveTo(0,0);c.lineTo(384,0);c.lineTo(384,98);c.lineTo(242,98);c.lineTo(215,85);c.lineTo(203,92);c.lineTo(191,77);c.lineTo(166,72);c.lineTo(0,72);c.closePath();c.fill();
+        c.beginPath();c.moveTo(110,177);c.lineTo(140,188);c.lineTo(159,177);c.lineTo(180,188);c.lineTo(210,178);c.lineTo(232,171);c.lineTo(264,184);c.lineTo(264,256);c.lineTo(110,256);c.closePath();c.fill();
+      }
+      doodles['scrubber-wiped-'+stage]=frame;
+    }
     const sheet=name==='grunt-animations'?{type:'grunt',rows:4,count:16}:name==='fast-animations'?{type:'fast',rows:2,count:8}:name==='sniper-animations'?{type:'sniper',rows:3,count:12}:null;
     if(sheet){
       // Crop equal cells once at load; draw/tint cached frames without allocations.
@@ -350,7 +363,7 @@ function tintedDoodle(name,colors){
   return canvas;
 }
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
-  const action=enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
+  const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
   const framed=/^(grunt|fast|sniper)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
   const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
@@ -857,7 +870,7 @@ function draw(){
   }
 
   const scrubberCue=game.api.scrubberHintSnapshot();
-  if(scrubberCue){const ctx=game.dom.ctx,x=game.api.clamp(scrubberCue.x,48,game.state.W-48),y=game.api.clamp(scrubberCue.y-50,90,game.state.H-50);ctx.save();ctx.fillStyle='#fff4cd';ctx.strokeStyle='#456238';ctx.lineWidth=2;ctx.fillRect(x-43,y-14,86,25);ctx.strokeRect(x-43,y-14,86,25);ctx.fillStyle='#29462c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('Erase me!',x,y+3);ctx.beginPath();ctx.moveTo(x,y+11);ctx.lineTo(scrubberCue.x,scrubberCue.y-20);ctx.stroke();ctx.restore();}
+  if(scrubberCue){const ctx=game.dom.ctx,x=game.api.clamp(scrubberCue.x,48,game.state.W-48),y=game.api.clamp(scrubberCue.y-50,90,game.state.H-50);ctx.save();ctx.fillStyle='#fff4cd';ctx.strokeStyle='#456238';ctx.lineWidth=2;ctx.fillRect(x-43,y-14,86,25);ctx.strokeRect(x-43,y-14,86,25);ctx.fillStyle='#29462c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('Erase ×'+scrubberCue.rubsLeft+'!',x,y+3);ctx.beginPath();ctx.moveTo(x,y+11);ctx.lineTo(scrubberCue.x,scrubberCue.y-20);ctx.stroke();ctx.restore();}
   for(const p of game.state.projectiles){
     const ctx=game.dom.ctx,color={fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a'}[p.paperElement];
     ctx.save();ctx.translate(p.x,p.y);ctx.fillStyle='#fffaf0';ctx.strokeStyle=color||'#6d655b';ctx.lineWidth=color?2:1.5;ctx.beginPath();ctx.moveTo(-5,-2);ctx.lineTo(-2,-5);ctx.lineTo(3,-4);ctx.lineTo(5,0);ctx.lineTo(2,5);ctx.lineTo(-4,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-3,-2);ctx.lineTo(1,1);ctx.lineTo(3,-2);ctx.moveTo(1,1);ctx.lineTo(0,4);ctx.stroke();ctx.restore();

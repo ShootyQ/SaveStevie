@@ -81,8 +81,12 @@ function eraseWallPath(a,b,r=20,options={}){
  if(changed){game.state.walls=result;game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+recovered);game.api.updateUI();}
  if(!options.enemy){
   changed=game.api.eraseProjectiles(a,b,r)||changed;
-  for(const e of [...game.state.enemies])if(e.type==='scrubber'&&!game.api.underPaper(e)&&e.hp>0&&game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<=r+e.r*.7){
-   game.api.dealDamage(e,e.hp,'erase');game.api.killEnemy(e);changed=true;
+  for(const e of [...game.state.enemies])if(e.type==='scrubber'&&!game.api.underPaper(e)&&e.hp>0){
+   const touches=game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<=r+e.r*.7;
+   if(!touches){e.eraseBrushInside=false;continue;}
+   // Many pointer samples within one rub still remove just one chunk.
+   if(!e.eraseBrushInside)changed=game.api.eraseScrubber(e)||changed;
+   e.eraseBrushInside=true;
   }
  }
  return changed;
