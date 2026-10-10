@@ -69,6 +69,7 @@ function damageNumber(enemy,amount,kind='physical',finishing=false){
   }
 }
 function dealDamage(enemy,amount,kind='physical',source=null){
+  if(game.api.abilityImmune(enemy)&&kind!=='physical'&&kind!=='reflected')return;
   const underground=game.api.underPaper(enemy);if(underground&&!source?.rock)return;
 
   if(enemy.immunity===kind&&amount>0){
@@ -78,7 +79,7 @@ function dealDamage(enemy,amount,kind='physical',source=null){
   if(!underground&&kind!=='reflected')amount*=game.api.gravityDamageMultiplier(enemy)*Math.max(game.api.bossDamageMultiplier(enemy),game.api.loopDamageMultiplier(enemy));
   if(enemy.type==='bulwark'&&kind==='physical'&&amount>0)amount*=.35;
   const death=game.state.stacks['Death Ink']||0;
-  if(kind==='physical'&&death>0&&enemy.hp<=enemy.maxHp*.5)amount*=1+Math.min(.4,.16+.04*death);
+  if(!game.api.abilityImmune(enemy)&&kind==='physical'&&death>0&&enemy.hp<=enemy.maxHp*.5)amount*=1+Math.min(.4,.16+.04*death);
   amount=game.api.limitBossDamage(enemy,Math.max(0,amount),kind);
   const before=enemy.hp,actual=Math.min(Math.max(0,before),amount);
   enemy.hp-=amount;

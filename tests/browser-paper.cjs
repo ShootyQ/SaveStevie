@@ -30,8 +30,8 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   const up=async()=>{if(touch)await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});else await page.mouse.up({button:'right'});};
   for(const p of [points.entry,points.exit]){
    await down(p);const before=await page.evaluate(()=>testGame.state.paper.holes.length);
-   for(let i=0;i<50;i++){await move({x:p.x+(i%2?0:48),y:p.y});await page.evaluate(()=>{for(let frame=0;frame<3;frame++)testGame.api.updatePaper(1/60);});if(i===47)assert.equal(await page.evaluate(()=>testGame.state.paper.holes.length),before);}
-   await up();assert.equal(await page.evaluate(()=>testGame.state.paper.holes.length),before+1,'real rubbing opens local hole at 2.5 seconds');
+   for(let i=0;i<40;i++){await move({x:p.x+(i%2?0:48),y:p.y});await page.evaluate(()=>{for(let frame=0;frame<3;frame++)testGame.api.updatePaper(1/60);});if(i===35)assert.equal(await page.evaluate(()=>testGame.state.paper.holes.length),before);}
+   await up();assert.equal(await page.evaluate(()=>testGame.state.paper.holes.length),before+1,'real rubbing opens local hole at 2 seconds');
   }
   await page.evaluate(()=>{const g=testGame,h=g.state.paper.holes[0];window.burrower=g.api.spawnEnemy(false,h.x,h.y,'grunt');burrower.hp=burrower.maxHp=100;const random=Math.random;Math.random=()=>0;g.api.updatePaperEnemy(burrower,.01);Math.random=random;g.api.updatePaperEnemy(burrower,.6);g.api.draw();});assert.equal(await page.evaluate(()=>burrower.paperTunnel.phase),'travel');
   await page.screenshot({path:'/tmp/paper-holes-'+viewport.width+'.png'});

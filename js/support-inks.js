@@ -13,6 +13,7 @@ function boss(e){return e.type==='boss'||e.type==='eraser'||game.catalog.enemyDe
 function resetSupportInks(){memory=new WeakMap();clock=0;bites=[];lastBite=-Infinity}
 function updateSupportInkTime(dt){clock+=dt;for(const b of bites)b.age+=dt;bites=bites.filter(b=>b.age<.4)}
 function updateSupportInkEnemy(e,dt){
+  if(game.api.abilityImmune(e))return;
   const data=memory.get(e);if(!data)return;
   data.cooldown=Math.max(0,data.cooldown-dt);data.held=Math.max(0,data.held-dt);
   if(!game.state.inks.frost||e.immunity==='frost')data.cold=0;
@@ -20,6 +21,7 @@ function updateSupportInkEnemy(e,dt){
   if(!game.state.inks.gravity||!game.state.walls.includes(data.wall)){data.held=0;data.wall=null}
 }
 function applyFrostContact(e,dt){
+  if(game.api.abilityImmune(e))return;
   const n=game.state.inks.frost;if(!n||e.hp<=0||e.immunity==='frost')return;
   const t=supportInkTuning(n),data=state(e);
   e.gravitySlow=Math.max(e.gravitySlow,t.frostSlow);data.lastCold=clock;

@@ -24,7 +24,7 @@ DoodleDefender.systems.paperTricks=function(game){
  function waitPaper(p,exclude=null){p.paperMode='wait';p.target=null;p.lastCreditTarget=exclude;p.manual=false;p.rail=null;p.life=1.2;p.hitDelay=.15;return true;}
  function lostPaper(p){if(p.doodlePayload?.credit){const target=nearest(p.x,p.y,90,null);if(target){launch(p,target);return true;}if(parkPaper(p))return true;return waitPaper(p);}return parkPaper(p);}
  function afterPaperHit(p,e){
-  const n=p.doodlePayload;if(!n)return false;splitPaper(p,e);
+  const n=p.doodlePayload;if(!n||game.api.abilityImmune(e))return false;splitPaper(p,e);
   if(n.ink&&!game.api.underPaper(e))extraInkHit(p,e);
   if(n.credit){p.damage+=n.credit;p.creditHops=(p.creditHops||0)+1;const next=nearest(e.x,e.y,90,e);if(next){launch(p,next);return true;}}
   if(n.orbit&&living(e)&&!game.api.underPaper(e)){p.paperMode='orbit';p.orbitTarget=e;p.target=e;p.orbitAngle=Math.atan2(p.y-e.y,p.x-e.x);p.orbitTick=.45/(1+.25*(n.orbit-1));p.life=1.2;p.rail=null;p.manual=false;return true;}
@@ -55,7 +55,7 @@ DoodleDefender.systems.paperTricks=function(game){
  function updatePaperMotion(p,dt){
   if(!p.doodlePayload)return false;p.hitDelay=Math.max(0,(p.hitDelay||0)-dt);
   if(p.paperMode==='orbit'){
-   const e=p.orbitTarget;if(!living(e)||game.api.underPaper(e))return lostPaper(p)?'handled':'remove';
+   const e=p.orbitTarget;if(!living(e)||game.api.underPaper(e)||game.api.abilityImmune(e))return lostPaper(p)?'handled':'remove';
    const from={x:p.x,y:p.y};p.orbitAngle+=dt*5;p.x=e.x+Math.cos(p.orbitAngle)*(e.r+12);p.y=e.y+Math.sin(p.orbitAngle)*(e.r+12);copyPaperWalls(p,from,p);p.orbitTick-=dt;
    if(p.orbitTick<=0){p.orbitTick+=.45/(1+.25*(p.doodlePayload.orbit-1));game.api.hitPaper(p,e);if(p.doodlePayload.ink)extraInkHit(p,e);
     if(p.doodlePayload.credit){p.damage+=p.doodlePayload.credit;p.creditHops=(p.creditHops||0)+1;const target=nearest(e.x,e.y,90,e);if(target)launch(p,target);}
