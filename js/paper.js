@@ -1,7 +1,7 @@
 /* The notebook itself is part of combat. Rubbing time is measured by the game
    clock, never by the number of pointer events or a stationary held eraser. */
 DoodleDefender.systems.paper=function(game){
-const tuning={wearSeconds:2,escapeSeconds:2,entryChance:.3,entryDuration:.5,patchRadius:30,holeRadius:22,holeSpacing:70,maxHoles:24,maxPatches:256,exitWarning:.7,recovery:1.2};
+const tuning={wearSeconds:1,escapeSeconds:2,entryChance:.3,entryDuration:.5,patchRadius:30,holeRadius:22,holeSpacing:70,maxHoles:24,maxPatches:256,exitWarning:.7,recovery:1.2};
 let pending=[],recentPaths=[],rubGrace=0;
 function paperActive(){const s=game.state;return s.running&&!s.paused&&!s.inUpgrade&&!s.betweenWaves&&!s.awaitingSpec&&!game.api.synergyRevealActive()&&!game.api.waveFinaleActive()&&!game.api.wobbleRepairActive()&&!game.api.bossEntranceActive();}
 function resetPaper(){game.state.paper={patches:[],holes:[],arcs:[],clock:0};pending=[];recentPaths=[];rubGrace=0;}
@@ -45,7 +45,7 @@ function updatePaper(dt){
  // Nearby patches share coverage rather than dividing the time for a
  // single small back-and-forth rub between arbitrary sample anchors.
  for(const patch of touched){const count=samples.filter(p=>Math.hypot(p.x-patch.x,p.y-patch.y)<=tuning.patchRadius+p.r).length;
- const before=patch.wear;patch.wear=Math.min(tuning.wearSeconds,patch.wear+rubTime*Math.min(1,2*count/samples.length));if(before<tuning.wearSeconds*.5&&patch.wear>=tuning.wearSeconds*.5)game.api.setMsg('Careful! Keep rubbing this thin patch and you will tear a shortcut.');if(patch.wear>=tuning.wearSeconds-1e-8){const hole=addPaperHole(patch);if(hole)game.api.setMsg('A hole! Monsters can tunnel to another hole closer to Stevie. Rub a moving bump for 2 seconds to bring it up.');}}
+ const before=patch.wear;patch.wear=Math.min(tuning.wearSeconds,patch.wear+rubTime*Math.min(1,2*count/samples.length));if(before<tuning.wearSeconds*.5&&patch.wear>=tuning.wearSeconds*.5)game.api.setMsg('Careful! Keep rubbing this thin patch and you will tear a shortcut.');if(patch.wear>=tuning.wearSeconds-1e-8){const hole=addPaperHole(patch);if(hole)game.api.setMsg(paper.holes.length===1?'A hole! Make a SECOND hole farther from Stevie so monsters can enter there and shortcut to this one.':'Shortcut ready! Some monsters use the farther hole to reach the nearer one. Rub a moving bump for 2 seconds to bring it up.');}}
  paper.patches=paper.patches.filter(p=>!paper.holes.some(h=>Math.hypot(h.x-p.x,h.y-p.y)<tuning.holeSpacing));
  for(const e of game.state.enemies){
   const t=e.paperTunnel;if(!t||t.phase!=='travel'||e.hp<=0)continue;

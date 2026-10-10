@@ -472,7 +472,7 @@ function firstBossIntroActive(){return !!arrival?.intro}
 function firstBossIntroPose(){
  if(!firstBossIntroActive())return null;
  const a=arrival,t=game.api.clamp(a.age/3.375,0,1),reduced=game.api.enemyMotionReduced();
- return {x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.stage,zoom:reduced?1:1+.65*game.api.clamp(t*2,0,1)*(a.stage==='smash'?game.api.clamp((6.582-a.age)/.45,0,1):1),hop:reduced||a.stage!=='stomp'?0:Math.abs(Math.sin(a.age*9))*5};
+ return {x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.stage,frame:reduced?0:a.stage==='stomp'?Math.floor(a.age*8)%4:a.stage==='roar'?4+Math.min(3,Math.floor((a.age-3.375)/2.757*4)):8,zoom:reduced?1:1+.65*game.api.clamp(t*2,0,1)*(a.stage==='smash'?game.api.clamp((6.582-a.age)/.45,0,1):1),hop:reduced||a.stage!=='stomp'?0:Math.abs(Math.sin(a.age*9))*5};
 }
 function beginFirstBossIntro(){
  const {W,player}=game.state;game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);
