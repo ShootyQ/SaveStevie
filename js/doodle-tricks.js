@@ -1,27 +1,33 @@
 /* Drawing interactions for Doodle Scraps. Combat updates own all clocks; draw is pure. */
 DoodleDefender.systems.doodleTricks=function(game){
+ let clings=[];
  let serial=0,decoys=[],links=[],snaps=[],draftMeter=0,crossReady=0;
  const palette=['#df5b67','#4c9bc3','#d6a530','#9b66b0','#509b6a'];
  const surface=e=>e.hp>0&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!game.api.underPaper(e)&&!e.flight;
- function resetDoodleTricks(){serial=0;decoys=[];links=[];snaps=[];draftMeter=0;crossReady=0;}
+ function resetDoodleTricks(){clings=[];serial=0;decoys=[];links=[];snaps=[];draftMeter=0;crossReady=0;}
  function mark(e){if(!e.noteId)e.noteId=++serial;return e.noteId;}
  function doodleTrickHit(e,n,before,clock){
   if(!surface(e))return;
   if(n.dots){e.noteDotHits=(e.noteDotHits||0)+1;if(e.noteDotHits>=2){mark(e);e.noteDotLife=8;e.noteDotColor=(e.noteId-1)%palette.length;}}
-  if(n.cling&&before.electric&&e.immunity!=='electric'&&!(e.noteClingCooldown>clock)){e.noteClingUntil=clock+3;e.noteClingCooldown=clock+6;}
+  if(n.cling&&before.electric&&e.immunity!=='electric'&&!(e.noteClingCooldown>clock)){e.noteClingUntil=clock+3;e.noteClingStrength=n.cling;e.noteClingCooldown=clock+6;}
   const ash=Math.max(n.ash||0,n.influence||0);
   if(ash&&before.burn&&e.immunity!=='fire'&&!(e.noteAshCooldown>clock)&&decoys.length<3){e.noteAshCooldown=clock+Math.max(4,8-Math.min(3,ash-1));const x=game.api.clamp(e.x+e.r+22,30,game.state.W-30),y=game.api.clamp(e.y-15,100,game.state.H-40);decoys.push({x,y,life:4+Math.min(2,ash-1),maxLife:4+Math.min(2,ash-1),owner:mark(e),payload:{...n},influence:n.influence||0});game.api.floatText(x,y-24,'ASH IMPOSTOR!','#bd693b');}
   if(n.bubble&&before.poison&&e.immunity!=='poison'&&!(e.noteBubbleCooldown>clock)){e.noteBubbleHits=(e.noteBubbleHits||0)+1;if(e.noteBubbleHits>=2){e.noteBubbleHits=0;e.noteBubbleLife=3;e.noteBubbleCooldown=clock+7;e.noteBubbleCenter={x:e.x,y:e.y};e.noteBubbleAge=0;game.api.floatText(e.x,e.y-30,'BUBBLE TROUBLE!','#528237');}}
  }
+ function clingMembers(e){const members=new Set([e]);for(let i=0;i<24;i++){const old=members.size;for(const l of clings)if(members.has(l.a)||members.has(l.b)){members.add(l.a);members.add(l.b);}if(members.size===old)break;}return members;}
+ function joinCling(e){if(clings.length>=64)return false;const own=clingMembers(e);const other=game.state.enemies.filter(n=>n!==e&&surface(n)&&!own.has(n)&&Math.hypot(n.x-e.x,n.y-e.y)<e.r+n.r+24).sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y)).find(n=>clingMembers(n).size+own.size<=24);if(!other)return false;mark(e);mark(other);clings.push({a:e,b:other,life:4+.5*((e.noteClingStrength||1)-1)});e.noteClingUntil=other.noteClingUntil=0;game.api.burst((e.x+other.x)/2,(e.y+other.y)/2,'#70aacf',4);game.api.floatText(e.x,e.y-25,'STUCK TOGETHER!','#386ac3');return true;}
+ function doodleClingScale(e){return clings.some(l=>l.a===e||l.b===e)?.7:1;}
  function updateDoodleTricks(dt){
   decoys=decoys.filter(d=>(d.life-=dt)>0);snaps=snaps.filter(s=>(s.life-=dt)>0);
   for(const e of game.state.enemies)if(e.noteDotLife>0)e.noteDotLife=Math.max(0,e.noteDotLife-dt);
+  clings=clings.filter(l=>(l.life-=dt)>0&&surface(l.a)&&surface(l.b)&&game.state.enemies.includes(l.a)&&game.state.enemies.includes(l.b));
+  for(const l of clings){const dx=l.b.x-l.a.x,dy=l.b.y-l.a.y,d=Math.hypot(dx,dy),rest=l.a.r+l.b.r+2;if(d>rest){const step=Math.min((d-rest)*.5,65*dt);for(const [e,sign] of [[l.a,1],[l.b,-1]])if(e.freeze<=0&&e.stun<=0)game.api.moveEnemySafely(e,dx/d*step*sign,dy/d*step*sign);}}
   links=links.filter(l=>(l.life-=dt)>0&&surface(l.a)&&surface(l.b)&&game.state.enemies.includes(l.a)&&game.state.enemies.includes(l.b));
   for(const l of links){const dx=l.b.x-l.a.x,dy=l.b.y-l.a.y,d=Math.hypot(dx,dy);if(d>l.length){const travel=Math.min((d-l.length)*.5,50*dt);for(const [e,sign] of [[l.a,1],[l.b,-1]])if(e.freeze<=0&&e.stun<=0)game.api.moveEnemySafely(e,dx/d*travel*sign,dy/d*travel*sign);}}
  }
  function doodleTarget(e){if(!surface(e)||['sniper','scrubber','medic','sapper','basil'].includes(e.type))return null;return decoys.filter(d=>d.owner!==e.noteId&&Math.hypot(d.x-e.x,d.y-e.y)<150).sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y))[0]||null;}
  function updateDoodleEnemy(e,dt){if(!surface(e)||e.freeze>0||e.stun>0)return false;const clock=game.api.doodleClock();
-  if(e.noteClingUntil>clock&&game.api.nearestWallHit(e)){e.noteClingUntil=0;e.stun=Math.max(e.stun,.7);game.api.floatText(e.x,e.y-25,'STATIC CLING!','#386ac3');return true;}
+  if(e.noteClingUntil>clock)joinCling(e);
   if(e.noteBubbleLife>0){e.noteBubbleLife=Math.max(0,e.noteBubbleLife-dt);e.noteBubbleAge+=dt;const c=e.noteBubbleCenter,a=e.noteBubbleAge*3,tx=game.api.clamp(c.x+Math.sin(a)*35,30,game.state.W-30),ty=game.api.clamp(c.y+Math.cos(a)*25,100,game.state.H-40);game.api.moveEnemySafely(e,(tx-e.x)*Math.min(1,dt*3),(ty-e.y)*Math.min(1,dt*3));return true;}
   const d=doodleTarget(e);if(d&&Math.hypot(e.x-d.x,e.y-d.y)<e.r+18){e.noteDecoyBite=Math.max(0,(e.noteDecoyBite||0)-dt);if(!e.noteDecoyBite){e.noteDecoyBite=.8;game.api.animateEnemyAction(e,'bite',d);if(d.influence)game.api.applyDoodleHit(e,d.payload,true);game.api.burst(d.x,d.y,'#daaa78',3);}return true;}return false;
  }
@@ -38,16 +44,17 @@ DoodleDefender.systems.doodleTricks=function(game){
   const route=[contact];for(let i=dir>0?segment+1:segment;i>=0&&i<pts.length;i+=dir)if(Math.hypot(pts[i].x-route.at(-1).x,pts[i].y-route.at(-1).y)>1)route.push({...pts[i]});if(route.length<2)return false;p.guided=true;p.rail={wall:hit.wall,points:route,index:1};p.x=contact.x;p.y=contact.y;p.life=Math.max(p.life,3);return true;
  }
  function advanceDoodleRail(p,dt){if(!p.rail)return false;const rail=p.rail;if(!game.state.walls.includes(rail.wall)||rail.wall.hp<=0||rail.wall.life<=0){p.rail=null;return false;}let travel=p.speed*dt;
-  while(travel>0&&p.rail){const q=rail.points[rail.index],dx=q.x-p.x,dy=q.y-p.y,len=Math.hypot(dx,dy);if(len<.01){rail.index++;if(rail.index>=rail.points.length){p.rail=null;break;}continue;}const step=Math.min(len,travel);p.x+=dx/len*step;p.y+=dy/len*step;p.vx=dx/len*p.speed;p.vy=dy/len*p.speed;travel-=step;}
+  while(travel>0&&p.rail){const q=rail.points[rail.index],dx=q.x-p.x,dy=q.y-p.y,len=Math.hypot(dx,dy);if(len<.01){rail.index++;if(rail.index>=rail.points.length){p.rail=null;break;}continue;}const step=Math.min(len,travel),from={x:p.x,y:p.y};p.x+=dx/len*step;p.y+=dy/len*step;p.vx=dx/len*p.speed;p.vy=dy/len*p.speed;travel-=step;game.api.copyPaperWalls(p,from,p);}
   if(!p.rail){p.target=game.api.nearestEnemy(p.x,p.y,game.api.paperRange(p.doodlePayload)+100+Math.min(100,(p.doodlePayload.underline-1)*30));p.manual=!p.target;p.life=Math.max(p.life,1.3);game.api.burst(p.x,p.y,'#63a38d',5);}return true;
  }
  function moveDoodleTricks(dx,dy){for(const d of decoys){d.x+=dx;d.y+=dy;}for(const s of snaps){s.ax+=dx;s.bx+=dx;s.ay+=dy;s.by+=dy;}for(const e of game.state.enemies)if(e.noteBubbleCenter){e.noteBubbleCenter.x+=dx;e.noteBubbleCenter.y+=dy;}for(const p of game.state.projectiles)if(p.rail)for(const q of p.rail.points){q.x+=dx;q.y+=dy;}}
  function drawDoodleTricks(){const ctx=game.dom.ctx,time=game.api.doodleClock(),reduced=game.api.enemyMotionReduced();ctx.save();
   for(const d of decoys){ctx.save();ctx.translate(d.x,d.y);ctx.globalAlpha=Math.min(.8,d.life);ctx.strokeStyle='#bd693b';ctx.fillStyle='#ffe7b3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-16,13);ctx.bezierCurveTo(-26,-30,25,-30,16,13);ctx.lineTo(8,8);ctx.lineTo(0,15);ctx.lineTo(-8,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#5b3e30';ctx.beginPath();ctx.arc(-5,-4,2,0,7);ctx.arc(5,-4,2,0,7);ctx.fill();ctx.beginPath();ctx.arc(0,0,6,0,Math.PI);ctx.stroke();if(d.influence){const colors=Object.keys(d.payload).filter(k=>['fire','electric','poison','frost','eraser'].includes(k)).map(k=>({fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a'}[k]));colors.forEach((c,i)=>{ctx.strokeStyle=c;ctx.beginPath();ctx.arc(0,0,21+i*3,0,Math.PI*2);ctx.stroke();});}ctx.restore();}
+  for(const l of clings){const {a,b}=l,dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;ctx.globalAlpha=Math.min(1,l.life);ctx.strokeStyle='#70aacf';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(a.x,a.y);for(let i=1;i<=6;i++){const t=i/6,wave=i===6?0:(i%2?4:-4);ctx.lineTo(a.x+dx*t-dy/len*wave,a.y+dy*t+dx/len*wave);}ctx.stroke();}
   for(const l of links){const {a,b}=l;ctx.globalAlpha=Math.min(1,l.life*2);const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1;for(let i=0;i<8;i++){const t=i/8,u=(i+1)/8,wave=reduced?0:Math.sin(time*8+i*.8)*4,nextWave=reduced?0:Math.sin(time*8+(i+1)*.8)*4;ctx.strokeStyle=palette[i%palette.length];ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(a.x+dx*t-dy/d*wave,a.y+dy*t+dx/d*wave);ctx.lineTo(a.x+dx*u-dy/d*nextWave,a.y+dy*u+dx/d*nextWave);ctx.stroke();}}
   for(const s of snaps){ctx.globalAlpha=s.life/.55;ctx.strokeStyle='#fff4a6';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(s.ax,s.ay);ctx.lineTo(s.bx,s.by);ctx.stroke();}
   ctx.globalAlpha=1;for(const e of game.state.enemies){if(!surface(e))continue;if(e.noteDotLife>0){const y=e.y-e.r-13,r=reduced?8:8+Math.sin(time*5+e.noteId)*1.2;ctx.fillStyle=palette[e.noteDotColor];ctx.strokeStyle='#fff9e9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,y,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff9e9';ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(String((e.noteId-1)%9+1),e.x,y+3);ctx.strokeStyle=palette[e.noteDotColor];ctx.setLineDash([2,4]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+9,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}if(e.noteBubbleLife>0){ctx.fillStyle='#98ce7144';ctx.strokeStyle='#6f9c57';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.r+13,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle='#fff9e9';ctx.beginPath();ctx.arc(e.x-3,e.y-3,e.r+7,Math.PI,Math.PI*1.6);ctx.stroke();}if(e.noteClingUntil>time){ctx.strokeStyle='#386ac3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(e.x-6,e.y-e.r-6);ctx.lineTo(e.x,e.y-e.r-15);ctx.lineTo(e.x+2,e.y-e.r-9);ctx.lineTo(e.x+8,e.y-e.r-17);ctx.stroke();}}
   ctx.restore();
  }
- const api={resetDoodleTricks,doodleTrickHit,updateDoodleTricks,doodleTarget,updateDoodleEnemy,connectDoodleDots,eraseDoodlePath,erasedDoodleShot,secondDraft,guideDoodleProjectile,advanceDoodleRail,moveDoodleTricks,drawDoodleTricks,doodleTricksSnapshot:()=>({decoys:decoys.map(d=>({x:d.x,y:d.y,life:d.life,influence:d.influence})),links:links.map(l=>({a:l.a.noteId,b:l.b.noteId,life:l.life,length:l.length})),snaps:snaps.length})};Object.assign(game.api,api);return api;
+ const api={doodleClingScale,resetDoodleTricks,doodleTrickHit,updateDoodleTricks,doodleTarget,updateDoodleEnemy,connectDoodleDots,eraseDoodlePath,erasedDoodleShot,secondDraft,guideDoodleProjectile,advanceDoodleRail,moveDoodleTricks,drawDoodleTricks,doodleTricksSnapshot:()=>({decoys:decoys.map(d=>({x:d.x,y:d.y,life:d.life,influence:d.influence})),links:links.map(l=>({a:l.a.noteId,b:l.b.noteId,life:l.life,length:l.length})),snaps:snaps.length,clings:clings.map(l=>({a:l.a.noteId,b:l.b.noteId,life:l.life}))})};Object.assign(game.api,api);return api;
 };

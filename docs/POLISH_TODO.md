@@ -31,7 +31,12 @@ Current player feedback: a wave-14 run feels good overall. Pew Pew and Rubble Ru
 - [x] Rarity offers: Common 55%, Uncommon 28%, Rare 13%, Epic 4%. Both distinct choices have the revealed tier. Repeat notes remain eligible and stack.
 - [x] Expand the Markdown, JSON and Excel references with the actual note catalogue and mechanics.
 - [x] Desktop WASD aims ordinary paper throws while held; release for auto-aim. Touch remains automatic. Left eraser is the default on a new touch installation, with the saved side preference preserved.
-- [ ] Design Legendary notes the player likes. Rejected ideas are excluded; no Legendary notes can currently drop.
+- [x] Alpha 0.1.19: five approved Legendary paper-ball notes at 0.3% per discovery: Round Trip, Extra Credit, Wallflowers, Carbon Copy, Extra Ink. Epic discoveries now occupy 3.7%. Seven new custom scrap illustrations.
+- [x] Uncommon Split Decision adds one generation per copy, with fractional physical damage and inherited notes. Rapid Scribble adds uncapped additive 5% throw speed per copy.
+- [x] Static Cling sticks regular monsters together into slow sparking clusters instead of stunning them on walls.
+- [x] Extra Credit hops on every hit within 90px and gains +1 physical damage per copy per hit; it waits for new targets. Round Trip orbits until the victim dies; orbit laps do not split again.
+- [x] Carbon copies launch straight from wall sides for double physical damage, inherit notes and cannot carbon-copy again. Wallflowers can reuse paper while supporting walls survive.
+- [x] Extra Ink repairs nearby walls completely, extends open ends, and refunds 5 ink per note copy per hit. Growth preserves lifetime, creates no reclaimable paid ink and stays on the page.
 - [ ] Playtest late-run combinations and repeated notes for clarity, strength and pickup pacing; tune after feedback.
 
-The entrance cleanup and checked note/control items ship together in this unmerged patch. Other entries remain queued design and playtest work.
+Alpha 0.1.18 is merged. Alpha 0.1.19 adds the checked paper-ball behaviors in a new review branch. Other entries remain queued design and playtest work.

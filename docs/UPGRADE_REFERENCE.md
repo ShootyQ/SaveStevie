@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.18
+# Save Stevie upgrade reference — Alpha 0.1.19
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -123,12 +123,19 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Long Distance Learning | Common | Reach farther enemies. Repeat copies extend range with diminishing returns. |
 | Second Draft | Uncommon | Every few throws, send a second ball at a different enemy. Copies make this happen more often. |
 | Follow the Underline | Uncommon | Paper balls ride your lines, then launch from the far end with extra range. |
-| Static Cling | Rare | Repeated electric hits prime an enemy to stick briefly to the next wall. Includes a basic electric effect if needed. |
+| Static Cling | Rare | Repeated electric hits make nearby monsters cling to each other in slow, sparking clumps. Includes basic electricity. |
 | Ash Impostor | Rare | Hit a burning enemy to shed a smoky decoy that distracts nearby monsters. Includes basic fire if needed. |
 | Bubble Trouble | Rare | Repeated poison hits inflate a wandering bubble. Erase it to pop and stagger the monster. Includes basic poison if needed. |
 | Cross Out | Rare | Erasing hostile pencils or spikes turns their remains into friendly paper throws. |
 | Connect the Dots | Epic | Paper hits mark monsters with bright dots. Draw through two dots to snap a colorful tether between them! |
 | Bad Influence | Epic | Ash decoys carry your paper elements. Monsters biting one receive those effects. Includes Ash Impostor if needed. |
+| Split Decision | Uncommon | On its first hit, a ball splits toward two different nearby enemies. Each copy adds one generation. Children carry your notes and retain 50% damage, improving slightly with copies. |
+| Rapid Scribble | Uncommon | Throw paper balls 5% faster per copy. Additive speed bonuses have no rank cap. |
+| Round Trip | Legendary | Paper balls orbit struck monsters and repeatedly deal their paper damage until that monster dies. Split children can orbit too; laps never split again. |
+| Extra Credit | Legendary | Every hit hops to another enemy within 90px and adds +1 physical damage per copy. No hop limit. If nobody is nearby, the ball waits for its next short hop. |
+| Wallflowers | Legendary | Finished throws perch on nearby walls, then launch again when monsters approach. The balls keep your notes and can be reused while their wall survives. |
+| Carbon Copy | Legendary | Cross any wall to fire two straight paper duplicates out its sides. They deal double physical damage and carry your notes. Each ball copies once per wall; duplicates cannot make more carbon copies. |
+| Extra Ink | Legendary | Black paper balls splash ink on impact: fully heal nearby walls, extend both ends of open walls, and refill 5 ink per copy on hit. Free growth does not create paid ink to reclaim. |
 
 ## Mechanics and specializations
 
@@ -140,7 +147,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Erase combat | Erase small hostile pencils/spikes, sacrificing return damage. Erasing paid electric ink between surviving wall ends discharges up to 12 + 2 × Electric Ink level damage, limited to 0.8 × removed paid ink, with a 0.8-second wall cooldown retained by fragments. Erase Chonks’s windup support or Boingus’s fresh rebound support to stun for 1.4 seconds; each monster has a 6-second stumble cooldown. |
 | Closed shapes | A stroke with more than six points and endpoints less than 22 pixels apart is a closed loop. Closed Loop/Fortress Geometry add durability and paid completion utility; related synergies add effects. |
 | Stevie throws paper balls | Unlocked through throwing upgrades, Paper Ball Practice or a Doodle Scrap discovery. Automatically targets a nearby enemy within 210 pixels before range notes. Desktop WASD steers throws while held; releasing restores auto-aim. Touch keeps auto-aim. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies. |
-| Doodle Scraps | Permanent Notebook unlock costs 25 saved scraps. Wave budgets: 25% zero, 40% one, 25% two, 10% three; eligible normal kills reveal the budget, with 10 combat seconds between discoveries. One pickup at a time, lasts 45 seconds. Draw through it to pause and choose one of two distinct notes of the same rarity. Tier odds: Common 55%, Uncommon 28%, Rare 13%, Epic 4%. No Legendary notes yet. All notes and duplicate copies stack for the run, with bounded control/procs and diminishing range. New notes do not change throws already in flight. No wave-reward slots used; development tests and boss/helpers excluded. |
+| Doodle Scraps | Permanent Notebook unlock costs 25 saved scraps. Wave budgets: 25% zero, 40% one, 25% two, 10% three; eligible normal kills reveal the budget, with 10 combat seconds between discoveries. One pickup at a time, lasts 45 seconds. Draw through it to pause and choose one of two distinct notes of the same rarity. Tier odds: Common 55%, Uncommon 28%, Rare 13%, Epic 3.7%, Legendary 0.3% per discovery. Five Legendary paper-ball behaviors are available. All notes and duplicate copies stack for the run, with bounded control/procs and diminishing range. New notes do not change throws already in flight. No wave-reward slots used; development tests and boss/helpers excluded. |
 | Specialization: Fortress | Defense-category upgrade weights ×3. Does not directly add wall HP. |
 | Specialization: Ink Alchemist | Ink-category upgrade weights ×3. Does not directly add ink levels. |
 | Specialization: Chaos | Adds +12 normal-reward rarity bonus; enemy HP scale ×1.08. No additional Legendary chances. |

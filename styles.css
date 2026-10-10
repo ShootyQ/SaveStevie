@@ -1098,3 +1098,5 @@ html.native-app .scrubber-hint{bottom:calc(66px + var(--native-bottom))}
 @media(max-width:480px){.doodle-choice-grid button{display:grid;grid-template-columns:58px 1fr;text-align:left;gap:3px 10px}.doodle-note-art{grid-row:1/3;width:58px;height:58px}.doodle-choice-grid article{padding:9px}.doodle-choice-grid{gap:8px;margin:10px 0}.doodle-choice-grid p{font-size:13px;margin:6px 0 0}}
 
 @media(max-height:500px) and (min-width:600px){.doodle-choice-box{padding:10px 16px}.doodle-choice-box .lesson-heading img{width:38px;height:40px}.doodle-choice-box h2{font-size:23px;margin:3px 0}.doodle-choice-grid{margin:8px 0}.doodle-choice-grid article{padding:7px}.doodle-note-art{width:40px;height:40px}.doodle-choice-grid p{font-size:12px;margin:6px 0 0}#doodleCurrent{max-height:42px;margin:6px 0}.doodle-choice-box .section-kicker{font-size:10px}}
+
+.doodle-choice-grid button[data-rarity="Legendary"]{border-color:#986515;background:#fff1c9;box-shadow:2px 3px 0 #d6a530}.doodle-choice-grid button[data-rarity="Legendary"] .doodle-note-tier{color:#785016;font-weight:900}
