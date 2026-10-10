@@ -52,6 +52,7 @@ function enterScreen(){
   try{const request=document.documentElement.requestFullscreen();request?.catch(()=>{});}catch{}
 }
 function startRun(options={}){
+  if(game.api.artworkStatus().ready===false){game.api.setMsg('Notebook artwork is still loading. Try again when it is ready.');return;}
   if(options.fromEnd!==true&&game.api.scrapLessonPending()){game.api.openInfo('hub');return;}
   game.api.startMusic('margin-mischief');
   if(window.matchMedia?.('(pointer: coarse)').matches)enterScreen();

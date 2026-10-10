@@ -1085,3 +1085,6 @@ html.native-app .scrubber-hint{bottom:calc(66px + var(--native-bottom))}
 .monster-book .monster-paused{padding:6px 8px;background:#eaf1e2;color:#29462c;border:1px dashed #6a8858;border-radius:3px;white-space:normal;text-align:center}
 .monster-book .monster-intro-footer{background:#fffbef;padding:12px 14px;border:1px dashed #a5997d;border-radius:4px;margin-top:22px}
 @media(max-width:480px){.monster-book{padding:18px 14px}.monster-book .build-heading h2{font-size:36px}.monster-book .monster-card{padding:22px 13px 14px}.monster-book .monster-card h3{font-size:27px}.monster-book .monster-subtitle{font-size:20px}.monster-book .monster-preferences{padding:12px}.monster-book .monster-card-heading{gap:9px}}
+.artwork-load-status{display:block;color:#26333c!important;background:#fff4d9;border:1px solid #aa9977;border-radius:5px;padding:7px 10px;font:13px/1.4 system-ui,sans-serif!important;margin:7px 0!important}
+#retryArtworkBtn{min-height:44px;color:#29462c;background:#fff4d9;margin:4px 0}
+#retryArtworkBtn[hidden],.artwork-load-status[hidden]{display:none}

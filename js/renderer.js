@@ -1,6 +1,6 @@
 /* renderer: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.renderer = function createRendererSystem(game) {
-// Load once. Missing/late assets retain the existing vector drawings.
+// Keep base artwork ready before starting; retry transient image failures.
 const doodles={},tintedDoodles=new Map();
 // Fit a busy wave's working set without rebuilding every colored enemy each frame.
 const tintLimits={entries:192,bytes:16*1024*1024};
@@ -8,8 +8,19 @@ let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
 const doodleNames=['scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
-if(typeof Image!=='undefined')for(const name of doodleNames){
-  const image=new Image();image.decoding='async';
+const coreArtwork=new Set(['paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
+const artworkLoads=new Map(),artworkSupported=typeof Image!=='undefined';
+function artworkStatus(){const loaded=[...coreArtwork].filter(name=>!!doodles[name]).length;return {ready:!artworkSupported||loaded===coreArtwork.size,loaded,total:coreArtwork.size,failed:[...artworkLoads].filter(([,r])=>r.failed).map(([name])=>name),loading:[...artworkLoads].filter(([,r])=>r.loading).map(([name])=>name)};}
+function syncArtworkUI(){
+ const s=artworkStatus(),notice=game.dom.$('artworkLoadStatus'),retry=game.dom.$('retryArtworkBtn');
+ notice.hidden=s.ready&&!s.failed.length;notice.textContent=s.failed.length?'Some doodle artwork couldn’t load. Retry artwork to bring it back.':s.ready?'':'Opening notebook artwork… '+s.loaded+' / '+s.total;
+ retry.hidden=!s.failed.length;
+ game.dom.$('startBtn').disabled=!s.ready||!!game.api.scrapLessonPending?.();
+}
+function retryArtwork(){for(const [name,r] of artworkLoads)if(r.failed){r.retries=0;loadDoodle(name,true)}syncArtworkUI();}
+function loadDoodle(name,retry=false){
+ const previous=artworkLoads.get(name),record=previous||{retries:0,attempt:0};if(record.loading||doodles[name])return;record.loading=true;record.failed=false;record.attempt++;artworkLoads.set(name,record);
+ const image=new Image();image.decoding='async';image.fetchPriority=coreArtwork.has(name)?'high':'low';
   image.onload=()=>{
     doodles[name]=image;
     const sheet=name==='grunt-animations'?{type:'grunt',rows:4,count:16}:name==='fast-animations'?{type:'fast',rows:2,count:8}:name==='sniper-animations'?{type:'sniper',rows:3,count:12}:null;
@@ -28,10 +39,15 @@ if(typeof Image!=='undefined')for(const name of doodleNames){
       frame.getContext('2d').drawImage(image,i*image.naturalWidth/2,0,image.naturalWidth/2,image.naturalHeight,0,0,128,136);
       doodles[i?'stevie-cover':'stevie-concerned']=frame;
     }
+    for(const img of document.querySelectorAll('img'))if(img.complete&&!img.naturalWidth&&img.getAttribute('src')?.split('?')[0]==='assets/art/'+name+'.png')img.src=image.src;
+    record.loading=false;record.failed=false;syncArtworkUI();
     inkSprites.clear();
   };
-  image.src='assets/art/'+name+'.png'+(artworkVersion?'?v='+artworkVersion:'');
+  image.onerror=()=>{record.loading=false;record.failed=true;syncArtworkUI();if(record.retries<2){record.retries++;setTimeout(()=>loadDoodle(name,true),record.retries*400);}};
+  image.src='assets/art/'+name+'.png'+(artworkVersion?'?v='+artworkVersion:'')+(retry?(artworkVersion?'&':'?')+'artRetry='+record.attempt:'');
 }
+if(artworkSupported)for(const name of doodleNames)loadDoodle(name);
+game.dom.$('retryArtworkBtn').onclick=retryArtwork;syncArtworkUI();
 // One SVG coordinate system drives both the visible stroke and its physical nib.
 const menuPath=game.dom.$('splashInkPath'),menuPencil=document.querySelector?.('.splash-pencil');
 const menuStrokes=document.querySelectorAll('.splash-ink-stroke');
@@ -899,7 +915,7 @@ function drawPaperDoodle(e,pose){
  ctx.globalAlpha=pose.reduced?pose.visible:1;ctx.translate(0,pose.y);ctx.rotate(pose.angle);ctx.scale(pose.sx,pose.sy);
  drawDoodleEnemy(e,game.api.clamp(e.hp/e.maxHp,0,1),false);ctx.restore();
 }
-const api = { drawPaperDoodle,drawStapleHelper:()=>drawDoodleEnemy({type:'jamling',r:10,hp:1,maxHp:1},1,false), enemyFacing, enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { artworkStatus,retryArtwork,drawPaperDoodle,drawStapleHelper:()=>drawDoodleEnemy({type:'jamling',r:10,hp:1,maxHp:1},1,false), enemyFacing, enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 updateMenuPencil(0);
 return api;
