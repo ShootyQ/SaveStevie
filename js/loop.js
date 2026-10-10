@@ -38,7 +38,7 @@ function update(dt){
     if(w.life<=0)game.state.walls=game.state.walls.filter(x=>x!==w);
   }
 
-  game.api.updateStevie(dt);game.api.updateProjectiles(dt);game.api.updateEnemyShots(dt);
+  if(!game.api.wobbleInfiniteInk()){game.api.updateStevie(dt);game.api.updateProjectiles(dt)}game.api.updateEnemyShots(dt);
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
 
   game.api.spawnWaveEnemies(dt);
@@ -127,7 +127,7 @@ function update(dt){
 
     if(game.api.waveFinaleActive())break;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
-    if(game.api.isWobbleBoss(e)){game.api.keepWobbleDistance(e);const hit=game.api.nearestWallHit(e);if(hit&&e.freeze<=0&&e.stun<=0)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
+    if(game.api.isWobbleBoss(e)){game.api.keepWobbleDistance(e);continue;}
     if(e.type==='wobble-tooth'&&game.api.updateWobbleTooth(e,dt))continue;
     if(game.api.isStapleBoss(e)){
       if(game.api.bossBrain(e).staple?.hop)continue; // Repositioning leaps cannot collide with ink in midair.

@@ -307,6 +307,7 @@ function joinStitchStart(t,end,reverse=false){
  resizeConnectorHp(t);
 }
 function finishStitch(t){
+ if(t.infinite)return;
  if(!game.state.stats.doodleStitch)return;
  const excluded=new Set([t.base,...t.copies]),last=t.strokePts.at(-1),previous=t.strokePts.at(-2);
  let end=stitchEndpoint(last,excluded);
@@ -342,7 +343,7 @@ let liveStroke=null;
 function wallHpForLength(length,closed=false,intersections=0){return game.state.stats.wallHp*(length/180)*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);}
 function createWall(points,options={}){
   if(points.length<2)return;
-  const start=game.state.stats.doodleStitch?stitchEndpoint(points[0]):null;
+  const start=game.state.stats.doodleStitch&&!game.api.wobbleInfiniteInk?.()?stitchEndpoint(points[0]):null;
   if(start)points=points.map((p,i)=>i===0?{...start.point}:{...p});
   let length=0;
   for(let i=1;i<points.length;i++)length+=game.api.dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
@@ -383,7 +384,7 @@ function createWall(points,options={}){
   // long strokes cost more ink but can take much more punishment.
   const hp=game.api.wallHpForLength(length,closed,intersections);
   const life=infinite?Math.min(10,game.state.stats.wallLife):game.state.stats.wallLife;
-  const base={eraseInk:actualPaid,...(infinite?{wobbleBumper:true}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
+  const base={eraseInk:actualPaid,...(infinite?{wobbleBumper:true,wobbleDraft:!!options.live}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
   game.state.walls.push(base);
 
   const copies=[];
@@ -406,7 +407,7 @@ function chargeFreehand(actualPaid){
   }
 
 }
-function finishWallEffects(base,actualPaid,copies=[],points=base.pts){chargeFreehand(actualPaid);
+function finishWallEffects(base,actualPaid,copies=[],points=base.pts){if(base.wobbleBumper){base.wobbleDraft=false;return}chargeFreehand(actualPaid);
   game.api.repairTouchedWalls(points,new Set([base,...copies]));
 
   game.api.cutWobbleStroke(points);
@@ -419,7 +420,7 @@ function finishWallEffects(base,actualPaid,copies=[],points=base.pts){chargeFree
 function updateLiveWall(points){
  if(!liveStroke){liveStroke=createWall(points,{live:true})||null;return liveStroke?.strokePts||points;}
  const t=liveStroke,w=t.base;
- if(!game.state.walls.includes(w)||w.hp<=0)return null;
+ if((!game.state.walls.includes(w)||w.hp<=0)&&!game.state.enemies.some(e=>game.api.isWobbleBoss(e)&&e.hp>0&&game.api.wobblePhase(e)===1))return null;
  let remaining=t.free?Infinity:(t.cost+Math.max(0,game.state.stats.ink)+(game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0))/game.state.stats.lineCost;
  const clipped=[points[0]];let length=0;
  for(let i=1;i<points.length&&remaining>0;i++){
@@ -444,7 +445,7 @@ function finishLiveWall(){
  const t=liveStroke;liveStroke=null;if(!t)return false;
  const w=t.base;if(game.state.walls.includes(w)&&w.hp>0){
   finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,t.copies,t.strokePts);game.api.collectDoodleScrap(t.strokePts,t.paid);game.api.updateUI();
- }else chargeFreehand(t.paid);
+ }else{chargeFreehand(t.paid);game.api.cutWobbleStroke(t.strokePts);}
  return true;
 }
 function cancelLiveWall(){const t=liveStroke;liveStroke=null;if(t)chargeFreehand(t.paid);}

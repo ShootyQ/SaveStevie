@@ -4,7 +4,7 @@ let brains=new WeakMap(),marks=[],clock=0;
 const minFriendGain=70;
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
-function abilityImmune(e){return isFirstBoss(e);}
+function abilityImmune(e){return isFirstBoss(e)||(game.api.isWobbleBoss(e)&&(game.api.wobblePhase(e)===2||game.api.wobbleCounterOpen(e)));}
 function isFirstBoss(e){return e.waveBoss&&e.type==='boss'&&game.state.wave===5}
 function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/1.1,helperCap:6,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:1.8,minThrowGain:minFriendGain}}
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
@@ -107,9 +107,9 @@ function firstBossLobs(e,targets){
  }
 }
 function shotCircleTime(x,y,nx,ny,cx,cy,r){const dx=nx-x,dy=ny-y,px=x-cx,py=y-cy,a=dx*dx+dy*dy,c=px*px+py*py-r*r;if(c<=0)return 0;if(!a)return null;const b=2*(px*dx+py*dy),disc=b*b-4*a*c;if(disc<0)return null;const t=(-b-Math.sqrt(disc))/(2*a);return t>=0&&t<=1?t:null}
-function returnWallHit(s,nx,ny,ignored=null){
+function returnWallHit(s,nx,ny,ignored=null,walls=game.state.walls){
  let best=null;
- for(const w of game.state.walls){if(ignored?.has(w)||w.hp<=0||w.life<=0)continue;const pad=w.thick/2+s.r;
+ for(const w of walls){if(ignored?.has(w)||w.hp<=0||w.life<=0)continue;const pad=w.thick/2+s.r;
   for(let i=1;i<w.pts.length;i++){
    const a=w.pts[i-1],b=w.pts[i];
    const touches=t=>{const x=s.x+(nx-s.x)*t,y=s.y+(ny-s.y)*t;return game.api.segmentIntersection({x:s.x,y:s.y},{x,y},a,b)||Math.min(game.api.pointSegDist(s.x,s.y,a.x,a.y,b.x,b.y),game.api.pointSegDist(x,y,a.x,a.y,b.x,b.y),game.api.pointSegDist(a.x,a.y,s.x,s.y,x,y),game.api.pointSegDist(b.x,b.y,s.x,s.y,x,y))<=pad};

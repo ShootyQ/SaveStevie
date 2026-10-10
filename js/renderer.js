@@ -700,10 +700,10 @@ function draw(){
     const lifeRatio=game.api.clamp(w.life/w.maxLife,0,1);
     const visualRatio=Math.min(hpRatio,lifeRatio);
     let col='#343638';
-    if(game.state.inks.chaos>0)col=`hsl(${(performance.now()/30+w.hp)%360},55%,30%)`;
+    if(!w.wobbleBumper&&game.state.inks.chaos>0)col=`hsl(${(performance.now()/30+w.hp)%360},55%,30%)`;
     drawToolStroke(w.pts,w.thick,.08+.92*visualRatio,col);
 
-    drawWallTextures(w.pts,w.thick,.08+.92*visualRatio);
+    if(!w.wobbleBumper)drawWallTextures(w.pts,w.thick,.08+.92*visualRatio);else continue;
     if(w.stitchPoints){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b37b32';ctx.lineWidth=2;ctx.globalAlpha=.85;for(const p of w.stitchPoints){if(!w.pts.slice(1).some((q,i)=>game.api.pointSegDist(p.x,p.y,w.pts[i].x,w.pts[i].y,q.x,q.y)<2))continue;ctx.beginPath();ctx.moveTo(p.x-4,p.y-5);ctx.lineTo(p.x+4,p.y+5);ctx.moveTo(p.x+4,p.y-5);ctx.lineTo(p.x-4,p.y+5);ctx.stroke();}ctx.restore();}
     if(w.rockCharge?.life>0){
       const ctx=game.dom.ctx,c=w.rockCharge;ctx.save();ctx.strokeStyle='#628fff';ctx.lineWidth=3;ctx.globalAlpha=Math.min(1,c.life)*.8;
