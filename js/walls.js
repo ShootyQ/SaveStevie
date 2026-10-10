@@ -81,6 +81,7 @@ function eraseWallPath(a,b,r=20,options={}){
  if(changed){game.state.walls=result;game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+recovered);game.api.updateUI();}
  if(!options.enemy){
   changed=game.api.eraseProjectiles(a,b,r)||changed;
+  changed=game.api.eraseDoodlePath(a,b,r)||changed;
   for(const e of [...game.state.enemies])if(e.type==='scrubber'&&!game.api.underPaper(e)&&e.hp>0){
    const touches=game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<=r+e.r*.7;
    if(!touches){e.eraseBrushInside=false;continue;}
@@ -423,6 +424,7 @@ function finishWallEffects(base,actualPaid,copies=[],points=base.pts){chargeFree
 
   game.api.cutWobbleStroke(points);
   game.api.cutTwiceyStroke(points);
+  game.api.connectDoodleDots(points);
   if(base.closed)rewardClosedLoop(base,actualPaid);
 }
 // A held stroke owns real wall objects. Growing changes those objects, rather

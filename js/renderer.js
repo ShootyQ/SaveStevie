@@ -7,7 +7,7 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const doodleNames=['doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
 const coreArtwork=new Set(['paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
 const artworkLoads=new Map(),artworkSupported=typeof Image!=='undefined';
 function artworkStatus(){const loaded=[...coreArtwork].filter(name=>!!doodles[name]).length;return {ready:!artworkSupported||loaded===coreArtwork.size,loaded,total:coreArtwork.size,failed:[...artworkLoads].filter(([,r])=>r.failed).map(([name])=>name),loading:[...artworkLoads].filter(([,r])=>r.loading).map(([name])=>name)};}
@@ -880,9 +880,10 @@ function draw(){
 
   const scrubberCue=game.api.scrubberHintSnapshot();
   if(scrubberCue){const ctx=game.dom.ctx,x=game.api.clamp(scrubberCue.x,48,game.state.W-48),y=game.api.clamp(scrubberCue.y-50,90,game.state.H-50);ctx.save();ctx.fillStyle='#fff4cd';ctx.strokeStyle='#456238';ctx.lineWidth=2;ctx.fillRect(x-43,y-14,86,25);ctx.strokeRect(x-43,y-14,86,25);ctx.fillStyle='#29462c';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('Erase ×'+scrubberCue.rubsLeft+'!',x,y+3);ctx.beginPath();ctx.moveTo(x,y+11);ctx.lineTo(scrubberCue.x,scrubberCue.y-20);ctx.stroke();ctx.restore();}
+  game.api.drawDoodleTricks();
   for(const p of game.state.projectiles){
-    const ctx=game.dom.ctx,color={fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a'}[p.paperElement];
-    ctx.save();ctx.translate(p.x,p.y);ctx.fillStyle='#fffaf0';ctx.strokeStyle=color||'#6d655b';ctx.lineWidth=color?2:1.5;ctx.beginPath();ctx.moveTo(-5,-2);ctx.lineTo(-2,-5);ctx.lineTo(3,-4);ctx.lineTo(5,0);ctx.lineTo(2,5);ctx.lineTo(-4,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-3,-2);ctx.lineTo(1,1);ctx.lineTo(3,-2);ctx.moveTo(1,1);ctx.lineTo(0,4);ctx.stroke();ctx.restore();
+    const ctx=game.dom.ctx,colors={fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a'},owned=Object.keys(p.doodlePayload||{}).filter(k=>colors[k]),color=colors[p.paperElement]||({cling:colors.electric,ash:colors.fire,influence:colors.fire,bubble:colors.poison,dots:'#a758a3',underline:'#40856a'}[p.paperElement]);
+    ctx.save();ctx.translate(p.x,p.y);if(owned.length>1){owned.forEach((k,i)=>{ctx.strokeStyle=colors[k];ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,8,i/owned.length*Math.PI*2,(i+.8)/owned.length*Math.PI*2);ctx.stroke();});}if(p.rail){ctx.strokeStyle='#40856a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-p.vx/p.speed*13,-p.vy/p.speed*13);ctx.lineTo(0,0);ctx.stroke();}ctx.fillStyle='#fffaf0';ctx.strokeStyle=color||'#6d655b';ctx.lineWidth=color?2:1.5;ctx.beginPath();ctx.moveTo(-5,-2);ctx.lineTo(-2,-5);ctx.lineTo(3,-4);ctx.lineTo(5,0);ctx.lineTo(2,5);ctx.lineTo(-4,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-3,-2);ctx.lineTo(1,1);ctx.lineTo(3,-2);ctx.moveTo(1,1);ctx.lineTo(0,4);ctx.stroke();ctx.restore();
   }
   for(const p of game.state.particles){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1
@@ -922,6 +923,7 @@ function draw(){
     if(stapleIntro.stage!=='punch'){ctx.save();ctx.scale(stapleIntro.scale,stapleIntro.scale);ctx.rotate(stapleIntro.angle);drawDoodleEnemy({type:'stapler',r:30,x:stapleIntro.x,y:stapleIntro.y,hp:1,maxHp:1,freeze:0,stun:0},1,false);ctx.restore()}
     if(stapleIntro.stage==='snap'){ctx.font='bold 22px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillStyle='#995c29';ctx.fillText(stapleIntro.age<2.55?'CLACK!':'CLACK CLACK!',0,-60)}ctx.restore();
   }
+  game.api.drawThrowAim?.();
   game.api.drawEraserCursor?.();
   game.api.drawWaveFinale(drawDoodleEnemy);game.dom.ctx.restore();
   if(game.state.paused){
@@ -937,7 +939,7 @@ function drawPaperDoodle(e,pose){
  ctx.globalAlpha=pose.reduced?pose.visible:1;ctx.translate(0,pose.y);ctx.rotate(pose.angle);ctx.scale(pose.sx,pose.sy);
  drawDoodleEnemy(e,game.api.clamp(e.hp/e.maxHp,0,1),false);ctx.restore();
 }
-const api = { artworkStatus,retryArtwork,drawPaperDoodle,drawStapleHelper:()=>drawDoodleEnemy({type:'jamling',r:10,hp:1,maxHp:1},1,false), enemyFacing, enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
+const api = { doodleArtwork:name=>doodles[name]||null,artworkStatus,retryArtwork,drawPaperDoodle,drawStapleHelper:()=>drawDoodleEnemy({type:'jamling',r:10,hp:1,maxHp:1},1,false), enemyFacing, enemyMotionReduced:()=>motionReduced, enemySpriteFrame, updateMenuPencil, resetMenuPencil, enemyActionCue, rendererCacheStats, artworkReady:()=>doodleNames.every(name=>!!doodles[name]), animateEnemyAction, prepareSapperStrike, enemyActionFrame, reactStevieHit, celebrateStevie, updateStevieCelebration, stevieReactionPose, resetEnemyAnimations, reactEnemyHit, animateEnemySplit, animateSplitChild, updateEnemyAnimations, enemyAnimationPose, enemyAnimationCount, resetStevieAnimation, updateStevieAnimation, startStevieThrow, stevieAnimationFrame, enemyStatusColors, resize, draw };
 Object.assign(game.api, api);
 updateMenuPencil(0);
 return api;

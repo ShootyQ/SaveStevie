@@ -11,7 +11,7 @@ function setAudioVolume(name,value){
   try{localStorage.setItem(key,JSON.stringify(preferences));storageIssue=false;}catch{storageIssue=true;}
   game.api.applyMusicVolume?.();game.api.applyEffectsVolume?.();renderOptions();return true;
 }
-const controlsKey='saveStevieControlsV1';let controls={eraserToggle:false,eraserLeft:false};
+const controlsKey='saveStevieControlsV1';let controls={eraserToggle:false,eraserLeft:!!(document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches)};
 try{const saved=JSON.parse(localStorage.getItem(controlsKey)||'null');if(saved&&typeof saved==='object')for(const name of Object.keys(controls))if(typeof saved[name]==='boolean')controls[name]=saved[name];}catch{}
 function drawingControls(){return {...controls};}
 function setDrawingControl(name,value){
@@ -73,7 +73,7 @@ function renderProblemReport(){
   'Tool: '+s.tool.name+'; upgrades: '+list(s.stacks),
   'Ink effects: '+list(s.inks),
   'Synergies: '+(Array.from(s.synergies).join(', ')||'None'),
-  'Throwing element: '+(game.api.paperElementName?.()||'Ordinary paper'),
+  'Doodle Scraps: '+(game.api.paperElementName?.()||'Ordinary paper'),
   'Walls: '+s.walls.length+'; monsters: '+s.enemies.filter(e=>e.hp>0).length,
   'Last hit: '+(game.dom.$('lastHitText').textContent||'None recorded'),
   'Eraser controls: '+(controls.eraserToggle?'Tap to toggle':'Hold')+', '+(controls.eraserLeft?'left':'right')+' button'
