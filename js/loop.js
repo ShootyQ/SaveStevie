@@ -1,6 +1,7 @@
 /* loop: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.loop = function createLoopSystem(game) {
 function update(dt){
+  game.api.updateStevieGuides();
   game.api.syncSoundEffects();game.api.updateMenuPencil(dt);
   if(game.api.wobbleRepairActive()){game.api.updateWobbleRepair(dt);return;}
   if(game.api.waveFinaleActive()){if(game.state.player.hp<=0){game.api.resetWaveFinale();game.api.gameOver();return}game.api.updateWaveFinale(dt);game.api.updateUI();return;}
