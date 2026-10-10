@@ -150,7 +150,7 @@ function renderBuild(){
     ['Wall damage',f(s.wallDamage)+' /s'],['Base wall HP',s.wallHp],['Wall lifetime',s.wallLife+'s'],['Line width',s.lineWidth+'px'],
     ['Closed-wall multiplier','×'+f(s.closedBonus)],['Intersection bonus',f(s.intersectBonus*100)+'% each'],
     ['Stevie max HP',game.state.player.maxHp],['Damage reduction',f(s.playerArmor*100)+'%'],
-    ['Doodle Scraps',game.api.paperElementName()],['Throw reach',Math.round(game.api.paperRange())+'px'],['Paper-ball damage',s.rockDamage],['Throw interval',s.rockRate?s.rockRate+'s':'Not unlocked'],
+    ['Doodle Scraps',game.api.paperElementName()],['Throw reach',Math.round(game.api.paperRange())+'px'],['Paper-ball damage',s.rockDamage],['Throw interval',s.rockRate?f(game.api.paperThrowInterval())+'s':'Not unlocked'],
     ['Walls per stroke',s.tripleLine?3:s.doubleLine?2:1],['Erase recovery',Math.round(s.eraseRefund*100)+'%'],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
     ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','6 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','12 HP/s shared']];
   game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
