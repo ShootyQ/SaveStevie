@@ -42,7 +42,12 @@ function loadDoodle(name,retry=false){
       for(let i=0;i<sheet.count;i++){
         const frame=document.createElement('canvas');frame.width=160;frame.height=sheet.type==='boss'?Math.round(160*image.naturalHeight/image.naturalWidth):sheet.type==='sprinter'?Math.round(160*image.naturalHeight*4/(image.naturalWidth*sheet.rows)):160;
         frame.naturalWidth=frame.width;frame.naturalHeight=frame.height;
-        frame.getContext('2d').drawImage(image,(i%4)*image.naturalWidth/4,Math.floor(i/4)*image.naturalHeight/sheet.rows,image.naturalWidth/4,image.naturalHeight/sheet.rows,0,0,frame.width,frame.height);
+        if(sheet.type==='boss'){
+          // The King's art has uneven row gutters. Equal-height slicing steals
+          // feet from the previous row during casting/entrance frames.
+          const row=Math.floor(i/4),tops=[0,320,600,850,1153],feet=[304,584,840,1124],ratio=image.naturalHeight/1153,top=tops[row]*ratio,bottom=tops[row+1]*ratio,cellWidth=image.naturalWidth/4,scale=frame.width/cellWidth;
+          frame.getContext('2d').drawImage(image,(i%4)*cellWidth,top,cellWidth,bottom-top,0,frame.height-5-(feet[row]*ratio-top)*scale,frame.width,(bottom-top)*scale);
+        }else frame.getContext('2d').drawImage(image,(i%4)*image.naturalWidth/4,Math.floor(i/4)*image.naturalHeight/sheet.rows,image.naturalWidth/4,image.naturalHeight/sheet.rows,0,0,frame.width,frame.height);
         doodles[sheet.type+'-frame-'+i]=frame;
       }
     }
