@@ -932,6 +932,7 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 .wobble-repair-paper h2{font:36px "Stevie Pencil",cursive;color:#3261ad;margin:8px}
 .wobble-repair-win{font-size:12px;font-weight:bold;letter-spacing:1px;color:#28796d}
 #wobbleRepairSpeech{font:22px "Stevie Pencil",cursive;line-height:1.25;min-height:2.5em;margin:8px 0}
+#wobbleRepairScene[hidden]{display:none}
 #wobbleRepairScene{display:block;width:100%;height:auto}
 #wobbleRepairPad{display:block;width:100%;height:auto;touch-action:none;background:#fffdf5;border:2px dashed #a08a65;border-radius:8px}
 #wobbleRepairHint{font-size:14px;line-height:1.4;margin:10px 0}

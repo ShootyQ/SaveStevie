@@ -125,9 +125,17 @@ DoodleDefender.WobblechompRig=(()=>{
    legX+=lift*45;legY-=lift*115;legAngle-=lift*.45;
   }
   let eyeX=m.stalkCuts?755:630,eyeY=m.stalkCuts?360:226,eyeAngle=m.stalkCuts?-.9:0;
+  if(m.mobilePose&&m.stalkCuts===0){eyeX=755;eyeY=340;eyeAngle=-.6}
   if(m.beamAge!==null){const t=m.beamAge,coil=t<.8?ease(t/.8):1-ease((t-2.1)/.7);eyeX+=coil*25;eyeY-=coil*25;eyeAngle-=coil*.3}
   if(!reduced){legAngle+=Math.sin(m.time*2.5)*.04;eyeAngle+=Math.sin(m.time*2)*.06}
   const parts={arm:part(at(466,418),at(m.wrist.x+(m.punchAge===null?Math.cos(m.walkPhase||0)*14*blend:0),m.wrist.y),m.angle,'arm',m.armCuts),leg:part(at(675,495),at(legX,legY),legAngle,'leg',m.legCuts),stalk:part(at(646,311),at(eyeX,eyeY),eyeAngle,'stalk',m.stalkCuts)};
+  // An exposed limb stretches forward; its joint and drawing hit target use the
+  // same pose. The body stays small enough to leave mobile drawing room.
+  for(const [name,limb] of Object.entries(parts))if(limb.cuts<2&&(m.cutFocus===name||({arm:'punchAge',leg:'spikeAge',stalk:'beamAge'}[name]&&m[{arm:'punchAge',leg:'spikeAge',stalk:'beamAge'}[name]]!==null))){
+   const focused=m.cutFocus===name,offer={arm:{x:-190,y:45},leg:{x:165,y:25},stalk:{x:145,y:m.focusSideways?20:-145}}[name],end=focused?{x:limb.root.x+offer.x,y:limb.root.y+offer.y}:{...limb.end};
+   parts[name]=part(limb.root,end,limb.angle,name,limb.cuts,focused?1.65:1.25);
+   const d=Math.hypot(end.x-limb.root.x,end.y-limb.root.y)||1;parts[name].joint.b={x:limb.root.x+(end.x-limb.root.x)/d*Math.min(110,d),y:limb.root.y+(end.y-limb.root.y)/d*Math.min(110,d)};
+  }
   const roll=rollPose(m,reduced);
   if(roll){
    const folds={arm:{root:{x:-75,y:0},end:{x:-75,y:-50},angle:-.35,scale:.55},leg:{root:{x:65,y:30},end:{x:60,y:55},angle:-.5,scale:.6},stalk:{root:{x:45,y:-50},end:{x:35,y:-75},angle:-.8,scale:.55}};
@@ -192,8 +200,8 @@ DoodleDefender.WobblechompRig=(()=>{
  function draw(ctx,image,m,{reduced=false,guide=true,toothImage=null,effects=true,debris=true}={}){
   const p=pose(m,reduced);ctx.save();
   for(const limb of Object.values(p.parts))if(limb.cuts<2){
-   const s=specs[limb.name];noodle(ctx,limb.joint.b,limb.end,limb.name==='arm'?(limb.cuts?70:35):limb.cuts?25:-10,limb.name==='stalk'?12:16);
-   tile(ctx,image,s.col,s.row,limb.end.x,limb.end.y,s.w*limb.scale,s.h*limb.scale,limb.angle,s.pivot);if(limb.name==='leg')drawInkFoot(ctx,limb.end.x,limb.end.y,s.w*limb.scale,s.h*limb.scale,limb.angle,s.pivot);
+   ctx.save();if(m.cutFocus&&m.cutFocus!==limb.name)ctx.globalAlpha=.5;const s=specs[limb.name];noodle(ctx,limb.joint.b,limb.end,limb.name==='arm'?(limb.cuts?70:35):limb.cuts?25:-10,limb.name==='stalk'?12:16);
+   tile(ctx,image,s.col,s.row,limb.end.x,limb.end.y,s.w*limb.scale,s.h*limb.scale,limb.angle,s.pivot);if(limb.name==='leg')drawInkFoot(ctx,limb.end.x,limb.end.y,s.w*limb.scale,s.h*limb.scale,limb.angle,s.pivot);ctx.restore();
   }
   const openMouth=m.reaction>0||(m.teethAge!==null&&m.teethAge>=.72&&m.teethAge<1.9);
   if(p.roll){const r=p.roll;ctx.save();ctx.translate(r.x+p.entry,r.y);ctx.rotate(r.angle);ctx.scale(r.scaleX,r.scaleY);
