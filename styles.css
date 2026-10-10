@@ -942,7 +942,7 @@ html.native-app .bottom #pauseBtn{flex:0 0 108px;font-family:'Stevie Pencil',cur
 /* Erase is a thumb modifier; capture both fingers without browser gestures. */
 .bottom button{flex-shrink:1;min-width:0}
 .bottom #eraserBtn{order:3;touch-action:none;user-select:none;-webkit-user-select:none}
-.bottom #eraserBtn::before{content:'';display:block;width:19px;height:13px;background:linear-gradient(90deg,#efb6c3 0 65%,#f6ede0 65%);border:1.5px solid #744454;border-radius:3px;transform:rotate(-30deg);flex-shrink:0}
+.bottom #eraserBtn::before,#lessonErase::before{content:'';display:block;width:19px;height:13px;background:linear-gradient(90deg,#efb6c3 0 65%,#f6ede0 65%);border:1.5px solid #744454;border-radius:3px;transform:rotate(-30deg);flex-shrink:0}
 .bottom #eraserBtn.is-erasing{background:#f7c9d5;color:#572f40;border:2px solid #793a51;box-shadow:inset 0 2px 3px #793a5128}
 .bottom #eraserBtn.eraser-left{order:-1;margin-right:auto}
 html.native-app .bottom #eraserBtn{flex:0 1 108px;font-size:21px}
@@ -1020,8 +1020,8 @@ html.native-app input,html.native-app textarea{user-select:text;-webkit-user-sel
 #lessonCanvas{background:#fffaf0;box-shadow:2px 3px 0 #b8a78555;border-radius:4px;border-color:#6f8998}
 .lesson-box .lesson-metrics{font-variant-numeric:tabular-nums;font-size:13px;font-weight:bold;color:#31578a;margin:8px 0}
 #lessonFeedback{min-height:0;margin:8px 0 12px;color:#3d6647}
-#lessonErase{min-width:132px;border:2px solid #486551;background:#e9f0da;color:#294634;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-#lessonErase.is-erasing{background:#39553f;color:#fffaf0}
+#lessonErase{display:flex;align-items:center;justify-content:center;gap:9px;min-width:112px;border:1.5px solid #9e927b;background:#fffaf0;color:#26333c;font-family:'Stevie Pencil',cursive;font-size:21px;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#lessonErase.is-erasing{background:#f7c9d5;color:#572f40;border:2px solid #793a51;box-shadow:inset 0 2px 3px #793a5128}
 .lesson-actions{border-top:1px dashed #b8a785;padding-top:12px}
 #lessonNext{background:#355d43;color:#fffaf0;flex:1}
 #lessonSkip{width:100%;border:0;box-shadow:none;background:transparent;color:#625c50;font-size:12px;min-height:36px}
