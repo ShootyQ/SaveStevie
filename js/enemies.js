@@ -121,7 +121,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
   game.state.enemies.push(enemy);game.api.discoverMonster(type);
-  if(forceBoss){const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isWobbleBoss(enemy)){game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
+  if(forceBoss){const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
   return enemy;
 }
 
@@ -438,13 +438,21 @@ function wobbleIntroPose(){
  if(!arrival?.wobbleIntro)return null;const a=arrival,t=game.api.clamp(a.age/3.375,0,1),reduced=game.api.enemyMotionReduced();
  return {x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.age<3.375?'stomp':'roar',zoom:reduced?1:1+.55*t*Math.min(1,Math.max(0,(6.132-a.age)/.5))};
 }
+function clearWobbleEntranceWalls(){
+ game.api.endDraw();
+ for(const wall of game.state.walls.slice(0,8)){const p=wall.pts[Math.floor(wall.pts.length/2)];if(p)game.api.burst(p.x,p.y,'#c8b99a',6);}
+ // Arrival sweeps ink away; destroying upgraded walls here would trigger
+ // explosions, healing, or other combat rewards before the fight starts.
+ game.state.walls=[];game.state.projectiles=[];game.state.enemyShots=[];
+ game.api.resetAbilityEffects();game.api.resetSupportInks();game.api.resetLaunchEffects();game.api.resetPlaguefire();
+}
 function beginWobbleIntro(){
  game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);game.api.loadWobbleArtwork();
  arrival={wobbleIntro:true,side:game.state.player.x>=game.state.W/2?'left':'right',age:0,left:6.132};refreshBossArrival();bossPhase='entrance';game.api.playSound('bossStomp');game.api.setMsg('Pencils down… Wobblechomp is stomping in!');
 }
 function updateWobbleIntro(dt){
  if(!arrival?.wobbleIntro||document.hidden)return;const a=arrival,before=a.age;a.age=Math.min(6.132,a.age+dt);a.left=6.132-a.age;
- if(before<3.375&&a.age>=3.375){game.api.stopSoundEffects('bossStomp');game.api.playSound('bossRoar');game.api.setMsg('Wobblechomp: WATCH ME FALL APART!')}
+ if(before<3.375&&a.age>=3.375){game.api.stopSoundEffects('bossStomp');game.api.playSound('bossRoar');clearWobbleEntranceWalls();game.api.setMsg('Wobblechomp ROARS your old walls off the page! Get ready to draw fresh cover.')}
  if(a.age<6.132){const kind=a.age<3.375?'bossStomp':'bossRoar';if(!game.api.soundEffectsSnapshot().voices.some(v=>v.kind===kind))game.api.playSound(kind,false,a.age-(kind==='bossRoar'?3.375:0))}
  if(a.age>=6.132){game.api.stopSoundEffects('bossRoar');game.api.spawnEnemy(true,a.targetX,a.y);game.api.suspendMusic(false);game.api.setMsg('Cut green threads twice per part! Block punches and spikes; rebuild after eye beams.')}
 }

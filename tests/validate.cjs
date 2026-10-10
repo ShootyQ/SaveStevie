@@ -620,6 +620,21 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 }
 
 
+// Wobblechomp sweeps carried cover during the roar without upgrade destruction procs.
+{
+ const g=load(true).sandbox.testGame;g.api.resetRun({skipIntro:true});g.api.setSynergyRevealsEnabled(false);g.state.wave=10;g.api.startWave({skipIntro:true});g.state.enemies=[];
+ g.state.stats.doubleLine=true;g.state.inks.fire=2;g.state.inks.blast=2;g.state.synergies.add('INFERNO');g.api.createWall([{x:100,y:180},{x:280,y:180}]);assert.equal(g.state.walls.length,2);
+ g.state.stats.ink=37;g.state.timeLeft=0;const hp=g.state.player.hp,kills=g.state.kills;
+ g.api.update(.01);assert(g.api.bossEntranceActive());g.api.update(3.374);assert.equal(g.state.walls.length,2,'walls survive stomp so the roar visibly sweeps them');
+ g.state.paused=true;g.api.update(2);assert.equal(g.state.walls.length,2,'paused entrance does not sweep');g.state.paused=false;
+ const damage=g.api.damageWall,explosion=g.api.animateWallExplosion;g.api.damageWall=()=>{throw Error('Entrance destroyed upgraded wall instead of clearing it')};g.api.animateWallExplosion=()=>{throw Error('Entrance triggered blast')};
+ g.api.update(.002);assert.equal(g.state.walls.length,0);assert.equal(g.state.stats.ink,37);assert.equal(g.state.kills,kills);assert.equal(g.state.player.hp,hp);assert.equal(g.state.inks.fire,2);assert.equal(g.state.stats.doubleLine,true);
+ g.api.update(2.756);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1);assert.equal(g.state.walls.length,0,'fight starts without inherited cover');
+ g.api.damageWall=damage;g.api.animateWallExplosion=explosion;
+ g.api.resetRun({skipIntro:true});g.state.wave=10;g.state.stats.doubleLine=true;g.api.createWall([{x:100,y:180},{x:280,y:180}]);g.state.stats.ink=37;g.api.spawnEnemy(true,100,180);assert.equal(g.state.walls.length,0,'direct boss starts also clear cover');assert.equal(g.state.stats.ink,37);
+ console.log('PASS: Wobble roar clears original/copied Fire/Blast walls, pause and direct starts, no explosions/refunds/rewards, preserved ink, health and upgrades.');
+}
+
 // King Doodle-Doom's four sprite sequences follow real attacks without combat mutation.
 {
  const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.wave=5;g.state.enemies=[];

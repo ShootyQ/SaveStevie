@@ -4,7 +4,7 @@ Wave 10 now replaces Staple Snack with Wobblechomp. After the timer and remainin
 monsters clear, combat, ink regeneration and wall aging stop. He stomps in from
 the side, the camera zooms for his roar, then Wobblechomp Fight V5 starts. Existing
 boss stomp/roar recordings are reused.
-Walls survive his entrance. Pausing/backgrounding stops the entrance; reduced
+His roar sweeps away every existing wall and its lingering combat effects before phase one. The sweep does not trigger Blast/Fire destruction effects, refund ink or grant combat rewards. Direct Scratch Page starts clear old walls too. Pausing/backgrounding stops the entrance; reduced
 motion removes the zoom. Scratch Page’s wave-10 boss shortcut starts combat directly.
 
 Detaching the arm, spiky leg and eye stalk starts **phase two**. Four player-directed spike splats win the encounter and award the boss kill before a friendly repair scene. Phase three is a friendly post-victory repair scene: the player redraws his appendages, they attach, and he walks off happy.
