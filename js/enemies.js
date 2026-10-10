@@ -756,7 +756,7 @@ function steerBounce(e,dt){
 function moveEnemySafely(e,dx,dy){
   if(game.api.underPaper(e))return false;
   const x=e.x+dx,y=e.y+dy;
-  if(game.api.isWobbleBoss(e)){if(!game.api.wobbleMoveClear(e,x,y))return false;e.x=x;e.y=y;return true}
+  if(game.api.isWobbleBoss(e)){if(!game.api.wobbleMoveClear(e,x,y))return false;game.api.shredWobbleWalls(e,e,{x,y});e.x=x;e.y=y;return true}
   if(e.waveBoss?!game.api.bossMoveClear(e,x,y):!game.api.bouncePathClear(e,x,y,0))return false;
   e.x=x;e.y=y;return true;
 }
