@@ -83,6 +83,7 @@ function eraseWallPath(a,b,r=20,options={}){
   const ground=eraseBurningGround(a,b,r),plague=game.api.erasePlaguefire(a,b,r);
   if((ground||plague)&&game.state.paper.clock>=(game.state.paper.firebreakCueAt??0)){game.state.paper.firebreakCueAt=game.state.paper.clock+.7;game.api.floatText(b.x,b.y-20,'FIREBREAK!','#a56930');}
   changed=ground||plague||changed;
+  changed=game.api.eraseHardhatTools(a,b,r)||changed;
   changed=game.api.eraseProjectiles(a,b,r)||changed;
   changed=game.api.eraseDoodlePath(a,b,r)||changed;
   for(const e of [...game.state.enemies])if(e.type==='scrubber'&&!game.api.underPaper(e)&&e.hp>0){

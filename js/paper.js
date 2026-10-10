@@ -62,7 +62,7 @@ function updatePaperEnemy(e,dt){
  if(e.eraseStumble>0)e.eraseStumble=Math.max(0,e.eraseStumble-dt);
  let t=e.paperTunnel;
  if(!t){
-  if(e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.hurdle||e.type==='wobble-tooth'||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
+  if(e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.hurdle||['wallpuller','papertearer','wobble-tooth'].includes(e.type)||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
   const holes=game.state.paper.holes,player=game.state.player,entry=holes.find(h=>Math.hypot(h.x-e.x,h.y-e.y)<=h.r+e.r*.35);
   if(e.paperEncounter&&!holes.some(h=>h.id===e.paperEncounter&&Math.hypot(h.x-e.x,h.y-e.y)<=h.r+e.r*.35+18))delete e.paperEncounter;
   if(!entry||e.paperEncounter===entry.id)return false;
@@ -184,5 +184,5 @@ function drawPaperBump(e){
 }
 function drawSparkGaps(){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#315fd2';ctx.lineWidth=3;for(const arc of game.state.paper.arcs){const dx=arc.b.x-arc.a.x,dy=arc.b.y-arc.a.y,d=Math.hypot(dx,dy)||1;ctx.globalAlpha=Math.min(1,arc.life/.45);ctx.beginPath();ctx.moveTo(arc.a.x,arc.a.y);for(let i=1;i<6;i++){const offset=(i%2?1:-1)*4;ctx.lineTo(arc.a.x+dx*i/6-dy/d*offset,arc.a.y+dy*i/6+dx/d*offset);}ctx.lineTo(arc.b.x,arc.b.y);ctx.strokeStyle='#b9eaff';ctx.lineWidth=6;ctx.stroke();ctx.strokeStyle='#315fd2';ctx.lineWidth=2;ctx.stroke();}ctx.restore();}
 resetPaper();
-const api={clearFirePatch,firePatchCleared,clipFirePatch,moveFirePatch,updateEraseSlide,paperTuning:()=>({...tuning}),paperTransitionPose,paperActive,resetPaper,cancelPaperRub,queuePaperRub,updatePaper,updatePaperEnemy,underPaper,eraseProjectiles,eraseWallReaction,movePaper,drawPaper,drawPaperBump,drawSparkGaps};Object.assign(game.api,api);return api;
+const api={safePaperPoint,addPaperHole,clearFirePatch,firePatchCleared,clipFirePatch,moveFirePatch,updateEraseSlide,paperTuning:()=>({...tuning}),paperTransitionPose,paperActive,resetPaper,cancelPaperRub,queuePaperRub,updatePaper,updatePaperEnemy,underPaper,eraseProjectiles,eraseWallReaction,movePaper,drawPaper,drawPaperBump,drawSparkGaps};Object.assign(game.api,api);return api;
 };

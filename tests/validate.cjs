@@ -528,9 +528,9 @@ const storage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>{saved.set
 const env=load(true,{intros:true,storage}),g=env.sandbox.testGame;
 assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
-assert.equal(g.catalog.monsters.length,26);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,26);
+assert.equal(g.catalog.monsters.length,28);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,28);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],2:['scrubber','fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],2:['scrubber','fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['wallpuller','bulwark'],12:['gnawer'],13:['basil','medic'],14:['papertearer','brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -550,14 +550,14 @@ g.api.resetRun();env.node('hideMonsterIntros').checked=true;g.api.continueMonste
 assert.equal(saved.get('saveStevieMonsterIntros'),'off');assert.equal(g.api.monsterIntrosEnabled(),false);assert.equal(saved.get('doodleDefenderBestV4'),'14');
 g.api.resetRun();assert.equal(g.api.infoOpen(),false,'disabled setting survives new runs');g.state.wave=20;g.api.startWave();assert.equal(g.api.infoOpen(),false);
 const reloaded=load(true,{intros:true,storage});assert.equal(reloaded.sandbox.testGame.api.monsterIntrosEnabled(),false,'disabled setting survives page reload');
-g.state.paused=false;for(const m of g.catalog.monsters)g.api.discoverMonster(m.type);g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,26);
+g.state.paused=false;for(const m of g.catalog.monsters)g.api.discoverMonster(m.type);g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,28);
 const before=JSON.stringify(g.state);g.api.update(.2);assert.equal(JSON.stringify(g.state),before);
 g.api.closeCompendium();assert.equal(g.state.paused,false);g.state.paused=true;g.api.openCompendium();g.api.closeCompendium();assert.equal(g.state.paused,true);
 g.api.setMonsterIntrosEnabled(true);assert.equal(saved.get('saveStevieMonsterIntros'),'on');g.api.resetRun();assert.equal(g.api.infoOpen(),true,'setting can be re-enabled');
 g.api.resetRun();assert.equal(g.state.paused,true,'reset replaces an open introduction safely');g.api.handleInfoKey({key:'Escape',preventDefault(){}});assert.equal(g.state.paused,false,'Escape explicitly continues the introduction');
 const blocked={getItem(k){if(k==='saveStevieAudioV1')throw Error('blocked');return null},setItem(k){if(k==='saveStevieAudioV1')throw Error('blocked')}};const fallback=load(true,{intros:true,storage:{getItem:key=>key==='doodleDefenderBestV4'?null:blocked.getItem(),setItem:blocked.setItem}}).sandbox.testGame;
 fallback.api.setMonsterIntrosEnabled(false);fallback.api.resetRun();assert.equal(fallback.state.paused,false,'blocked preference storage does not prevent gameplay');
-console.log('PASS: all 26 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
+console.log('PASS: all 28 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
 }
 
 
@@ -654,7 +654,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 // A mixed-status crowd must reuse its tinted sprites instead of allocating each frame.
 {
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
-const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['basil','scrubber','wobblechomp','wobble-tooth'].includes(type));
+const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['basil','scrubber','wallpuller','papertearer','wobblechomp','wobble-tooth'].includes(type));
 for(let i=0;i<76;i++){
  const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][Math.floor(i/types.length)%4];
  e.burn=mask&1?2:0;e.poison=mask&2?2:0;e.freeze=mask&4?2:0;e.charged=mask&8?2:0;e.gravitySlow=mask&16?.4:0;
@@ -2592,4 +2592,20 @@ require('./wobblechomp-rework.cjs')(load);
  g.api.movePlaguefire(20,30);safe.x=220;safe.y=280;safe.hp=1000;g.api.updatePlaguefire(.1);assert.equal(safe.hp,1000,'cleared geometry follows page translation');g.api.dropPlaguefire({x:220,y:280,burn:1,poison:1});g.api.updatePlaguefire(.1);assert(safe.hp<1000,'fresh fire can reignite erased ground');
  const renderState=JSON.stringify(g.state),patches=JSON.stringify(g.api.plaguefireSnapshot());g.api.draw();g.api.draw();assert.equal(JSON.stringify(g.state),renderState);assert.equal(JSON.stringify(g.api.plaguefireSnapshot()),patches,'firebreak render is pure');
  console.log('PASS: timely Trip Line skids/cooldown/safe geometry, old/distant gaps, Chonks momentum reset, pause, surviving-end Spark Gap and local Napalm/Plaguefire Firebreak growth/translation/reignition/pure rendering.');
+}
+
+// Hard-hat jobs are real, warned, erasable and bounded; drawing never drives them.
+{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.wave=14;g.state.spawnTimer=999;
+ const tug=g.api.spawnEnemy(false,100,250,'wallpuller');assert.equal(g.api.spawnEnemy(false,90,250,'wallpuller'),null,'one wall mover at a time');g.api.createWall([{x:150,y:190},{x:150,y:310}]);const wall=g.state.walls[0],hp=wall.hp,ink=g.state.stats.ink;
+ g.api.updateHardhat(tug,1.1);assert.equal(tug.crew.phase,'hook');assert.equal(wall.pts[0].x,150,'hook warning does not move wall');g.api.updateHardhat(tug,1.2);assert.equal(tug.crew.phase,'pull');g.api.updateHardhat(tug,.2);assert(wall.pts[0].x<150,'wall moves away from Stevie');assert.equal(wall.hp,hp);assert.equal(g.state.stats.ink,ink,'pulling creates no ink or HP');
+ g.api.eraseWallPath({x:110,y:235},{x:110,y:265},8);assert.equal(tug.crew.phase,'walk');assert(tug.stun>0,'rope erasing stops job');const pts=JSON.stringify(wall.pts);g.api.updateHardhat(tug,.5);assert.equal(JSON.stringify(wall.pts),pts);
+ tug.stun=0;tug.crew={phase:'hook',left:1,wall,anchor:{x:150,y:250}};g.state.walls=[];g.api.updateHardhat(tug,.2);assert.equal(tug.crew.phase,'walk','erased target releases grip');
+ g.api.resetRun();g.state.wave=14;const rip=g.api.spawnEnemy(false,400,155,'papertearer');assert.equal(g.api.spawnEnemy(false,450,155,'papertearer'),null);g.api.updateHardhat(rip,1.1);assert.equal(rip.crew.phase,'tear');assert.equal(g.state.paper.holes.length,0,'entry is warned before opening');g.api.updateHardhat(rip,1.4);assert.equal(g.state.paper.holes.length,1);assert.equal(rip.crew.phase,'bomb');const target={...rip.crew.aim};assert(target.y>155,'exit is closer to Stevie');g.api.updateHardhat(rip,1.3);assert.equal(g.api.hardhatSnapshot().bombs.length,1);assert.equal(g.state.paper.holes.length,1,'bomb must actually land');
+ const frozen=JSON.stringify(g.api.hardhatSnapshot());g.state.paused=true;g.api.updateHardhatBombs(.5);assert.equal(JSON.stringify(g.api.hardhatSnapshot()),frozen);g.state.paused=false;g.api.updateHardhatBombs(1);assert.equal(g.api.hardhatSnapshot().bombs.length,0);assert.equal(g.state.paper.holes.length,2);assert(g.state.paper.holes.every(h=>g.api.safePaperPoint(h)));assert.equal(g.state.player.hp,75,'bombs open holes without surprise fort damage');
+ const entry=g.state.paper.holes[0],ordinary=g.api.spawnEnemy(false,entry.x,entry.y,'grunt'),boss=g.api.spawnEnemy(false,entry.x,entry.y,'boss'),random=env.sandbox.Math.random;env.sandbox.Math.random=()=>0;assert(g.api.updatePaperEnemy(ordinary,.01),'new hole pair uses ordinary tunnel logic');assert.equal(g.api.updatePaperEnemy(boss,.01),false,'bosses never tunnel');env.sandbox.Math.random=random;
+ rip.crew={phase:'bomb',left:1,aim:target};assert(g.api.eraseHardhatTools(target,target,20));assert.equal(rip.crew.phase,'walk');assert(rip.stun>0);rip.stun=0;rip.crew={phase:'bomb',left:.01,aim:target};g.api.updateHardhat(rip,.02);const bomb=g.api.hardhatSnapshot().bombs[0];assert(g.api.eraseHardhatTools(bomb.from,bomb.from,20));assert.equal(g.api.hardhatSnapshot().bombs.length,0);
+ g.state.paper.crewHoles=6;rip.crew={phase:'tear',left:.01,aim:{x:600,y:200}};const holes=g.state.paper.holes.length;g.api.updateHardhat(rip,.02);assert.equal(g.state.paper.holes.length,holes,'per-wave construction cap');
+ const snapshot=JSON.stringify(g.state),jobs=JSON.stringify(g.api.hardhatSnapshot());g.api.draw();g.api.draw();assert.equal(JSON.stringify(g.state),snapshot);assert.equal(JSON.stringify(g.api.hardhatSnapshot()),jobs,'pure rendering');g.api.startWave();assert.equal(g.api.hardhatSnapshot().bombs.length,0);assert.equal(g.state.paper.crewHoles,undefined);
+ console.log('PASS: hard-hat spawn caps, warned real wall displacement/no healing, rope erasing, stale targets, warned entry/closer-exit bombs, pause/fuse/mark counters, safe holes with existing tunnel/boss rules, per-wave caps and pure rendering/reset.');
 }

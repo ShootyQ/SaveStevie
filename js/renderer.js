@@ -7,8 +7,8 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
-const coreArtwork=new Set(['paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
+const doodleNames=['wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const coreArtwork=new Set(['wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
 const artworkLoads=new Map(),artworkSupported=typeof Image!=='undefined';
 function artworkStatus(){const loaded=[...coreArtwork].filter(name=>!!doodles[name]).length;return {ready:!artworkSupported||loaded===coreArtwork.size,loaded,total:coreArtwork.size,failed:[...artworkLoads].filter(([,r])=>r.failed).map(([name])=>name),loading:[...artworkLoads].filter(([,r])=>r.loading).map(([name])=>name)};}
 function syncArtworkUI(){
@@ -183,7 +183,7 @@ function enemySpriteFrame(e){
 }
 // Native profile direction: Staple Snack's open jaws point left; the other
 // profile monsters point right. Front-facing silhouettes keep their artwork.
-const profileDirections={scrubber:1,fast:1,sprinter:1,flanker:1,mini:1,basil:1,jamling:1,sniper:1,stapler:-1};
+const profileDirections={wallpuller:1,papertearer:1,scrubber:1,fast:1,sprinter:1,flanker:1,mini:1,basil:1,jamling:1,sniper:1,stapler:-1};
 function enemyFacing(e){
   const m=enemyMotion.get(e);
   if(e.type==='sniper'&&(m?.action==='fire'&&m.actionAge<.3||e.shootCd<=.6&&game.api.sniperCanAim(e)))return game.state.player.x<e.x?-1:1;
@@ -240,6 +240,7 @@ function updateEnemyAnimations(dt){
       }else if(e.type==='medic'&&m.action==='heal'&&m.actionAge<.1)m.sprite=motionTime% .6<.3?'medic-ready':'medic-heal';
     }
     m.cue=null;m.cueProgress=0;
+    if(e.crew&&!motionReduced&&e.freeze<=0&&e.stun<=0){const c=e.crew;if(c.phase==='hook'||c.phase==='pull'){p.angle-=m.facing*(c.phase==='pull'?.2:.1);p.sx+=.08;p.sy-=.08;}else if(c.phase==='tear'){p.y+=4;p.sy-=.14;p.sx+=.12;}else if(c.phase==='bomb')p.angle-=m.facing*.18;}
     if(e.eraseStumble>0&&e.freeze<=0&&!motionReduced){const skid=game.api.clamp(e.eraseStumble/1.4,0,1);p.angle+=m.facing*.7*skid;p.y+=4*skid;p.sx+=.15*skid;p.sy-=.15*skid;}
     if(e.freeze>0||e.stun>0)continue;
     // Distinct silhouettes reuse the existing art. These offsets never touch
@@ -381,7 +382,7 @@ function tintedDoodle(name,colors){
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
   const framed=/^(grunt|fast|sprinter|sniper|boss)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
-  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(e.type==='sprinter'?4.2:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?4.2:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
@@ -496,7 +497,7 @@ function resize(){
     for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.rockCharge&&!movedCharges.has(wall.rockCharge)){movedCharges.add(wall.rockCharge);wall.rockCharge.x+=dx;wall.rockCharge.y+=dy;}if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
-    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.movePaper(dx,dy);game.api.moveDoodleScraps(dx,dy);
+    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.movePaper(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveDoodleScraps(dx,dy);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
@@ -735,7 +736,7 @@ function draw(){
   }
 
   // Ranged threats are readable before and after firing.
-  game.api.drawSparkGaps();
+  game.api.drawSparkGaps();game.api.drawHardhatCrew();
   game.api.drawWallExplosions();
   drawSplitAnimations();
   for(const e of game.state.enemies){
