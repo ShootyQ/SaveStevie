@@ -40,6 +40,7 @@ function addTestUpgrade(){
 }
 function readSetup(){return {wave:Number($('testWave').value),phase:$('testPhase').value,toolRank:Number($('testTool').value),notebook:!!$('testNotebook').checked,upgrades:loadout.map(x=>({...x}))}}
 function startTestRun(config=readSetup()){
+ if(game.api.artworkStatus().ready===false){notice('Notebook artwork is still loading. Wait for the artwork or retry it from the home screen.');return false;}
  if(!config||!Number.isInteger(config.wave)||config.wave<1||config.wave>200||!['wave','boss'].includes(config.phase)||!Object.hasOwn(tools,config.toolRank)||!Array.isArray(config.upgrades)||config.upgrades.length>50){notice('Choose a wave from 1–200 and a valid drawing tool.');return false}
  if(config.phase==='boss'&&config.wave%5!==0){notice('Boss-only tests need a boss wave: 5, 10, 15, 20, 25…');return false}
  const entries=[],effects=new Set(),once=new Set();

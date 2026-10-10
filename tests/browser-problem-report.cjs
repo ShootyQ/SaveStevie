@@ -19,7 +19,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.click('#pauseBtn');await page.click('#pauseSettingsBtn');await page.click('#reportProblemBtn');
   assert.equal(await page.evaluate(()=>testGame.state.paused),true);
   await page.fill('#reportDescription','My wall vanished. I expected it to stay. <script>plain text</script>');
-  const report=await page.inputValue('#reportPreview');assert.match(report,/Alpha 0.1.13/);assert.match(report,/Wave: 7/);assert.match(report,/Fire Ink ×2/);assert.match(report,/fire ×2/);assert.match(report,/<script>plain text<\/script>/);
+  const report=await page.inputValue('#reportPreview');assert(report.includes('Alpha '+require(path.join(root,'package.json')).version));assert.match(report,/Wave: 7/);assert.match(report,/Fire Ink ×2/);assert.match(report,/fire ×2/);assert.match(report,/<script>plain text<\/script>/);
   const href=await page.locator('#reportGitHubLink').getAttribute('href'),url=new URL(href);assert.equal(url.origin,'https://github.com');assert.equal(url.pathname,'/ShootyQ/SaveStevie/issues/new');assert.equal(url.searchParams.get('body'),report);
   await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async text=>{window.copiedReport=text}}}));await page.click('#copyReportBtn');assert.equal(await page.evaluate(()=>copiedReport),report);
   await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw new Error('denied')}}}));await page.click('#copyReportBtn');assert.match(await page.textContent('#reportStatus'),/Clipboard unavailable/);
