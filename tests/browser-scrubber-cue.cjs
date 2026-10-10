@@ -22,8 +22,12 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   const hintBox=await page.locator('#scrubberHint').boundingBox(),controlBox=await page.locator('#eraserBtn').boundingBox();assert(hintBox.y+hintBox.height<=controlBox.y,'hint stays above controls');
   await page.screenshot({path:'/tmp/ruff-erase-cue-'+viewport.width+'.png'});
   const canvas=await page.locator('#game').boundingBox(),x=canvas.x+enemy.x*canvas.width/enemy.w,y=canvas.y+enemy.y*canvas.height/enemy.h;
+  for(let pass=1;pass<=3;pass++){
   if(viewport.width<600){const cdp=await page.context().newCDPSession(page),button=await page.locator('#eraserBtn').boundingBox(),thumb={x:button.x+button.width/2,y:button.y+button.height/2,id:2},finger={x,y,id:1};await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[thumb]});await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[thumb,finger]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[thumb,{...finger,x:x+5}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}
   else{await page.mouse.move(x,y);await page.mouse.down({button:'right'});await page.mouse.move(x+5,y);await page.mouse.up({button:'right'});}
+   await page.evaluate(()=>testGame.api.draw());
+   if(pass<3){assert.equal(await page.evaluate(()=>testGame.state.enemies.find(e=>e.type==='scrubber').eraseHits),pass);await page.screenshot({path:'/tmp/ruff-wiped-'+pass+'-'+viewport.width+'.png'});}
+  }
   assert.equal(await page.evaluate(()=>testGame.state.enemies.some(e=>e.type==='scrubber')),false,'rub over Ruff removes him');assert.equal(await page.locator('#scrubberHint').isVisible(),false);
   await page.evaluate(()=>{const g=testGame;g.api.spawnEnemy(false,g.state.player.x+80,g.state.player.y-80,'scrubber');g.api.updateScrubberHint(0)});assert.equal(await page.locator('#scrubberHint').isVisible(),false,'once per run');
   await page.evaluate(()=>{const g=testGame;g.api.resetRun();g.api.spawnEnemy(false,g.state.player.x+80,g.state.player.y-80,'scrubber');g.api.updateScrubberHint(0)});assert.equal(await page.locator('#scrubberHint').isVisible(),true);

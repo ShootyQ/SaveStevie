@@ -1,7 +1,7 @@
 /* The notebook itself is part of combat. Rubbing time is measured by the game
    clock, never by the number of pointer events or a stationary held eraser. */
 DoodleDefender.systems.paper=function(game){
-const tuning={wearSeconds:7,escapeSeconds:2,entryChance:.3,entryDuration:.5,patchRadius:30,holeRadius:22,holeSpacing:70,maxHoles:24,maxPatches:256,exitWarning:.7,recovery:1.2};
+const tuning={wearSeconds:2.5,escapeSeconds:2,entryChance:.3,entryDuration:.5,patchRadius:30,holeRadius:22,holeSpacing:70,maxHoles:24,maxPatches:256,exitWarning:.7,recovery:1.2};
 let pending=[];
 function paperActive(){const s=game.state;return s.running&&!s.paused&&!s.inUpgrade&&!s.betweenWaves&&!s.awaitingSpec&&!game.api.synergyRevealActive()&&!game.api.waveFinaleActive()&&!game.api.wobbleRepairActive()&&!game.api.bossEntranceActive();}
 function resetPaper(){game.state.paper={patches:[],holes:[],arcs:[],clock:0};pending=[];}
@@ -37,7 +37,7 @@ function updatePaper(dt){
    touched.set(patch,(touched.get(patch)||0)+1);
   }
  }
- for(const [patch,count] of touched){const before=patch.wear;patch.wear=Math.min(tuning.wearSeconds,patch.wear+Math.min(dt,.1)*count/samples);if(before<3&&patch.wear>=3)game.api.setMsg('Careful! Keep rubbing this thin patch and you will tear a shortcut.');if(patch.wear>=tuning.wearSeconds-1e-8){const hole=addPaperHole(patch);if(hole)game.api.setMsg('A hole! Monsters can tunnel to another hole closer to Stevie. Rub a moving bump for 2 seconds to bring it up.');}}
+ for(const [patch,count] of touched){const before=patch.wear;patch.wear=Math.min(tuning.wearSeconds,patch.wear+Math.min(dt,.1)*count/samples);if(before<tuning.wearSeconds*.5&&patch.wear>=tuning.wearSeconds*.5)game.api.setMsg('Careful! Keep rubbing this thin patch and you will tear a shortcut.');if(patch.wear>=tuning.wearSeconds-1e-8){const hole=addPaperHole(patch);if(hole)game.api.setMsg('A hole! Monsters can tunnel to another hole closer to Stevie. Rub a moving bump for 2 seconds to bring it up.');}}
  paper.patches=paper.patches.filter(p=>!paper.holes.some(h=>Math.hypot(h.x-p.x,h.y-p.y)<tuning.holeSpacing));
  for(const e of game.state.enemies){
   const t=e.paperTunnel;if(!t||t.phase!=='travel'||e.hp<=0)continue;
@@ -110,7 +110,7 @@ function movePaper(dx,dy){const p=game.state.paper;for(const q of [...p.holes,..
 function drawPaper(){
  const ctx=game.dom.ctx,p=game.state.paper;ctx.save();
  for(const patch of p.patches){const amount=patch.wear/tuning.wearSeconds;ctx.fillStyle='rgba(155,130,98,'+(amount*.18)+')';ctx.strokeStyle='rgba(120,93,63,'+(amount*.5)+')';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(patch.x,patch.y,26,20,-.15,0,Math.PI*2);ctx.fill();for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(patch.x-18,patch.y-9+i*4);ctx.lineTo(patch.x+18,patch.y-12+i*4);ctx.stroke();}if(amount>.6){ctx.beginPath();ctx.moveTo(patch.x-12,patch.y);ctx.lineTo(patch.x-3,patch.y-5);ctx.lineTo(patch.x+3,patch.y+4);ctx.lineTo(patch.x+12,patch.y-2);ctx.stroke();}}
- for(const h of p.holes){ctx.fillStyle='#273039';ctx.strokeStyle='#a28d69';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<16;i++){const angle=i*Math.PI/8,r=h.r*(i%2?.88:1.1),x=h.x+Math.cos(angle)*r,y=h.y+Math.sin(angle)*r*.8;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.stroke();ctx.strokeStyle='#fff8e8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(h.x,h.y,h.r*.94,Math.PI,Math.PI*1.7);ctx.stroke();}
+ for(const h of p.holes){ctx.fillStyle='#ba8550';ctx.strokeStyle='#a28d69';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<16;i++){const angle=i*Math.PI/8,r=h.r*(i%2?.88:1.1),x=h.x+Math.cos(angle)*r,y=h.y+Math.sin(angle)*r*.8;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.save();ctx.clip();ctx.translate(h.x,h.y);game.api.drawDeskGrain(ctx,{...h,seed:h.id});ctx.restore();ctx.strokeStyle='#a28d69';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<16;i++){const angle=i*Math.PI/8,r=h.r*(i%2?.88:1.1),x=h.x+Math.cos(angle)*r,y=h.y+Math.sin(angle)*r*.8;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.stroke();ctx.strokeStyle='#fff8e8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(h.x,h.y,h.r*.94,Math.PI,Math.PI*1.7);ctx.stroke();}
  ctx.restore();
 }
 function paperTransitionPose(e){

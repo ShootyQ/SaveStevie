@@ -5,7 +5,7 @@ DoodleDefender.systems.doodleScraps=function(game){
   {id:'electric',name:'Electric paper',color:'#386ac3',desc:'Paper balls spark a small chain of lightning. Crossing walls charges ink or releases sparks.'},
   {id:'poison',name:'Poison paper',color:'#528237',desc:'Paper balls add a little stacking poison.'},
   {id:'frost',name:'Frost paper',color:'#387f98',desc:'Paper balls briefly freeze and slow monsters.'},
-  {id:'eraser',name:'Eraser paper',color:'#ae537a',desc:'Paper balls rub out 3 extra damage. They wipe out Rubble Ruff!'}
+  {id:'eraser',name:'Eraser paper',color:'#ae537a',desc:'Paper balls rub out 3 extra damage. Each hit wipes a chunk off Rubble Ruff (three chunks total)!'}
  ];
  let clock=0,lastDrop=-100,kills=0,found=0,drop=null,offers=[],element=null;
  function unlocked(){return game.api.notebookSnapshot().levels.doodleScraps>0;}
@@ -54,7 +54,7 @@ DoodleDefender.systems.doodleScraps=function(game){
   if(id==='poison'){e.poison=Math.min(6,e.poison+1);e.poisonDps=Math.max(e.poisonDps,4.5);}
   if(id==='frost'){e.gravitySlow=Math.max(e.gravitySlow,.2);e.freeze=Math.max(e.freeze,.3);}
   if(id==='electric')game.api.chainLightning(e,1);
-  if(id==='eraser')game.api.dealDamage(e,e.type==='scrubber'?e.hp:3,'erase');
+  if(id==='eraser'){if(e.type==='scrubber'){game.api.eraseScrubber(e);return;}game.api.dealDamage(e,3,'erase');}
  }
  function moveDoodleScraps(dx,dy){if(!drop)return;drop.x+=dx;drop.y+=dy;if(drop.fromX!==undefined){drop.fromX+=dx;drop.fromY+=dy;}if(!drop.reel){drop.x=game.api.clamp(drop.x,26,game.state.W+2*dx-26);drop.y=game.api.clamp(drop.y,100,game.state.H+2*dy-30);}}
  function drawDoodleScraps(){
