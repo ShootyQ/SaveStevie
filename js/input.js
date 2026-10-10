@@ -4,6 +4,7 @@ function pointerPos(e){
   const r=game.dom.canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}
 }
 
+const aimKeys=new Set();
 let strokePointer=null,modifierPointer=null,held=false,toggled=false,rightDrag=false,lastPoint=null,cursor=null;
 function canPaint(){return game.state.running&&!game.state.paused&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec&&!game.api.synergyRevealActive()&&!game.api.waveFinaleActive()&&!game.api.wobbleRepairActive()&&!game.api.bossEntranceActive();}
 function eraserActive(){return rightDrag||held||toggled;}
@@ -20,10 +21,10 @@ function finishStroke(commit=true){
  syncDrawingControls();
 }
 function cancelDrawingInput(){
- held=false;toggled=false;modifierPointer=null;finishStroke(false);
+ aimKeys.clear();held=false;toggled=false;modifierPointer=null;finishStroke(false);
 }
 function endDraw(){
- held=false;toggled=false;modifierPointer=null;finishStroke(true);
+ aimKeys.clear();held=false;toggled=false;modifierPointer=null;finishStroke(true);
 }
 function changeEraserMode(change){
  const before=eraserActive();change();const after=eraserActive();
@@ -39,6 +40,11 @@ function drawEraserCursor(){
  if(!cursor||!eraserActive()||!canPaint())return;
  const ctx=game.dom.ctx;ctx.save();ctx.fillStyle='#f7d5dc44';ctx.strokeStyle='#793a51';ctx.lineWidth=2;ctx.beginPath();ctx.arc(cursor.x,cursor.y,cursor.r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle='#fffaf0';ctx.lineWidth=1;ctx.beginPath();ctx.arc(cursor.x,cursor.y,cursor.r+2,0,Math.PI*2);ctx.stroke();ctx.restore();
 }
+function throwAim(){
+ if(!canPaint()||document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches)return null;
+ const x=Number(aimKeys.has('KeyD'))-Number(aimKeys.has('KeyA')),y=Number(aimKeys.has('KeyS'))-Number(aimKeys.has('KeyW')),length=Math.hypot(x,y);return length?{x:x/length,y:y/length}:null;
+}
+function drawThrowAim(){const a=throwAim();if(!a||!game.state.stats.rockRate)return;const ctx=game.dom.ctx,p=game.state.player;ctx.save();ctx.translate(p.x,p.y-8);ctx.rotate(Math.atan2(a.y,a.x));ctx.strokeStyle='#385f87';ctx.lineWidth=2;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(24,0);ctx.lineTo(54,0);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(47,-6);ctx.lineTo(54,0);ctx.lineTo(47,6);ctx.stroke();ctx.restore();}
 function screenSupported(){return typeof document.documentElement?.requestFullscreen==='function'}
 function updateScreenButton(){
   const button=game.dom.$('fullscreenBtn');
@@ -85,6 +91,9 @@ game.dom.$('victoryMenuBtn').onclick=game.api.returnToMenu;
 game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
 game.dom.$('resetNotebookBtn').onclick=game.api.resetNotebookProgress;
 window.addEventListener('keydown',game.api.handleInfoKey);
+const aimCode=e=>/^Key[WASD]$/.test(e.code||'')?e.code:({w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD'}[e.key?.toLowerCase()]);
+window.addEventListener('keydown',e=>{const code=aimCode(e);if(!code||!canPaint()||e.ctrlKey||e.altKey||e.metaKey||e.target?.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(e.target?.tagName)||document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches)return;aimKeys.add(code);e.preventDefault?.();});
+window.addEventListener('keyup',e=>{const code=aimCode(e);if(code)aimKeys.delete(code);});
 window.addEventListener('savestevie:background',()=>{
   if(game.api.firstLessonActive?.()){game.api.cancelLessonGesture();game.api.stopSoundEffects();return;}
   if(game.api.wobbleRepairActive()){game.api.stopSoundEffects();return;}
@@ -156,7 +165,7 @@ game.dom.$('returnMenuBtn').onclick=()=>{game.dom.$('pauseActions').hidden=true;
 game.dom.$('cancelQuitBtn').onclick=()=>{game.dom.$('quitConfirmation').hidden=true;game.dom.$('pauseActions').hidden=false;game.dom.$('returnMenuBtn').focus?.()};
 game.dom.$('confirmQuitBtn').onclick=game.api.returnToMenu;
 }
-const api = { pointerPos, endDraw, cancelDrawingInput, eraserActive, syncDrawingControls, drawEraserCursor, bind };
+const api = { throwAim,drawThrowAim,pointerPos, endDraw, cancelDrawingInput, eraserActive, syncDrawingControls, drawEraserCursor, bind };
 Object.assign(game.api, api);
 return api;
 };

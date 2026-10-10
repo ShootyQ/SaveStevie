@@ -19,15 +19,19 @@ Current player feedback: a wave-14 run feels good overall. Pew Pew and Rubble Ru
 - [ ] For later enemies, favor recognizable approach/attack patterns and clear counters over additional HP or speed. Avoid making every monster a wall-ignoring exception.
 - [ ] Playtest mixed groups: threats should complement each other without drowning out tells.
 
-## Expand Doodle Scraps / Doodle Notes
+## Doodle Scraps prepared for Alpha 0.1.18
 
-- [ ] Add a Range note for Stevie's paper-ball targeting/throw reach, with a visible explanation of its benefit.
-- [ ] Stack collected note effects during a run instead of replacing the equipped element. Define same-element repeats and interaction order; keep end-of-wave ink reward slots separate.
-- [ ] Replace current drop behavior with a per-wave budget. Proposed interpretation of the requested odds: 75% at least one, 35% at least two, 10% three; equivalently 25% zero, 40% one, 25% two, 10% three. One planned wave count avoids repeatedly rolling until every wave guarantees three. Confirm when implementing; decide boss-wave handling separately.
-- [ ] Create 7–8 custom scrap-paper pickup variations in the notebook art style, with clear element/rarity marks that remain readable on phones.
-- [ ] Add Common, Uncommon, Rare, Epic and Legendary notes. Higher tiers should change behavior and create new decisions, not simply add +2 of an existing effect.
-- [ ] Design and review tiered effects before coding them. Starting directions: electric static cling to drawn walls; fire decoys; poison bubbles that can be erased; frost changes to movement; eraser interaction tricks; range/trajectory opportunities. These are ideas, not implemented or approved final effects.
-- [ ] Explain stacking and rare effects when discovered. Distinguish permanent saved scraps from run-only Doodle Notes.
-- [ ] Update the upgrade reference/workbook when the note catalogue actually changes.
+- [x] Stack notes and duplicate copies for the run without spending wave reward slots. Capture owned effects on each throw; bound repeated control, extra shots and decoys.
+- [x] Per-wave budgets: 25% zero, 40% one, 25% two, 10% three. Timed enemies in boss waves remain eligible; bosses and helpers do not drop scraps. Budget is rolled once; discoveries need eligible kills and at least 10 combat seconds between drops.
+- [x] Fourteen individual scrapbook designs in one transparent sheet, with readable tier labels and phone-sized choices.
+- [x] Six Commons: Hot Off the Page, Static Scribble, Questionable Lunch, Cold Shoulder, Correction Notice, Long Distance Learning.
+- [x] Two Uncommons: Second Draft and Follow the Underline.
+- [x] Four Rares: Static Cling, Ash Impostor, Bubble Trouble and Cross Out.
+- [x] Two Epics: Connect the Dots and Bad Influence. Draw a completed stroke through two marked monsters to tether them; ash decoys can carry owned paper elements without generating recursive decoys.
+- [x] Rarity offers: Common 55%, Uncommon 28%, Rare 13%, Epic 4%. Both distinct choices have the revealed tier. Repeat notes remain eligible and stack.
+- [x] Expand the Markdown, JSON and Excel references with the actual note catalogue and mechanics.
+- [x] Desktop WASD aims ordinary paper throws while held; release for auto-aim. Touch remains automatic. Left eraser is the default on a new touch installation, with the saved side preference preserved.
+- [ ] Design Legendary notes the player likes. Rejected ideas are excluded; no Legendary notes can currently drop.
+- [ ] Playtest late-run combinations and repeated notes for clarity, strength and pickup pacing; tune after feedback.
 
-Only the checked entrance item ships in this patch. The remaining entries are queued design and playtest work.
+The entrance cleanup and checked note/control items ship together in this unmerged patch. Other entries remain queued design and playtest work.

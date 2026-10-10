@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.16
+# Save Stevie upgrade reference — Alpha 0.1.18
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -101,7 +101,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Perk | Current effect | Ranks | Costs per rank |
 | --- | --- | --- | --- |
 | Starter Eraser | Stevie’s free first purchase. Adds 5 percentage points to ink recovery when erasing; applies to every new run. | 1 | 0 |
-| Doodle Scraps | Unlock mysterious paper drops in future runs, from any wave. Draw through one and choose a temporary element for Stevie’s paper balls. Finds last only for that run. | 1 | 25 |
+| Doodle Scraps | Unlock mysterious paper drops in future runs, from any wave. Draw through one and choose a stacking trick for Stevie’s paper balls. Discover elemental throws, wall rides, decoys and Connect the Dots. Finds last only for that run. | 1 | 25 |
 | Your Drawing Tool | Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Every rank has its own artwork and adds +8 base wall HP. Pens unlock a third effect slot; Sharpies unlock a fourth. | 10 | 5, 8, 12, 16, 20, 24, 30, 36, 44, 55 |
 | Bigger Starting Tank | +20 starting/max ink per rank. | 5 | 5, 12, 24, 40, 60 |
 | Refill Practice | +1 starting ink regeneration per second per rank. Stacks with run upgrades. | 3 | 5, 12, 24 |
@@ -110,6 +110,25 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Paper Ball Practice | Start throwing crumpled paper: 3 damage per rank. Higher ranks throw a little faster. | 3 | 5, 12, 24 |
 | Lunch Money | +1 starting reroll per rank. Each cleared wave still supplies a free reroll. | 2 | 5, 12 |
 | Lucky Eraser | +2 starting Luck per rank, improving upgrade rarity odds. | 4 | 5, 12, 24, 40 |
+
+## Doodle Scraps — stack for this run
+
+| Note | Rarity | Effect |
+| --- | --- | --- |
+| Hot Off the Page | Common | Ignite enemies. More copies strengthen the burn. |
+| Static Scribble | Common | Spark enemies and charge crossed walls. |
+| Questionable Lunch | Common | Add stacking poison. Stevie insists it is still good. |
+| Cold Shoulder | Common | Briefly chill enemies. Repeat copies improve the chill, with a control cap. |
+| Correction Notice | Common | Add eraser damage. Each hit wipes one chunk off Ruff. |
+| Long Distance Learning | Common | Reach farther enemies. Repeat copies extend range with diminishing returns. |
+| Second Draft | Uncommon | Every few throws, send a second ball at a different enemy. Copies make this happen more often. |
+| Follow the Underline | Uncommon | Paper balls ride your lines, then launch from the far end with extra range. |
+| Static Cling | Rare | Repeated electric hits prime an enemy to stick briefly to the next wall. Includes a basic electric effect if needed. |
+| Ash Impostor | Rare | Hit a burning enemy to shed a smoky decoy that distracts nearby monsters. Includes basic fire if needed. |
+| Bubble Trouble | Rare | Repeated poison hits inflate a wandering bubble. Erase it to pop and stagger the monster. Includes basic poison if needed. |
+| Cross Out | Rare | Erasing hostile pencils or spikes turns their remains into friendly paper throws. |
+| Connect the Dots | Epic | Paper hits mark monsters with bright dots. Draw through two dots to snap a colorful tether between them! |
+| Bad Influence | Epic | Ash decoys carry your paper elements. Monsters biting one receive those effects. Includes Ash Impostor if needed. |
 
 ## Mechanics and specializations
 
@@ -120,8 +139,8 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Paper wear and tunnels | About 2.5 seconds of local active eraser rubbing tears a hole. Each wave starts with fresh paper; wear and holes reset, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. One 30% entry decision per hole encounter, with no approach-alignment requirement. Bosses never enter. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page. |
 | Erase combat | Erase small hostile pencils/spikes, sacrificing return damage. Erasing paid electric ink between surviving wall ends discharges up to 12 + 2 × Electric Ink level damage, limited to 0.8 × removed paid ink, with a 0.8-second wall cooldown retained by fragments. Erase Chonks’s windup support or Boingus’s fresh rebound support to stun for 1.4 seconds; each monster has a 6-second stumble cooldown. |
 | Closed shapes | A stroke with more than six points and endpoints less than 22 pixels apart is a closed loop. Closed Loop/Fortress Geometry add durability and paid completion utility; related synergies add effects. |
-| Stevie throws paper balls | Unlocked through throwing upgrades, Paper Ball Practice or a Doodle Scrap discovery. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies. |
-| Doodle Scraps | Permanent Notebook unlock costs 25 saved scraps. From wave 1, eligible normal kills have an 8% drop chance; first drop guaranteed by eight eligible kills. Minimum 20 combat seconds between drops, one ground pickup at a time, max four per run; drops last 45 combat seconds. Finish a drawing through a pickup to reel it in and pause for two random elements. Fire, electric, poison, frost and eraser paper replace the current element and last only for the run; no wave-reward or ink slots used. Choosing an element unlocks 4-damage, 1.6s throws if needed. Bosses/helpers and development tests do not drop discoveries. |
+| Stevie throws paper balls | Unlocked through throwing upgrades, Paper Ball Practice or a Doodle Scrap discovery. Automatically targets a nearby enemy within 210 pixels before range notes. Desktop WASD steers throws while held; releasing restores auto-aim. Touch keeps auto-aim. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies. |
+| Doodle Scraps | Permanent Notebook unlock costs 25 saved scraps. Wave budgets: 25% zero, 40% one, 25% two, 10% three; eligible normal kills reveal the budget, with 10 combat seconds between discoveries. One pickup at a time, lasts 45 seconds. Draw through it to pause and choose one of two distinct notes of the same rarity. Tier odds: Common 55%, Uncommon 28%, Rare 13%, Epic 4%. No Legendary notes yet. All notes and duplicate copies stack for the run, with bounded control/procs and diminishing range. New notes do not change throws already in flight. No wave-reward slots used; development tests and boss/helpers excluded. |
 | Specialization: Fortress | Defense-category upgrade weights ×3. Does not directly add wall HP. |
 | Specialization: Ink Alchemist | Ink-category upgrade weights ×3. Does not directly add ink levels. |
 | Specialization: Chaos | Adds +12 normal-reward rarity bonus; enemy HP scale ×1.08. No additional Legendary chances. |

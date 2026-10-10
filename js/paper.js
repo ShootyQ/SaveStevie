@@ -90,7 +90,7 @@ function eraseProjectiles(a,b,r){
   // Small hostile pencils/spikes can be erased. Boss orbs and paper bombs
   // retain their existing drawing counters; returned projectiles stay useful.
   if(s.reflected||s.owner||s.r>6||game.api.pointSegDist(s.x,s.y,a.x,a.y,b.x,b.y)>r+(s.r||3))return true;
-  game.api.burst(s.x,s.y,'#cbbba4',4);changed=true;return false;
+  game.api.erasedDoodleShot(s);game.api.burst(s.x,s.y,'#cbbba4',4);changed=true;return false;
  });return changed;
 }
 function eraseWallReaction(wall,pieces,a,b,r,removedInk){

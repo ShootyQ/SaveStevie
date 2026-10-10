@@ -1,5 +1,5 @@
 {
-  "version": "0.1.16",
+  "version": "0.1.18",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -877,7 +877,7 @@
     },
     {
       "name": "Doodle Scraps",
-      "effect": "Unlock mysterious paper drops in future runs, from any wave. Draw through one and choose a temporary element for Stevie’s paper balls. Finds last only for that run.",
+      "effect": "Unlock mysterious paper drops in future runs, from any wave. Draw through one and choose a stacking trick for Stevie’s paper balls. Discover elemental throws, wall rides, decoys and Connect the Dots. Finds last only for that run.",
       "maxRanks": 1,
       "costs": [
         25
@@ -999,6 +999,120 @@
       "source": "js/notebook.js"
     }
   ],
+  "doodleNotes": [
+    {
+      "id": "fire",
+      "name": "Hot Off the Page",
+      "rarity": "Common",
+      "effect": "Ignite enemies. More copies strengthen the burn.",
+      "art": 0,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "electric",
+      "name": "Static Scribble",
+      "rarity": "Common",
+      "effect": "Spark enemies and charge crossed walls.",
+      "art": 1,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "poison",
+      "name": "Questionable Lunch",
+      "rarity": "Common",
+      "effect": "Add stacking poison. Stevie insists it is still good.",
+      "art": 2,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "frost",
+      "name": "Cold Shoulder",
+      "rarity": "Common",
+      "effect": "Briefly chill enemies. Repeat copies improve the chill, with a control cap.",
+      "art": 3,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "eraser",
+      "name": "Correction Notice",
+      "rarity": "Common",
+      "effect": "Add eraser damage. Each hit wipes one chunk off Ruff.",
+      "art": 4,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "range",
+      "name": "Long Distance Learning",
+      "rarity": "Common",
+      "effect": "Reach farther enemies. Repeat copies extend range with diminishing returns.",
+      "art": 5,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "second",
+      "name": "Second Draft",
+      "rarity": "Uncommon",
+      "effect": "Every few throws, send a second ball at a different enemy. Copies make this happen more often.",
+      "art": 6,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "underline",
+      "name": "Follow the Underline",
+      "rarity": "Uncommon",
+      "effect": "Paper balls ride your lines, then launch from the far end with extra range.",
+      "art": 7,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "cling",
+      "name": "Static Cling",
+      "rarity": "Rare",
+      "effect": "Repeated electric hits prime an enemy to stick briefly to the next wall. Includes a basic electric effect if needed.",
+      "art": 8,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "ash",
+      "name": "Ash Impostor",
+      "rarity": "Rare",
+      "effect": "Hit a burning enemy to shed a smoky decoy that distracts nearby monsters. Includes basic fire if needed.",
+      "art": 9,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "bubble",
+      "name": "Bubble Trouble",
+      "rarity": "Rare",
+      "effect": "Repeated poison hits inflate a wandering bubble. Erase it to pop and stagger the monster. Includes basic poison if needed.",
+      "art": 10,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "cross",
+      "name": "Cross Out",
+      "rarity": "Rare",
+      "effect": "Erasing hostile pencils or spikes turns their remains into friendly paper throws.",
+      "art": 11,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "dots",
+      "name": "Connect the Dots",
+      "rarity": "Epic",
+      "effect": "Paper hits mark monsters with bright dots. Draw through two dots to snap a colorful tether between them!",
+      "art": 12,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    },
+    {
+      "id": "influence",
+      "name": "Bad Influence",
+      "rarity": "Epic",
+      "effect": "Ash decoys carry your paper elements. Monsters biting one receive those effects. Includes Ash Impostor if needed.",
+      "art": 13,
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js"
+    }
+  ],
   "mechanics": [
     {
       "name": "Drawing",
@@ -1027,13 +1141,13 @@
     },
     {
       "name": "Stevie throws paper balls",
-      "effect": "Unlocked through throwing upgrades, Paper Ball Practice or a Doodle Scrap discovery. Automatically targets a nearby enemy within 210 pixels. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies.",
+      "effect": "Unlocked through throwing upgrades, Paper Ball Practice or a Doodle Scrap discovery. Automatically targets a nearby enemy within 210 pixels before range notes. Desktop WASD steers throws while held; releasing restores auto-aim. Touch keeps auto-aim. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies.",
       "source": "js/enemies.js; js/balance.js"
     },
     {
       "name": "Doodle Scraps",
-      "effect": "Permanent Notebook unlock costs 25 saved scraps. From wave 1, eligible normal kills have an 8% drop chance; first drop guaranteed by eight eligible kills. Minimum 20 combat seconds between drops, one ground pickup at a time, max four per run; drops last 45 combat seconds. Finish a drawing through a pickup to reel it in and pause for two random elements. Fire, electric, poison, frost and eraser paper replace the current element and last only for the run; no wave-reward or ink slots used. Choosing an element unlocks 4-damage, 1.6s throws if needed. Bosses/helpers and development tests do not drop discoveries.",
-      "source": "js/doodle-scraps.js; js/notebook.js"
+      "effect": "Permanent Notebook unlock costs 25 saved scraps. Wave budgets: 25% zero, 40% one, 25% two, 10% three; eligible normal kills reveal the budget, with 10 combat seconds between discoveries. One pickup at a time, lasts 45 seconds. Draw through it to pause and choose one of two distinct notes of the same rarity. Tier odds: Common 55%, Uncommon 28%, Rare 13%, Epic 4%. No Legendary notes yet. All notes and duplicate copies stack for the run, with bounded control/procs and diminishing range. New notes do not change throws already in flight. No wave-reward slots used; development tests and boss/helpers excluded.",
+      "source": "js/doodle-scraps.js; js/doodle-tricks.js; js/notebook.js"
     },
     {
       "name": "Specialization: Fortress",

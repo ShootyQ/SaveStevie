@@ -1088,3 +1088,13 @@ html.native-app .scrubber-hint{bottom:calc(66px + var(--native-bottom))}
 .artwork-load-status{display:block;color:#26333c!important;background:#fff4d9;border:1px solid #aa9977;border-radius:5px;padding:7px 10px;font:13px/1.4 system-ui,sans-serif!important;margin:7px 0!important}
 #retryArtworkBtn{min-height:44px;color:#29462c;background:#fff4d9;margin:4px 0}
 #retryArtworkBtn[hidden],.artwork-load-status[hidden]{display:none}
+
+/* Individual scrapbook illustrations: one sheet, fourteen readable note cards. */
+.doodle-choice-grid button{display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px;color:#26333c;background:#fffaf0;border:2px solid #8c7a59;box-shadow:2px 3px 0 #c7b899}
+.doodle-choice-grid button[data-rarity="Uncommon"]{border-color:#40856a}.doodle-choice-grid button[data-rarity="Rare"]{border-color:#386ac3}.doodle-choice-grid button[data-rarity="Epic"]{border-color:#a758a3}
+.doodle-note-art{display:block;flex-shrink:0;width:76px;height:76px;background-image:url('assets/art/doodle-scraps.png');background-size:400% 400%;background-repeat:no-repeat}
+.doodle-note-tier{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#655537}
+#doodleCurrent{max-height:110px;overflow:auto;font-size:13px}
+@media(max-width:480px){.doodle-choice-grid button{display:grid;grid-template-columns:58px 1fr;text-align:left;gap:3px 10px}.doodle-note-art{grid-row:1/3;width:58px;height:58px}.doodle-choice-grid article{padding:9px}.doodle-choice-grid{gap:8px;margin:10px 0}.doodle-choice-grid p{font-size:13px;margin:6px 0 0}}
+
+@media(max-height:500px) and (min-width:600px){.doodle-choice-box{padding:10px 16px}.doodle-choice-box .lesson-heading img{width:38px;height:40px}.doodle-choice-box h2{font-size:23px;margin:3px 0}.doodle-choice-grid{margin:8px 0}.doodle-choice-grid article{padding:7px}.doodle-note-art{width:40px;height:40px}.doodle-choice-grid p{font-size:12px;margin:6px 0 0}#doodleCurrent{max-height:42px;margin:6px 0}.doodle-choice-box .section-kicker{font-size:10px}}
