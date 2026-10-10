@@ -174,6 +174,7 @@ function prepareSapperStrike(e){if(!motionReduced)motionFor(e).readyUntil=motion
 function enemyActionCue(e){return motionReduced?null:(enemyMotion.get(e)?.cue||null)}
 function enemyActionFrame(e){return motionReduced?null:(enemyMotion.get(e)?.sprite||null)}
 function enemySpriteFrame(e){
+  if(e.introFrame!==undefined&&doodles['boss-frame-0'])return 'boss-frame-'+e.introFrame;
   if(e.type==='sprinter'&&doodles['sprinter-frame-0'])return 'sprinter-frame-'+(motionReduced?0:(enemyMotion.get(e)?.dashFrame||0));
   if(game.api.isFirstBoss(e)&&doodles['boss-frame-0'])return motionReduced?null:'boss-frame-'+(enemyMotion.get(e)?.kingFrame||0);
   if(e.type==='sniper'&&doodles['sniper-frame-0'])return 'sniper-frame-'+(motionReduced?8:(enemyMotion.get(e)?.sniperFrame??8));
@@ -382,7 +383,7 @@ function tintedDoodle(name,colors){
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
   const framed=/^(grunt|fast|sprinter|sniper|boss)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
-  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?4.2:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?3.4:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
@@ -922,7 +923,7 @@ function draw(){
   game.api.drawDamageNumbers();
   if(intro){
     const ctx=game.dom.ctx;ctx.save();ctx.translate(intro.x,intro.y-intro.hop);
-    const e={type:'boss',r:28,hp:1,maxHp:1,freeze:0,stun:0,burn:0,poison:0,charged:0,gravitySlow:0};
+    const e={type:'boss',introFrame:intro.frame,r:28,hp:1,maxHp:1,freeze:0,stun:0,burn:0,poison:0,charged:0,gravitySlow:0};
     if(!drawDoodleEnemy(e,1,false)){ctx.fillStyle='#962f3d';ctx.beginPath();ctx.arc(0,0,28,0,Math.PI*2);ctx.fill()}
     if(intro.stage==='roar'){ctx.fillStyle='#962f3d';ctx.font='bold 23px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillText('ROOOAR!',0,-65)}
     if(intro.stage==='smash'){ctx.strokeStyle='#b17635';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,40+(intro.age-6.132)*game.state.W*3,0,Math.PI*2);ctx.stroke()}
@@ -940,7 +941,7 @@ function draw(){
   }
   game.api.drawThrowAim?.();
   game.api.drawEraserCursor?.();
-  game.api.drawWaveFinale(drawDoodleEnemy);game.dom.ctx.restore();
+  game.api.drawWaveFinale(drawDoodleEnemy);game.dom.ctx.restore();game.api.drawBossVictory();
   if(game.state.paused){
     game.dom.ctx.fillStyle='rgba(20,25,28,.38)';game.dom.ctx.fillRect(0,0,game.state.W,game.state.H);
     game.dom.ctx.fillStyle='#fff';game.dom.ctx.textAlign='center';game.dom.ctx.font='900 38px system-ui';game.dom.ctx.fillText('PAUSED',game.state.W/2,game.state.H/2)

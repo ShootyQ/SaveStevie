@@ -1719,7 +1719,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.api.resetRun();g.state.timeLeft=0;const splitter=g.api.spawnEnemy(false,180,180,'splitter');splitter.hp=0;g.api.killEnemy(splitter);assert.equal(g.api.waveFinaleActive(),false);assert.equal(g.state.enemies.length,2);
  for(const child of g.state.enemies)child.hp=0;g.api.update(.02);assert.equal(g.state.kills,3,'all simultaneous deaths count before the close-up');assert.ok(g.api.waveFinaleActive());g.state.player.hp=0;g.api.update(.02);assert.equal(g.api.waveFinaleActive(),false);assert.equal(env.node('gameOverOverlay').style.display,'grid');assert.equal(env.node('waveOverlay').style.display,'none');
  g.api.resetRun();g.state.timeLeft=0;const flyer=g.api.spawnEnemy(false,160,180,'grunt');assert.ok(g.api.launchEnemy(flyer,150,180,true));flyer.hp=0;const flightDuration=flyer.flight.duration;g.api.updateEnemyFlight(flyer,flightDuration/2);assert.equal(g.api.waveFinaleActive(),false,'airborne fatality lands before the close-up');g.api.updateEnemyFlight(flyer,flightDuration);assert.equal(g.api.waveFinaleActive(),true);assert.equal(g.state.kills,1);
- g.api.resetRun();g.state.wave=20;g.api.startWave();const boss=g.api.spawnEnemy(true,180,180);g.api.killEnemy(boss);assert.ok(g.api.waveFinaleActive());assert.equal(env.node('victoryOverlay').style.display,'none');g.api.update(1.7);assert.equal(env.node('victoryOverlay').style.display,'grid');assert.equal(g.state.running,false);
+ g.api.resetRun();g.state.wave=20;g.api.startWave();const boss=g.api.spawnEnemy(true,180,180);g.api.killEnemy(boss);assert.ok(g.api.waveFinaleActive());assert.equal(g.api.waveFinaleSnapshot().boss,true);assert.equal(g.api.musicStatus().track,'victory');assert.equal(env.node('victoryOverlay').style.display,'none');g.api.update(g.api.waveFinaleSnapshot().duration+.01);assert.equal(env.node('victoryOverlay').style.display,'grid');assert.equal(g.state.running,false);
  g.api.resetRun();g.state.timeLeft=0;g.api.killEnemy(g.api.spawnEnemy(false,160,180,'grunt'));g.api.startWave();assert.equal(g.api.waveFinaleActive(),false,'new waves clear presentation state');
  const reduced=load(true,{finale:true,reduced:true}).sandbox.testGame;reduced.api.resetRun();reduced.state.timeLeft=0;reduced.api.killEnemy(reduced.api.spawnEnemy(false,160,180,'grunt'));assert.equal(reduced.api.waveFinaleCamera().zoom,1);reduced.api.update(.61);assert.equal(reduced.state.betweenWaves,true);
  console.log('PASS: last-death close-up/pop, delayed single awards, frozen combat/pause, pure art/no RNG, split children/simultaneous kills, loss priority, final victory, reset and reduced motion.');
@@ -1784,7 +1784,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.api.createWall([{x:70,y:170},{x:270,y:170}]);g.api.update(.01);assert.ok(g.api.firstBossIntroActive());
  const wall=g.state.walls[0],life=wall.life,elapsed=g.state.waveElapsed,hp=g.state.player.hp,ink=g.state.stats.ink;
  g.api.update(3.5);assert.equal(g.api.firstBossIntroPose().stage,'roar');assert.equal(wall.life,life);assert.equal(g.state.waveElapsed,elapsed);assert.equal(g.state.player.hp,hp);assert.equal(g.state.stats.ink,ink);assert.equal(g.state.enemies.length,0);
- const pose=JSON.stringify(g.api.firstBossIntroPose());g.api.draw();assert.equal(JSON.stringify(g.api.firstBossIntroPose()),pose,'entrance rendering is pure');
+ assert.equal(g.api.firstBossIntroPose().frame,4);const pose=JSON.stringify(g.api.firstBossIntroPose());g.api.draw();assert.equal(JSON.stringify(g.api.firstBossIntroPose()),pose,'entrance rendering is pure');
  g.state.paused=true;g.api.update(10);assert.equal(JSON.stringify(g.api.firstBossIntroPose()),pose);g.state.paused=false;
  g.api.update(2.65);assert.equal(g.state.walls.length,0);assert.equal(g.api.firstBossIntroPose().stage,'smash');g.api.update(.5);assert.equal(g.api.firstBossIntroActive(),false);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1);assert.equal(g.api.musicStatus().track,'first-boss');
  g.api.resetRun();assert.equal(g.api.firstBossIntroActive(),false);assert.equal(g.api.musicStatus().track,'margin-mischief');
@@ -2356,13 +2356,13 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  for(const [fps,events] of [[120,30],[60,20],[30,30],[60,120]]){
   const g=load(true).sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.enemies=[];
   let last=100,nextEvent=0;
-  for(let frame=0;frame<Math.ceil(fps*2);frame++){
+  for(let frame=0;frame<Math.ceil(fps*1);frame++){
    const now=frame/fps;
    while(nextEvent<=now+1e-8){const x=last===100?160:100;g.api.queuePaperRub({x:last,y:180},{x,y:180},20);last=x;nextEvent+=1/events;}
    g.api.updatePaper(1/fps);
-   if(frame<Math.floor(fps*1.85))assert.equal(g.state.paper.holes.length,0,'no premature tear');
+   if(frame<Math.floor(fps*.85))assert.equal(g.state.paper.holes.length,0,'no premature tear');
   }
-  assert.equal(g.state.paper.holes.length,1,`${fps} FPS / ${events} movement events: local back-and-forth tears at 2 seconds`);
+  assert.equal(g.state.paper.holes.length,1,`${fps} FPS / ${events} movement events: local back-and-forth tears at 1 second`);
  }
  const g=load(true).sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.enemies=[];
  g.api.queuePaperRub({x:100,y:180},{x:110,y:180});for(let i=0;i<600;i++)g.api.updatePaper(1/60);
@@ -2405,7 +2405,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const fresh=()=>{g.api.resetRun({skipIntro:true,skipNotebook:true});g.state.enemies=[];g.state.spawnTimer=9999;g.state.timeLeft=300;g.state.stats.ink=g.state.stats.maxInk=1000;};
  const rub=(x,y,seconds)=>{for(let i=0;i<Math.round(seconds/.05);i++){g.api.queuePaperRub({x,y},{x:x+10,y},20);g.api.updatePaper(.05);}};
  fresh();g.api.queuePaperRub({x:100,y:180},{x:100,y:180});g.api.updatePaper(8);assert.equal(g.state.paper.holes.length,0,'stationary eraser never wears paper');
- rub(100,180,1.95);assert.equal(g.state.paper.holes.length,0);rub(100,180,.05);assert.equal(g.state.paper.holes.length,1,'2 seconds opens one local hole');
+ rub(100,180,.95);assert.equal(g.state.paper.holes.length,0);rub(100,180,.05);assert.equal(g.state.paper.holes.length,1,'1 second opens one local hole');
  rub(112,185,2.5);assert.equal(g.state.paper.holes.length,1,'holes cannot stack');rub(g.state.player.x,g.state.player.y,2.5);assert.equal(g.state.paper.holes.length,1,'fort stays intact');
  g.state.paused=true;rub(240,220,8);assert.equal(g.state.paper.holes.length,1);g.state.paused=false;rub(240,220,2.5);assert.equal(g.state.paper.holes.length,2);
  rub(350,180,.5);assert(g.state.paper.patches.length>0);g.state.paper.arcs.push({life:.2});g.api.queuePaperRub({x:100,y:180},{x:110,y:180});
