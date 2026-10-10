@@ -232,7 +232,7 @@ assert.equal(pg.state.enemies.length,4);assert.ok(pg.state.enemies.every(e=>e.ty
 for(const e of [...pg.state.enemies])pg.api.killEnemy(e);assert.equal(pg.state.enemies.length,0,'split chain is finite');
 const runner=pg.api.spawnEnemy(false,100,200,'sprinter');runner.dashTime=2.2;
 assert.equal(pg.api.enemyMoveScale(runner),pg.api.enemySpeedScale(),'telegraph comes before dash');
-pg.api.updateEnemyBehavior(runner,.5);assert.ok(pg.api.enemyMoveScale(runner)>2*pg.api.enemySpeedScale());
+pg.api.updateEnemyBehavior(runner,.5);assert.ok(Math.abs(pg.api.enemyMoveScale(runner)/pg.api.enemySpeedScale()-1.35*1.075)<1e-8,"short burst stacks with fast three-second acceleration");
 const medic=pg.api.spawnEnemy(false,100,200,'medic'),ally=pg.api.spawnEnemy(false,130,200,'grunt');ally.hp=5;
 pg.api.updateEnemyBehavior(medic,1);assert.equal(ally.hp,8);
 medic.freeze=1;pg.api.updateEnemyBehavior(medic,1);assert.equal(ally.hp,8,'freeze stops healing');
@@ -1322,7 +1322,7 @@ g.api.update(.02);assert.equal(g.state.betweenWaves,true);const score=g.state.sc
 g.api.resetRun();g.state.timeLeft=0;g.state.player.hp=0;g.api.update(.02);assert.equal(g.state.betweenWaves,false,'death takes priority over cleanup clear');
 for(const wave of [5,10,15,20,25]){
  g.api.resetRun();g.state.endless=wave>20;g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;g.api.update(.01);assert.equal(g.api.bossWavePhase(),[5,10].includes(g.state.wave)?'entrance':'warning');g.api.update(g.state.wave===5?6.582:g.state.wave===10?6.132:2.4);
- const boss=g.state.enemies.find(e=>e.waveBoss);assert.ok(boss);boss.freeze=999;boss.x=-100;boss.y=-100;
+ const boss=g.state.enemies.find(e=>e.waveBoss);assert.ok(boss);boss.freeze=999;boss.speed=0;boss.x=-100;boss.y=-100;g.state.player.hp=g.state.player.maxHp=100000;
  const time=g.state.timeLeft;for(let i=0;i<70;i++)g.api.update(1);
  assert.equal(g.state.timeLeft,time);assert.equal(g.state.betweenWaves,false);assert.ok(g.state.waveElapsed>60);
  g.api.killEnemy(boss);g.api.update(.01);assert.ok(g.state.betweenWaves,'boss death clears campaign and endless encounters');
@@ -1382,8 +1382,8 @@ console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss l
  g.state.walls=[];e.x=100;e.y=200;e.hp=e.maxHp=1000;g.api.resetBossEncounters();
  const stroke={pts:[{x:80,y:200},{x:120,y:200}],closed:false,thick:8,hp:200,maxHp:200,life:100};g.state.walls=[stroke];
  assert.equal(g.api.moveEnemySafely(e,10,0),true,'body-crossing stroke does not pin the boss');g.api.pushThroughBossStrokes(e,.6);assert.equal(g.state.walls.length,0);
- const budget=45*.5*.25;g.api.dealDamage(e,10000,'blast');assert.equal(e.hp,1000-budget);g.api.dealDamage(e,10000,'fire');assert.equal(e.hp,1000-budget,'different overlapping sources share boss budget');
- g.api.updateBossDamageBudgets(1);g.api.dealDamage(e,10000,'electric');assert.equal(e.hp,1000-budget*2,'boss budget has bounded burst capacity');
+ const budget=45*.5*.25;g.api.dealDamage(e,10000,'physical');assert.equal(e.hp,1000-budget);g.api.dealDamage(e,10000,'fire');assert.equal(e.hp,1000-budget,'immune elemental sources do not consume the physical damage budget');
+ g.api.updateBossDamageBudgets(1);g.api.dealDamage(e,10000,'physical');assert.equal(e.hp,1000-budget*2,'boss budget has bounded burst capacity');
  g.state.walls=[{pts:[{x:50,y:140},{x:170,y:140},{x:170,y:260},{x:50,y:260},{x:50,y:140}],closed:true,thick:8,hp:200,maxHp:200,life:100}];
  g.api.updateBossEncounter(e,.01);assert.equal(g.api.bossBrain(e).enclosed,true);assert.equal(g.api.bossDamageMultiplier(e),1.35);
  g.api.updateBossEncounter(e,1.8);assert.equal(g.api.bossBrain(e).cast.kind,'breakout');assert.equal(g.state.walls.length,1);
@@ -1427,12 +1427,12 @@ console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss l
 }
 console.log('PASS: three first-boss attacks, sideways curved flight, swept wall returns/player ordering, exact return damage, exposure/guard, safe locked lobs, freeze/pause/death, bounded shots/trails and pure art.');
 
-// Full fights with four common wave-1–4 rewards: paid returns and helper defenses.
+// Four common rewards: physical paper, paid returns and helper defenses against an ability-immune king.
 {
  const results=[];
  for(const [width,height] of [[800,700],[360,640],[851,300]]){
   const env=load(true),g=env.sandbox.testGame;env.node('game').getBoundingClientRect=()=>({left:0,top:0,width,height});g.api.resize();g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.timeLeft=0;g.state.spawnTimer=9999;
-  for(const name of ['Fire Ink','Fire Ink','Thick Ink','Thick Ink'])g.api.applyUpgrade({...g.catalog.upgrades.find(u=>u.name===name),rarity:'common'});
+  for(const name of ['Fire Ink','Pocket Rocks','Thick Ink','Thick Ink'])g.api.applyUpgrade({...g.catalog.upgrades.find(u=>u.name===name),rarity:'common'});
   const boss=g.api.spawnEnemy(true),handled=new WeakSet();let spent=0,seconds=0,closest=Infinity;
   for(let i=0;i<6000&&g.state.running&&!g.state.betweenWaves;i++){
    for(const s of g.state.enemyShots){
@@ -1441,9 +1441,11 @@ console.log('PASS: three first-boss attacks, sideways curved flight, swept wall 
     g.api.createWall([{x:s.x-nx*28,y:s.y-ny*28},{x:s.x+nx*28,y:s.y+ny*28}]);spent+=before-g.state.stats.ink;handled.add(s);
    }
    for(const n of g.state.enemies){
-    if(n.waveBoss||n.hp<=0||n.flight||n.burn*n.burnDps>=n.hp||Math.hypot(n.x-g.state.player.x,n.y-g.state.player.y)>190||g.api.nearestWallHit(n))continue;
-    const dx=g.state.player.x-n.x,dy=g.state.player.y-n.y,d=Math.hypot(dx,dy)||1,nx=-dy/d,ny=dx/d,before=g.state.stats.ink;
-    g.api.createWall([{x:n.x-nx*16,y:n.y-ny*16},{x:n.x+nx*16,y:n.y+ny*16}]);spent+=before-g.state.stats.ink;
+    // Defend the warned landing during a drive-by toss, rather than waiting for touchdown.
+    const q=n.flight?.bossThrown?{...n,x:n.flight.targetX,y:n.flight.targetY}:n;
+    if(n.waveBoss||n.hp<=0||n.flight&&!n.flight.bossThrown||n.burn*n.burnDps>=n.hp||Math.hypot(q.x-g.state.player.x,q.y-g.state.player.y)>190||g.api.nearestWallHit(q))continue;
+    const dx=g.state.player.x-q.x,dy=g.state.player.y-q.y,d=Math.hypot(dx,dy)||1,nx=-dy/d,ny=dx/d,before=g.state.stats.ink;
+    g.api.createWall([{x:q.x-nx*16,y:q.y-ny*16},{x:q.x+nx*16,y:q.y+ny*16}]);spent+=before-g.state.stats.ink;
    }
    g.api.update(.03);seconds+=.03;if(boss.x>0&&boss.x<width&&boss.y>0&&boss.y<height)closest=Math.min(closest,Math.hypot(boss.x-g.state.player.x,boss.y-g.state.player.y));
   }
@@ -1554,7 +1556,7 @@ console.log('PASS: flight trajectory translates on resize and landing is recheck
  g.api.updateSniper(e,.03);assert.equal(g.state.enemyShots.length,0);assert.ok(e.shootCd>=.65);g.state.walls=[];g.api.updateSniper(e,.1);assert.equal(g.state.enemyShots.length,0,'new sightline still gives an aim warning');
  e.freeze=1;const before={x:e.x,y:e.y};g.api.updateSniper(e,.1);assert.equal(e.x,before.x);assert.equal(e.y,before.y);assert.ok(e.shootCd>=.65);e.freeze=0;
  e.x=250;e.y=350;g.state.walls=[{pts:[{x:210,y:310},{x:290,y:310},{x:290,y:390},{x:210,y:390},{x:210,y:310}],closed:true,thick:8,hp:1000,maxHp:1000,life:100}];g.state.enemyShots=[];
- for(let i=0;i<100;i++)assert.equal(g.api.updateSniper(e,.03),false);assert.equal(e.x,250);assert.equal(e.y,350);assert.equal(g.state.enemyShots.length,0,'closed defenses remain solid');
+ const beforeCage=JSON.stringify(g.state.walls);for(let i=0;i<10;i++)g.api.updateSniper(e,.03);assert(e.x<290);assert.equal(JSON.stringify(g.state.walls),beforeCage,'cage remains solid until eraser windup finishes');assert.equal(g.state.enemyShots.length,0,'no shot through a cage');
 }
 console.log('PASS: single-use returns, harder furious phase and uncancelled casts; sniper wall-end detours, clear shots, cover interruption, fresh aim warning, freeze and solid closed cages.');
 
@@ -1612,7 +1614,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
   assert.equal(quadrants.size,4,'visits every side '+width+'x'+height);assert.ok(winding>Math.PI*2,'completes a continuous orbit '+width+'x'+height+' '+winding);
  }
  function effectiveTop(height){return height<400?65:110}
- const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();const boss=g.api.spawnEnemy(true,180,160),b=g.api.bossBrain(boss);
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();const boss=g.api.spawnEnemy(true,180,160),b=g.api.bossBrain(boss);b.driveByCd=999; // Isolate the scheduled pickup; bonus flings have their own regression.
  g.api.spawnWaveEnemies(1.4);assert.equal(g.state.enemies.length,1);g.api.spawnWaveEnemies(.11);assert.equal(g.state.enemies.length,2);
  for(let i=0;i<30;i++)g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,6,'helper stream is capped');
  const friend=g.state.enemies.find(n=>n.bossOwner===boss);g.api.killEnemy(friend);g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,6,'stream replaces defeated helpers');
@@ -1644,19 +1646,19 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 // Faster Paper Pop and meaningful, interruptible buddy throws.
 {
  const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();g.state.spawnTimer=9999;
- const boss=g.api.spawnEnemy(true,120,160),b=g.api.bossBrain(boss);b.helperCd=999;
+ const boss=g.api.spawnEnemy(true,120,160),b=g.api.bossBrain(boss);b.helperCd=999;b.driveByCd=999;
  const near=g.api.spawnEnemy(false,175,180,'grunt'),far=g.api.spawnEnemy(false,130,90,'grunt');near.bossOwner=far.bossOwner=boss;
  assert.equal(g.api.chooseBossFriend(boss),far,'prefers more ground gained rather than nearest buddy');
  g.state.walls=[{pts:[{x:50,y:125},{x:250,y:125}],hp:1000,maxHp:1000,thick:8,life:100}];assert.equal(g.api.chooseBossFriend(boss),near,'does not choose a helper behind solid cover');g.state.walls=[];
  g.state.enemies=[boss,near];b.turn=3;b.cd=0;g.api.updateBossEncounter(boss,.01);assert.equal(g.api.bossChaseScale(boss),1.8);g.api.updateBossEncounter(boss,.01);assert.equal(b.cast.kind,'friend-fling');assert.equal(b.cast.duration,.4);assert.ok(g.api.bossFriendHeld(near));
  const before={x:near.x,y:near.y,hp:near.hp};near.burn=3;near.burnDps=8;g.api.update(.1);assert.equal(near.x,before.x);assert.equal(near.y,before.y);assert.ok(near.hp<before.hp,'held helper still takes damage');
- boss.freeze=1;g.api.update(.1);assert.equal(g.api.bossFriendHeld(near),false,'boss interruption releases helper');assert.equal(b.cast,null);assert.equal(near.flight,undefined);boss.freeze=0;
+ boss.freeze=1;g.api.update(.1);assert.equal(g.api.bossFriendHeld(near),true,'ability-immune king keeps his warned hold');assert.equal(boss.freeze,0);assert.equal(b.cast.kind,'friend-fling');assert.equal(near.flight,undefined);g.api.updateBossEncounter(boss,.3);assert(near.flight);g.api.updateEnemyFlight(near,1);
  near.x=g.state.player.x-170;near.y=g.state.player.y;assert.equal(g.api.friendLanding(near),null,'already-close helper cannot receive a tiny throw');b.turn=3;b.cd=0;b.recovery=0;g.api.updateBossEncounter(boss,.01);assert.equal(b.cast.kind,'paper-lob','too-close helpers get useful Paper Pop fallback');
  g.api.resetRun();g.state.wave=5;g.api.startWave();const e=g.api.spawnEnemy(true,200,150),brain=g.api.bossBrain(e);brain.helperCd=999;brain.turn=2;brain.cd=0;
  const wall={pts:[{x:280,y:200},{x:320,y:200}],hp:1000,maxHp:1000,thick:8,life:100};g.state.walls=[wall];g.api.updateBossEncounter(e,.01);assert.equal(brain.cast.left,.45);
  g.api.updateBossEncounter(e,.44);assert.equal(g.state.enemyShots.length,0,'short warning is still respected');g.api.updateBossEncounter(e,.02);assert.equal(g.state.enemyShots[0].duration,.55);assert.equal(brain.cd,.9);
  const playerHp=g.state.player.hp;g.api.updateEnemyShots(.54);assert.equal(wall.hp,1000,'no pop before flight ends');g.api.updateEnemyShots(.02);assert.equal(wall.hp,840);assert.equal(g.state.player.hp,playerHp);assert.equal(g.state.enemyShots.length,0);
- console.log('PASS: useful-gain buddy priority, reachable routes, accelerated pickup, held walking/attacks with continuing damage, clean freeze release, close-helper fallback and accurately warned one-second Paper Pop.');
+ console.log('PASS: useful-gain buddy priority, reachable routes, accelerated pickup, held walking/attacks with continuing damage, immune king continuation, close-helper fallback and accurately warned one-second Paper Pop.');
 }
 
 // Inspecting a reward is read-only and stale previews cannot commit it.
@@ -2173,9 +2175,9 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  }
  g.api.resetRun();g.state.wave=9;g.api.startWave();g.api.closeInfo();g.state.paused=false;
  const dash=g.api.spawnEnemy(false,100,100,'sprinter');dash.dashTime=0;
- const base=g.api.enemyMoveScale(dash);g.api.updateEnemyBehavior(dash,16);dash.dashTime=0;
- assert.ok(Math.abs(g.api.enemyMoveScale(dash)/base-1.8)<1e-8,'Dash accelerates to capped pace');
- g.api.updateEnemyBehavior(dash,100);dash.dashTime=0;assert.ok(Math.abs(g.api.enemyMoveScale(dash)/base-1.8)<1e-8,'speed remains capped');
+ const base=g.api.enemyMoveScale(dash);g.api.updateEnemyBehavior(dash,3);dash.dashTime=0;
+ assert.ok(Math.abs(g.api.enemyMoveScale(dash)/base-1.45)<1e-8,'Dash accelerates quickly to capped pace');
+ g.api.updateEnemyBehavior(dash,100);dash.dashTime=0;assert.ok(Math.abs(g.api.enemyMoveScale(dash)/base-1.45)<1e-8,'speed remains capped');
  for(const wave of [12,13,18,19,20]){
   g.state.wave=wave;g.state.enemies=[];g.state.enemyShots=[];g.state.walls=[];
   const e=g.api.spawnEnemy(false,100,200,'sniper'),need=wave<=12?1:wave<=18?2:3;
@@ -2211,26 +2213,22 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  console.log('PASS: guaranteed wave introductions, capped Dash acceleration, Pew-Pew return thresholds and ownership, and three moving Boingus ricochets before chewing.');
 }
 
-// Chonks spends earned walking momentum on a warned, interruptible wall hit.
+// Chonks spends actual travel on an immediate ram, then recovers.
 {
  function encounter(distance=250,layered=false){
   const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.W=800;g.state.H=700;g.state.player.x=700;g.state.player.y=350;g.state.spawnTimer=9999;g.state.timeLeft=300;g.state.stats.rockDamage=0;
   const e=g.api.spawnEnemy(false,50,350,'tank');e.hp=e.maxHp=10000;
   const wall=x=>({pts:[{x,y:200},{x,y:500}],thick:8,hp:1000,maxHp:1000,life:1000,maxLife:1000}),w=wall(50+distance);g.state.walls=[w];if(layered)g.state.walls.push(wall(75+distance));
-  let steps=0;while(e.chonks.phase==='walk'&&steps++<1500)g.api.update(.02);assert.equal(e.chonks.phase,'windup');return {env,g,e,w};
+  let steps=0;while(e.chonks.phase==='walk'&&steps++<1500)g.api.update(.02);assert.equal(e.chonks.phase,'recover');assert.equal(w.hp,1000-e.chonks.bumpDamage,'impact happens on the first contact frame');return {env,g,e,w};
  }
  const early=encounter(45),late=encounter(),double=encounter(250,true);
- assert(early.e.chonks.bumpDamage<22,'early interception yields weak bump');assert.equal(late.e.chonks.bumpDamage,52.5,'long approach reaches maximum wall damage');
- for(const {g,e,w} of [early,late,double]){
-  const before=w.hp,position={x:e.x,y:e.y};g.api.update(.6);assert.equal(w.hp,before,'windup warns before damage');g.api.update(.06);assert.equal(w.hp,before-e.chonks.bumpDamage,'one exact momentum-scaled impact');assert.equal(e.chonks.momentum,0,'bump spends momentum');assert.equal(e.chonks.phase,'recover');
-  const hp=e.hp;g.api.update(.5);assert.deepEqual({x:e.x,y:e.y},position,'seated recovery stops movement');assert.equal(w.hp,before-e.chonks.bumpDamage,'no repeated recovery hits');assert(e.hp<hp,'wall ink works during recovery');
- }
- assert.equal(early.e.chonks.recoveryTotal,1.4);assert.equal(double.e.chonks.recoveryTotal,2.8,'second layer earns longer flop');assert.equal(double.g.state.walls[1].hp,1000,'bump only damages first wall');
- const {g,e,w}=encounter();const hp=w.hp;e.freeze=1;const enemyHp=e.hp,momentum=e.chonks.momentum;g.api.update(.2);assert.equal(e.chonks.phase,'walk');assert(e.chonks.momentum<momentum);assert(e.hp<enemyHp,'frozen Chonks still takes wall damage');assert.equal(w.hp,hp,'freeze cancels pending bump');
- e.freeze=0;g.api.update(.02);assert.equal(e.chonks.phase,'windup');e.stun=1;g.api.update(.1);assert.equal(e.chonks.phase,'walk');assert.equal(w.hp,hp,'stun cancels pending bump');e.stun=0;g.api.update(.02);g.state.walls=[];g.api.update(.1);assert.equal(w.hp,hp,'erased target cannot take a stale hit');assert.equal(e.chonks.phase,'walk');
- const stopped=encounter(45);stopped.g.state.paused=true;const snapshot=JSON.stringify(stopped.g.state);stopped.g.api.update(1);assert.equal(JSON.stringify(stopped.g.state),snapshot,'pause freezes warning and momentum');
- const render=JSON.stringify(late.g.state);late.g.api.draw();assert.equal(JSON.stringify(late.g.state),render,'animation rendering never changes combat');
- console.log('PASS: Chonks earned/capped momentum, weak early interception, warned single hits, layered-wall flop, vulnerable recovery, freeze/stun/erase interruption, pause and pure rendering.');
+ assert(early.e.chonks.bumpDamage<22);assert.equal(late.e.chonks.bumpDamage,52.5);
+ for(const {g,e,w} of [early,late,double]){const hp=w.hp,position={x:e.x,y:e.y},enemyHp=e.hp;g.api.update(.5);assert.equal(w.hp,hp,'no repeat hits while recovering');assert.equal(e.chonks.momentum,0);assert.deepEqual({x:e.x,y:e.y},position);assert(e.hp<enemyHp,'wall damage still applies during the flop');}
+ assert.equal(early.e.chonks.recoveryTotal,1);assert.equal(double.e.chonks.recoveryTotal,2);assert.equal(double.g.state.walls[1].hp,1000);
+ const {g,e,w}=encounter();e.freeze=1;const hp=w.hp;g.api.update(.2);assert.equal(w.hp,hp);e.freeze=0;e.stun=1;g.api.update(.2);assert.equal(w.hp,hp,'freeze/stun prevent further rams');
+ const stopped=encounter(45);stopped.g.state.paused=true;const snapshot=JSON.stringify(stopped.g.state);stopped.g.api.update(1);assert.equal(JSON.stringify(stopped.g.state),snapshot);
+ const render=JSON.stringify(late.g.state);late.g.api.draw();assert.equal(JSON.stringify(late.g.state),render);
+ console.log('PASS: immediate momentum-scaled Chonks rams, weak early interception, layered-wall flop, damage during recovery, freeze/stun, pause and pure rendering.');
 }
 
 // Twicey's structural conversions preserve health, walls and run rewards.
@@ -2297,7 +2295,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);const canvas=env.node('lessonCanvas');canvas.getBoundingClientRect=()=>({left:0,top:0,width:420,height:150});
  canvas.listeners.pointerdown({pointerId:1,clientX:100,clientY:75,button:0});canvas.listeners.pointermove({pointerId:1,clientX:220,clientY:75});canvas.listeners.pointerup({pointerId:1});assert.equal(env.node('lessonNext').disabled,false);assert.match(env.node('lessonMetrics').textContent,/37.2.*43.3/);assert.equal(JSON.stringify(g.state),before,'practice changes no real walls, health, ink or timer');
  for(let i=0;i<4;i++)env.node('lessonNext').onclick();assert.equal(g.api.firstLessonActive(),false);assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.draw,true);
- g.state.wave=2;g.api.startWave();assert.equal(g.api.lessonSnapshot().kind,'erase');assert.equal(g.state.paused,true);env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);env.node('lessonExample').onclick();assert.equal(env.node('lessonNext').disabled,false);env.node('lessonNext').onclick();assert.equal(g.state.paused,true);assert.equal(g.api.lessonSnapshot().step,2);assert.match(env.node('lessonText').textContent,/erase HIM/);env.node('lessonBack').onclick();assert.equal(g.api.lessonSnapshot().step,1);assert.equal(env.node('lessonNext').disabled,true);env.node('lessonExample').onclick();env.node('lessonNext').onclick();env.node('lessonNext').onclick();assert.match(env.node('lessonText').textContent,/2.5 seconds/);env.node('lessonNext').onclick();assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.erase,true);
+ g.state.wave=2;g.api.startWave();assert.equal(g.api.lessonSnapshot().kind,'erase');assert.equal(g.state.paused,true);env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);env.node('lessonExample').onclick();assert.equal(env.node('lessonNext').disabled,false);env.node('lessonNext').onclick();assert.equal(g.state.paused,true);assert.equal(g.api.lessonSnapshot().step,2);assert.match(env.node('lessonText').textContent,/erase HIM/);env.node('lessonBack').onclick();assert.equal(g.api.lessonSnapshot().step,1);assert.equal(env.node('lessonNext').disabled,true);env.node('lessonExample').onclick();env.node('lessonNext').onclick();env.node('lessonNext').onclick();assert.match(env.node('lessonText').textContent,/2 seconds/);env.node('lessonNext').onclick();assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.erase,true);
  g.api.resetFirstLessons();g.api.setDrawingControl('eraserToggle',true);g.api.beginFirstLesson();env.node('lessonNext').onclick();env.node('lessonErase').onclick({detail:1});assert.equal(env.node('lessonErase').textContent,'Erasing');const eraseState=JSON.stringify(g.state);canvas.listeners.pointerdown({pointerId:3,clientX:210,clientY:75,button:0});canvas.listeners.pointerup({pointerId:3});assert.equal(env.node('lessonNext').disabled,false,'toggle practice erases with one pointer');assert.equal(JSON.stringify(g.state),eraseState);g.api.cancelLessonGesture();assert.equal(env.node('lessonErase').textContent,'Erase');g.api.finishFirstLesson();g.api.setDrawingControl('eraserToggle',false);g.state.wave=1;g.api.beginFirstLesson();g.api.finishFirstLesson();
  g.api.resetRun();assert.equal(g.api.firstLessonActive(),false,'completed lesson does not repeat');g.api.resetFirstLessons();g.api.setDevMode(true);g.api.resetRun();assert.equal(g.api.firstLessonActive(),false,'dev testing bypasses beginner lessons');
  const store=new Map(),storage={getItem:k=>store.get(k)||null,setItem:(k,v)=>store.set(k,v)};const fresh=load(true,{lessons:true,storage});fresh.sandbox.testGame.api.resetRun();fresh.sandbox.testGame.api.finishFirstLesson();const reloaded=load(true,{lessons:true,storage});reloaded.sandbox.testGame.api.resetRun();assert.equal(reloaded.sandbox.testGame.api.firstLessonActive(),false,'completion saves across reload');reloaded.sandbox.testGame.state.wave=2;reloaded.sandbox.testGame.api.startWave();assert.equal(reloaded.sandbox.testGame.api.firstLessonActive(),true,'wave-two lesson remains pending separately');
@@ -2358,13 +2356,13 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  for(const [fps,events] of [[120,30],[60,20],[30,30],[60,120]]){
   const g=load(true).sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.enemies=[];
   let last=100,nextEvent=0;
-  for(let frame=0;frame<Math.ceil(fps*2.5);frame++){
+  for(let frame=0;frame<Math.ceil(fps*2);frame++){
    const now=frame/fps;
    while(nextEvent<=now+1e-8){const x=last===100?160:100;g.api.queuePaperRub({x:last,y:180},{x,y:180},20);last=x;nextEvent+=1/events;}
    g.api.updatePaper(1/fps);
-   if(frame<Math.floor(fps*2.4))assert.equal(g.state.paper.holes.length,0,'no premature tear');
+   if(frame<Math.floor(fps*1.85))assert.equal(g.state.paper.holes.length,0,'no premature tear');
   }
-  assert.equal(g.state.paper.holes.length,1,`${fps} FPS / ${events} movement events: local back-and-forth tears at 2.5 seconds`);
+  assert.equal(g.state.paper.holes.length,1,`${fps} FPS / ${events} movement events: local back-and-forth tears at 2 seconds`);
  }
  const g=load(true).sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.enemies=[];
  g.api.queuePaperRub({x:100,y:180},{x:110,y:180});for(let i=0;i<600;i++)g.api.updatePaper(1/60);
@@ -2407,7 +2405,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const fresh=()=>{g.api.resetRun({skipIntro:true,skipNotebook:true});g.state.enemies=[];g.state.spawnTimer=9999;g.state.timeLeft=300;g.state.stats.ink=g.state.stats.maxInk=1000;};
  const rub=(x,y,seconds)=>{for(let i=0;i<Math.round(seconds/.05);i++){g.api.queuePaperRub({x,y},{x:x+10,y},20);g.api.updatePaper(.05);}};
  fresh();g.api.queuePaperRub({x:100,y:180},{x:100,y:180});g.api.updatePaper(8);assert.equal(g.state.paper.holes.length,0,'stationary eraser never wears paper');
- rub(100,180,2.45);assert.equal(g.state.paper.holes.length,0);rub(100,180,.05);assert.equal(g.state.paper.holes.length,1,'2.5 seconds opens one local hole');
+ rub(100,180,1.95);assert.equal(g.state.paper.holes.length,0);rub(100,180,.05);assert.equal(g.state.paper.holes.length,1,'2 seconds opens one local hole');
  rub(112,185,2.5);assert.equal(g.state.paper.holes.length,1,'holes cannot stack');rub(g.state.player.x,g.state.player.y,2.5);assert.equal(g.state.paper.holes.length,1,'fort stays intact');
  g.state.paused=true;rub(240,220,8);assert.equal(g.state.paper.holes.length,1);g.state.paused=false;rub(240,220,2.5);assert.equal(g.state.paper.holes.length,2);
  rub(350,180,.5);assert(g.state.paper.patches.length>0);g.state.paper.arcs.push({life:.2});g.api.queuePaperRub({x:100,y:180},{x:110,y:180});
@@ -2430,9 +2428,9 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  fresh();g.state.inks.electric=1;g.state.walls=[{pts:[{x:80,y:180},{x:280,y:180}],hp:60,maxHp:60,thick:8,life:50,maxLife:50,eraseInk:0}];e=enemy();e.x=180;e.y=180;g.api.eraseWallPath({x:180,y:175},{x:180,y:185},20);assert.equal(e.hp,100,'free/copy ink cannot generate a discharge');
  for(const type of ['tank','bouncer']){
   fresh();g.api.createWall([{x:100,y:140},{x:100,y:240}]);const w=g.state.walls[0],n=g.api.spawnEnemy(false,78,180,type);n.x=78;n.y=180;n.hp=n.maxHp=100;
-  if(type==='tank'){n.chonks.phase='windup';n.chonks.target=w;n.chonks.momentum=1;}else{n.bounceTime=1;n.bounceKick=.2;}
+  if(type==='tank'){n.chonks.phase='recover';n.chonks.target=w;n.chonks.momentum=1;}else{n.bounceTime=1;n.bounceKick=.2;}
   g.api.eraseWallPath({x:100,y:175},{x:100,y:185},20);assert.equal(n.stun,1.4,type+' support cut stumbles');assert.equal(n.eraseStumbleCooldown,6);if(type==='tank')assert.equal(n.chonks.momentum,0);
-  n.stun=0;g.api.createWall([{x:100,y:140},{x:100,y:240}]);if(type==='tank'){n.chonks.phase='windup';n.chonks.target=g.state.walls.at(-1);}else{n.bounceTime=1;n.bounceKick=.2;}
+  n.stun=0;g.api.createWall([{x:100,y:140},{x:100,y:240}]);if(type==='tank'){n.chonks.phase='recover';n.chonks.target=g.state.walls.at(-1);}else{n.bounceTime=1;n.bounceKick=.2;}
   g.api.eraseWallPath({x:100,y:175},{x:100,y:185},20);assert.equal(n.stun,0,'draw/erase spam does not repeat a stumble');
  }
  console.log('PASS: timed local paper wear, stationary/pause/fort guards, fresh per-wave spaced holes, closer-exit commitment, underground surface immunity and real rocks, two-second forced and warned natural emergence, reentry cooldown, pure/reduced rendering and resize/reset; projectile erasing, paid electric gaps/fragment cooldown and committed Chonks/Boingus stumbles.');
@@ -2557,6 +2555,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 }
 
 require('./paper-ball-notes.cjs')(load);
+require('./enemy-tactics.cjs')(load);
 // Portable progress rejects bad files before writes, and restores as a transaction.
 {
  const key='saveStevieNotebookV1',saved=new Map([[key,JSON.stringify({version:2,scraps:12,lifetimeScraps:40,scrapTutorialDone:true,levels:{starterEraser:1,tool:2}})],['doodleDefenderBestV4','6']]);let writes=0,failAt=0;

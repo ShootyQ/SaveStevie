@@ -179,7 +179,7 @@ function updateLaunchEffects(dt){
  for(const p of napalm)p.age+=dt;napalm=napalm.filter(p=>p.age<p.life);
  for(const p of landingPuffs)p.age+=dt;landingPuffs=landingPuffs.filter(p=>p.age<.45);
  for(const e of game.state.enemies){
-  if(e.hp<=0||e.flight)continue;
+  if(e.hp<=0||e.flight||game.api.abilityImmune(e))continue;
   let dps=0;for(const patch of napalm)if(e.x>=patch.minX-patch.r-e.r&&e.x<=patch.maxX+patch.r+e.r&&e.y>=patch.minY-patch.r-e.r&&e.y<=patch.maxY+patch.r+e.r&&patch.points.some(p=>(p.x-e.x)**2+(p.y-e.y)**2<(patch.r+e.r)**2))dps=Math.max(dps,patch.dps);
   if(dps){e.burn=Math.max(e.burn,.5);e.burnDps=Math.max(e.burnDps,dps)}
  }
@@ -465,6 +465,7 @@ function liveWallActive(){return liveStroke!==null;}
 
 function applyInkContact(e,dt,wall=null){
   if(game.api.underPaper(e))return 0;
+  if(game.api.abilityImmune(e))return game.state.stats.wallDamage;
   let dps=game.state.stats.wallDamage;
 
   if(game.state.synergies.has('Ring of Fire')&&wall&&wall.closed){
@@ -524,6 +525,7 @@ function contactPulses(e,kind,dt,interval){
   const count=Math.floor((data[kind]+1e-9)/interval);data[kind]-=count*interval;return count;
 }
 function applyRepulsionContact(e,dt){
+  if(game.api.abilityImmune(e))return;
   const t=remainingInkTuning(game.state.inks.repulsion),boss=isInkBoss(e),scale=boss?.5:1;
   const pulses=contactPulses(e,'repulsion',dt,t.repulsionInterval);
   for(let i=0;i<pulses&&e.hp>0;i++){
@@ -536,6 +538,7 @@ function applyRepulsionContact(e,dt){
   }
 }
 function applyChaosContact(e,dt){
+  if(game.api.abilityImmune(e))return;
   const n=game.state.inks.chaos,t=remainingInkTuning(n);
   const pulses=contactPulses(e,'chaos',dt,t.chaosInterval);
   for(let i=0;i<pulses&&e.hp>0;i++){
@@ -546,6 +549,7 @@ function applyChaosContact(e,dt){
 }
 
 function applyOneInk(kind,e,dt,chaos=false){
+  if(game.api.abilityImmune(e))return;
   if(game.api.underPaper(e))return;
   const n=chaos?Math.max(1,game.state.inks.chaos):1;
   if(kind==='fire'&&e.immunity!=='fire'){e.burn=Math.max(e.burn,1.8);e.burnDps=Math.max(e.burnDps,6+n)}
@@ -571,7 +575,7 @@ function electricTuning(level){
   return {damage:3+1.2*power,count:Math.min(6,1+Math.floor(level/3)),range:Math.min(190,110+level*12),radius:360,cooldown:Math.max(.8,1.15-level*.025),stun:Math.min(.18,.09+level*.01),fieldDps:2+power*.9};
 }
 function chainLightning(source,level){
-  if(source.hp<=0||game.api.underPaper(source)||(source.chainCd||0)>0)return;
+  if(source.hp<=0||game.api.abilityImmune(source)||game.api.underPaper(source)||(source.chainCd||0)>0)return;
   const t=electricTuning(level);let {count,range}=t,mult=1;
   if(game.state.synergies.has('Cryoshock')&&source.freeze>0){range+=25;count++;mult+=.15}
   if(game.state.synergies.has('Tesla Well')&&game.api.gravityWallHit(source)){range+=20;count++;mult+=.1}
@@ -581,7 +585,7 @@ function chainLightning(source,level){
   for(let hop=0;hop<count;hop++){
     let next=null,best=range*range;
     for(const e of game.state.enemies){
-      if(e.hp<=0||game.api.underPaper(e)||visited.has(e)||(e.chainCd||0)>0||e.immunity==='electric'||Math.hypot(e.x-source.x,e.y-source.y)>t.radius)continue;
+      if(e.hp<=0||game.api.abilityImmune(e)||game.api.underPaper(e)||visited.has(e)||(e.chainCd||0)>0||e.immunity==='electric'||Math.hypot(e.x-source.x,e.y-source.y)>t.radius)continue;
       const d=(e.x-from.x)**2+(e.y-from.y)**2;
       if(d<=best&&(!next||d<best)){next=e;best=d}
     }
@@ -603,6 +607,7 @@ function chainLightning(source,level){
 }
 
 function applySynergies(e,dt){
+  if(game.api.abilityImmune(e))return;
   if(game.state.synergies.has('Cryoshock')&&e.freeze>0)game.api.dealDamage(e,electricTuning(game.state.inks.electric).fieldDps*dt,'electric');
   if(game.state.synergies.has('Black Ice')&&e.freeze>0)e.gravitySlow=Math.max(e.gravitySlow,.62);
   if(game.state.synergies.has('Leech Ink')&&e.poison>0){

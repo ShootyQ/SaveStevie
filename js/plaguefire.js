@@ -18,7 +18,7 @@ function updatePlaguefire(dt){
   // monsters drop new patches through the normal kill/reward path afterward.
   const fields=patches.map(p=>{const active=Math.min(dt,Math.max(0,p.life-p.age));return {p,active,r:radius(p,Math.min(p.life,p.age+active))};});
   for(const enemy of game.state.enemies){
-    if(game.api.underPaper(enemy))continue;
+    if(game.api.underPaper(enemy)||game.api.abilityImmune(enemy))continue;
     if(enemy.hp<=0)continue;
     let fire=0,poison=0;
     for(const {p,active,r} of fields){

@@ -1,14 +1,14 @@
 /* The notebook itself is part of combat. Rubbing time is measured by the game
    clock, never by the number of pointer events or a stationary held eraser. */
 DoodleDefender.systems.paper=function(game){
-const tuning={wearSeconds:2.5,escapeSeconds:2,entryChance:.3,entryDuration:.5,patchRadius:30,holeRadius:22,holeSpacing:70,maxHoles:24,maxPatches:256,exitWarning:.7,recovery:1.2};
+const tuning={wearSeconds:2,escapeSeconds:2,entryChance:.3,entryDuration:.5,patchRadius:30,holeRadius:22,holeSpacing:70,maxHoles:24,maxPatches:256,exitWarning:.7,recovery:1.2};
 let pending=[],recentPaths=[],rubGrace=0;
 function paperActive(){const s=game.state;return s.running&&!s.paused&&!s.inUpgrade&&!s.betweenWaves&&!s.awaitingSpec&&!game.api.synergyRevealActive()&&!game.api.waveFinaleActive()&&!game.api.wobbleRepairActive()&&!game.api.bossEntranceActive();}
 function resetPaper(){game.state.paper={patches:[],holes:[],arcs:[],clock:0};pending=[];recentPaths=[];rubGrace=0;}
 function cancelPaperRub(){pending=[];recentPaths=[];rubGrace=0;}
 function underPaper(e){return !!e.paperTunnel;}
 function clearSurfaceEffects(e){for(const key of ['burn','burnDps','poison','poisonDps','freeze','stun','charged','gravitySlow','feastRush'])e[key]=0;e.feastHost=null;}
-function safePaperPoint(p,r=tuning.holeRadius){const b=game.api.refugeBounds(),near=game.api.refugePoint(p.x,p.y);return p.x>=r+8&&p.x<=game.state.W-r-8&&p.y>=r+76&&p.y<=game.state.H-r-20&&Math.hypot(p.x-near.x,p.y-near.y)>r+28;}
+function safePaperPoint(p,r=tuning.holeRadius){const b=game.api.refugeBounds(),near=game.api.refugePoint(p.x,p.y);return p.x>=r+8&&p.x<=game.state.W-r-8&&p.y>=r+76&&p.y<=game.state.H-r-20&&Math.hypot(p.x-near.x,p.y-near.y)> (r===tuning.holeRadius?12:r+8);}
 function addPaperHole(p){
  const paper=game.state.paper,near=paper.holes.find(h=>Math.hypot(h.x-p.x,h.y-p.y)<tuning.holeSpacing);
  if(near)return near;
@@ -16,7 +16,7 @@ function addPaperHole(p){
  const hole={x:p.x,y:p.y,r:tuning.holeRadius,id:paper.holes.length+1};paper.holes.push(hole);return hole;
 }
 function queuePaperRub(a,b,r=20){
- if(!paperActive()||![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||Math.hypot(b.x-a.x,b.y-a.y)<1)return;
+ if(!paperActive()||![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||Math.hypot(b.x-a.x,b.y-a.y)<.05)return;
  // Adjacent pointer samples share one frame's time budget. Bound work even
  // on devices delivering thousands of coalesced moves.
  if(pending.length>=128)pending.shift();pending.push({a:{...a},b:{...b},r});
@@ -45,7 +45,7 @@ function updatePaper(dt){
  // Nearby patches share coverage rather than dividing the time for a
  // single small back-and-forth rub between arbitrary sample anchors.
  for(const patch of touched){const count=samples.filter(p=>Math.hypot(p.x-patch.x,p.y-patch.y)<=tuning.patchRadius+p.r).length;
- const before=patch.wear;patch.wear=Math.min(tuning.wearSeconds,patch.wear+rubTime*count/samples.length);if(before<tuning.wearSeconds*.5&&patch.wear>=tuning.wearSeconds*.5)game.api.setMsg('Careful! Keep rubbing this thin patch and you will tear a shortcut.');if(patch.wear>=tuning.wearSeconds-1e-8){const hole=addPaperHole(patch);if(hole)game.api.setMsg('A hole! Monsters can tunnel to another hole closer to Stevie. Rub a moving bump for 2 seconds to bring it up.');}}
+ const before=patch.wear;patch.wear=Math.min(tuning.wearSeconds,patch.wear+rubTime*Math.min(1,2*count/samples.length));if(before<tuning.wearSeconds*.5&&patch.wear>=tuning.wearSeconds*.5)game.api.setMsg('Careful! Keep rubbing this thin patch and you will tear a shortcut.');if(patch.wear>=tuning.wearSeconds-1e-8){const hole=addPaperHole(patch);if(hole)game.api.setMsg('A hole! Monsters can tunnel to another hole closer to Stevie. Rub a moving bump for 2 seconds to bring it up.');}}
  paper.patches=paper.patches.filter(p=>!paper.holes.some(h=>Math.hypot(h.x-p.x,h.y-p.y)<tuning.holeSpacing));
  for(const e of game.state.enemies){
   const t=e.paperTunnel;if(!t||t.phase!=='travel'||e.hp<=0)continue;
@@ -62,7 +62,7 @@ function updatePaperEnemy(e,dt){
  if(e.eraseStumble>0)e.eraseStumble=Math.max(0,e.eraseStumble-dt);
  let t=e.paperTunnel;
  if(!t){
-  if(e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.type==='wobble-tooth'||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
+  if(e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.hurdle||e.type==='wobble-tooth'||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
   const holes=game.state.paper.holes,player=game.state.player,entry=holes.find(h=>Math.hypot(h.x-e.x,h.y-e.y)<=h.r+e.r*.35);
   if(e.paperEncounter&&!holes.some(h=>h.id===e.paperEncounter&&Math.hypot(h.x-e.x,h.y-e.y)<=h.r+e.r*.35+18))delete e.paperEncounter;
   if(!entry||e.paperEncounter===entry.id)return false;
@@ -105,7 +105,7 @@ function eraseWallReaction(wall,pieces,a,b,r,removedInk){
  }
  for(const e of game.state.enemies){
   if(e.hp<=0||underPaper(e)||e.freeze>0||e.stun>0||e.eraseStumbleCooldown>clock)continue;
-  const chonk=e.type==='tank'&&e.chonks?.phase==='windup'&&e.chonks.target===wall,boing=e.type==='bouncer'&&e.bounceTime>0&&e.bounceKick>0;
+  const chonk=e.type==='tank'&&e.chonks?.phase==='recover'&&e.chonks.target===wall,boing=e.type==='bouncer'&&e.bounceTime>0&&e.bounceKick>0;
   if(!chonk&&!boing)continue;
   const q=game.api.nearestPointOnWall(e,wall);if(!q||Math.hypot(q.x-e.x,q.y-e.y)>e.r+wall.thick/2+10||!rubTouches(q,[{a,b,r}]))continue;
   if(pieces.some(p=>{const near=game.api.nearestPointOnWall(e,p);return near&&Math.hypot(near.x-e.x,near.y-e.y)<=e.r+p.thick/2+2;}))continue;
@@ -117,7 +117,7 @@ function eraseWallReaction(wall,pieces,a,b,r,removedInk){
 function movePaper(dx,dy){const p=game.state.paper;for(const q of [...p.holes,...p.patches]){q.x+=dx;q.y+=dy;}for(const arc of p.arcs)for(const q of [arc.a,arc.b]){q.x+=dx;q.y+=dy;}for(const e of game.state.enemies)if(e.paperTunnel){e.paperTunnel.exit.x+=dx;e.paperTunnel.exit.y+=dy;if(e.paperTunnel.entry){e.paperTunnel.entry.x+=dx;e.paperTunnel.entry.y+=dy;}if(e.paperTunnel.hole){e.paperTunnel.hole.x+=dx;e.paperTunnel.hole.y+=dy;}}pending=[];recentPaths=[];rubGrace=0;}
 function drawPaper(){
  const ctx=game.dom.ctx,p=game.state.paper;ctx.save();
- for(const patch of p.patches){const amount=patch.wear/tuning.wearSeconds;ctx.fillStyle='rgba(155,130,98,'+(amount*.18)+')';ctx.strokeStyle='rgba(120,93,63,'+(amount*.5)+')';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(patch.x,patch.y,26,20,-.15,0,Math.PI*2);ctx.fill();for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(patch.x-18,patch.y-9+i*4);ctx.lineTo(patch.x+18,patch.y-12+i*4);ctx.stroke();}if(amount>.6){ctx.beginPath();ctx.moveTo(patch.x-12,patch.y);ctx.lineTo(patch.x-3,patch.y-5);ctx.lineTo(patch.x+3,patch.y+4);ctx.lineTo(patch.x+12,patch.y-2);ctx.stroke();}}
+ for(const patch of p.patches){const amount=patch.wear/tuning.wearSeconds;if(amount>.08){ctx.strokeStyle='#8a6843';ctx.lineWidth=2;ctx.beginPath();ctx.arc(patch.x,patch.y,25,-Math.PI/2,-Math.PI/2+amount*Math.PI*2);ctx.stroke();ctx.fillStyle='#725337';ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(Math.round(amount*100)+'%',patch.x,patch.y-28);}ctx.fillStyle='rgba(155,130,98,'+(amount*.18)+')';ctx.strokeStyle='rgba(120,93,63,'+(amount*.5)+')';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(patch.x,patch.y,26,20,-.15,0,Math.PI*2);ctx.fill();for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(patch.x-18,patch.y-9+i*4);ctx.lineTo(patch.x+18,patch.y-12+i*4);ctx.stroke();}if(amount>.6){ctx.beginPath();ctx.moveTo(patch.x-12,patch.y);ctx.lineTo(patch.x-3,patch.y-5);ctx.lineTo(patch.x+3,patch.y+4);ctx.lineTo(patch.x+12,patch.y-2);ctx.stroke();}}
  for(const h of p.holes){ctx.fillStyle='#ba8550';ctx.strokeStyle='#a28d69';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<16;i++){const angle=i*Math.PI/8,r=h.r*(i%2?.88:1.1),x=h.x+Math.cos(angle)*r,y=h.y+Math.sin(angle)*r*.8;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.save();ctx.clip();ctx.translate(h.x,h.y);game.api.drawDeskGrain(ctx,{...h,seed:h.id});ctx.restore();ctx.strokeStyle='#a28d69';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<16;i++){const angle=i*Math.PI/8,r=h.r*(i%2?.88:1.1),x=h.x+Math.cos(angle)*r,y=h.y+Math.sin(angle)*r*.8;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.stroke();ctx.strokeStyle='#fff8e8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(h.x,h.y,h.r*.94,Math.PI,Math.PI*1.7);ctx.stroke();}
  ctx.restore();
 }

@@ -64,7 +64,8 @@ DoodleDefender.systems.doodleScraps=function(game){
   game.api.setMsg(n.name+' added! All your Doodle Scraps stack.');game.api.closeInfo(false);return true;
  }
  function dismissDoodleChoice(){offers=[];}
- function applyDoodleHit(e,payload,secondary=false){if(!payload||e.hp<=0||game.api.underPaper(e))return;const n=typeof payload==='string'?{[payload]:1}:payload;
+ function applyDoodleHit(e,payload,secondary=false){
+  if(game.api.abilityImmune(e))return;if(!payload||e.hp<=0||game.api.underPaper(e))return;const n=typeof payload==='string'?{[payload]:1}:payload;
   const before={burn:e.burn>0,poison:e.poison>0,electric:e.charged>0||e.noteElectric>clock};
   const fire=Math.max(n.fire||0,n.ash||0,n.influence||0),poison=Math.max(n.poison||0,n.bubble||0),electric=Math.max(n.electric||0,n.cling||0);
   if(fire&&e.immunity!=='fire'){e.burn=Math.max(e.burn,2+Math.min(2,(fire-1)*.3));e.burnDps=Math.max(e.burnDps,5.5+Math.min(8,(fire-1)*1.5));}

@@ -13,7 +13,7 @@ DoodleDefender.systems.firstLessons=function(game){
   ['Make room for a better wall.','A wall in the wrong place? Erase a section to open a gap and recover some ink. You normally get back 25% of its paid ink; damaged walls return less. Let’s try it safely.'],
   ['Your turn: rub out a gap.','Rub across the middle of this wall. '],
   ['Meet Rubble Ruff!','This little rascal carries an eraser and wipes out your walls. Here’s the trick: YOU can erase HIM! Rub directly over him three times: each pass wipes off a chunk! Lift your finger or mouse button between rubs. Rocks and wall effects also hurt him. You can also erase small hostile pencils and spikes; walls can reflect Pew Pew’s pencils back at him.'],
-  ['Go easy on the paper.','Rubbing the same spot for about 2.5 seconds makes a hole. Every wave starts with fresh paper, so smudges and holes reset. Some monsters slip under the page if another hole is closer to me. See a moving bump? Rub near it for 2 seconds to force it back up. For now, a quick erase is all you need!']
+  ['Go easy on the paper.','Rubbing the same spot for about 2 seconds makes a hole. Every wave starts with fresh paper, so smudges and holes reset. Some monsters slip under the page if another hole is closer to me. See a moving bump? Rub near it for 2 seconds to force it back up. For now, a quick erase is all you need!']
  ];
  function steps(){return kind==='draw'?drawSteps:eraseSteps;}
  function practiceLength(){let n=0;for(let i=1;i<points.length;i++)n+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);return n;}

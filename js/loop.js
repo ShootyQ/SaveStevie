@@ -51,7 +51,7 @@ function update(dt){
 
     if(game.state.synergies.has('Gravity Trap')||game.state.synergies.has('THE BLACK HOLE')){
       for(const e of game.state.enemies){
-        if(game.api.underPaper(e))continue;
+        if(game.api.underPaper(e)||game.api.abilityImmune(e))continue;
         if(game.api.bossFriendHeld(e)||game.api.isFirstBoss(e))continue;
         if(game.api.withinRadius(e.x,e.y,cx,cy,game.api.supportInkTuning(game.state.inks.gravity).gravityRange)){
           const dx=cx-e.x,dy=cy-e.y,m=Math.hypot(dx,dy)||1;
@@ -64,7 +64,7 @@ function update(dt){
 
     if(game.state.synergies.has('Ring of Fire')){
       for(const e of game.state.enemies){
-        if(game.api.underPaper(e))continue;
+        if(game.api.underPaper(e)||game.api.abilityImmune(e))continue;
         if(game.api.withinRadius(e.x,e.y,cx,cy,115)){
           e.burn=Math.max(e.burn,1.4);
           e.burnDps=Math.max(e.burnDps,5+game.state.inks.fire*2.5);
@@ -74,7 +74,7 @@ function update(dt){
 
     if(game.state.synergies.has('TESLA CAGE')&&w.intersections>0){
       for(const e of game.state.enemies){
-        if(game.api.underPaper(e))continue;
+        if(game.api.underPaper(e)||game.api.abilityImmune(e))continue;
         if(!teslaHits.has(e)&&game.api.withinRadius(e.x,e.y,cx,cy,145)){
           teslaHits.add(e);
           game.api.dealDamage(e,game.api.electricTuning(game.state.inks.electric).fieldDps*dt,'electric');
@@ -87,7 +87,7 @@ function update(dt){
   // Parallel-wall field synergies.
   if(game.state.synergies.has('Ice Corridor')||game.state.synergies.has('Power Lines')||game.state.synergies.has('ABSOLUTE ZERO')){
     for(const e of game.state.enemies){
-        if(game.api.underPaper(e))continue;
+        if(game.api.underPaper(e)||game.api.abilityImmune(e))continue;
       if(game.api.wallNear(e.x,e.y,42)){
         if(game.state.synergies.has('Ice Corridor')||game.state.synergies.has('ABSOLUTE ZERO')){
           e.gravitySlow=Math.max(e.gravitySlow,.42);
@@ -109,6 +109,7 @@ function update(dt){
     if(game.api.waveFinaleActive())break;
     if(!game.state.enemies.includes(e))continue;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
+    if(game.api.abilityImmune(e)){for(const k of ['burn','burnDps','poison','poisonDps','freeze','stun','charged','gravitySlow'])e[k]=0;}
     if(game.api.updatePaperEnemy(e,dt))continue;
     if(e.shockRest>0)e.shockRest=Math.max(0,e.shockRest-dt);e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
@@ -159,6 +160,8 @@ function update(dt){
     game.api.pullGravity(e,dt,immobilized);
     if(game.api.updateTwicey(e,dt))continue;
     if(e.type==='tank'&&game.api.updateChonks(e,dt))continue;
+    if(e.type==='sprinter'&&game.api.updateDash(e,dt))continue;
+    if(e.type==='flanker'&&game.api.updateSneaky(e,dt))continue;
     if(e.type==='sniper'&&immobilized)e.shootCd=Math.max(.65,e.shootCd);
     if(e.type==='sniper'&&!immobilized&&!game.api.feastHost(e)&&game.api.updateSniper(e,dt))continue;
 
@@ -171,15 +174,7 @@ function update(dt){
     if(e.waveBoss&&!immobilized&&!(game.api.isFirstBoss(e)&&game.api.bossBrain(e).recovery>0))game.api.pushThroughBossStrokes(e,dt);
     const target=game.api.enemyTarget(e);
     let targetX=target.x,targetY=target.y;
-    if(!immobilized&&e.type==='flanker'&&!game.api.feastHost(e)){
-      e.flankCd-=dt;
-      if(e.flankCd<=0){
-        e.flankAngle+=game.api.rand(.65,1.35)*(Math.random()<.5?-1:1);
-        e.flankCd=game.api.rand(1.0,1.7);
-      }
-      targetX=game.state.player.x+Math.cos(e.flankAngle)*68;
-      targetY=game.state.player.y+Math.sin(e.flankAngle)*68;
-    }
+
 
     const dx=targetX-e.x,dy=targetY-e.y,d=Math.hypot(dx,dy)||1;
     const playerDist=game.api.dist(e.x,e.y,game.state.player.x,game.state.player.y);

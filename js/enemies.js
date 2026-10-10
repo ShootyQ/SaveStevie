@@ -14,7 +14,7 @@ const defs=game.catalog.enemyDefs={
     brute:{r:19,hp:105,speed:20,dmg:22,color:'#51634a'},
     elite:{r:13,hp:68,speed:42,dmg:13,color:'#b34e82'},
     wardling:{r:12,hp:38,speed:36,dmg:8,color:'#9e71b5'},
-    sprinter:{r:9,hp:24,speed:37,dmg:7,color:'#e39d2d'},
+    sprinter:{r:14,hp:24,speed:86,dmg:7,color:'#e39d2d'},
     brood:{r:17,hp:62,speed:25,dmg:11,color:'#9053ac'},
     bulwark:{r:18,hp:80,speed:22,dmg:13,color:'#6d7e91'},
     medic:{r:12,hp:32,speed:28,dmg:5,color:'#4e9d75'},
@@ -116,7 +116,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='wardling'){enemy.immunity=game.api.pick(['fire','poison','electric','blast','frost']);enemy.immuneCd=0}
   if(type==='tank')enemy.chonks={phase:'walk',momentum:0,windup:0,recovery:0,recoveryTotal:1.4,target:null,facing:1,bumpDamage:d.dmg};
   if(type==='scrubber')enemy.scrubOrbit=enemy.flankAngle;
-  if(type==='sprinter'){enemy.dashTime=0;enemy.screenAge=0;}
+  if(type==='sprinter'){enemy.dashTime=0;enemy.screenAge=0;enemy.hurdlesLeft=1;}
   if(type==='sniper')enemy.returnHitsNeeded=game.state.wave<=12?1:game.state.wave<=18?2:3;
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
@@ -291,7 +291,7 @@ function updateStevie(dt){
 }
 function hitPaper(p,e){
   game.api.playSound('rock');game.api.dealDamage(e,p.damage,'physical',{rock:true});
-  if(!game.api.underPaper(e)){
+  if(!game.api.underPaper(e)&&!game.api.abilityImmune(e)){
    if(game.state.synergies.has('Hot Rocks')){e.burn=Math.max(e.burn,2);e.burnDps=Math.max(e.burnDps,8+game.state.inks.fire*3);}
    if(game.state.synergies.has('Snowball Fight')){e.gravitySlow=Math.max(e.gravitySlow,.35);if(Math.random()<.22)e.freeze=Math.max(e.freeze,.55);}
    game.api.applyDoodleHit(e,p.doodlePayload||p.paperElement);
@@ -425,7 +425,7 @@ function eraserAttack(e,dt){
 }
 
 let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,introducedSpawned=0,bossPhase='timed',arrival=null;
-function resetEnemyWave(){if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;game.api.resetBossEncounters()}
+function resetEnemyWave(){game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;game.api.resetBossEncounters()}
 function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
@@ -659,9 +659,9 @@ function sniperRoute(e){
 }
 function updateSniper(e,dt){
  if(e.hp<=0)return true;
- if(e.freeze>0||e.stun>0){e.shootCd=Math.max(.65,e.shootCd);return true;}
+ if(e.freeze>0||e.stun>0){e.shootCd=Math.max(.65,e.shootCd);delete e.sniperErase;return true;}
  if(sniperCanAim(e)){
-  sniperRoutes.delete(e);e.shootCd-=dt;
+  sniperRoutes.delete(e);delete e.sniperErase;e.shootCd-=dt;
   if(e.shootCd<=0){fireSniper(e);e.shootCd=1.7}
   return true;
  }
@@ -669,52 +669,39 @@ function updateSniper(e,dt){
  e.shootCd=Math.max(.65,e.shootCd);
  let route=sniperRoutes.get(e);
  if(route)route.left-=dt;
- if(route?.blocked&&route.left>0)return false;
+ if(route?.blocked&&route.left>0)return game.api.eraseSniperLane(e,dt);
  if(!route||route.left<=0||!sniperPathClear(e,route.x,route.y)||Math.hypot(route.x-e.x,route.y-e.y)<4){
   const next=sniperRoute(e);route=next?{...next,left:next.detour?2:.4}:{blocked:true,left:.4};sniperRoutes.set(e,route);
  }
- if(!route||route.blocked)return false; // A genuine closed cage still takes wall contact damage.
+ if(!route||route.blocked)return game.api.eraseSniperLane(e,dt);
+ delete e.sniperErase;
  const dx=route.x-e.x,dy=route.y-e.y,d=Math.hypot(dx,dy)||1,travel=Math.min(d,e.speed*enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7))*dt);
  return moveEnemySafely(e,dx/d*travel,dy/d*travel);
 }
 
-// Chonks earns momentum from actual travel, then spends it on one warned belly bump.
+// Waddling earns momentum; contact spends it immediately on a ram.
 function updateChonks(e,dt){
- const c=e.chonks,p=game.state.player;if(!c)return false;
- const touching=game.api.nearestWallHit(e),restWall=c.target,point=restWall&&game.state.walls.includes(restWall)&&restWall.hp>0&&restWall.life>0?game.api.nearestPointOnWall(e,restWall):null;
- const resting=point&&Math.hypot(point.x-e.x,point.y-e.y)<=e.r+restWall.thick/2+.5?{wall:restWall}:null;
- const hit=touching||game.api.gravityWallHit(e)||resting;
- if(hit){game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');if(e.hp<=0)return true}
- const frozen=e.freeze>0||e.stun>0;
- if(frozen){c.momentum=Math.max(0,c.momentum-dt);if(c.phase==='windup'){c.phase='walk';c.target=null;c.windup=0}return true}
- if(c.phase==='recover'){
-  c.recovery=Math.max(0,c.recovery-dt);if(!c.recovery){c.phase='walk';c.target=null}return true;
- }
- if(c.phase==='windup'){
-  const wall=c.target,q=wall&&game.api.nearestPointOnWall(e,wall);
-  if(!wall||!game.state.walls.includes(wall)||wall.hp<=0||wall.life<=0||!q||Math.hypot(q.x-e.x,q.y-e.y)>e.r+wall.thick/2+5){c.phase='walk';c.target=null;c.momentum=0;return true}
-  c.windup=Math.max(0,c.windup-dt);if(c.windup>0)return true;
-  const dx=q.x-e.x,dy=q.y-e.y,len=Math.hypot(dx,dy)||1;
-  // A separate live barrier just behind this one turns the bump into a pratfall.
-  const ignored=new Set([wall]),layered=!game.api.bouncePathClear(e,e.x+dx/len*(len+60),e.y+dy/len*(len+60),0,ignored);
-  game.api.damageWall(wall,c.bumpDamage,q.x,q.y);game.api.animateEnemyAction(e,'belly-bump',q);
-  game.api.floatText(e.x,e.y-e.r-12,layered?'FLOP!':'BELLY BUMP!','#a56930');
-  c.phase='recover';c.recovery=c.recoveryTotal=layered?2.8:1.4;c.momentum=0;return true;
- }
+ const c=e.chonks;if(!c)return false;
+ const touching=game.api.nearestWallHit(e),wall=c.target,q=wall&&game.state.walls.includes(wall)&&wall.hp>0&&wall.life>0?game.api.nearestPointOnWall(e,wall):null;
+ const resting=q&&Math.hypot(q.x-e.x,q.y-e.y)<=e.r+wall.thick/2+1?{wall}:null,hit=touching||game.api.gravityWallHit(e)||resting;
+ if(hit){game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');if(e.hp<=0)return true;}
+ if(e.freeze>0||e.stun>0){c.momentum=Math.max(0,c.momentum-dt);return true;}
+ if(c.phase==='recover'){c.recovery=Math.max(0,c.recovery-dt);if(!c.recovery){c.phase='walk';c.target=null;}return true;}
  if(game.api.feastHost(e))c.momentum=0;
- const target=game.api.enemyTarget(e),dx=target.x-e.x,dy=target.y-e.y,len=Math.hypot(dx,dy)||1;
- if(Math.abs(dx)>.1)c.facing=dx<0?-1:1;
+ const target=game.api.enemyTarget(e),dx=target.x-e.x,dy=target.y-e.y,len=Math.hypot(dx,dy)||1;if(Math.abs(dx)>.1)c.facing=dx<0?-1:1;
  const travel=Math.min(len,e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7))*dt),nx=e.x+dx/len*travel,ny=e.y+dy/len*travel;
- const ahead=touching?{wall:touching.wall,t:0}:game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},nx,ny);
+ const ahead=hit?{wall:hit.wall,t:0}:game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},nx,ny);
  if(ahead){
   const step=Math.max(0,ahead.t-.001);c.momentum=game.api.clamp(c.momentum+travel*step/180,0,1);e.x+=(nx-e.x)*step;e.y+=(ny-e.y)*step;
-  c.phase='windup';c.windup=.65;c.target=ahead.wall;c.bumpDamage=e.dmg*(1+2.5*c.momentum);
-  game.api.animateEnemyAction(e,'belly-ready',game.api.nearestPointOnWall(e,ahead.wall));return true;
+  const point=game.api.nearestPointOnWall(e,ahead.wall),vx=point.x-e.x,vy=point.y-e.y,d=Math.hypot(vx,vy)||1;
+  const layered=!game.api.bouncePathClear(e,e.x+vx/d*(d+60),e.y+vy/d*(d+60),0,new Set([ahead.wall]));
+  c.bumpDamage=e.dmg*(1+2.5*c.momentum)*(1-game.api.clamp(e.gravitySlow,0,.7));c.target=ahead.wall;
+  game.api.damageWall(ahead.wall,c.bumpDamage,point.x,point.y);game.api.animateEnemyAction(e,'belly-bump',point);game.api.floatText(e.x,e.y-e.r-12,layered?'FLOP!':'RAM!','#a56930');
+  c.phase='recover';c.recovery=c.recoveryTotal=layered?2:1;c.momentum=0;return true;
  }
- const moved=Math.hypot(nx-e.x,ny-e.y);e.x=nx;e.y=ny;
- c.momentum=game.api.clamp(c.momentum+moved/180,0,1);game.api.contactStevie(e);return true;
+ e.x=nx;e.y=ny;c.momentum=game.api.clamp(c.momentum+travel/180,0,1);game.api.contactStevie(e);return true;
 }
-function enemyMoveScale(e){return game.api.enemySpeedScale()*game.api.doodleClingScale(e)*(e.type==='basil'&&e.feastPhase!=='idle'?0:e.feastRush>0?2:feastHost(e)?1.6:e.type==='tank'?1+1.4*(e.chonks?.momentum||0):e.type==='sprinter'?(1+.8*game.api.clamp((e.screenAge||0)/16,0,1))*(e.dashTime>=2.6?2.6:1):1)}
+function enemyMoveScale(e){return game.api.enemySpeedScale()*game.api.doodleClingScale(e)*(e.type==='basil'&&e.feastPhase!=='idle'?0:e.feastRush>0?2:feastHost(e)?1.6:e.type==='tank'?1+1.4*(e.chonks?.momentum||0):e.type==='sprinter'?(1+.45*game.api.clamp((e.screenAge||0)/3,0,1))*(e.dashTime>=2.6?1.35:1):1)}
 function enemyTarget(e){
   if(e.waveBoss)return game.api.bossTarget(e);
   const host=feastHost(e);if(host)return game.api.dist(e.x,e.y,host.x,host.y)<host.r+e.r+14?e:host;
