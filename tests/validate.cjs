@@ -620,6 +620,23 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 }
 
 
+// King Doodle-Doom's four sprite sequences follow real attacks without combat mutation.
+{
+ const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.wave=5;g.state.enemies=[];
+ const e=g.api.spawnEnemy(false,100,180,'boss');e.waveBoss=true;const b=g.api.bossBrain(e);g.api.updateEnemyAnimations(0);
+ const walk=[];for(let i=0;i<4;i++){e.x+=e.r*.51;g.api.updateEnemyAnimations(.05);walk.push(g.api.enemySpriteFrame(e));}assert.equal(new Set(walk).size,4);assert(walk.every(n=>/^boss-frame-[0-3]$/.test(n)));
+ const charge=[];b.cast={kind:'mirror-orb',x:g.state.player.x,y:g.state.player.y,duration:.95,left:.95};
+ for(let i=0;i<4;i++){b.cast.left=.95*(1-(i+.05)/4);g.api.updateEnemyAnimations(.01);charge.push(g.api.enemySpriteFrame(e));}assert.deepEqual(charge,[4,5,6,7].map(i=>'boss-frame-'+i));
+ b.cast.left=0;g.api.updateBossEncounter(e,.01);assert.equal(g.state.enemyShots.length,1);assert.equal(b.action.kind,'mirror-orb');
+ const throwing=[];for(let i=0;i<4;i++){b.action.age=i*.12;g.api.updateEnemyAnimations(.01);throwing.push(g.api.enemySpriteFrame(e));}assert.deepEqual(throwing,[8,9,10,11].map(i=>'boss-frame-'+i));
+ const shot=g.state.enemyShots[0],hp=e.hp;shot.reflected=true;shot.x=e.x;shot.y=e.y;assert.equal(g.api.updateFirstBossShot(shot,.01),false);assert(e.hp<hp);assert.equal(b.recovery,1.25);
+ g.api.updateEnemyAnimations(0);assert.equal(g.api.enemySpriteFrame(e),'boss-frame-12');const recoil=['boss-frame-12'];for(let i=0;i<3;i++){g.api.updateEnemyAnimations(.313);recoil.push(g.api.enemySpriteFrame(e));}assert.deepEqual(recoil,[12,13,14,15].map(i=>'boss-frame-'+i));
+ e.freeze=1;const frozen=g.api.enemySpriteFrame(e);g.api.updateEnemyAnimations(.2);assert.equal(g.api.enemySpriteFrame(e),frozen,'freeze holds the current drawing');e.freeze=0;
+ const before=JSON.stringify(g.state),brain=JSON.stringify(b),random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('King animation consumed combat RNG')};g.api.updateEnemyAnimations(.01);g.api.draw();env.sandbox.Math.random=random;assert.equal(JSON.stringify(g.state),before);assert.equal(JSON.stringify(b),brain);
+ const reduced=load(true,{images:true,reduced:true}).sandbox.testGame;reduced.state.wave=5;const king=reduced.api.spawnEnemy(false,100,180,'boss');king.waveBoss=true;reduced.api.updateEnemyAnimations(.1);assert.equal(reduced.api.enemySpriteFrame(king),null,'reduced motion retains still base artwork');
+ console.log('PASS: four King Doodle-Doom walk, cast, actual throw and real returned-shot recoil sequences, frozen sprite, reduced motion and pure combat/RNG/brain rendering.');
+}
+
 // A mixed-status crowd must reuse its tinted sprites instead of allocating each frame.
 {
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();

@@ -133,7 +133,7 @@ function updateFirstBossShot(s,dt){
     const boss=s.owner,b=bossBrain(boss);b.recovery=Math.max(b.recovery,firstBossTuning(boss).recovery);b.cd=Math.max(b.cd,.5);
     const levels=Object.values(game.state.inks).reduce((a,n)=>a+n,0),bonus=1+Math.min(.3,levels*.025);
     game.api.dealDamage(boss,boss.maxHp*(s.bossKind==='mirror-orb'?firstBossTuning(boss).orbReturn:firstBossTuning(boss).sparkReturn)*bonus,'reflected');
-    game.api.animateEnemyAction(boss,'slam');game.api.burst(boss.x,boss.y,'#4c9c97',12);game.api.floatText(boss.x,boss.y-boss.r-14,'EXPOSED!','#287a78');
+    game.api.animateEnemyAction(boss,'king-return');game.api.burst(boss.x,boss.y,'#4c9c97',12);game.api.floatText(boss.x,boss.y-boss.r-14,'EXPOSED!','#287a78');
     if(boss.hp<=0)game.api.killEnemy(boss);return false;
    }
   }else{
