@@ -64,6 +64,7 @@ function renderProblemReport(){
   'Save Stevie problem report',
   'Version: '+version,
   'Device/browser: '+ua,
+  'Artwork: '+(game.api.artworkStatus?.().loaded??0)+' / '+(game.api.artworkStatus?.().total??0)+' base sprites; failed: '+(game.api.artworkStatus?.().failed.join(', ')||'None'),
   'Screen: '+(window.innerWidth||s.W)+' ×'+(window.innerHeight||s.H)+'; game: '+Math.round(s.W)+' ×'+Math.round(s.H),
   'Platform: '+(document.documentElement?.classList?.contains('native-app')?'Android app':'Web'),
   'Run: '+(game.api.testLabActive?.()?'Scratch Page test':devRunActive()?'Dev run':s.running?'Normal run':'Menu / ended run'),

@@ -1,6 +1,14 @@
 // Package the dependency-free game and version its resources together.
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
 const root=path.resolve(__dirname,'..'),output=path.resolve(process.argv[2]||path.join(root,'_site'));
+// Canvas art is referenced dynamically, so catch omissions before publishing.
+const renderer=fs.readFileSync(path.join(root,'js/renderer.js'),'utf8'),artNames=renderer.match(/const doodleNames=\[([^\]]+)\]/);
+if(!artNames)throw Error('Canvas artwork manifest is missing.');
+for(const match of artNames[1].matchAll(/'([^']+)'/g)){
+ const file=path.join(root,'assets/art',match[1]+'.png');
+ if(!fs.existsSync(file))throw Error('Missing game artwork: '+path.relative(root,file));
+ const bytes=fs.readFileSync(file);if(bytes.length<24||!bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))throw Error('Invalid game artwork: '+path.relative(root,file));
+}
 const entries=['index.html','styles.css','game.js','js','assets'],files=[];
 function collect(name){const file=path.join(root,name);if(fs.statSync(file).isDirectory())for(const child of fs.readdirSync(file).sort())collect(path.join(name,child));else files.push(name)}
 entries.forEach(collect);
