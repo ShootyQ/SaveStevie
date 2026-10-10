@@ -80,7 +80,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <aside id="scrapGuideCover" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>Stevie’s scrap trail</h3><p>Step 1 of 3: you earned scraps! They stay in my Notebook even when the monsters get me. Come with me to the Notebook! I saved a free Starter Eraser for your first purchase. Let’s claim it before our next adventure.</p><div class="cardactions"><button id="scrapGuideShow">Show me →</button><button class="secondary" id="scrapGuideSkip">Open Notebook</button></div></div></aside><div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.25</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <aside id="scrapGuideCover" class="scrap-guide" hidden aria-label="Stevie’s scrap tutorial"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="64"><div><h3>Stevie’s scrap trail</h3><p>Step 1 of 3: you earned scraps! They stay in my Notebook even when the monsters get me. Come with me to the Notebook! I saved a free Starter Eraser for your first purchase. Let’s claim it before our next adventure.</p><div class="cardactions"><button id="scrapGuideShow">Show me →</button><button class="secondary" id="scrapGuideSkip">Open Notebook</button></div></div></aside><div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.26</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -366,6 +366,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.26 · Wobble’s matching makeover</h3><p>Draw Wobblechomp’s replacement parts from dot 1 back to dot 2 to join both sides to his body. Your outlines fill with his bright yellow, orange spots and pencil texture. The eye stays at the stalk tip, and both joints stay connected as he happily walks away.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.25 · A royal entrance and a proper hooray</h3><p>Crash Dash is smaller but keeps his speedy hurdle. About one second of rubbing now tears the paper, with clearer guidance for making a two-hole shortcut. King Doodle-Doom walks into his intro, and boss wins get a victory banner, cheering Stevie and paper confetti. Reduced motion keeps the celebration still.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.24 · Questionable construction</h3><p>Meet the hard-hat crew! Wave 11 introduces Yank Doodle, who hooks and drags your walls; erase his rope to cancel the job. At wave 14, Rip-Raff tears entry holes and throws warned fire bombs to open exits closer to Stevie. Erase his work marks or flying bombs to stop him. Each worker is capped at one, new crew holes at six per wave, and bosses keep their feet above the paper.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.23 · Erase your way out</h3><p>Trip Line: erase a wall just ahead of Crash Dash or a charging Sir Chonks to make him skid and stumble. Spark Gap has a brighter, longer lightning cue and only discharges across a small gap between surviving electric wall ends. Firebreak lets your eraser clear strips through Napalm and Plaguefire; cleared ground stays safe from that patch as it grows.</p></article>
@@ -597,7 +598,7 @@
     <p id="wobbleRepairHint"></p>
     <button id="wobbleRepairHelp">Help Wobblechomp draw his bits back</button><button id="wobbleRepairContinue">Take the win · continue</button>
     <div id="wobbleRepairDrawing" hidden>
-      <canvas id="wobbleRepairPad" width="480" height="320" aria-label="Draw a replacement appendage starting at the attachment dot"></canvas>
+      <canvas id="wobbleRepairPad" width="480" height="320" aria-label="Draw a replacement appendage outline from attachment dot 1 back to dot 2"></canvas>
       <div class="wobble-repair-actions"><button id="wobbleRepairClear">Try again</button><button id="wobbleRepairPreset">Use Stevie’s doodle</button><button id="wobbleRepairAttach">Attach my doodle →</button></div>
     </div>
   </section>
