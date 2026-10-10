@@ -101,6 +101,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   let type=typeOverride||game.api.enemyType();
   if(forceBoss)type=game.api.bossTypeForWave();
   const scale=game.api.enemyHpScale()*game.state.stats.enemyScale;
+  if(type==='scrubber'&&game.state.enemies.filter(e=>e.type==='scrubber'&&e.hp>0).length>=3)return null;
   if(type==='basil'&&game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length>=2)return null;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
   const earlyBoss=forceBoss&&(game.state.wave===5||game.state.wave===10),bossHp=forceBoss&&game.state.wave===5?3:earlyBoss?1.8:1,bossSpeed=forceBoss&&game.state.wave===5?7.8:earlyBoss?2:1;

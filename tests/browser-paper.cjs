@@ -30,7 +30,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   const up=async()=>{if(touch)await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});else await page.mouse.up({button:'right'});};
   for(const p of [points.entry,points.exit]){
    await down(p);const before=await page.evaluate(()=>testGame.state.paper.holes.length);
-   for(let i=0;i<25;i++){await move({x:p.x+(i%2?0:10),y:p.y});await page.evaluate(()=>testGame.api.updatePaper(.1));if(i===23)assert.equal(await page.evaluate(()=>testGame.state.paper.holes.length),before);}
+   for(let i=0;i<50;i++){await move({x:p.x+(i%2?0:48),y:p.y});await page.evaluate(()=>{for(let frame=0;frame<3;frame++)testGame.api.updatePaper(1/60);});if(i===47)assert.equal(await page.evaluate(()=>testGame.state.paper.holes.length),before);}
    await up();assert.equal(await page.evaluate(()=>testGame.state.paper.holes.length),before+1,'real rubbing opens local hole at 2.5 seconds');
   }
   await page.evaluate(()=>{const g=testGame,h=g.state.paper.holes[0];window.burrower=g.api.spawnEnemy(false,h.x,h.y,'grunt');burrower.hp=burrower.maxHp=100;const random=Math.random;Math.random=()=>0;g.api.updatePaperEnemy(burrower,.01);Math.random=random;g.api.updatePaperEnemy(burrower,.6);g.api.draw();});assert.equal(await page.evaluate(()=>burrower.paperTunnel.phase),'travel');
@@ -42,7 +42,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.evaluate(()=>{const g=testGame;g.state.enemyShots=[{x:80,y:150,r:3,damage:7}];});await down({x:70,y:150});await move({x:90,y:150});await up();assert.equal(await page.evaluate(()=>testGame.state.enemyShots.length),0);assert.equal(await page.evaluate(()=>testGame.state.stats.ink),0,'erase counters require no ink');
   await page.evaluate(()=>{const g=testGame;g.state.enemies=[];for(const [i,type] of ['grunt','scrubber','fast','sprinter','bouncer'].entries()){const e=g.api.spawnEnemy(false,45+i*(g.state.W-90)/4,170,type);e.paperTunnel={phase:'enter',entryTimer:.25,age:.25,exit:{x:e.x,y:e.y}};}g.api.draw();});await page.screenshot({path:'/tmp/paper-entry-animations-'+viewport.width+'.png'});await page.evaluate(()=>{for(const e of testGame.state.enemies){e.paperTunnel.phase='emerge';e.paperTunnel.warning=.2;}testGame.api.draw();});await page.screenshot({path:'/tmp/paper-exit-animations-'+viewport.width+'.png'});
   const snapshot=await page.evaluate(()=>JSON.stringify(testGame.state));await page.evaluate(()=>testGame.api.draw());assert.equal(await page.evaluate(()=>JSON.stringify(testGame.state)),snapshot);await page.evaluate(()=>{testGame.state.wave=2;testGame.api.startWave({skipIntro:true});});assert.equal(await page.evaluate(()=>testGame.state.paper.holes.length+testGame.state.paper.patches.length),0,'next wave has clean paper');assert.deepEqual(errors,[]);
-  console.log('PASS: real mouse/touch 2.5-second paper wear, hole routing, two-second forced/warned emergence, pause, empty-ink projectile erase and pure rendering at',viewport.width);await page.close();
+  console.log('PASS: real mouse/touch 20-event/60-frame local paper wear, hole routing, two-second forced/warned emergence, pause, empty-ink projectile erase and pure rendering at',viewport.width);await page.close();
  }
  }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exitCode=1});
