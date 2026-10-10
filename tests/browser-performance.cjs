@@ -46,8 +46,8 @@ const mode=process.argv[4]||'simulation';
   const g=window.testGame,W=g.state.W,H=g.state.H;g.state.wave=15;g.api.startWave();g.state.spawnTimer=1000;g.state.timeLeft=1000;g.state.waveTime=1000;
   g.state.player.hp=g.state.player.maxHp=1e6;
   for(const kind of ['fire','frost','poison','electric','blast','vampire','gravity','repulsion'])g.state.inks[kind]=2;
-  for(const name of ['Thick Ink','Fat Marker','Architect','Closed Loop','Fine Tip','Double Stroke','Triple Stroke','Quick Refill','Freehand','Pocket Rocks','Patchwork','Helmet'])g.state.stacks[name]=2;
-  g.state.stats.doubleLine=true;g.state.stats.tripleLine=true;g.api.checkSynergies();
+  for(const name of ['Thick Ink','Fat Marker','Architect','Closed Loop','Fine Tip','Quick Refill','Freehand','Pocket Rocks','Patchwork','Helmet'])g.state.stacks[name]=2;
+  g.api.checkSynergies();
   for(let w=0;w<12;w++){
    const pts=[];for(let i=0;i<120;i++)pts.push({x:15+i*(W-30)/119,y:135+w*(H-180)/13+Math.sin(i*.12+w)*12});
    g.state.walls.push({pts,thick:8,hp:1e6,maxHp:1e6,life:1000,maxLife:1000,closed:w%3===0,intersections:2});

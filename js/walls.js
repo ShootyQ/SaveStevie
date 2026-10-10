@@ -388,20 +388,7 @@ function createWall(points,options={}){
   game.state.walls.push(base);
 
   const copies=[];
-  if(!infinite&&(game.state.stats.doubleLine||game.state.stats.tripleLine)){
-    const copyCount=game.state.stats.tripleLine?2:1;
-    for(let c=1;c<=copyCount;c++){
-      const off=12*c;
-      const shifted=points.map((p,i)=>{
-        let n={x:0,y:0};
-        if(i<points.length-1){n.x=points[i+1].y-p.y;n.y=-(points[i+1].x-p.x)}
-        else{n.x=p.y-points[i-1].y;n.y=-(p.x-points[i-1].x)}
-        const m=Math.hypot(n.x,n.y)||1;
-        return{x:p.x+n.x/m*off,y:p.y+n.y/m*off};
-      });
-      const copy={...(infinite?{wobbleBumper:true,wobbleDraft:!!options.live}:{}),pts:shifted,hp:hp*game.catalog.balance.copyDurability,maxHp:hp*game.catalog.balance.copyDurability,thick:base.thick,life,maxLife:life,closed:false,intersections:0};copies.push(copy);game.state.walls.push(copy);
-    }
-  }
+  // One gesture creates one wall, even with retired flags in a legacy loadout.
   if(infinite){const bumpers=game.state.walls.filter(w=>w.wobbleBumper);if(bumpers.length>40){const remove=new Set(bumpers.slice(0,bumpers.length-40));game.state.walls=game.state.walls.filter(w=>!remove.has(w))}}
   const t={base,copies,free:firstStrokeFree,infinite,cost,paid:actualPaid,length,strokePts:base.pts,prefix:null,oldMaxHp:0,oldIntersections:0,newIntersections:intersections,factor:1};
   if(start)joinStitchStart(t,start);

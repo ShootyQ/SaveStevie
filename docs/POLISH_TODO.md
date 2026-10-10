@@ -40,3 +40,13 @@ Current player feedback: a wave-14 run feels good overall. Pew Pew and Rubble Ru
 - [ ] Playtest late-run combinations and repeated notes for clarity, strength and pickup pacing; tune after feedback.
 
 Alpha 0.1.18 is merged. Alpha 0.1.19 adds the checked paper-ball behaviors in a new review branch. Other entries remain queued design and playtest work.
+
+## Late-game drawing clarity — Alpha 0.1.22
+
+- [x] Retire Double Stroke, Triple Stroke and their parallel-wall synergies; keep paper-ball duplication.
+- [x] Space element decorations along walls with a maximum of eighteen per wall; longer strokes repeat icons less densely.
+- [ ] Playtest the single-wall change before compensating with durability or ink. More ink may make circle spam stronger.
+- [ ] Prototype drawing over existing walls as repair rather than overlapping layers. Keep intentional crossings useful and make the preview clear.
+- [ ] Give shapes distinct jobs rather than a universal damage bonus: triangles deflect, squares organize space, circles contain.
+- [ ] Explore clearly warned local breaches and patching, enemy tosses over walls, and outward Niblet split landings. Preserve reaction time and avoid unavoidable damage near Stevie.
+- [ ] Profile actual late-game runs: rendering, collision segments and effect queries may all contribute to slowdown.

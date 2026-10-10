@@ -1,5 +1,5 @@
 {
-  "version": "0.1.20",
+  "version": "0.1.22",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -7,7 +7,7 @@
   },
   "notes": [
     "Catalog descriptions and requirements are exported from game code; mechanics and review notes are maintained alongside them. Suggestions are proposals, not shipped changes.",
-    "Fresh Pencil was retired; legacy paid ranks receive a one-time scrap refund. Every Drawing Tool rank adds +8 base wall HP. Quick Sketch was retired and replaced by Doodle Stitch following player feedback. Other review candidates are hypotheses, not pick-rate data.",
+    "Fresh Pencil was retired; legacy paid ranks receive a one-time scrap refund. Every Drawing Tool rank adds +8 base wall HP. Quick Sketch was retired and replaced by Doodle Stitch following player feedback. Double Stroke, Triple Stroke and their parallel-wall synergies were retired to reduce clutter; one stroke creates one wall. Other review candidates are hypotheses, not pick-rate data.",
     "About one in three campaigns reserves at most one Legendary offer after waves 1–19. Runs ending early may never see their offer; this is not a guarantee every third run.",
     "One-time upgrades award one unlock regardless of rarity; stackable upgrades generally award 1/2/3/4 levels, subject to caps.",
     "Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-upgrade-workbook.py (requires openpyxl)."
@@ -161,20 +161,6 @@
       "source": "js/upgrades.js"
     },
     {
-      "name": "Double Stroke",
-      "category": "Drawing / ink economy",
-      "effect": "Each stroke adds a parallel wall with 60% of the original durability.",
-      "rarities": "Common / Uncommon / Rare",
-      "levels": "One-time: +1 unlock",
-      "stacking": "One-time unlock",
-      "limits": "One-time unlock; disabled when parallel walls are already unlocked.",
-      "synergies": [
-        "Ice Corridor",
-        "ABSOLUTE ZERO"
-      ],
-      "source": "js/upgrades.js"
-    },
-    {
       "name": "Doodle Stitch",
       "category": "Drawing / ink economy",
       "effect": "Snap new strokes to open wall endpoints. Connectors add 75%, 50%, then 25% of normal new-length HP; later extensions add none. Pay normal ink; old damage, oldest lifetime and extension history are preserved.",
@@ -216,21 +202,6 @@
       "stacking": "Repeatable; caps/diminishing returns may apply",
       "limits": "Repeat level n multiplies regeneration by 1 + 0.35 / (1 + 0.5 × (n−1)).",
       "synergies": [],
-      "source": "js/upgrades.js"
-    },
-    {
-      "name": "Triple Stroke",
-      "category": "Drawing / ink economy",
-      "effect": "Every stroke adds TWO parallel walls, each with 60% durability.",
-      "rarities": "legendary",
-      "levels": "One-time: +1 unlock",
-      "stacking": "One-time unlock",
-      "limits": "Legendary-only, one-time unlock; two copies replace the single Double Stroke copy.",
-      "synergies": [
-        "Ice Corridor",
-        "Power Lines",
-        "ABSOLUTE ZERO"
-      ],
       "source": "js/upgrades.js"
     },
     {
@@ -415,10 +386,8 @@
         "Black Ice",
         "Thermal Shock",
         "Venom Ice",
-        "Ice Corridor",
         "Snowball Fight",
-        "THE STORM",
-        "ABSOLUTE ZERO"
+        "THE STORM"
       ],
       "source": "js/upgrades.js"
     },
@@ -452,8 +421,7 @@
         "Cannon Ink",
         "Rail Ink",
         "Human Pinball",
-        "INFERNO",
-        "ABSOLUTE ZERO"
+        "INFERNO"
       ],
       "source": "js/upgrades.js"
     },
@@ -470,7 +438,6 @@
         "Tesla Well",
         "Rail Ink",
         "Circuit Board",
-        "Power Lines",
         "Thunderstones",
         "THE STORM",
         "TESLA CAGE"
@@ -713,24 +680,6 @@
       "effect": "Intersections make wall explosions larger and stronger."
     },
     {
-      "name": "Ice Corridor",
-      "kind": "Two-part synergy",
-      "requires": [
-        "Frost Ink",
-        "Double Stroke (or Triple Stroke)"
-      ],
-      "effect": "The space between parallel walls chills nearby enemies."
-    },
-    {
-      "name": "Power Lines",
-      "kind": "Two-part synergy",
-      "requires": [
-        "Electric Ink",
-        "Triple Stroke"
-      ],
-      "effect": "Triple walls pulse electricity into enemies caught nearby."
-    },
-    {
       "name": "Blood Patch",
       "kind": "Two-part synergy",
       "requires": [
@@ -841,16 +790,6 @@
         "Gravity Ink"
       ],
       "effect": "Pinned poisoned enemies continuously feed Stevie health."
-    },
-    {
-      "name": "ABSOLUTE ZERO",
-      "kind": "Major build",
-      "requires": [
-        "Frost Ink",
-        "Repulsion Ink",
-        "Double Stroke (or Triple Stroke)"
-      ],
-      "effect": "Parallel walls become freezing launch rails."
     },
     {
       "name": "TESLA CAGE",
@@ -1367,18 +1306,6 @@
       "nextTest": ""
     },
     {
-      "name": "Double Stroke",
-      "category": "Drawing / ink economy",
-      "effect": "Each stroke adds a parallel wall with 60% of the original durability.",
-      "evidence": "Not rated",
-      "priority": "Unrated",
-      "idea": "",
-      "playerRating": "",
-      "playerNotes": "",
-      "decision": "",
-      "nextTest": ""
-    },
-    {
       "name": "Doodle Stitch",
       "category": "Drawing / ink economy",
       "effect": "Snap new strokes to open wall endpoints. Connectors add 75%, 50%, then 25% of normal new-length HP; later extensions add none. Pay normal ink; old damage, oldest lifetime and extension history are preserved.",
@@ -1418,18 +1345,6 @@
       "name": "Living Fountain Pen",
       "category": "Drawing / ink economy",
       "effect": "35% faster ink regeneration on the first pick; smaller multipliers on repeats.",
-      "evidence": "Not rated",
-      "priority": "Unrated",
-      "idea": "",
-      "playerRating": "",
-      "playerNotes": "",
-      "decision": "",
-      "nextTest": ""
-    },
-    {
-      "name": "Triple Stroke",
-      "category": "Drawing / ink economy",
-      "effect": "Every stroke adds TWO parallel walls, each with 60% durability.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",

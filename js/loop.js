@@ -84,20 +84,6 @@ function update(dt){
     }
   }
 
-  // Parallel-wall field synergies.
-  if(game.state.synergies.has('Ice Corridor')||game.state.synergies.has('Power Lines')||game.state.synergies.has('ABSOLUTE ZERO')){
-    for(const e of game.state.enemies){
-        if(game.api.underPaper(e)||game.api.abilityImmune(e))continue;
-      if(game.api.wallNear(e.x,e.y,42)){
-        if(game.state.synergies.has('Ice Corridor')||game.state.synergies.has('ABSOLUTE ZERO')){
-          e.gravitySlow=Math.max(e.gravitySlow,.42);
-          if(game.state.synergies.has('ABSOLUTE ZERO')&&Math.random()<.04*dt*60)e.freeze=Math.max(e.freeze,.4);
-        }
-        if(game.state.synergies.has('Power Lines'))game.api.dealDamage(e,game.api.electricTuning(game.state.inks.electric).fieldDps*dt,'electric');
-      }
-    }
-  }
-
   game.api.updateSupportInkTime(dt);
   game.api.updatePlaguefire(dt);
   if(game.api.waveFinaleActive())return;

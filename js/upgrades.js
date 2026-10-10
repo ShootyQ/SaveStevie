@@ -17,8 +17,6 @@ game.catalog.synergyDefs = [
   {name:'Ring of Fire', req:()=>game.state.stacks['Closed Loop']&&game.state.inks.fire, desc:'Closed loops radiate heat and ignite enemies nearby.'},
   {name:'Circuit Board', req:()=>game.state.stacks['Architect']&&game.state.inks.electric, desc:'Wall intersections become electrical nodes.'},
   {name:'Demolition Grid', req:()=>game.state.stacks['Architect']&&game.state.inks.blast, desc:'Intersections make wall explosions larger and stronger.'},
-  {name:'Ice Corridor', req:()=>game.state.stats.doubleLine&&game.state.inks.frost, desc:'The space between parallel walls chills nearby enemies.'},
-  {name:'Power Lines', req:()=>game.state.stats.tripleLine&&game.state.inks.electric, desc:'Triple walls pulse electricity into enemies caught nearby.'},
   {name:'Blood Patch', req:()=>game.state.stacks['Patchwork']&&game.state.inks.vampire, desc:'Repairing walls also heals Stevie.'},
   {name:'Needlepoint', req:()=>game.state.stacks['Fine Tip']&&game.state.inks.poison, desc:'Cheap thin lines stack poison much faster.'},
   {name:'Heavy Artillery', req:()=>game.state.stacks['Fat Marker']&&game.state.inks.blast, desc:'Thicker walls create larger explosions.'},
@@ -33,7 +31,6 @@ game.catalog.synergyDefs = [
   {name:'INFERNO', req:()=>game.state.inks.fire&&game.state.inks.blast&&game.state.inks.repulsion, desc:'Burning explosions hurl ordinary monsters farther, with harder landings and a 1.6s stun; leave stronger four-second fire patches. Bosses resist launches.', major:true},
   {name:'THE BLACK HOLE', req:()=>game.state.inks.gravity&&game.state.inks.void&&game.state.stacks['Closed Loop'], desc:'Closed loops become miniature event horizons.', major:true},
   {name:'NECROTIC ENGINE', req:()=>game.state.inks.poison&&game.state.inks.vampire&&game.state.inks.gravity, desc:'Pinned poisoned enemies continuously feed Stevie health.', major:true},
-  {name:'ABSOLUTE ZERO', req:()=>game.state.inks.frost&&game.state.inks.repulsion&&game.state.stats.doubleLine, desc:'Parallel walls become freezing launch rails.', major:true},
   {name:'TESLA CAGE', req:()=>game.state.inks.electric&&game.state.stacks['Architect']&&game.state.stacks['Closed Loop'], desc:'Closed intersecting geometry becomes a powered electric circuit.', major:true}
 ];
 
@@ -110,11 +107,9 @@ function upgradePreview(u){
     'Closed Loop':()=>loopPreview(.4),
     'Architect':()=>pair('Durability per intersection',s.intersectBonus*100,(s.intersectBonus+.15*levels)*100,'%'),
     'Patchwork':()=>pair('Drawing repair',s.repairDraw,s.repairDraw+18*levels,' HP'),
-    'Double Stroke':()=>pair('Walls per stroke',s.tripleLine?3:s.doubleLine?2:1,2),
     'Patch Job':()=>pair('Repair per kill per wall',s.repairOnKill,s.repairOnKill+3*levels,' HP'),
     'Freehand':()=>pair('Free-ink bank size',s.freehandLevel?s.freehandBankSize:0,40+(s.freehandLevel+levels-1)*20),
     'Living Fountain Pen':()=>pair('Ink regeneration',s.inkRegen,s.inkRegen*regen(u.name),' /s'),
-    'Triple Stroke':()=>pair('Walls per stroke',s.doubleLine?2:1,3),
     'Bottomless Pen':()=>pair('Maximum ink',s.maxInk,s.maxInk+40*levels),
     'Fortress Geometry':()=>loopPreview(.5),
     'Bandages':()=>pair('Between-wave healing',5+s.playerRegen,5+s.playerRegen+8*levels,' HP'),
@@ -203,12 +198,10 @@ game.catalog.upgrades = [
   {name:'Closed Loop',cat:'defense',desc:'Closed shapes gain +40% durability. First loop-utility level: 15% paid ink back, repair nearby walls by 15% of missing HP, and +10% damage inside. Later levels have diminishing gains; repair is capped by ink spent.',apply:()=>game.state.stats.closedBonus+=.4},
   {name:'Architect',cat:'defense',desc:'Each wall intersection adds 15% durability.',apply:()=>game.state.stats.intersectBonus+=.15},
   {name:'Patchwork',cat:'defense',desc:'Drawing across an old wall repairs 18 HP.',apply:()=>game.state.stats.repairDraw+=18},
-  {name:'Double Stroke',cat:'draw',desc:'Each stroke adds a parallel wall with 60% of the original durability.',apply:()=>game.state.stats.doubleLine=true},
   {name:'Doodle Stitch',cat:'draw',desc:'Snap new strokes to open wall endpoints. Connectors add 75%, 50%, then 25% of normal new-length HP; later extensions add none. Pay normal ink; old damage, oldest lifetime and extension history are preserved.',apply:()=>game.state.stats.doodleStitch=true},
   {name:'Patch Job',cat:'defense',desc:'Every kill repairs walls by up to 3 HP each, sharing a 12 wall HP/s budget.',apply:()=>game.state.stats.repairOnKill+=3},
   {name:'Freehand',cat:'draw',desc:'Spend 80 real ink to charge a limited free-ink bank. Stacking increases the free bank.',apply:()=>{game.state.stats.freehandLevel++;game.state.stats.freehandBankSize=40+(game.state.stats.freehandLevel-1)*20;game.state.stats.freehandCharge=Math.min(game.state.stats.freehandCharge,game.state.stats.freehandThreshold)}},
   {name:'Living Fountain Pen',cat:'draw',desc:'35% faster ink regeneration on the first pick; smaller multipliers on repeats.',apply:()=>game.state.stats.inkRegen*=game.api.regenPick('Living Fountain Pen')},
-  {name:'Triple Stroke',exclusiveRarity:'legendary',rarity:'legendary',cat:'draw',desc:'Every stroke adds TWO parallel walls, each with 60% durability.',apply:()=>{game.state.stats.doubleLine=true;game.state.stats.tripleLine=true}},
   {name:'Bottomless Pen',cat:'draw',desc:'Per level: +40 max ink and +2 ink/s at first, with smaller regeneration bonuses on repeats.',apply:()=>{game.state.stats.maxInk+=40;game.state.stats.inkRegen+=game.api.regenPick('Bottomless Pen')}},
   {name:'Fortress Geometry',cat:'defense',desc:'Per level: +50% closed-shape durability. Shares Closed Loop’s diminishing ink refund, completion repair and enclosed-enemy damage bonus (15% / 15% / 10% at the first utility level).',apply:()=>game.state.stats.closedBonus+=.5},
 
@@ -241,12 +234,11 @@ game.catalog.upgrades = [
   {name:'Death Ink',cat:'ink',desc:'Per level: +5 base wall damage per second. Physical hits deal bonus damage against enemies at half health or lower.',apply:()=>game.state.stats.wallDamage+=5},
 ];
 
-const oneTimeUpgrades = new Set(['Double Stroke','Triple Stroke','Doodle Stitch','Loaded Deck','Collector','Greedy Goblin']);
+const oneTimeUpgrades = new Set(['Doodle Stitch','Loaded Deck','Collector','Greedy Goblin']);
 function upgradeAvailable(u){
   if(u.name==='Electric Rocks'&&game.state.stats.electricRocks>=6)return false;
   if(oneTimeUpgrades.has(u.name)&&game.state.stacks[u.name])return false;
   if(u.name==='Greedy Goblin'&&game.state.stats.extraChoice)return false;
-  if(u.name==='Double Stroke'&&game.state.stats.doubleLine)return false;
   if(u.name==='Clean Erasing'&&game.state.stats.eraseRefund>=.6)return false;
   if(u.name==='Helmet'&&game.state.stats.playerArmor>=.55)return false;
   if(u.name==='Reroll Coupon'&&game.state.rerolls>=5)return false;
@@ -281,7 +273,7 @@ function getUpgrade(forceRare=false){
 
 const upgradeArtGroups=[
  ['Fire Ink','Frost Ink','Poison Ink','Repulsion Ink','Electric Ink','Blast Ink','Vampire Ink','Gravity Ink','Void Ink','Chaos Ink','Death Ink','Bigger Ink Tank','Quick Refill','Thick Ink','First Aid','Fine Tip'],
- ['Fat Marker','Lucky Scribble','Recycling','Closed Loop','Architect','Patchwork','Double Stroke','Doodle Stitch','Patch Job','Freehand','Living Fountain Pen','Triple Stroke','Bottomless Pen','Fortress Geometry','Bandages','Helmet'],
+ ['Fat Marker','Lucky Scribble','Recycling','Closed Loop','Architect','Patchwork',null,'Doodle Stitch','Patch Job','Freehand','Living Fountain Pen',null,'Bottomless Pen','Fortress Geometry','Bandages','Helmet'],
  ['Pocket Rocks','Better Rocks','Emergency Medicine','Really Good Rocks','Stevie Has Had Enough','Loaded Deck','Reroll Coupon','Collector','Greedy Goblin']
 ];
 function upgradeArtworkInfo(u){
