@@ -1,6 +1,6 @@
 # Save Stevie soundtrack
 
-All five MP3s are user supplied and copied unchanged, including embedded cover
+The music MP3s are user supplied and copied unchanged, including embedded cover
 art. They are packaged with the static site; no external music service or
 runtime library is needed.
 
@@ -8,13 +8,15 @@ runtime library is needed.
 | --- | --- | --- | --- |
 | save-stevie-splash.mp3 | Splash (explicit Play intro music tap) | 117.432s | 2,831,677 |
 | save-stevie.mp3 | Margin Mischief, 1–5 | 359.880s | 8,542,904 |
-| pop-quiz-panic.mp3 | Pop Quiz Panic, 6–10 | 360.432s | 8,737,536 |
+| waves-6-10-a.mp3 | Waves 6, 8 and 10 (before the boss) | 249.840s | 5,910,317 |
+| waves-6-10-b.mp3 | Waves 7 and 9 | 249.360s | 5,704,704 |
 | crayon-catastrophe.mp3 | Crayon Catastrophe, 11–15 | 360.432s | 8,524,472 |
 | final-draft.mp3 | Detention: The Final Draft, 16–20 / Endless | 359.832s | 7,929,239 |
 
 One audio element loops the selected track at 35% volume. Chapter transitions
-switch its source and start at zero; waves and menus within a chapter retain
-position. Mute is saved under saveStevieMusicMuted. Hidden tabs pause/resume;
+switch its source and start at zero; waves and menus using the same song retain
+position. Waves 6–10 alternate the two supplied tracks by wave number; this
+does not consume gameplay randomness. The previous chapter MP3 was removed. Mute is saved under saveStevieMusicMuted. Hidden tabs pause/resume;
 playback failures cannot block the game and the music button can retry.
 Track paths use the deployment build version. The splash track starts only
 from a user gesture. MP3s use preload=none instead of downloading all songs
@@ -23,7 +25,7 @@ at startup. Resetting progress returns to the splash song while retaining mute.
 ## Additional user-supplied audio
 
 The three chapter MP3s were replaced with the supplied `(1)` versions, copied
-unchanged. Waves 1–5 use Save Stevie; 6–10 Pop Quiz Panic; 11–15 Crayon
+unchanged. Waves 1–5 use Save Stevie; 6–10 alternate the two new middle-wave songs; 11–15 Crayon
 Catastrophe; 16–20/Endless retain Final Draft.
 
 `stevie-victory.wav` (9.160 seconds) plays once immediately when a wave boss
