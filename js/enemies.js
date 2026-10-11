@@ -104,6 +104,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(forceBoss)type=game.api.bossTypeForWave();
   const scale=game.api.enemyHpScale()*game.state.stats.enemyScale;
   if(['wallpuller','papertearer'].includes(type)&&game.state.enemies.some(e=>e.type===type&&e.hp>0))return null;
+  if(type==='tank'&&game.state.wave>=6&&game.state.enemies.filter(e=>e.type==='tank'&&e.hp>0).length>=2)return null;
   if(type==='flanker'&&game.state.enemies.filter(e=>e.type==='flanker'&&e.hp>0).length>=2)return null;
   if(type==='scrubber'&&game.state.enemies.filter(e=>e.type==='scrubber'&&e.hp>0).length>=3)return null;
   if(type==='basil'&&game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length>=2)return null;
@@ -777,6 +778,7 @@ function contactStevie(e){
   if(!game.api.touchesRefuge(e))return false;
   if(e.type==='wobble-tooth')return false; // Its own warned bite handles Stevie; cover still uses wall contact.
   if(e.type==='jamling')return game.api.jamlingContact(e);
+  if(game.api.isFirstBoss(e))return game.api.bossContact(e);
   if(game.api.shotBlocked(e.x,e.y,player.x,player.y,0))return false;
   if(e.waveBoss)return game.api.bossContact(e);
   const damage=e.dmg*(1-game.state.stats.playerArmor);
