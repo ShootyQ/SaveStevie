@@ -29,9 +29,27 @@ function bossWallHit(e){if(!e.waveBoss)return null;const hit=nearestBossWall(e,e
 function bossContact(e){
  if(game.api.isWobbleBoss(e))return true;
  if(game.api.isStapleBoss(e))return game.api.stapleContact(e);
- const b=bossBrain(e),p=game.state.player;if(e.type==='crayon'&&(b.contactWarning||0)<1.3)return true;if(b.contactCd<=0){game.api.damageStevie(10*(1-game.state.stats.playerArmor),game.api.monsterName(e.type)+' contact',e);b.contactCd=1.2}
+ const b=bossBrain(e),p=game.state.player;if(e.type==='crayon'&&(b.contactWarning||0)<1.3)return true;if(b.contactCd<=0&&(!isFirstBoss(e)||!game.api.shotBlocked(e.x,e.y,p.x,p.y,0))){game.api.damageStevie(10*(1-game.state.stats.playerArmor),game.api.monsterName(e.type)+' contact',e);b.contactCd=1.2}
  const angle=Math.atan2(e.y-p.y,e.x-p.x),distance=e.r+Math.hypot(game.api.refugeBounds().halfWidth,game.api.refugeBounds().halfHeight)+6;
- for(let i=0;i<12;i++){const a=angle+i*Math.PI/6,x=p.x+Math.cos(a)*distance,y=p.y+Math.sin(a)*distance;if(game.api.moveEnemySafely(e,x-e.x,y-e.y))break}
+ let escaped=false,retreat=null;
+ for(let i=0;i<12;i++){const a=angle+i*Math.PI/6,x=p.x+Math.cos(a)*distance,y=p.y+Math.sin(a)*distance;
+  if(isFirstBoss(e)&&(x<e.r||x>game.state.W-e.r||y<e.r+76||y>game.state.H-e.r-20))continue;
+  if(!retreat||Math.hypot(x-e.x,y-e.y)<Math.hypot(retreat.x-e.x,retreat.y-e.y))retreat={x,y};
+  if(game.api.moveEnemySafely(e,x-e.x,y-e.y)){escaped=true;break}
+ }
+ if(isFirstBoss(e)){
+  // Contact used to skip normal wall shredding every tick. If every exit is
+  // blocked, tear only the shortest retreat corridor instead of camping on
+  // the fort until its surrounding walls expire. No ink explosions/refunds.
+  if(!escaped&&retreat){
+   for(let i=0,limit=game.state.walls.length;i<limit;i++){
+    const hit=game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r+1},retreat.x,retreat.y);if(!hit)break;
+    game.state.walls=game.state.walls.filter(w=>w!==hit.wall);game.api.burst(hit.x??e.x,hit.y??e.y,'#bca88a',6);
+   }
+   game.api.moveEnemySafely(e,retreat.x-e.x,retreat.y-e.y);
+  }
+  b.target=null;b.detour=false;b.pickup=null;b.cast=null;e.bossWindup=0;b.cd=Math.max(b.cd,.5);
+ }
  b.moveCd=0;b.contactWarning=0;return true;
 }
 function summon(e,type,count,x=e.x,y=e.y){const existing=game.state.enemies.filter(n=>n.bossOwner===e&&n.hp>0).length;for(let i=0;i<Math.min(count,6-existing);i++){const a=i*2.4+bossBrain(e).turn;const n=game.api.spawnEnemy(false,x+Math.cos(a)*35,y+Math.sin(a)*35,type);if(n)n.bossOwner=e}game.api.animateEnemyAction(e,'summon')}

@@ -2683,3 +2683,5 @@ require('./wobblechomp-rework.cjs')(load);
 require('./scoring.cjs')(load);
 
 require('./chonks-shield.cjs')(load);
+
+require('./chonks-cap-doom-retreat.cjs')(load);
