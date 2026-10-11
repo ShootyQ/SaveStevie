@@ -112,6 +112,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
  }
  function safeSpikeCounter(e){const s=state(e);return s.attack==='spikes'?s.attackSerial:null}
  function counter(e,part,serial=state(e).attackSerial){
+  clearWobbleControl(e);
   const s=state(e),kind={arm:'punch',leg:'spikes',stalk:'beam'}[part];
   if(s.phase!==1||e.hp<=0||e.freeze>0||e.stun>0||serial!==s.attackSerial||s.counteredSerial===serial||s.lastAttack!==kind||s.model[part+'Cuts']>=2)return false;
   stopWobbleAttackSounds();s.counteredSerial=serial;s.attack=null;s.blockStun=3;s.cutWindow={part,left:3};s.model.cutFocus=part;s.model.focusAge=0;s.model.focusSideways=portraitPhone()||game.state.H<600;s.beamWalls=[];s.model.punchAge=s.model.spikeAge=s.model.beamAge=null;s.model.spikes=[];s.model.walkBlend=0;s.trapped=0;s.trapProbe=null;
@@ -138,9 +139,11 @@ DoodleDefender.systems.wobbleBoss=function(game){
  function cancel(e,s){stopWobbleAttackSounds();s.model.punchAge=s.model.spikeAge=s.model.beamAge=s.model.teethAge=s.model.rollAge=null;s.model.teethPlan=[];s.model.spikes=[];s.model.teeth=[];s.model.walkBlend=0;s.model.cutFocus=null;s.rail=null;s.attack=null;s.gap=.8;s.cutWindow=null;s.beamWalls=[];s.blockStun=0;s.trapped=0;s.trapWarning=false;s.trapProbe=null}
  function wobblePhase(e){return game.api.bossBrain(e).wobble?.phase??1}
  function wobbleInfiniteInk(){return game.state.running&&game.state.player.hp>0&&!game.state.betweenWaves&&!game.state.inUpgrade&&game.state.enemies.some(e=>isWobbleBoss(e)&&e.hp>0&&wobblePhase(e)===2)}
+ // Phase-one progress depends on attacks happening; only earned counters may stop them.
+ function clearWobbleControl(e){if(isWobbleBoss(e)&&wobblePhase(e)===1){e.freeze=0;e.stun=0;e.gravitySlow=0;}}
  function updateWobbleBoss(e,dt){
+  clearWobbleControl(e);
   const s=state(e);s.model.mobilePose=portraitPhone();if(e.hp<=0){stopWobbleAttackSounds();return}keepWobbleDistance(e);
-  if(s.phase===1&&(e.freeze>0||e.stun>0)){cancel(e,s);return}
   let remaining=Math.min(dt,5);while(remaining>1e-8){const step=Math.min(.025,remaining);remaining-=step;
    if(s.cutWindow){s.cutWindow.left-=step;if(s.cutWindow.left<=0){s.cutWindow=null;s.model.cutFocus=null}}
    const m=s.model;if(s.phase===1)shredWobbleWalls(e);
@@ -188,7 +191,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
   if(!game.state.running||game.state.paused||game.state.inUpgrade||game.state.betweenWaves||game.api.bossEntranceActive())return false;
   if(!Array.isArray(points)||points.length<2||points.some(q=>!q||!Number.isFinite(q.x)||!Number.isFinite(q.y)))return false;
   let length=0;for(let i=1;i<points.length;i++)length+=Math.hypot(points[i].x-points[i-1].x,points[i].y-points[i-1].y);
-  for(const e of game.state.enemies){if(!isWobbleBoss(e)||e.hp<=0||e.freeze>0||e.stun>0)continue;const s=state(e);if(s.phase===2||s.model.rollAge!==null)continue;
+  for(const e of game.state.enemies){clearWobbleControl(e);if(!isWobbleBoss(e)||e.hp<=0||e.freeze>0||e.stun>0)continue;const s=state(e);if(s.phase===2||s.model.rollAge!==null)continue;
    if(length>=12&&s.attack==='beam'&&s.model.beamAge/beamPace>=.2&&s.beamTip){
     const eye=world(e,rig.pose(s.model,true).parts.stalk.center);
     for(let i=1;i<points.length;i++)if(game.api.segmentIntersection(points[i-1],points[i],eye,s.beamTip)){if(counter(e,'stalk')){game.api.burst(eye.x,eye.y,'#61aca0',12);return true}}
@@ -256,5 +259,5 @@ DoodleDefender.systems.wobbleBoss=function(game){
  }
  function wobbleSnapshot(e){const s=game.api.bossBrain(e).wobble;return s?{phase:s.phase,phaseHits:s.phaseHits,transition:s.transition??0,inkPot:s.inkPot?{...s.inkPot}:null,rolling:s.phase===2?{vx:s.rollVX??0,vy:s.rollVY??0,armedFor:s.armedFor,bounces:s.bounces,riding:!!s.rail,railPoints:s.rail?s.rail.points.slice(s.rail.index).map(q=>({...q})):[]}:null,attack:s.attack,turn:s.turn,gap:s.gap,pace,footPace,cutRadius,topMargin:topMargin(),keepout:keepout(),bodyWidth:320*scale(),cutSeconds:s.cutWindow?.left??0,clearance:clearance(e.x,e.y),blockStun:s.blockStun,trapped:s.trapped,beamHit:s.beamHit,beamTargets:s.beamWalls.length,beamTip:s.beamTip?{...s.beamTip}:null,beamOrigin:world(e,rig.pose(s.model,true).parts.stalk.center),scorches:s.scorches.map(q=>({...q})),debris:s.debris.map(q=>({...q})),punchEnd:s.punchEnd?{...s.punchEnd}:null,model:JSON.parse(JSON.stringify(s.model)),parts:Object.fromEntries(Object.entries(rig.pose(s.model,game.api.enemyMotionReduced()).parts).map(([k,v])=>[k,{cuts:v.cuts,joint:{a:world(e,v.joint.a),b:world(e,v.joint.b)}}])),available:availableParts(s),helpers:game.state.enemies.filter(n=>n.bossOwner===e).length}:null}
  const phaseTwo=DoodleDefender.WobblePhaseTwo(game,{state,rig,spawnTooth,topMargin:()=>Math.max(topMargin(),hintTop()+65)});
- const api={wobbleCounterOpen:e=>isWobbleBoss(e)&&!!game.api.bossBrain(e).wobble?.cutWindow&&game.api.bossBrain(e).wobble.blockStun>0,wobbleRailPreview:(e,points)=>phaseTwo.preview(e,state(e),{pts:points,thick:game.state.stats.lineWidth}),shredWobbleWalls,isWobbleBoss,wobblePhase,wobbleInfiniteInk,wobbleMoveClear,wobblePositionSafe,keepWobbleDistance,loadWobbleArtwork,wobbleArtworkReady:()=>!!art&&!!toothArt,initWobbleBoss,updateWobbleBoss,counterWobbleSpike,cutWobbleStroke,updateWobbleTooth,wobbleToothHeight,clearWobbleBoss,moveWobbleFields,drawWobbleEnemy,drawWobbleTooth,drawWobbleFields,wobbleSnapshot,wobbleEntrancePoint:()=>safePoint(-2.2)};Object.assign(game.api,api);return api;
+ const api={clearWobbleControl,wobbleCounterOpen:e=>isWobbleBoss(e)&&!!game.api.bossBrain(e).wobble?.cutWindow&&game.api.bossBrain(e).wobble.blockStun>0,wobbleRailPreview:(e,points)=>phaseTwo.preview(e,state(e),{pts:points,thick:game.state.stats.lineWidth}),shredWobbleWalls,isWobbleBoss,wobblePhase,wobbleInfiniteInk,wobbleMoveClear,wobblePositionSafe,keepWobbleDistance,loadWobbleArtwork,wobbleArtworkReady:()=>!!art&&!!toothArt,initWobbleBoss,updateWobbleBoss,counterWobbleSpike,cutWobbleStroke,updateWobbleTooth,wobbleToothHeight,clearWobbleBoss,moveWobbleFields,drawWobbleEnemy,drawWobbleTooth,drawWobbleFields,wobbleSnapshot,wobbleEntrancePoint:()=>safePoint(-2.2)};Object.assign(game.api,api);return api;
 };
