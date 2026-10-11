@@ -388,7 +388,7 @@ function tintedDoodle(name,colors){
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
   const framed=/^(grunt|fast|sprinter|sniper|boss)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
-  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?3.4:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?3.4:e.type==='flanker'?4.1:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
@@ -742,7 +742,7 @@ function draw(){
   }
 
   // Ranged threats are readable before and after firing.
-  game.api.drawSparkGaps();game.api.drawHardhatCrew();
+  game.api.drawSparkGaps();game.api.drawHardhatCrew();game.api.drawSneakyRoutes();
   game.api.drawWallExplosions();
   drawSplitAnimations();
   for(const e of game.state.enemies){

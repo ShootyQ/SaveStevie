@@ -104,6 +104,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(forceBoss)type=game.api.bossTypeForWave();
   const scale=game.api.enemyHpScale()*game.state.stats.enemyScale;
   if(['wallpuller','papertearer'].includes(type)&&game.state.enemies.some(e=>e.type===type&&e.hp>0))return null;
+  if(type==='flanker'&&game.state.enemies.filter(e=>e.type==='flanker'&&e.hp>0).length>=2)return null;
   if(type==='scrubber'&&game.state.enemies.filter(e=>e.type==='scrubber'&&e.hp>0).length>=3)return null;
   if(type==='basil'&&game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length>=2)return null;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
@@ -708,7 +709,7 @@ function enemyMoveScale(e){return game.api.enemySpeedScale()*game.api.doodleClin
 function enemyTarget(e){
   if(e.waveBoss)return game.api.bossTarget(e);
   const host=feastHost(e);if(host)return game.api.dist(e.x,e.y,host.x,host.y)<host.r+e.r+14?e:host;
-  let target=game.api.doodleTarget(e)||game.state.player;
+  let target=game.api.doodleTarget(e)||game.api.sneakFollowTarget(e)||game.state.player;
   if(e.type==='sapper'){
     let distance=Infinity;
     for(const wall of game.state.walls)for(const point of wall.pts){
