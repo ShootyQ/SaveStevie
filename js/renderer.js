@@ -895,6 +895,7 @@ function draw(){
       }
     }
     if(e.eraseStumble>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle="#a56930";ctx.lineWidth=2;for(let i=0;i<3;i++){const angle=i*Math.PI*2/3;ctx.beginPath();ctx.arc(Math.cos(angle)*(e.r+6),-e.r-7+Math.sin(angle)*4,2,0,Math.PI*2);ctx.stroke();}ctx.restore();}
+    game.api.drawChonksShield(e);
     drawEnemyActionMarks(e);
     game.dom.ctx.restore();
   }

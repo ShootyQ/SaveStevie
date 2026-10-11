@@ -28,6 +28,7 @@ function update(dt){
   }
 
   if(game.api.waveFinaleActive())return;
+  game.api.updateChonksShield(dt);
   game.api.updateBossDamageBudgets(dt);
   game.api.updateSustain(dt);
   game.state.stats.ink=game.api.wobbleInfiniteInk()?game.state.stats.maxInk:Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.inkRegen*dt);
@@ -124,6 +125,7 @@ function update(dt){
     if(game.api.updateEnemyFlight(e,dt))continue;
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
     if(game.api.updateDoodleEnemy(e,dt))continue;
+    if(game.api.updateChonksEscort(e,dt))continue;
     game.api.updateEnemyBehavior(e,dt);
     game.api.applySynergies(e,dt);
     game.api.eraserAttack(e,dt);
