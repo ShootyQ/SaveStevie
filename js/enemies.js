@@ -118,7 +118,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   };
   if(type==='stapler'||type==='crayon'){enemy.bossCd=type==='stapler'?4:6;enemy.bossWindup=0;enemy.bossTarget=null}
   if(type==='wardling'){enemy.immunity=game.api.pick(['fire','poison','electric','blast','frost']);enemy.immuneCd=0}
-  if(type==='tank')enemy.chonks={phase:'walk',momentum:0,windup:0,recovery:0,recoveryTotal:1.4,target:null,facing:1,bumpDamage:d.dmg};
+  if(type==='tank')enemy.chonks={shield:game.state.wave>=6,shieldWear:0,phase:'walk',momentum:0,windup:0,recovery:0,recoveryTotal:1.4,target:null,facing:1,bumpDamage:d.dmg};
   if(type==='scrubber')enemy.scrubOrbit=enemy.flankAngle;
   if(type==='sprinter'){enemy.dashTime=0;enemy.screenAge=0;enemy.hurdlesLeft=1;}
   if(type==='sniper')enemy.returnHitsNeeded=game.state.wave<=12?1:game.state.wave<=18?2:3;
@@ -132,7 +132,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
 function killEnemy(e){
   if(!game.state.enemies.includes(e))return;
   game.api.playSound('defeated');
-  game.state.kills++;game.state.waveKills++;game.state.score+=10;
+  game.state.kills++;game.state.waveKills++;game.api.awardKillScore(e);
   game.api.awardKillScraps(e);game.api.dropDoodleScrap(e);
   game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
   if(e.waveBoss){if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
@@ -429,7 +429,7 @@ function eraserAttack(e,dt){
 }
 
 let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,introducedSpawned=0,bossPhase='timed',arrival=null;
-function resetEnemyWave(){game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;game.api.resetBossEncounters()}
+function resetEnemyWave(){game.api.resetChonksShield?.();game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;game.api.resetBossEncounters()}
 function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
@@ -685,10 +685,10 @@ function updateSniper(e,dt){
 
 // Waddling earns momentum; contact spends it immediately on a ram.
 function updateChonks(e,dt){
- const c=e.chonks;if(!c)return false;
+ const c=e.chonks;if(!c)return false;const shield=game.api.hasChonksShield(e);if(shield)game.api.clearChonksControl(e);
  const touching=game.api.nearestWallHit(e),wall=c.target,q=wall&&game.state.walls.includes(wall)&&wall.hp>0&&wall.life>0?game.api.nearestPointOnWall(e,wall):null;
  const resting=q&&Math.hypot(q.x-e.x,q.y-e.y)<=e.r+wall.thick/2+1?{wall}:null,hit=touching||game.api.gravityWallHit(e)||resting;
- if(hit){game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');if(e.hp<=0)return true;}
+ if(hit&&!shield){game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');if(e.hp<=0)return true;}
  if(e.freeze>0||e.stun>0){c.momentum=Math.max(0,c.momentum-dt);return true;}
  if(c.phase==='recover'){c.recovery=Math.max(0,c.recovery-dt);if(!c.recovery){c.phase='walk';c.target=null;}return true;}
  if(game.api.feastHost(e))c.momentum=0;
@@ -699,9 +699,9 @@ function updateChonks(e,dt){
   const step=Math.max(0,ahead.t-.001);c.momentum=game.api.clamp(c.momentum+travel*step/180,0,1);e.x+=(nx-e.x)*step;e.y+=(ny-e.y)*step;
   const point=game.api.nearestPointOnWall(e,ahead.wall),vx=point.x-e.x,vy=point.y-e.y,d=Math.hypot(vx,vy)||1;
   const layered=!game.api.bouncePathClear(e,e.x+vx/d*(d+60),e.y+vy/d*(d+60),0,new Set([ahead.wall]));
-  c.bumpDamage=e.dmg*(1+2.5*c.momentum)*(1-game.api.clamp(e.gravitySlow,0,.7));c.target=ahead.wall;
+  c.bumpDamage=shield?ahead.wall.hp:e.dmg*(1+2.5*c.momentum)*(1-game.api.clamp(e.gravitySlow,0,.7));c.target=ahead.wall;
   game.api.damageWall(ahead.wall,c.bumpDamage,point.x,point.y);game.api.animateEnemyAction(e,'belly-bump',point);game.api.floatText(e.x,e.y-e.r-12,layered?'FLOP!':'RAM!','#a56930');
-  c.phase='recover';c.recovery=c.recoveryTotal=layered?2:1;c.momentum=0;return true;
+  c.phase='recover';c.recovery=c.recoveryTotal=shield?.3:layered?2:1;c.momentum=shield?.6:0;return true;
  }
  e.x=nx;e.y=ny;c.momentum=game.api.clamp(c.momentum+travel/180,0,1);game.api.contactStevie(e);return true;
 }
@@ -767,7 +767,7 @@ function moveEnemySafely(e,dx,dy){
 function damageStevie(damage,source,impact=game.state.player){
   if(game.state.player.hp<=0)return;
   game.state.player.hp=Math.max(0,game.state.player.hp-damage);
-  if(damage>0){game.api.reactStevieHit();game.api.refugeImpact(impact)}
+  if(damage>0){game.api.breakScoreStreak();game.api.reactStevieHit();game.api.refugeImpact(impact)}
   game.state.floaters.push({hitMarker:true,x:impact.x,y:impact.y,r:impact.r||5,type:impact.type||'arrow',t:.9,source,amount:damage});
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }

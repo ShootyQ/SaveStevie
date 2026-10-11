@@ -8,6 +8,7 @@ function text(node,value){
 function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
+  game.api.updateScoreHUD();
   game.api.syncScrapTutorial();
   game.api.updateChapterBackground();
   game.dom.$('app').classList?.toggle('menu-view',!game.state.running&&game.dom.startOverlay.style.display!=='none');
@@ -170,6 +171,7 @@ function openInfo(kind){
   game.state.paused=true;activeInfo=kind;
   game.dom.$('pauseBtn').textContent='Resume';
   if(kind==='pause'){
+    game.api.renderScorecard('pauseScorecard');game.dom.$('pauseScoreTitle').textContent='Scorecard · '+game.state.score.toLocaleString('en-US')+' points';
     game.dom.$('quitConfirmation').hidden=true;game.dom.$('pauseActions').hidden=false;
     game.dom.$('pauseSummary').textContent='Wave '+game.state.wave+' · '+game.state.tool.name+' · '+game.api.notebookSnapshot().runScraps+' scraps earned';
   }
@@ -180,7 +182,7 @@ function openInfo(kind){
   if(kind==='report')game.api.renderProblemReport();
   if(kind==='backup')game.api.renderSaveBackup();
   if(kind==='statistics')game.api.renderStatistics();
-  game.dom.$(kind+'Overlay').style.display='grid';
+  game.dom.$(kind+'Overlay').style.display='grid';game.api.updateScoreHUD();
   game.api.syncScrapTutorial();
   game.dom.$(infoButtons[kind]).focus?.({preventScroll:true});
   const cards=game.dom.$(kind+'Overlay').querySelector?.('.build-box');
@@ -191,7 +193,7 @@ function openInfo(kind){
 function closeInfo(back=true){
   if(!activeInfo)return;
   const kind=activeInfo,goBack=back&&returnInfo;returnInfo=null;activeInfo=null;game.state.paused=pausedBeforeInfo;
-  game.dom.$(kind+'Overlay').style.display='none';
+  game.dom.$(kind+'Overlay').style.display='none';game.api.updateScoreHUD();
   if(kind==='lesson')game.api.dismissFirstLesson?.();
   if(kind==='doodle')game.api.dismissDoodleChoice?.();
   game.dom.$('pauseBtn').textContent='Pause';

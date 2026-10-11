@@ -21,15 +21,15 @@ const root=path.resolve(__dirname,'..');
   const layout=await page.evaluate(()=>{
    const book=document.querySelector('.pause-book'),overlay=document.querySelector('#pauseOverlay'),r=book.getBoundingClientRect();
    const buttons=[...book.querySelectorAll('#pauseActions button')].filter(b=>!b.hidden);
-   return {width:r.width,height:r.height,viewport:innerWidth,scroll:book.scrollWidth<=book.clientWidth+1,tape:buttons.every(b=>getComputedStyle(b,'::after').backgroundImage.includes('tape.svg')),fullSheet:document.querySelector('.recess-page').offsetHeight>=book.scrollHeight-2,plain:!document.querySelector('#pauseTitle').classList.contains('paper-slip'),eggHidden:document.querySelector('.recess-margin').getAttribute('aria-hidden')};
+   return {width:r.width,height:r.height,viewport:innerWidth,scroll:book.scrollWidth<=book.clientWidth+1,tape:buttons.every(b=>getComputedStyle(b,'::after').backgroundImage.includes('tape.svg')),fullSheet:document.querySelector('.recess-page').offsetHeight>=book.scrollHeight-2,plain:!document.querySelector('#pauseTitle').classList.contains('paper-slip'),eggsOnButtons:buttons.filter(b=>b.id!=='pauseRestartTestBtn').every(b=>getComputedStyle(b,'::before').backgroundImage.includes('recess-')),noMargin:!document.querySelector('.recess-margin')};
   });
-  assert(layout.fullSheet,'paper background covers entire scrollable menu');assert(layout.scroll,'no horizontal scroll');assert(layout.tape&&layout.plain);assert.equal(layout.eggHidden,'true');
+  assert(layout.fullSheet,'paper background covers entire scrollable menu');assert(layout.scroll,'no horizontal scroll');assert(layout.tape&&layout.plain);assert(layout.eggsOnButtons&&layout.noMargin,'decorative notes live only on button scraps');
   await page.screenshot({path:'/tmp/recess-'+viewport.width+'x'+viewport.height+'.png'});
   await page.locator('#pauseSettingsBtn').click();await page.waitForSelector('#optionsOverlay',{state:'visible'});
   await page.click('#closeOptionsBtn');await page.waitForSelector('#pauseOverlay',{state:'visible'});
   await page.locator('#returnMenuBtn').scrollIntoViewIfNeeded();await page.screenshot({path:'/tmp/recess-bottom-'+viewport.width+'x'+viewport.height+'.png'});await page.locator('#returnMenuBtn').click();await page.waitForSelector('#quitConfirmation',{state:'visible'});
   await page.locator('#cancelQuitBtn').click();await page.locator('#resumeBtn').click();
   assert.equal(await page.locator('#pauseOverlay').isVisible(),false);
-  assert.deepEqual(errors,[]);console.log('PASS:',viewport,'taped actions, margin notes, settings/back, quit/cancel, resume, responsive overflow');await page.close();
+  assert.deepEqual(errors,[]);console.log('PASS:',viewport,'taped actions, hand-drawn button notes, settings/back, quit/cancel, resume, responsive overflow');await page.close();
  }}finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

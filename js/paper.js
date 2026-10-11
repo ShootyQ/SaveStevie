@@ -58,6 +58,7 @@ function beginEmergence(e,point,forced=false){
  game.api.floatText(e.x,e.y-e.r-15,forced?'CAUGHT YOU!':'COMING UP!','#855c3e');
 }
 function updatePaperEnemy(e,dt){
+ if(game.api.hasChonksShield(e))return false;
  if(e.paperCooldown>0)e.paperCooldown=Math.max(0,e.paperCooldown-dt);
  if(e.eraseStumble>0)e.eraseStumble=Math.max(0,e.eraseStumble-dt);
  let t=e.paperTunnel;

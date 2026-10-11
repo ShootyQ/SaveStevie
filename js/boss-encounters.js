@@ -4,7 +4,7 @@ let brains=new WeakMap(),marks=[],clock=0;
 const minFriendGain=70;
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
-function abilityImmune(e){return isFirstBoss(e)||(game.api.isWobbleBoss(e)&&(game.api.wobblePhase(e)===2||game.api.wobbleCounterOpen(e)));}
+function abilityImmune(e){return game.api.chonksProtected?.(e)||isFirstBoss(e)||(game.api.isWobbleBoss(e)&&(game.api.wobblePhase(e)===2||game.api.wobbleCounterOpen(e)));}
 function isFirstBoss(e){return e.waveBoss&&e.type==='boss'&&game.state.wave===5}
 function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/1.1,helperCap:6,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:1.8,minThrowGain:minFriendGain}}
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}

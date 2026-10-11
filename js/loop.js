@@ -16,6 +16,7 @@ function update(dt){
   if((game.state.wave===5||game.state.wave===10)&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
   game.api.updateRefuge(dt);game.api.updatePaper(dt);game.api.updateHardhatBombs(dt);game.api.updateScrubberHint(dt);if(game.api.updateDoodleScraps(dt))return;
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
+  game.api.updateScoring(dt);
   game.state.waveElapsed+=dt;
   if(game.state.wave%5!==0||game.api.bossWavePhase()==='timed'){
     const previous=game.state.timeLeft;
@@ -27,6 +28,7 @@ function update(dt){
   }
 
   if(game.api.waveFinaleActive())return;
+  game.api.updateChonksShield(dt);
   game.api.updateBossDamageBudgets(dt);
   game.api.updateSustain(dt);
   game.state.stats.ink=game.api.wobbleInfiniteInk()?game.state.stats.maxInk:Math.min(game.state.stats.maxInk,game.state.stats.ink+game.state.stats.inkRegen*dt);
@@ -123,6 +125,7 @@ function update(dt){
     if(game.api.updateEnemyFlight(e,dt))continue;
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
     if(game.api.updateDoodleEnemy(e,dt))continue;
+    if(game.api.updateChonksEscort(e,dt))continue;
     game.api.updateEnemyBehavior(e,dt);
     game.api.applySynergies(e,dt);
     game.api.eraserAttack(e,dt);
