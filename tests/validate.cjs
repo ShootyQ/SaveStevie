@@ -2303,7 +2303,9 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const frozen=JSON.stringify(g.state);g.api.update(3);assert.equal(JSON.stringify(g.state),frozen,'combat stays frozen after practice');
  env.node('lessonRetry').onclick();assert.equal(g.state.stats.ink,ink);assert.equal(g.state.walls.length,0);assert.equal(env.node('lessonNext').disabled,true);
  canvas.listeners.pointerdown(event(2,z.x+10,y));canvas.listeners.pointermove(event(2,z.x+130,y));canvas.listeners.pointerup(event(2,z.x+130,y));
+ g.state.stats.ink=0; // A long practice stroke can exhaust the whole tank.
  for(let i=0;i<4;i++)env.node('lessonNext').onclick();
+ assert.equal(g.state.stats.ink,g.state.stats.maxInk,'drawing lesson starts combat with a full tank');
  assert.equal(g.api.firstLessonActive(),false);assert.equal(g.state.paused,false);assert.equal(g.api.lessonSnapshot().seen.draw,true);assert.equal(g.state.walls.length,1,'practice cover stays for first wave');
  g.state.wave=2;g.api.startWave();const fullInk=g.state.stats.ink;assert.equal(g.api.lessonSnapshot().kind,'erase');assert.equal(g.state.paused,true);
  env.node('lessonNext').onclick();assert.equal(env.node('lessonNext').disabled,true);assert.equal(g.state.walls.length,1,'real paid wall is seeded on the page');env.node('lessonBack').onclick();env.node('lessonNext').onclick();assert.equal(g.state.walls.length,1,'revisiting practice does not buy another seed wall');

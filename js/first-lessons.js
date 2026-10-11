@@ -5,7 +5,7 @@ DoodleDefender.systems.firstLessons=function(game){
  try{const saved=JSON.parse(localStorage.getItem(key)||'null');if(!saved&&game.api.notebookSnapshot().lifetimeScraps>0)seen={draw:true,erase:true};if(saved&&typeof saved==='object')for(const k of ['draw','erase'])seen[k]=saved[k]===true;}catch{}
  const drawSteps=[
   ['Hey! I’m Stevie.','My doodles have come to life! You draw the walls; I try very hard not to get eaten. Let’s practice right here on our page.'],
-  ['Draw me some cover!','Drag across the marked paper. Watch your real ink bar change! Short walls cost less ink and have less HP; longer walls use more ink and have more HP.'],
+  ['Draw me some cover!','Drag across the marked paper. Watch your real ink bar change! I’ll refill it before the wave starts. Short walls cost less ink and have less HP; longer walls use more ink and have more HP.'],
   ['This is your ink.','See this bar? Every new line needs at least 6 ink. Ink refills during play. Save a little for surprises—my doodles are terrible at following plans.'],
   ['That health bar is me!','Keep the doodles away from my fort. They hurt walls to get through; your walls hurt them back. If my health runs out, our run ends—but earned scraps stay yours.'],
   ['Watch the wave timer.','When this reaches zero, new doodles stop arriving. Clear the rest, then choose an upgrade! Your practice wall stays as cover. Ready for the real thing?']
@@ -119,6 +119,7 @@ DoodleDefender.systems.firstLessons=function(game){
  }
  function finishFirstLesson(){
   if(!firstLessonActive())return;cancelLessonGesture();if(kind==='erase')restorePractice();
+  if(kind==='draw'){game.state.stats.ink=game.state.stats.maxInk;game.api.updateUI();}
   seen[kind]=true;try{localStorage.setItem(key,JSON.stringify(seen));}catch{}
   spotlight();kind=null;baseline=null;game.api.closeInfo(false);game.api.introduceWave();
  }

@@ -39,7 +39,8 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    const pointed=await page.evaluate(selector=>{const r=document.querySelector(selector).getBoundingClientRect(),d=document.getElementById('lessonOverlayFocus').getAttribute('d');return d.includes(String(Math.max(0,r.left-5)))},target);assert(pointed,'spotlight follows real HUD bounds');
    await page.screenshot({path:'/tmp/on-page-'+target.slice(1)+'-'+viewport.width+'.png'});
   }
-  await page.click('#lessonNext');assert(!await page.locator('#lessonOverlay').isVisible());assert.equal(await page.evaluate(()=>testGame.state.walls.length),1);
+  await page.evaluate(()=>{testGame.state.stats.ink=0;});
+  await page.click('#lessonNext');assert(!await page.locator('#lessonOverlay').isVisible());assert.equal(await page.evaluate(()=>testGame.state.walls.length),1);assert(await page.evaluate(()=>testGame.state.stats.ink===testGame.state.stats.maxInk));
   await page.evaluate(()=>{const g=testGame;g.state.wave=2;g.api.startWave();});assert.equal(await page.evaluate(()=>testGame.api.lessonSnapshot().kind),'erase');
   await page.click('#lessonNext');await checkCard();
   const ez=await page.evaluate(()=>{const g=testGame,z=g.api.lessonSnapshot().practice,r=g.dom.canvas.getBoundingClientRect();return {x:r.x+z.x+z.width/2,y:r.y+z.y+z.height/2};});
