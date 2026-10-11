@@ -40,6 +40,7 @@
       </div>
     </div>
     <div id="upgradeList"></div>
+    <aside id="scoreHud" class="score-hud" hidden aria-label="Run score and kill streak"><strong id="liveScore">Score 0</strong><span id="liveScoreStreak">Far kills earn more</span><div class="score-streak-track" aria-hidden="true"><span id="scoreStreakBar"></span></div></aside>
     <div id="hitNotice" role="status" style="display:none"></div>
     <div id="synergySplash" class="overlay synergy-reveal" style="display:none" role="dialog" aria-modal="true" aria-labelledby="synergySplashName" aria-describedby="synergySplashDesc">
       <div class="synergy-reveal-paper">
@@ -80,7 +81,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.33</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.34</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -140,10 +141,10 @@
           <div class="pill">Best <span id="best">1</span></div>
           <div class="pill">Pressure <span id="pressure">1×</span></div>
         </div>
-        </details><div class="bigscore wave-grade">+<span id="waveScore">0</span></div>
+        </details><details class="score-details"><summary>This wave’s full scorecard</summary><div id="waveScorecard"></div></details><div class="bigscore wave-grade">+<span id="waveScore">0</span></div>
         <div class="summary">
           <div>Survival <span id="survivalBonus">+100</span></div>
-          <div>Kills <span id="killBonus">+0</span></div>
+          <div>Kill clear bonus <span id="killBonus">+0</span></div>
           <div>Ink Bonus <span id="inkBonus">+0</span></div>
           <div>HP Bonus <span id="hpBonus">+0</span></div>
         </div>
@@ -157,7 +158,7 @@
       <div class="cardbox startbox wave-clear-book">
         <h2>STEVIE SURVIVED THE NOTEBOOK</h2>
         <p>You defeated The Eraser. This is, somehow, Stevie's greatest accomplishment.</p>
-        <div class="bigscore"><span id="victoryScore">0</span></div>
+        <div class="bigscore"><span id="victoryScore">0</span></div><details class="score-details"><summary>Where your points came from</summary><div id="victoryScorecard"></div></details>
         <p class="scrap-summary">Earned <b id="victoryRunScraps">0</b> scraps this run · Bank: <b id="victoryBankScraps">0</b></p>
         <aside class="stevie-note" aria-label="A note from Stevie">
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
@@ -177,7 +178,7 @@
         <h2>They Got Stevie.</h2>
         <p>You reached wave <b id="finalWave">1</b> with <b id="finalKills">0</b> kills.</p>
         <p id="lastHitText"></p>
-        <div class="bigscore"><span id="finalScore">0</span></div>
+        <div class="bigscore"><span id="finalScore">0</span></div><details class="score-details"><summary>Where your points came from</summary><div id="deathScorecard"></div></details>
         <p class="scrap-summary">Kept <b id="deathRunScraps">0</b> scraps from this run · Bank: <b id="deathBankScraps">0</b></p>
         <aside class="stevie-note" aria-label="A note from Stevie">
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
@@ -258,6 +259,7 @@
       <button class="secondary paper-slip" id="pauseRestartTestBtn" hidden>Restart test · same build ↻</button>
       <button class="secondary paper-slip" id="returnMenuBtn">Return to main menu</button>
       <p class="option-help">Your page stays right here until you resume.</p>
+      <details class="score-details"><summary id="pauseScoreTitle">Scorecard</summary><div id="pauseScorecard"></div><p class="score-footnote">Normal kills start at 10 points; bosses at 100. Distance adds up to 3×. Keep kills within 4 seconds for streaks: 3 kills = 1.25×, 6 = 1.5×, 10 = 2×. Stevie taking damage breaks the streak. Pauses stop the clock.</p></details>
     </div>
     <section id="quitConfirmation" hidden aria-labelledby="quitTitle">
       <h3 id="quitTitle">Close this notebook?</h3><p>Your current run and its upgrades will be lost. Scraps you’ve already earned stay saved, along with your permanent Notebook upgrades.</p>
@@ -333,6 +335,7 @@
     <h3>Saved progress</h3><div id="statisticsProgress" class="journal-grid"></div>
     <div class="journal-progress" aria-hidden="true"><span id="statisticsProgressBar"></span></div><p class="option-help">Permanent Notebook ranks unlocked</p>
     <h3 id="statisticsRunTitle">This run</h3><div id="statisticsRun" class="journal-grid"></div>
+    <details class="score-details"><summary>Run score breakdown</summary><div id="statisticsScorecard"></div></details>
     <p id="statisticsSaveNote" class="save-note"></p>
   </div>
 </div>
@@ -376,6 +379,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.34 · Give your doodles some distance</h3><p>Kills farther from Stevie earn up to triple points. Keep a four-second kill streak for up to double points; taking damage breaks it, and pauses freeze it. A compact score tracker, wave and run scorecards, and a saved personal best explain your points. Test runs do not save records.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.33 · Notes from recess</h3><p>Pause unfolds a crumpled notebook page with taped paper buttons, secret notes and schoolwork hiding in the margins. Resume now says “Back to game.”</p></article>
       <article class="build-entry"><h3>Alpha 0.1.31 · Fresh middle-page music</h3><p>Two new songs replace the old waves 6–10 soundtrack, alternating between waves. Wobblechomp still has his own boss music.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.30 · Sneaky has a plan</h3><p>From wave 7, Sneaky McSneak scouts the outskirts and draws dotted routes for nearby melee friends. Block the route or erase his instructions; compromised plans are discarded after ten seconds. He joins his third marked attack. When arrivals have stopped and he is the last monster alive, he declares “We’ll be back!” and flees—letting you win once he escapes. Routes do not grant extra kills, ink or wall damage.</p></article>
@@ -624,6 +628,7 @@
 <script src="js/state.js"></script>
 <script src="js/geometry.js"></script>
 <script src="js/refuge.js"></script>
+<script src="js/scoring.js"></script>
 <script src="js/balance.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/sound-effects.js"></script>

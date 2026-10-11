@@ -132,7 +132,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
 function killEnemy(e){
   if(!game.state.enemies.includes(e))return;
   game.api.playSound('defeated');
-  game.state.kills++;game.state.waveKills++;game.state.score+=10;
+  game.state.kills++;game.state.waveKills++;game.api.awardKillScore(e);
   game.api.awardKillScraps(e);game.api.dropDoodleScrap(e);
   game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
   if(e.waveBoss){if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
@@ -767,7 +767,7 @@ function moveEnemySafely(e,dx,dy){
 function damageStevie(damage,source,impact=game.state.player){
   if(game.state.player.hp<=0)return;
   game.state.player.hp=Math.max(0,game.state.player.hp-damage);
-  if(damage>0){game.api.reactStevieHit();game.api.refugeImpact(impact)}
+  if(damage>0){game.api.breakScoreStreak();game.api.reactStevieHit();game.api.refugeImpact(impact)}
   game.state.floaters.push({hitMarker:true,x:impact.x,y:impact.y,r:impact.r||5,type:impact.type||'arrow',t:.9,source,amount:damage});
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }

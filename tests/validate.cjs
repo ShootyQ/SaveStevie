@@ -9,6 +9,9 @@ const a=load(false),b=load(true);let checks=0;
 // and permanent perks are checked separately below.
 function legacyStartingKit(){const g=b.sandbox.testGame;Object.assign(g.state.stats,{maxInk:250,ink:250,inkRegen:8,wallHp:95,wallDamage:10});Object.assign(g.state.player,{maxHp:100,hp:100});g.state.rerolls=1;}
 b.sandbox.testGame.api.applyNotebookLoadout=legacyStartingKit;
+// Scoring is intentionally redesigned; retain flat kill points only in v8
+// parity comparisons. The real distance/streak authority has focused tests.
+b.sandbox.testGame.api.awardKillScore=()=>{b.sandbox.testGame.state.score+=10;};
 // Keep release-only drawing and the old HP clamps in the unchanged-system
 // parity fixture; smooth durability and live strokes have focused checks below.
 b.sandbox.testGame.api.updateLiveWall=points=>points;
@@ -51,7 +54,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['doubleLine','tripleLine','paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>['doubleLine','tripleLine','synergySplashTimer'].includes(key)?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['scoring','doubleLine','tripleLine','paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>['doubleLine','tripleLine','synergySplashTimer'].includes(key)?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
 for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -2609,7 +2612,7 @@ require('./wobblechomp-rework.cjs')(load);
  for(const change of [p=>p.notebook.scraps=-1,p=>p.notebook.scraps=1.5,p=>p.notebook.levels.tool=11,p=>p.bestWave=0,p=>p.notebook.lifetimeScraps=0,p=>p.lessons.draw='yes',p=>p.discoveries=['unknown'],p=>p.notebook.levels.futurePerk=1]){const d=JSON.parse(original);change(d.progress);assert.throws(()=>g.api.validateSaveBackup(JSON.stringify(d)));}assert.equal(JSON.stringify([...saved]),initial);
  data.progress.notebook.scraps=8;data.progress.notebook.levels.tool=3;data.progress.bestWave=10;data.progress.lessons={draw:true,erase:false};data.progress.discoveries=['grunt','scrubber'];const text=JSON.stringify(data);
  g.state.running=true;assert(g.api.previewSaveBackup(text));assert.equal(g.api.restoreSaveBackup(),false);assert.equal(JSON.stringify([...saved]),initial);g.state.running=false;
- for(const failure of [1,3,5]){writes=0;failAt=failure;assert.equal(g.api.restoreSaveBackup(),false);assert.equal(JSON.stringify([...saved]),initial);assert.equal(g.api.notebookSnapshot().scraps,12);assert.equal(g.state.best,6);}
+ for(const failure of [1,3,5,6]){writes=0;failAt=failure;assert.equal(g.api.restoreSaveBackup(),false);assert.equal(JSON.stringify([...saved]),initial);assert.equal(g.api.notebookSnapshot().scraps,12);assert.equal(g.state.best,6);}
  writes=0;failAt=0;assert.equal(g.api.restoreSaveBackup(),true);assert.equal(g.api.notebookSnapshot().scraps,8);assert.equal(g.state.best,10);assert.equal(g.api.lessonSnapshot().seen.erase,false);assert.deepEqual(Array.from(g.api.discoveredMonsterTypes()),['grunt','scrubber']);assert.equal(JSON.parse(saved.get('saveStevieBeforeRestoreV1')).progress.notebook.scraps,12);
  const reloaded=load(true,{storage}).sandbox.testGame;assert.equal(reloaded.state.best,10);assert.equal(reloaded.api.notebookSnapshot().levels.tool,3);assert.equal(reloaded.api.lessonSnapshot().seen.erase,false);assert.deepEqual(Array.from(reloaded.api.discoveredMonsterTypes()),['grunt','scrubber']);
  assert(g.api.previewSaveBackup(saved.get('saveStevieBeforeRestoreV1')));assert(g.api.restoreSaveBackup());assert.equal(g.api.notebookSnapshot().scraps,12);assert.equal(g.state.best,6);assert.equal(g.api.notebookSnapshot().levels.tool,2);
@@ -2676,3 +2679,5 @@ require('./wobblechomp-rework.cjs')(load);
  const second=g.api.spawnEnemy(false,100,100,'flanker'),third=g.api.spawnEnemy(false,110,100,'flanker');assert(second&&third);assert.equal(g.api.spawnEnemy(false,120,100,'flanker'),null,'at most two route scouts');g.api.resetRun();assert.equal(g.api.sneakySnapshot().length,0);
  console.log('PASS: nearby melee rallies, real follow movement, wall compromise/ten-second retirement, erasable nonrefundable instructions, third-run commitment, last-alive timed escape without kill rewards, pure visuals, pause, resize, death/reset and scout cap.');
 }
+
+require('./scoring.cjs')(load);
