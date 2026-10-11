@@ -2065,6 +2065,19 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
   assert(s.blockStun>0&&s.cutWindow,'actual attack counter earns cut');
  }
 
+ // Frequent elemental paper hits must not reset the attack clock or lock the six-cut puzzle.
+ for(const [kind,part] of [['punch','arm'],['spikes','leg'],['beam','stalk']]){
+  const target=setup(),brain=prepare(target,kind);target.hp=target.maxHp=10000;g.state.spawnTimer=9999;
+  g.api.hitPaper({damage:4,doodlePayload:{fire:1,frost:1}},target);target.stun=2;
+  const burningHp=target.hp;g.api.update(.02);
+  assert.equal(target.freeze,0);assert.equal(target.stun,0);assert(target.burn>0&&target.hp<burningHp,'fire damage remains active');
+  assert.equal(brain.attack,kind,'elemental hits cannot cancel a windup');
+  for(let cut=1;cut<=2;cut++){
+   openCounter(target,kind,cut===2);target.freeze=.5;target.stun=.5;
+   assert(g.api.cutWobbleStroke(ringStroke(target,part)),'status arriving between ticks cannot block an earned cut');
+   assert.equal(brain.model[part+'Cuts'],cut);assert.equal(g.api.cutWobbleStroke(ringStroke(target,part)),false,'one cut per counter');
+  }
+ }
  let e=setup();let tuning=prepare(e,'punch');
  assert.equal(g.api.wobbleSnapshot(e).bodyWidth,64,'readable puppet body width');assert.equal(e.r,22,'smaller body collider');assert.equal(g.api.wobbleSnapshot(e).pace,1.45);
  const warnedHP=g.state.player.hp;g.api.updateWobbleBoss(e,.7);assert.equal(g.state.player.hp,warnedHP,'punch retains a readable warning');prepare(e,'punch');const cut=stroke(e,'arm'),ink=g.state.stats.ink;
@@ -2106,7 +2119,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  e=setup();for(let i=0;i<3;i++)g.api.createWall([{x:50+i*70,y:350},{x:70+i*70,y:350}]);prepare(e,'beam');const beamInk=g.state.stats.ink,beamHP=p.hp;g.api.updateWobbleBoss(e,1.8);assert.equal(g.state.walls.length,0,'uninterrupted beam erases all selected drawings');assert.equal(g.state.stats.ink,beamInk,'beam does not steal ink');assert.equal(p.hp,beamHP,'beam never hurts Stevie');
  e=setup();prepare(e,'teeth');g.api.updateWobbleBoss(e,1.45);let teeth=g.state.enemies.filter(n=>n.bossOwner===e);assert.equal(teeth.length,8);assert(teeth.every(n=>n.wobbleLanding),'teeth launch from mouth before moving');const tooth=teeth[0];g.api.updateWobbleTooth(tooth,2);assert(!tooth.wobbleLanding);tooth.x=p.x;tooth.y=p.y;const biteHP=p.hp;g.api.updateWobbleTooth(tooth,1.19);assert.equal(p.hp,biteHP,'bite visibly warned');tooth.freeze=1;g.api.updateWobbleTooth(tooth,1);assert.equal(tooth.toothWarning,0);assert.equal(p.hp,biteHP);tooth.freeze=0;g.api.updateWobbleTooth(tooth,1.21);assert.equal(p.hp,biteHP-7);assert(!g.state.enemies.includes(tooth));
  e=setup();prepare(e,'roll');g.api.updateWobbleBoss(e,1.8);assert(g.state.enemyShots.length>0);assert(g.state.enemies.some(n=>n.bossOwner===e));assert.equal(g.api.cutWobbleStroke(stroke(e,'arm')),false,'hidden rolling joints cannot be cut');e.x=p.x;e.y=p.y;const contactHP=p.hp;g.api.contactStevie(e);assert.equal(p.hp,contactHP,'boss body itself has no unavoidable damage');g.api.killEnemy(e);assert.equal(g.state.enemies.length,0,'boss cleanup removes tooth pack');assert.equal(g.state.enemyShots.length,0);
- for(const [W,H] of [[1280,900],[393,851],[360,640],[851,393]]){e=setup();g.state.W=W;g.state.H=H;p.x=W/2;p.y=H/2;g.api.initWobbleBoss(e);const seen=new Set();for(let i=0;i<3000;i++){g.api.updateWobbleBoss(e,.01);const q=g.api.wobbleSnapshot(e);if(q.attack)seen.add(q.attack);assert(Number.isFinite(e.x)&&Number.isFinite(e.y));assert(e.y>=q.topMargin-1e-7,'boss stays below header boundary');assert(q.clearance>=q.keepout-1e-7,'keeps body and idle parts away from fort');assert(g.state.enemyShots.length<=32);assert(q.helpers<=10)}assert.equal(seen.size,5,'all five moves within thirty seconds');const before=JSON.stringify(g.api.wobbleSnapshot(e));g.api.draw();assert.equal(JSON.stringify(g.api.wobbleSnapshot(e)),before,'render stays pure')}
+ for(const [W,H] of [[1280,900],[393,851],[360,640],[851,393]]){e=setup();g.state.W=W;g.state.H=H;p.x=W/2;p.y=H/2;g.api.initWobbleBoss(e);const seen=new Set();for(let i=0;i<3000;i++){if(i%10===0){g.api.hitPaper({damage:0,doodlePayload:{fire:1,frost:1}},e);e.stun=.55;}g.api.updateWobbleBoss(e,.01);assert.equal(e.freeze,0);assert.equal(e.stun,0);const q=g.api.wobbleSnapshot(e);if(q.attack)seen.add(q.attack);assert(Number.isFinite(e.x)&&Number.isFinite(e.y));assert(e.y>=q.topMargin-1e-7,'boss stays below header boundary');assert(q.clearance>=q.keepout-1e-7,'keeps body and idle parts away from fort');assert(g.state.enemyShots.length<=32);assert(q.helpers<=10)}assert.equal(seen.size,5,'all five moves within thirty seconds');const before=JSON.stringify(g.api.wobbleSnapshot(e));g.api.draw();assert.equal(JSON.stringify(g.api.wobbleSnapshot(e)),before,'render stays pure')}
 
  for(const [W,H] of [[1280,900],[393,851],[360,640],[851,393]]){
   e=setup();g.state.W=W;g.state.H=H;p.x=W/2;p.y=H/2;g.api.initWobbleBoss(e);p.hp=p.maxHp=75;g.state.stats.rockDamage=0;
