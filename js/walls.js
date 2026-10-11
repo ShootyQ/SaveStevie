@@ -88,6 +88,7 @@ function eraseWallPath(a,b,r=20,options={}){
   changed=game.api.eraseHardhatTools(a,b,r)||changed;
   changed=game.api.eraseProjectiles(a,b,r)||changed;
   changed=game.api.eraseDoodlePath(a,b,r)||changed;
+  changed=game.api.eraseSneakyRoutes(a,b,r)||changed;
   for(const e of [...game.state.enemies])if(e.type==='scrubber'&&!game.api.underPaper(e)&&e.hp>0){
    const touches=game.api.pointSegDist(e.x,e.y,a.x,a.y,b.x,b.y)<=r+e.r*.7;
    if(!touches){e.eraseBrushInside=false;continue;}

@@ -42,7 +42,7 @@ function update(dt){
   if(!game.api.wobbleInfiniteInk()){game.api.updateStevie(dt);game.api.updateProjectiles(dt)}game.api.updateEnemyShots(dt);
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
 
-  game.api.spawnWaveEnemies(dt);
+  game.api.spawnWaveEnemies(dt);game.api.updateSneakyOrders(dt);
 
   const teslaHits=new Set(),railHits=new Set();
   // Geometry-based synergies pulse continuously.
