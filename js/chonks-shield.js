@@ -6,6 +6,15 @@ DoodleDefender.systems.chonksShield=function(game){
  function hasChonksShield(e){return e?.type==='tank'&&e.chonks?.shield===true&&e.hp>0&&!e.flight&&!game.api.underPaper(e);}
  function shieldHosts(){const list=game.state.enemies;if(list!==cachedArray||list.length!==cachedLength){cachedArray=list;cachedLength=list.length;hosts=list.filter(e=>e.type==='tank');}return hosts.filter(hasChonksShield);}
  function front(e){const p=game.state.player,dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1;return {x:dx/d,y:dy/d};}
+ // Match the body's planted-foot squash and waddle transform. Both drawing
+ // and eraser collision use this same carried-shield attachment point.
+ function chonksShieldAnchor(e){
+  const f=front(e),p=game.api.enemyAnimationPose(e),image=game.api.doodleArtwork('tank');
+  const foot=e.r*2.7*(image?.naturalHeight||140)/(image?.naturalWidth||200)*.46;
+  const x=f.x*e.r*.8*p.sx,y=(f.y*e.r*.45+e.r*.6-foot)*p.sy+foot;
+  const ca=Math.cos(p.angle),sa=Math.sin(p.angle);
+  return {x:e.x+p.x+x*ca-y*sa,y:e.y+p.y+x*sa+y*ca,angle:p.angle+f.x*.12,sx:p.sx,sy:p.sy};
+ }
  function eligible(e){return e.hp>0&&!e.flight&&!game.api.underPaper(e)&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!['tank','boss','eraser'].includes(e.type);}
  function chonksProtected(e){
   if(hasChonksShield(e))return true;if(!eligible(e))return false;
@@ -17,7 +26,7 @@ DoodleDefender.systems.chonksShield=function(game){
  function cancelChonksRub(){rubs.clear();}
  function eraseChonksShields(a,b,r){
   if(!active()||Math.hypot(b.x-a.x,b.y-a.y)<.5)return false;
-  for(const h of shieldHosts()){const f=front(h),x=h.x+f.x*30,y=h.y+f.y*30;if(game.api.pointSegDist(x,y,a.x,a.y,b.x,b.y)<=r+22)rubs.set(h,.1);}
+  for(const h of shieldHosts()){const q=chonksShieldAnchor(h);if(game.api.pointSegDist(q.x,q.y,a.x,a.y,b.x,b.y)<=r+22)rubs.set(h,.1);}
   return false; // Queues timed rubbing; never awards damage, ink or a kill.
  }
  function updateChonksShield(dt){
@@ -48,9 +57,17 @@ DoodleDefender.systems.chonksShield=function(game){
   if(!hasChonksShield(e)){if(chonksProtected(e)){ctx.save();ctx.strokeStyle='#84699e';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-5,-e.r-13);ctx.lineTo(5,-e.r-13);ctx.lineTo(4,-e.r-7);ctx.lineTo(0,-e.r-4);ctx.lineTo(-4,-e.r-7);ctx.closePath();ctx.stroke();ctx.restore();}return;}
   const f=front(e),wear=Math.min(1,(e.chonks.shieldWear||0)/tuning.rubSeconds);ctx.save();ctx.rotate(Math.atan2(f.y,f.x));
   ctx.fillStyle='#b4a3c617';ctx.strokeStyle='#9074a65c';ctx.lineWidth=1;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(-12,-25);ctx.lineTo(-115,-72);ctx.lineTo(-115,72);ctx.lineTo(-12,25);ctx.closePath();ctx.fill();ctx.stroke();ctx.setLineDash([]);
-  ctx.globalAlpha=1-wear*.65;ctx.fillStyle='#e9dcf5';ctx.strokeStyle='#705080';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(22,-25);ctx.lineTo(41,-20);ctx.lineTo(43,10);ctx.lineTo(30,28);ctx.lineTo(18,8);ctx.closePath();ctx.fill();ctx.stroke();
-  ctx.strokeStyle='#b396cb';ctx.lineWidth=2;for(let i=0;i<4;i++){ctx.beginPath();ctx.moveTo(23,-17+i*9);ctx.lineTo(37,-12+i*8);ctx.stroke();}ctx.restore();
+  ctx.restore();
+  const q=chonksShieldAnchor(e),image=game.api.doodleArtwork('chonks-shield');
+  ctx.save();ctx.translate(q.x-e.x,q.y-e.y);ctx.rotate(q.angle);ctx.scale(q.sx,q.sy);
+  // A little gray gripping hand connects the shield's inner rim to his armor.
+  ctx.strokeStyle='#342f2b';ctx.fillStyle='#b4aaa1';ctx.lineWidth=1.8;ctx.beginPath();ctx.ellipse(-f.x*9,-5,5,3,-f.x*.3,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.globalAlpha=1-wear*.8;
+  if(image){const width=e.r*2.2,height=width*image.naturalHeight/image.naturalWidth;ctx.drawImage(image,-width/2,-height/2,width,height);}
+  // During a transient load failure the buckler still visibly overlaps his body.
+  else{ctx.fillStyle='#c8b2d9';ctx.beginPath();ctx.moveTo(-14,-14);ctx.lineTo(14,-13);ctx.lineTo(11,10);ctx.lineTo(0,17);ctx.lineTo(-12,8);ctx.closePath();ctx.fill();ctx.stroke();}
+  ctx.restore();
   ctx.save();ctx.fillStyle='#65437a';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('ERASE SHIELD',game.api.clamp(f.x*62,50-e.x,game.state.W-50-e.x),f.y*62+4);ctx.restore();
  }
- const api={hasChonksShield,chonksProtected,clearChonksControl,resetChonksShield,cancelChonksRub,eraseChonksShields,updateChonksShield,updateChonksEscort,drawChonksShield,chonksShieldTuning:()=>({...tuning})};Object.assign(game.api,api);return api;
+ const api={chonksShieldAnchor,hasChonksShield,chonksProtected,clearChonksControl,resetChonksShield,cancelChonksRub,eraseChonksShields,updateChonksShield,updateChonksEscort,drawChonksShield,chonksShieldTuning:()=>({...tuning})};Object.assign(game.api,api);return api;
 };
