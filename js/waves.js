@@ -124,7 +124,7 @@ function startWave(options={}){
   game.api.resetAbilityEffects();
   game.api.resetLaunchEffects();
   game.api.resetSupportInks();
-  game.api.resetPlaguefire();game.api.resetPaper();
+  game.api.resetPlaguefire();const carriedPaper=game.api.beginPaperWave();
   game.api.resetSoundEffects();game.api.resetRefuge();game.api.resetEnemyWave();game.api.resetSustain();
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.particles=[];game.state.floaters=[];
   game.state.finalOvertime=false; game.state.finalBossDefeated=false;
@@ -133,7 +133,7 @@ function startWave(options={}){
   game.state.waveElapsed=0;game.state.waveKills=0;game.state.waveTime=game.api.waveDuration();game.state.timeLeft=game.state.waveTime;game.state.spawnTimer=game.state.wave===1?game.catalog.balance.openingDelay:.5;
   game.state.player.hp=Math.min(game.state.player.maxHp,game.state.player.hp+game.state.stats.playerRegen+5);
   game.api.startDoodleWave();
-  game.api.setMsg(game.state.wave%5===0?'Wave '+game.state.wave+'. Clear the timed fight; the boss follows.':'Wave '+game.state.wave+'. Fresh page, full ink.');
+  game.api.setMsg(game.state.wave%5===0?'Wave '+game.state.wave+'. Clear the timed fight; the boss follows.':'Wave '+game.state.wave+(carriedPaper?'. Same paper, full ink.':'. Fresh page, full ink.'));
   game.api.updateUI();
   if(!options.skipIntro&&!game.api.testLabActive?.()&&!game.api.beginFirstLesson?.())game.api.introduceWave();
 }

@@ -14,7 +14,7 @@ DoodleDefender.systems.firstLessons=function(game){
   ['Meet your eraser.','Wrong wall? Open a gap and recover some ink. Here’s the actual Erase control you’ll use. I’ll reset our practice ink before the wave starts.'],
   ['Erase this bit of wall.','Rub through the marked wall on our real page. Healthy paid walls return 25% of their ink; damaged walls return less.'],
   ['YOU can erase HIM!','Rubble Ruff carries an eraser and wipes out your walls. Rub over HIM three separate times to wipe off his chunks. Lift between passes. Paper balls and wall effects also hurt him.'],
-  ['Careful: this is paper!','About 1 second of rubbing one spot makes a hole. Two holes can make a shortcut: some monsters go in the farther one and pop out closer to me. Rub a moving bump for 2 seconds to bring it up. Each wave gets fresh paper.']
+  ['Careful: this is paper!','About 1 second of rubbing one spot makes a hole. Two holes can make a shortcut: some monsters go in the farther one and pop out closer to me. Rub a moving bump for 2 seconds to bring it up. Waves 1–5 share this sheet: scuffs and holes stay. Wave 6 gets fresh paper.']
  ];
  function firstLessonActive(){return kind!==null&&$('lessonOverlay').style.display==='grid';}
  function lessonCanPaint(tool=kind){return firstLessonActive()&&step===1&&tool===kind&&!document.hidden;}

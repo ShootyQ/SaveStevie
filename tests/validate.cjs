@@ -2451,7 +2451,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  rub(112,185,2.5);assert.equal(g.state.paper.holes.length,1,'holes cannot stack');rub(g.state.player.x,g.state.player.y,2.5);assert.equal(g.state.paper.holes.length,1,'fort stays intact');
  g.state.paused=true;rub(240,220,8);assert.equal(g.state.paper.holes.length,1);g.state.paused=false;rub(240,220,2.5);assert.equal(g.state.paper.holes.length,2);
  rub(350,180,.5);assert(g.state.paper.patches.length>0);g.state.paper.arcs.push({life:.2});g.api.queuePaperRub({x:100,y:180},{x:110,y:180});
- g.state.wave=2;g.api.startWave({skipIntro:true});assert.equal(g.state.paper.holes.length,0,'fresh page clears holes');assert.equal(g.state.paper.patches.length,0,'fresh page clears smudges');assert.equal(g.state.paper.arcs.length,0);g.api.updatePaper(.1);assert.equal(g.state.paper.patches.length,0,'fresh page cancels queued rubs');
+ g.state.wave=6;g.api.startWave({skipIntro:true});assert.equal(g.state.paper.holes.length,0,'wave six clears holes');assert.equal(g.state.paper.patches.length,0,'fresh page clears smudges');assert.equal(g.state.paper.arcs.length,0);g.api.updatePaper(.1);assert.equal(g.state.paper.patches.length,0,'fresh page cancels queued rubs');
  rub(100,180,2.5);rub(240,220,2.5);
  const enemy=()=>{const e=g.api.spawnEnemy(false,100,180,'grunt');e.x=100;e.y=180;e.hp=e.maxHp=100;return e;};
  let e=enemy();e.burn=3;e.poison=2;e.charged=2;assert(g.api.updatePaperEnemy(e,.05));assert.equal(e.paperTunnel.exit.x,240);assert.equal(e.burn,0);assert.equal(e.poison,0);g.api.updatePaperEnemy(e,.5);
@@ -2676,3 +2676,5 @@ require('./wobblechomp-rework.cjs')(load);
  const second=g.api.spawnEnemy(false,100,100,'flanker'),third=g.api.spawnEnemy(false,110,100,'flanker');assert(second&&third);assert.equal(g.api.spawnEnemy(false,120,100,'flanker'),null,'at most two route scouts');g.api.resetRun();assert.equal(g.api.sneakySnapshot().length,0);
  console.log('PASS: nearby melee rallies, real follow movement, wall compromise/ten-second retirement, erasable nonrefundable instructions, third-run commitment, last-alive timed escape without kill rewards, pure visuals, pause, resize, death/reset and scout cap.');
 }
+
+require('./opening-paper.cjs')(load);
