@@ -80,7 +80,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.31</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.33</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -240,23 +240,30 @@
   </div>
 </div>
 <div class="overlay build-overlay" id="pauseOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
-  <div class="cardbox pause-book">
-    <span class="section-kicker paper-slip">pencil down. snack break.</span><h2 class="paper-slip" id="pauseTitle">Recess.</h2>
-    <p id="pauseSummary" class="pause-summary paper-slip"></p>
+  <div class="cardbox pause-book"><div class="recess-page">
+    <div class="recess-margin" aria-hidden="true">
+      <span class="recess-secret">do you…<br><small>circle YES / NO</small><i>♡</i></span>
+      <span class="recess-math">7 × 8 = <s>54</s> 56<br><small>show your work!</small></span>
+      <span class="recess-grade">A+<small>in snack time</small></span>
+      <span class="recess-doodle">★<br><small>super secret<br>snack map ↗</small></span>
+      <span class="recess-footer">if found, return to Stevie.<br><small>unless you’re a monster.</small></span>
+    </div>
+    <span class="section-kicker">pencil down. snack break.</span><h2 id="pauseTitle">Recess.</h2>
+    <p id="pauseSummary" class="pause-summary"></p>
     <div id="pauseActions" class="pause-actions">
-      <button class="paper-slip" id="resumeBtn">Back to the doodles →</button>
+      <button class="paper-slip" id="resumeBtn">Back to game →</button>
       <button class="secondary paper-slip" id="pauseSettingsBtn">Settings</button>
       <div class="pause-reference"><button class="secondary paper-slip" id="pauseToolBtn">Your tool</button><button class="secondary paper-slip" id="pauseMonstersBtn">Monster notes</button></div>
       <div class="pause-utilities"><button class="secondary paper-slip" id="clearBtn" title="Erase all walls and reclaim a little ink">Erase walls</button><button class="secondary paper-slip" id="musicBtn" aria-label="Mute music">Mute music</button></div>
       <button class="secondary paper-slip" id="pauseRestartTestBtn" hidden>Restart test · same build ↻</button>
       <button class="secondary paper-slip" id="returnMenuBtn">Return to main menu</button>
-      <p class="option-help paper-slip">Your page stays right here until you resume.</p>
+      <p class="option-help">Your page stays right here until you resume.</p>
     </div>
     <section id="quitConfirmation" hidden aria-labelledby="quitTitle">
       <h3 id="quitTitle">Close this notebook?</h3><p>Your current run and its upgrades will be lost. Scraps you’ve already earned stay saved, along with your permanent Notebook upgrades.</p>
       <div class="cardactions"><button class="secondary" id="cancelQuitBtn">Keep playing</button><button id="confirmQuitBtn">Save scraps &amp; leave</button></div>
     </section>
-  </div>
+  </div></div>
 </div>
 <div class="overlay build-overlay" id="backupOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="backupTitle"><div class="cardbox build-box report-book">
  <div class="build-heading"><div><span class="section-kicker">KEEP A SPARE NOTEBOOK</span><h2 id="backupTitle">Back up &amp; restore</h2></div><button id="closeBackupBtn">Close</button></div>
@@ -369,6 +376,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.33 · Notes from recess</h3><p>Pause unfolds a crumpled notebook page with taped paper buttons, secret notes and schoolwork hiding in the margins. Resume now says “Back to game.”</p></article>
       <article class="build-entry"><h3>Alpha 0.1.31 · Fresh middle-page music</h3><p>Two new songs replace the old waves 6–10 soundtrack, alternating between waves. Wobblechomp still has his own boss music.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.30 · Sneaky has a plan</h3><p>From wave 7, Sneaky McSneak scouts the outskirts and draws dotted routes for nearby melee friends. Block the route or erase his instructions; compromised plans are discarded after ten seconds. He joins his third marked attack. When arrivals have stopped and he is the last monster alive, he declares “We’ll be back!” and flees—letting you win once he escapes. Routes do not grant extra kills, ink or wall damage.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.29 · Wobble gets his turn</h3><p>Fire and frost paper builds can no longer keep Wobblechomp stuck waiting to attack. In phase one, elemental damage still works, but freezes, stuns and slows cannot interrupt him. Blocking or countering his attacks still earns the stun and one-cut opening.</p></article>

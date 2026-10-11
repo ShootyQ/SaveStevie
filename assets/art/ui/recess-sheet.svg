@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="760" viewBox="0 0 520 760" preserveAspectRatio="none">
+ <defs>
+  <pattern id="rules" width="520" height="28" patternUnits="userSpaceOnUse"><path d="M0 27.5H520" stroke="#9bb7c5" stroke-opacity=".38"/></pattern>
+  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".65" numOctaves="3" seed="12"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".12"/></feComponentTransfer><feBlend in="SourceGraphic" mode="multiply"/></filter>
+  <linearGradient id="fold"><stop stop-color="#9b8a6d" stop-opacity="0"/><stop offset=".46" stop-color="#9b8a6d" stop-opacity=".12"/><stop offset=".5" stop-color="#fffef4" stop-opacity=".75"/><stop offset=".58" stop-color="#b3a184" stop-opacity=".16"/><stop offset="1" stop-color="#9b8a6d" stop-opacity="0"/></linearGradient>
+  <clipPath id="sheet"><path d="m9 12 92-6 129 5 153-6 126 9-3 155 5 121-7 141 6 163-5 151-144 4-118-6-138 5-96-9 4-133-7-124 5-153-4-152Z"/></clipPath>
+ </defs>
+ <g clip-path="url(#sheet)">
+  <path fill="#f3ecd9" d="M0 0h520v760H0z" filter="url(#grain)"/>
+  <path fill="url(#rules)" d="M0 0h520v760H0z"/>
+  <path stroke="#cc8580" stroke-opacity=".5" d="M48 0v760"/>
+  <g fill="url(#fold)">
+   <path d="m-40 49 36-26 533 599-37 29Z"/><path d="m463-15 37 7-277 792-40-12Z"/>
+   <path d="m-15 447 3-34 545-202 10 33Z"/><path d="m-5 726 3-38 544-107 8 35Z"/>
+   <path d="m92-20 36 0 20 800-36 0Z"/><path d="m-10 162 0-30 550 64-2 28Z"/>
+  </g>
+  <g fill="none" stroke="#8e7e62" stroke-opacity=".12" stroke-width="1">
+   <path d="m9 76 131 117 85 212 161 76 123 144M14 423l122-39 89 21 122-186 166-34M140 193l-22-130M386 481l-42 201M225 405l-91 162-123 55M347 219l76-140"/>
+   <path d="m10 21 90-5 130 7 151-8 116 8M498 29l-5 127 5 155M16 732l100 7 139-5 151 5 84-4"/>
+  </g>
+  <path d="m475 5 34 9-1 34-22-22Z" fill="#d6c9b0"/><path d="m476 5 10 21 22 22-35-8Z" fill="#fff7e4"/>
+ </g>
+</svg>
