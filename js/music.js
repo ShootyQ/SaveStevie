@@ -7,7 +7,8 @@ const tracks=game.catalog.musicTracks={
   'first-boss':{name:'King Doodle-Doom',file:'first-boss.mp3'},
   wobblechomp:{name:'Wobblechomp Fight V5',file:'wobblechomp-fight.mp3'},
   'margin-mischief':{name:'Save Stevie',file:'save-stevie.mp3'},
-  'pop-quiz-panic':{name:'Pop Quiz Panic',file:'pop-quiz-panic.mp3'},
+  'pop-quiz-panic':{name:'Waves 6–10 · Track 1',file:'waves-6-10-a.mp3'},
+  'pop-quiz-panic-alt':{name:'Waves 6–10 · Track 2',file:'waves-6-10-b.mp3'},
   'crayon-catastrophe':{name:'Crayon Catastrophe',file:'crayon-catastrophe.mp3'},
   'final-draft':{name:'Detention: The Final Draft',file:'final-draft.mp3'}
 };
@@ -36,6 +37,8 @@ function playMusic(){
   }catch{if(attempt===playAttempt){blocked=true;updateMusicButton()}}
 }
 function selectMusicTrack(id){
+  // Alternate the two chapter songs by wave, without using gameplay randomness.
+  if(id==='pop-quiz-panic'&&game.state.wave>=6&&game.state.wave<=10&&game.state.wave%2===1)id='pop-quiz-panic-alt';
   if(!tracks[id]||id===track)return false;
   track=id;playAttempt++;blocked=false;audio.pause?.();
   audio.loop=id!=='victory';
