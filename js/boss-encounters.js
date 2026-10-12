@@ -6,7 +6,7 @@ const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-mot
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
 function abilityImmune(e){return game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||(game.api.isWobbleBoss(e)&&(game.api.wobblePhase(e)===2||game.api.wobbleCounterOpen(e)));}
 function isFirstBoss(e){return e.waveBoss&&e.type==='boss'&&game.state.wave===5}
-function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/1.1,helperCap:6,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:1.8,minThrowGain:minFriendGain}}
+function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/(1.1*1.2),helperCap:7,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:1.8,minThrowGain:minFriendGain}}
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
 const colors={boss:'#9b3549',stapler:'#ad741f',crayon:'#8751ac',eraser:'#b95176'};
 function bossBrain(e){let b=brains.get(e);if(!b){b={cd:3,cast:null,turn:0,moveCd:0,target:null,enclosed:false,enclosedAge:0,damageBudget:Math.max(30,e.maxHp*.045)*.5,contactCd:0,recovery:0,charge:0,action:null,repeat:0,helperCd:1.5,helperSerial:0,pickup:null};brains.set(e,b)}return b}
@@ -60,9 +60,9 @@ function updateFirstBossHelpers(dt){
  const b=bossBrain(e);b.helperCd-=dt;if(b.helperCd>0)return;
  b.helperCd=firstBossTuning(e).helperGap;
  if(game.state.enemies.filter(n=>n.bossOwner===e&&n.hp>0).length>=firstBossTuning(e).helperCap)return;
- const {W,H}=game.state,side=b.helperSerial++%4;
+ const {W,H}=game.state,serial=b.helperSerial++,side=serial%4;
  const x=side===1?W+26:side===3?-26:W*(side===0?.25:.75),y=side===0?-26:side===2?H+26:H*(side===1?.3:.7);
- const friend=game.api.spawnEnemy(false,x,y,'grunt');if(friend)friend.bossOwner=e;
+ const friend=game.api.spawnEnemy(false,x,y,serial%3===2?'fast':'grunt');if(friend)friend.bossOwner=e;
 }
 function friendCanBePicked(e,n){
  const p=game.state.player;return n.bossOwner===e&&n.hp>0&&!n.flight&&n.freeze<=0&&n.stun<=0&&game.state.enemies.includes(n)&&n.x>=n.r&&n.x<=game.state.W-n.r&&n.y>=n.r&&n.y<=game.state.H-n.r&&Math.hypot(n.x-p.x,n.y-p.y)>p.r+n.r+75+firstBossTuning(e).minThrowGain+12;
