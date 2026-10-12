@@ -36,7 +36,7 @@ function updatePaper(dt){
   for(let i=0;i<=steps;i++){
    const p={x:path.a.x+(path.b.x-path.a.x)*i/steps,y:path.a.y+(path.b.y-path.a.y)*i/steps};
    samples.push({...p,r:path.r});
-   if(!safePaperPoint(p)||paper.holes.some(h=>Math.hypot(h.x-p.x,h.y-p.y)<tuning.holeSpacing))continue;
+   if(game.api.crayonWaxCovers(p)||!safePaperPoint(p)||paper.holes.some(h=>Math.hypot(h.x-p.x,h.y-p.y)<tuning.holeSpacing))continue;
    let patch=paper.patches.find(q=>Math.hypot(q.x-p.x,q.y-p.y)<tuning.patchRadius);
    if(!patch){if(paper.patches.length>=tuning.maxPatches)continue;patch={...p,wear:0};paper.patches.push(patch);}
    touched.add(patch);

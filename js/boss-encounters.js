@@ -4,17 +4,17 @@ let brains=new WeakMap(),marks=[],clock=0;
 const minFriendGain=70;
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
-function abilityImmune(e){return game.api.chonksProtected?.(e)||isFirstBoss(e)||(game.api.isWobbleBoss(e)&&(game.api.wobblePhase(e)===2||game.api.wobbleCounterOpen(e)));}
+function abilityImmune(e){return game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||(game.api.isWobbleBoss(e)&&(game.api.wobblePhase(e)===2||game.api.wobbleCounterOpen(e)));}
 function isFirstBoss(e){return e.waveBoss&&e.type==='boss'&&game.state.wave===5}
 function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/1.1,helperCap:6,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:1.8,minThrowGain:minFriendGain}}
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
 const colors={boss:'#9b3549',stapler:'#ad741f',crayon:'#8751ac',eraser:'#b95176'};
 function bossBrain(e){let b=brains.get(e);if(!b){b={cd:3,cast:null,turn:0,moveCd:0,target:null,enclosed:false,enclosedAge:0,damageBudget:Math.max(30,e.maxHp*.045)*.5,contactCd:0,recovery:0,charge:0,action:null,repeat:0,helperCd:1.5,helperSerial:0,pickup:null};brains.set(e,b)}return b}
-function resetBossEncounters(){brains=new WeakMap();marks=[];clock=0}
+function resetBossEncounters(){game.api.resetCrayonBoss?.();brains=new WeakMap();marks=[];clock=0}
 function inside(e,w){let yes=false;const pts=w.pts;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a.y>e.y)!==(b.y>e.y)&&e.x<(b.x-a.x)*(e.y-a.y)/(b.y-a.y)+a.x)yes=!yes}return yes}
 function nearestBossWall(e,range=150){let best=null;for(const w of game.state.walls){const p=game.api.nearestPointOnWall(e,w);if(!p)continue;const d=Math.hypot(p.x-e.x,p.y-e.y);if(d<range){range=d;best={wall:w,...p}}}return best}
 function updateBossDamageBudgets(dt){for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e),rate=Math.max(30,e.maxHp*.045);b.damageBudget=Math.min(rate*.5,b.damageBudget+rate*dt)}}
-function limitBossDamage(e,amount,kind){if(game.api.isWobbleBoss(e)&&game.api.wobblePhase(e)===2)return 0;if(game.api.isWobbleBoss(e))amount=Math.min(amount,Math.max(0,e.hp-e.maxHp*.04));if(!e.waveBoss||(kind==='reflected'&&isFirstBoss(e)))return amount;const b=bossBrain(e),guard=isFirstBoss(e)&&!b.enclosed&&b.recovery<=0?.25:1,actual=Math.min(amount,b.damageBudget*guard);b.damageBudget-=actual/guard;return actual}
+function limitBossDamage(e,amount,kind){if(game.api.isCrayonBoss?.(e)){if(kind==='reflected')return amount;amount*=game.api.crayonGuard(e);}if(game.api.isWobbleBoss(e)&&game.api.wobblePhase(e)===2)return 0;if(game.api.isWobbleBoss(e))amount=Math.min(amount,Math.max(0,e.hp-e.maxHp*.04));if(!e.waveBoss||(kind==='reflected'&&isFirstBoss(e)))return amount;const b=bossBrain(e),guard=isFirstBoss(e)&&!b.enclosed&&b.recovery<=0?.25:1,actual=Math.min(amount,b.damageBudget*guard);b.damageBudget-=actual/guard;return actual}
 function pushThroughBossStrokes(e,dt){
  for(const w of [...game.state.walls]){if(w.hp<=0)continue;const p=game.api.nearestPointOnWall(e,w);
   if(p&&Math.hypot(p.x-e.x,p.y-e.y)<e.r*.8+w.thick/2){
@@ -24,7 +24,7 @@ function pushThroughBossStrokes(e,dt){
   }
  }
 }
-function bossDamageMultiplier(e){if(!e.waveBoss)return 1;if(game.api.isWobbleBoss(e))return .35;if(game.api.isStapleBoss(e))return game.api.stapleDamageMultiplier(e);const b=bossBrain(e);return b.enclosed||b.recovery>0?1.35:isFirstBoss(e)?.25:1}
+function bossDamageMultiplier(e){if(game.api.isCrayonBoss?.(e))return 1;if(!e.waveBoss)return 1;if(game.api.isWobbleBoss(e))return .35;if(game.api.isStapleBoss(e))return game.api.stapleDamageMultiplier(e);const b=bossBrain(e);return b.enclosed||b.recovery>0?1.35:isFirstBoss(e)?.25:1}
 function bossWallHit(e){if(!e.waveBoss)return null;const hit=nearestBossWall(e,e.r+20);return hit&&Math.hypot(hit.x-e.x,hit.y-e.y)<=e.r+hit.wall.thick/2+3?{wall:hit.wall,seg:1}:null}
 function bossContact(e){
  if(game.api.isWobbleBoss(e))return true;
@@ -212,6 +212,7 @@ function tryDriveByFling(e,dt){
  }
 }
 function updateBossEncounter(e,dt){
+ if(game.api.isCrayonBoss?.(e)){game.api.updateCrayonBoss(e,dt);return}
  if(game.api.isWobbleBoss(e)){game.api.updateWobbleBoss(e,dt);return}
  if(game.api.isStapleBoss(e)){game.api.updateStapleBoss(e,dt);return}
  if(isFirstBoss(e))tryDriveByFling(e,dt);
@@ -301,7 +302,7 @@ function updateBossFields(dt){clock+=dt;for(const e of game.state.enemies)if(e.w
   }
  }marks=marks.filter(m=>m.age<m.life);
 }
-function moveBossFields(dx,dy){game.api.moveWobbleFields(dx,dy);moveFirstBossShots(dx,dy);for(const m of marks){m.x+=dx;m.y+=dy;m.originX+=dx;m.originY+=dy}for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e);if(game.api.isStapleBoss(e))game.api.moveStapleBoss(e,dx,dy);for(const p of [b.cast,b.target])if(p&&p!==game.state.player){p.x+=dx;p.y+=dy;for(const q of p.targets||[]){q.x+=dx;q.y+=dy}if(p.landing){p.landing.x+=dx;p.landing.y+=dy}}if(b.chargeX!==undefined){b.chargeX+=dx;b.chargeY+=dy}}}
+function moveBossFields(dx,dy){game.api.moveCrayonFields?.(dx,dy);game.api.moveWobbleFields(dx,dy);moveFirstBossShots(dx,dy);for(const m of marks){m.x+=dx;m.y+=dy;m.originX+=dx;m.originY+=dy}for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e);if(game.api.isStapleBoss(e))game.api.moveStapleBoss(e,dx,dy);for(const p of [b.cast,b.target])if(p&&p!==game.state.player){p.x+=dx;p.y+=dy;for(const q of p.targets||[]){q.x+=dx;q.y+=dy}if(p.landing){p.landing.x+=dx;p.landing.y+=dy}}if(b.chargeX!==undefined){b.chargeX+=dx;b.chargeY+=dy}}}
 function bossEncounterSnapshot(){return {marks:marks.map(m=>({x:m.x,y:m.y,age:m.age,kind:m.kind})),bosses:game.state.enemies.filter(e=>e.waveBoss).map(e=>{const b=bossBrain(e);return {type:e.type,wobble:game.api.isWobbleBoss(e)?game.api.wobbleSnapshot(e):null,staple:game.api.isStapleBoss(e)?game.api.stapleSnapshot(e):null,pickup:b.pickup?{x:b.pickup.friend.x,y:b.pickup.friend.y,left:b.pickup.left}:null,enclosed:b.enclosed,cast:b.cast?{kind:b.cast.kind,x:b.cast.x,y:b.cast.y,left:b.cast.left,targets:b.cast.targets?.map(p=>({...p})),landing:b.cast.landing?{...b.cast.landing}:undefined}:null,recovery:b.recovery,charge:b.charge,action:b.action?{...b.action}:null}})}}
 function drawLobTarget(ctx,x,y,progress){
  ctx.save();ctx.translate(x,y);ctx.strokeStyle='#b07535';ctx.fillStyle='rgba(190,122,48,.13)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,46,0,Math.PI*2);ctx.fill();ctx.setLineDash([5,4]);ctx.stroke();ctx.setLineDash([]);
@@ -330,7 +331,7 @@ function drawBossEncounters(){const ctx=game.dom.ctx;
  }
 
  for(const m of marks){if(m.age<1.2){ctx.save();ctx.strokeStyle='#8751ac';ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(m.originX,m.originY);ctx.lineTo(m.x,m.y);ctx.stroke();ctx.restore()}const color=m.kind==='red'?'#c34937':m.kind==='blue'?'#3887ba':'#57913b';ctx.save();ctx.translate(m.x,m.y);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.globalAlpha=m.age<1.2?.45:.2;ctx.beginPath();ctx.arc(0,0,m.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.8;ctx.lineWidth=2;ctx.setLineDash(m.age<1.2?[5,5]:[]);ctx.stroke();ctx.font='bold 18px sans-serif';ctx.textAlign='center';ctx.fillText(m.kind==='green'?'✦':m.kind==='blue'?'~':'!',0,6);ctx.restore()}
- for(const e of game.state.enemies){if(!e.waveBoss||e.hp<=0)continue;if(game.api.isStapleBoss(e)){game.api.drawStapleBoss(e);continue}const b=bossBrain(e);ctx.save();ctx.strokeStyle=colors[e.type];ctx.fillStyle=colors[e.type];ctx.lineWidth=2;
+ for(const e of game.state.enemies){if(!e.waveBoss||e.hp<=0)continue;if(game.api.isCrayonBoss?.(e))continue;if(game.api.isStapleBoss(e)){game.api.drawStapleBoss(e);continue}const b=bossBrain(e);ctx.save();ctx.strokeStyle=colors[e.type];ctx.fillStyle=colors[e.type];ctx.lineWidth=2;
   if(e.type==='crayon'&&b.contactWarning>0){ctx.strokeStyle='#b34936';ctx.beginPath();ctx.arc(e.x,e.y,e.r+10,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,b.contactWarning/1.3));ctx.stroke();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText('CONTACT · DRAW COVER',game.api.clamp(e.x,85,game.state.W-85),Math.max(100,e.y-e.r-18))}
   if(isFirstBoss(e)){
    ctx.strokeStyle=b.recovery>0?'#278f82':firstBossTuning(e).furious?'#b3483b':'#6e586d';ctx.fillStyle=ctx.strokeStyle;ctx.setLineDash(b.recovery>0?[]:[3,5]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+12,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);

@@ -82,6 +82,7 @@ function eraseWallPath(a,b,r=20,options={}){
  if(changed){game.state.walls=result;game.state.stats.ink=Math.min(game.state.stats.maxInk,game.state.stats.ink+recovered);game.api.updateUI();}
  if(lesson)return changed;
  if(!options.enemy){
+  changed=game.api.eraseCrayonWax(a,b,r)||changed;
   const ground=eraseBurningGround(a,b,r),plague=game.api.erasePlaguefire(a,b,r);
   if((ground||plague)&&game.state.paper.clock>=(game.state.paper.firebreakCueAt??0)){game.state.paper.firebreakCueAt=game.state.paper.clock+.7;game.api.floatText(b.x,b.y-20,'FIREBREAK!','#a56930');}
   changed=ground||plague||changed;
@@ -423,6 +424,7 @@ function chargeFreehand(actualPaid){
 function finishWallEffects(base,actualPaid,copies=[],points=base.pts){if(base.wobbleBumper){base.wobbleDraft=false;return}chargeFreehand(actualPaid);
   game.api.repairTouchedWalls(points,new Set([base,...copies]));
 
+  game.api.connectCrayonReturn(points,actualPaid);
   game.api.cutWobbleStroke(points);
   game.api.cutTwiceyStroke(points);
   game.api.connectDoodleDots(points);
@@ -458,7 +460,7 @@ function finishLiveWall(){
  const t=liveStroke;liveStroke=null;if(!t)return false;
  const w=t.base;if(game.state.walls.includes(w)&&w.hp>0){
   finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,t.copies,t.strokePts);game.api.collectDoodleScrap(t.strokePts,t.paid);game.api.updateUI();
- }else{chargeFreehand(t.paid);game.api.cutWobbleStroke(t.strokePts);}
+ }else{chargeFreehand(t.paid);game.api.connectCrayonReturn(t.strokePts,t.paid);game.api.cutWobbleStroke(t.strokePts);}
  return true;
 }
 function cancelLiveWall(){const t=liveStroke;liveStroke=null;if(t)chargeFreehand(t.paid);}
