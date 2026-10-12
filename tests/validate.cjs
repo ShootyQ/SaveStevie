@@ -2704,3 +2704,5 @@ require('./crayon-boss.cjs')(load);
 require('./stolen-routes.cjs')(load);
 
 require('./common-pressure.cjs')(load);
+
+require('./beta-scraps.cjs')(load);

@@ -4,7 +4,7 @@ const limit=65536,checkpointKey='saveStevieBeforeRestoreV1';let pending=null,rea
 const status=text=>{game.dom.$('backupStatus').textContent=text;};
 function saveBackupText(){
  const p=game.api.notebookSnapshot();
- return JSON.stringify({format:'SaveStevieBackup',version:1,appVersion:game.dom.$('appVersion').textContent,createdAt:new Date().toISOString(),progress:{notebook:{version:2,scraps:p.scraps,lifetimeScraps:p.lifetimeScraps,scrapTutorialDone:p.scrapTutorialDone===true,levels:p.levels},bestWave:game.state.best,bestScore:game.api.bestRunScore(),lessons:game.api.lessonSnapshot().seen,discoveries:game.api.discoveredMonsterTypes()}},null,2);
+ return JSON.stringify({format:'SaveStevieBackup',version:1,appVersion:game.dom.$('appVersion').textContent,createdAt:new Date().toISOString(),progress:{notebook:{version:2,scraps:p.scraps,lifetimeScraps:p.lifetimeScraps,scrapTutorialDone:p.scrapTutorialDone===true,betaPencilClaimed:p.betaPencilClaimed===true,levels:p.levels},bestWave:game.state.best,bestScore:game.api.bestRunScore(),lessons:game.api.lessonSnapshot().seen,discoveries:game.api.discoveredMonsterTypes()}},null,2);
 }
 function validateSaveBackup(text){
  if(typeof text!=='string'||text.length>limit)throw Error('Choose a Save Stevie backup smaller than 64 KB.');
@@ -15,12 +15,13 @@ function validateSaveBackup(text){
  const p=data.progress,n=p?.notebook;
  if(!object(p)||!object(n)||n.version!==2||!object(n.levels)||!integer(n.scraps)||!integer(n.lifetimeScraps)||n.lifetimeScraps<n.scraps||typeof n.scrapTutorialDone!=='boolean'||!integer(p.bestWave,1e9,1))throw Error('The backup has invalid saved-progress values. Nothing was restored.');
  if(p.bestScore!==undefined&&!integer(p.bestScore,1e12))throw Error('The backup has an invalid best score.');
+ if(n.betaPencilClaimed!==undefined&&typeof n.betaPencilClaimed!=='boolean')throw Error('Invalid beta pencil progress. Nothing was restored.');
  const perks=game.catalog.notebookPerks,levels={};
  if(Object.keys(n.levels).some(id=>!perks.some(perk=>perk.id===id)))throw Error('This backup includes upgrades this Alpha does not support.');
  for(const perk of perks){const rank=n.levels[perk.id]??0;if(!integer(rank,perk.max))throw Error('Invalid upgrade rank: '+perk.name+'. Nothing was restored.');levels[perk.id]=rank;}
  if(!object(p.lessons)||['draw','erase'].some(k=>typeof p.lessons[k]!=='boolean'))throw Error('The backup has invalid tutorial progress.');
  if(!Array.isArray(p.discoveries)||p.discoveries.length>game.catalog.monsters.length||p.discoveries.some(type=>!game.catalog.monsters.some(m=>m.type===type)))throw Error('The backup has invalid monster discoveries.');
- return {notebook:{version:2,scraps:n.scraps,lifetimeScraps:n.lifetimeScraps,scrapTutorialDone:n.scrapTutorialDone,levels},bestWave:p.bestWave,bestScore:p.bestScore??null,lessons:{draw:p.lessons.draw,erase:p.lessons.erase},discoveries:[...new Set(p.discoveries)]};
+ return {notebook:{version:2,scraps:n.scraps,lifetimeScraps:n.lifetimeScraps,scrapTutorialDone:n.scrapTutorialDone,betaPencilClaimed:n.betaPencilClaimed===true,levels},bestWave:p.bestWave,bestScore:p.bestScore??null,lessons:{draw:p.lessons.draw,erase:p.lessons.erase},discoveries:[...new Set(p.discoveries)]};
 }
 function clearBackupReview(){pending=null;game.dom.$('backupReview').hidden=true;}
 function renderSaveBackup(){
@@ -32,7 +33,7 @@ function renderSaveBackup(){
 function previewSaveBackup(text=game.dom.$('backupText').value){
  clearBackupReview();
  try{pending=validateSaveBackup(text);const p=game.api.notebookSnapshot(),ranks=levels=>Object.values(levels).reduce((sum,n)=>sum+n,0);
-  game.dom.$('backupComparison').textContent='Saved scraps: '+p.scraps+' → '+pending.notebook.scraps+'. Best wave: '+game.state.best+' → '+pending.bestWave+'. Best score: '+game.api.bestRunScore()+' → '+(pending.bestScore??game.api.bestRunScore())+'. Permanent upgrade ranks: '+ranks(p.levels)+' → '+ranks(pending.notebook.levels)+'. Discovered monsters: '+game.api.discoveredMonsterTypes().length+' → '+pending.discoveries.length+'.';
+  game.dom.$('backupComparison').textContent='Saved scraps: '+p.scraps+' → '+pending.notebook.scraps+'. Best wave: '+game.state.best+' → '+pending.bestWave+'. Best score: '+game.api.bestRunScore()+' → '+(pending.bestScore??game.api.bestRunScore())+'. Permanent upgrade ranks: '+ranks(p.levels)+' → '+ranks(pending.notebook.levels)+'. Beta starting pencil: '+(p.betaPencilClaimed?'claimed':'unclaimed')+' → '+(pending.notebook.betaPencilClaimed?'claimed':'unclaimed')+'. Discovered monsters: '+game.api.discoveredMonsterTypes().length+' → '+pending.discoveries.length+'.';
   const changes=game.dom.$('backupPerkChanges');changes.innerHTML='';for(const perk of game.catalog.notebookPerks)if(p.levels[perk.id]!==pending.notebook.levels[perk.id]){const item=document.createElement('li');item.textContent=perk.name+': rank '+p.levels[perk.id]+' → '+pending.notebook.levels[perk.id];changes.appendChild(item);}
   game.dom.$('backupReview').hidden=false;game.dom.$('confirmBackupBtn').disabled=game.state.running;
   status(game.state.running?'Backup checked. Finish your run or return to the home screen before restoring.':'Backup checked. Review the replacement above, then confirm or cancel.');return true;

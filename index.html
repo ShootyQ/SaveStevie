@@ -81,7 +81,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.54</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.55</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -234,6 +234,7 @@
       <button class="paper-slip" id="hubMonstersBtn">Monster notes</button>
       <button class="paper-slip" id="hubToolBtn">My pencil</button>
       <button class="paper-slip" id="hubNotebookBtn">Spend scraps</button>
+      <button class="paper-slip" id="hubBetaScrapsBtn">BETA Scraps</button>
       <button class="paper-slip" id="hubSettingsBtn">Settings</button>
       <button class="paper-slip" id="hubStatsBtn">My scores</button>
       <button class="paper-slip" id="hubChangelogBtn">New stuff</button>
@@ -295,6 +296,7 @@
       <p class="option-help">Adjust pencil scribbles, impacts and electric zaps. Set this to zero to mute effects without muting music.</p>
     </section>
     <section class="option-section"><h3>How you play</h3><label class="monster-setting"><input id="eraserToggle" type="checkbox"> Tap to toggle the eraser instead of holding</label><label class="monster-setting"><input id="eraserLeft" type="checkbox"> Put the eraser button on the left (handy for a right drawing hand)</label><label class="option-help eraser-size-setting" for="eraserSize">Eraser button size <select id="eraserSize"><option value="normal">Normal</option><option value="large">Large</option><option value="extra-large">Extra Large</option></select></label><p class="option-help">Hold Erase with one thumb and rub a wall with your other finger. Release to draw again. On PC, right-drag to erase. Hold WASD to aim Stevie’s paper throws; release to return to auto-aim. Erasing costs no ink and recovers a portion of the paid ink in healthy walls.</p><label class="monster-setting"><input id="optionsIntros" type="checkbox" checked> Introduce new monsters before a wave</label><p class="option-help">Motion follows your device’s reduced-motion setting. Open Tool any time to pause and inspect your pencil, effects, and synergies.</p></section>
+    <section class="option-section"><h3>Scrap projects</h3><div class="cardactions"><button class="secondary" id="optionsScrapsBtn">Spend scraps</button><button class="secondary" id="optionsBetaScrapsBtn">BETA Scraps</button></div><p class="option-help">Try Stevie’s zoomable tree. Both pages share your saved ranks and scrap bank; the original shop still works as usual.</p></section>
     <div class="options-links"><button class="secondary" id="optionsStatsBtn">Notebook stats</button><button class="secondary" id="changelogBtn">What’s new</button><button class="secondary" id="reportProblemBtn">Report a problem</button></div>
     <section class="dev-mode-section"><button class="secondary dev-mode-button" id="devModeBtn" aria-pressed="false">DEV MODE</button><p id="devModeNote" class="option-help"></p><button class="secondary" id="testLabBtn" aria-expanded="false" aria-controls="testLabPanel">Test a wave / boss</button>
       <section id="testLabPanel" class="test-lab" hidden aria-labelledby="testLabTitle">
@@ -333,6 +335,15 @@
   </div>
 </div>
 
+<div class="overlay" id="betaScrapsOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="betaTreeTitle">
+ <div class="beta-tree-book">
+  <header class="beta-tree-heading"><div><span class="section-kicker">STEVIE’S WORK IN PROGRESS</span><h2 id="betaTreeTitle">BETA Scraps</h2></div><strong><span id="betaTreeBank">0</span> scraps</strong><button id="closeBetaScrapsBtn">Back</button></header>
+  <div class="beta-tree-toolbar" aria-label="Tree viewing controls"><button id="betaZoomOut" aria-label="Zoom out">−</button><output id="betaZoomLevel">100%</output><button id="betaZoomIn" aria-label="Zoom in">+</button><button id="betaFit">Whole tree</button><button id="betaCenter">Stevie</button><span>Drag to explore · pinch or scroll to zoom</span></div>
+  <nav id="betaBranchNav" class="beta-branch-nav" aria-label="Jump to a branch"></nav>
+  <div class="beta-tree-content"><div id="betaTreeViewport" class="beta-tree-viewport" tabindex="0" aria-label="Scrap tree. Drag to move, pinch or scroll to zoom. Arrow keys move; plus and minus zoom."><div id="betaTreeBoard" class="beta-tree-board"><img class="beta-tree-background" src="assets/art/ui/beta-scrap-tree.png" alt="Stevie’s handmade tree on crumpled notebook paper" draggable="false"><div id="betaHeldTool" aria-hidden="true"></div><div id="betaTreeNodes"></div></div></div>
+  <aside class="beta-tree-details" aria-labelledby="betaNodeTitle"><span id="betaNodeTier" class="section-kicker"></span><h3 id="betaNodeTitle"></h3><div id="betaNodeArt"></div><p id="betaNodeDescription"></p><p id="betaNodeEffect"></p><p id="betaNodeRequirement"></p><button id="betaBuyNode"></button><p id="betaTreeStatus" role="status" aria-live="polite"></p><p class="beta-tree-footnote">Uses current upgrade prices and limits for this first test. Purchases apply next run. New branch abilities are still being designed.</p></aside></div>
+ </div>
+</div>
 <div class="overlay build-overlay" id="notebookOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="notebookTitle">
   <div class="cardbox build-box notebook-book">
     <div class="build-heading"><h2 id="notebookTitle">Back of the Notebook</h2><button id="closeNotebookBtn">Close</button></div>
@@ -372,6 +383,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.55 · Stevie’s beta scrap tree</h3><p>BETA Scraps opens an illustrated tree alongside the original scrap shop. Claim its free starting pencil, explore six branches, and buy existing permanent upgrades with saved scraps. Both pages share ranks and current prices. Stevie holds your upgraded drawing tool. Drag, pinch, scroll or use zoom and branch buttons to explore; Shapes and future projects remain locked.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.54 · Less crowd, more royal trouble</h3><p>From wave 8 onward, one in ten scheduled common attackers is skipped: Gribbles, Zoom Nuggets, brutes and elites. Special enemies, first introductions and boss-specific minions keep their roles. King Doodle-Doom’s adds arrive 20% more often, with up to seven alive; every third add is a Zoom Nugget.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.53 · Crayons crawl out</h3><p>Count Crayon’s wax trails branch outward in six directions, then twist toward different parts of the page; only one melts toward Stevie. Each trail takes two or three eraser passes to break, showing pale scrub marks as it wears down. Back-and-forth rubbing, leaving the trail or lifting the eraser counts another pass. Flying volleys now contain four to six minions. Raised crayons use new custom art: hands grab the wax rim, elbows haul up the body, then a belly drag and knee scramble bring them out.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.51 · Wax on, wax off… twice</h3><p>Count Crayon raises helpers from three custom wax-puddle shapes in random crayon colours. Hats peek out, little wizards wriggle through stretching wax, then hop free with a landing wobble. Each puddle needs two eraser passes: the first removes a visible chunk, and the second prevents its hatch. Lift the eraser or leave the puddle before returning for the second pass. The Count also reacts to spoiled puddles and pulls harder as he summons.</p></article>
@@ -680,6 +692,7 @@
 <script src="js/crayon-boss.js"></script>
 <script src="js/loop.js"></script>
 <script src="js/save-backup.js"></script>
+<script src="js/beta-scraps.js"></script>
 <script src="js/input.js"></script>
 <script src="game.js"></script>
 </body>

@@ -161,7 +161,7 @@ function renderBuild(){
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${game.api.paperLabel(def.name)}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
-const infoButtons={backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(game.api.wobbleRepairActive?.())return;
@@ -178,11 +178,13 @@ function openInfo(kind){
   if(kind==='build')renderBuild();
   if(kind==='compendium')game.api.renderCompendium();
   if(kind==='notebook')game.api.renderNotebook();
+  if(kind==='betaScraps')game.api.renderBetaTree();
   if(kind==='options')game.api.renderOptions();
   if(kind==='report')game.api.renderProblemReport();
   if(kind==='backup')game.api.renderSaveBackup();
   if(kind==='statistics')game.api.renderStatistics();
   game.dom.$(kind+'Overlay').style.display='grid';game.api.updateScoreHUD();
+  if(kind==='betaScraps')game.api.fitBetaTree();
   game.api.syncScrapTutorial();
   game.dom.$(infoButtons[kind]).focus?.({preventScroll:true});
   const cards=game.dom.$(kind+'Overlay').querySelector?.('.build-box');
@@ -192,7 +194,8 @@ function openInfo(kind){
 }
 function closeInfo(back=true){
   if(!activeInfo)return;
-  const kind=activeInfo,goBack=back&&returnInfo;returnInfo=null;activeInfo=null;game.state.paused=pausedBeforeInfo;
+  const kind=activeInfo,goBack=back&&returnInfo;
+  if(kind==='betaScraps')game.api.cancelBetaGesture();returnInfo=null;activeInfo=null;game.state.paused=pausedBeforeInfo;
   game.dom.$(kind+'Overlay').style.display='none';game.api.updateScoreHUD();
   if(kind==='lesson')game.api.dismissFirstLesson?.();
   if(kind==='doodle')game.api.dismissDoodleChoice?.();
