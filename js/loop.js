@@ -229,6 +229,7 @@ function update(dt){
   }
 
   if(game.api.waveFinaleActive()){game.api.updateUI();return;}
+  game.api.separateEnemies(dt);
   for(const p of game.state.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.96;p.vy*=.96}
   game.state.particles=game.state.particles.filter(p=>p.life>0);
   game.api.updateDamageNumbers(dt);
