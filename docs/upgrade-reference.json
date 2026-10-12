@@ -1,5 +1,5 @@
 {
-  "version": "0.1.38",
+  "version": "0.1.41",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -605,7 +605,7 @@
         "Repulsion Ink",
         "Frost Ink"
       ],
-      "effect": "Frozen enemies are shoved harder and stay slowed."
+      "effect": "Repelling frozen monsters sends them skating into their friends before a spin-out. Bosses resist the slide."
     },
     {
       "name": "Leech Ink",

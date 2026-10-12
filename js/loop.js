@@ -124,6 +124,7 @@ function update(dt){
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.updateEnemyFlight(e,dt))continue;
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
+    if(game.api.updateBlackIce(e,dt))continue;
     if(game.api.updateDoodleEnemy(e,dt))continue;
     if(game.api.updateChonksEscort(e,dt))continue;
     game.api.updateEnemyBehavior(e,dt);

@@ -122,7 +122,7 @@ DoodleDefender.systems.enemyTactics=function(game){
   if(s.phase==='escape'){ctx.save();const x=game.api.clamp(e.x,65,game.state.W-65),y=game.api.clamp(e.y-e.r-25,90,game.state.H-30);ctx.fillStyle='#fff8e5';ctx.strokeStyle='#566fb0';ctx.lineWidth=2;ctx.fillRect(x-61,y-17,122,27);ctx.strokeRect(x-61,y-17,122,27);ctx.fillStyle='#354775';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('We’ll be back!',x,y+1);ctx.beginPath();ctx.moveTo(x,y+10);ctx.lineTo(e.x,e.y-e.r);ctx.stroke();ctx.restore();}
  }}
  // Local neighbours only; accumulated offsets are capped so a crowd never catapults anyone.
- function crowdEligible(e){return e.hp>0&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!game.api.bossFriendHeld(e);}
+ function crowdEligible(e){return e.hp>0&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!e.blackIce&&!game.api.bossFriendHeld(e);}
  function separateEnemies(dt){
   const enemies=game.state.enemies.filter(crowdEligible),size=Math.max(64,...enemies.map(e=>e.r*2+4)),grid=new Map(),offsets=new Map();
   enemies.forEach((e,i)=>{const x=Math.floor(e.x/size),y=Math.floor(e.y/size),key=x+','+y;if(!grid.has(key))grid.set(key,[]);grid.get(key).push({e,i});offsets.set(e,{x:0,y:0});});
