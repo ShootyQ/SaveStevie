@@ -12,6 +12,13 @@ Run `node tests/validate.cjs` for gameplay/UI changes. For layout or interaction
 changes, check relevant screens at desktop and phone-sized browser viewports.
 Keep the static site dependency-free and preserve existing best-wave records.
 
+For experimental gameplay changes, prefer a quick playable pass for the user's
+own playtesting. Run required checks and targeted verification of the changed
+mechanic; avoid expanding into additional browser matrices or repeated suites
+without a failure or new change that warrants them. Use player feedback for
+fun, pacing and balance before investing in a broader polish pass. Save,
+purchase and blocking tutorial changes still need careful verification.
+
 Start each new change on a fresh descriptive feature branch from current `main`.
 Push that branch and create a pull request into `main`, providing its direct link
 for the user to review and merge. Continue on an existing feature branch when

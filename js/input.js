@@ -32,7 +32,7 @@ function changeEraserMode(change){
  if(before!==after){game.api.cancelPaperRub();game.api.cancelChonksRub();game.api.resetScrubberRub();}
  if(before!==after&&strokePointer!==null&&canPaint()){
   if(after){if(!game.api.finishLiveWall()&&game.state.currentWall)game.api.createWall(game.state.currentWall);game.state.currentWall=null;game.api.stopSoundEffects('scribble');cursor={...lastPoint,r:20};game.api.eraseWallPath(lastPoint,lastPoint,20);}
-  else{cursor=null;game.state.currentWall=game.api.canStartStroke()?[{...lastPoint}]:null;}
+  else{cursor=null;game.state.currentWall=game.api.canStartStroke(lastPoint)?[{...lastPoint}]:null;}
  }
  if(!before&&after&&window.matchMedia?.('(pointer: coarse)').matches)globalThis.navigator?.vibrate?.(12);
  syncDrawingControls();
@@ -115,7 +115,7 @@ game.dom.canvas.addEventListener('pointerdown',e=>{
  if(game.api.firstLessonActive()){game.api.lessonPointerDown(e);return;}
  if(!canPaint()||strokePointer!==null||e.button!==0&&e.button!==2)return;
  const erase=e.button===2||eraserActive();
- if(!erase&&!game.api.canStartStroke()){game.api.setMsg('Let your ink refill to 6 before drawing.');return;}
+ if(!erase&&!game.api.canStartStroke(game.api.pointerPos(e))){game.api.setMsg('Let your ink refill to 6 before drawing.');return;}
  e.preventDefault?.();strokePointer=e.pointerId;rightDrag=e.button===2;lastPoint=game.api.pointerPos(e);game.state.drawing=true;game.state.currentWall=erase?null:[lastPoint];game.dom.canvas.setPointerCapture(e.pointerId);
  if(erase){cursor={...lastPoint,r:20};game.api.eraseWallPath(lastPoint,lastPoint,20);}syncDrawingControls();
 });

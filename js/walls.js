@@ -286,7 +286,7 @@ function repairTouchedWalls(points,excluded=null){
   }
 }
 
-function canStartStroke(){const s=game.state.stats;return game.api.wobbleInfiniteInk?.()||(s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6;}
+function canStartStroke(point){if(game.api.canStartCrayonStroke(point))return true;const s=game.state.stats;return game.api.wobbleInfiniteInk?.()||(s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6;}
 
 const stitchReach=16;
 function stitchFactor(count){return [.75,.5,.25][count-1]||0;}
@@ -357,6 +357,7 @@ let liveStroke=null;
 function wallHpForLength(length,closed=false,intersections=0){return game.state.stats.wallHp*(length/180)*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);}
 function createWall(points,options={}){
   if(points.length<2)return;
+  const crayonDraft=game.api.crayonStrokeSource(points[0]);if(crayonDraft){game.api.extendCrayonStroke(crayonDraft,points);return {crayonDraft,strokePts:points.map(p=>({...p})),paid:0};}
   const start=game.state.stats.doodleStitch&&!game.api.wobbleInfiniteInk?.()?stitchEndpoint(points[0]):null;
   if(start)points=points.map((p,i)=>i===0?{...start.point}:{...p});
   let length=0;
@@ -434,7 +435,7 @@ function finishWallEffects(base,actualPaid,copies=[],points=base.pts){if(base.wo
 // than replacing them, so combat damage and remaining lifetime are retained.
 function updateLiveWall(points){
  if(!liveStroke){liveStroke=createWall(points,{live:true})||null;return liveStroke?.strokePts||points;}
- const t=liveStroke,w=t.base;
+ const t=liveStroke;if(t.crayonDraft){game.api.extendCrayonStroke(t.crayonDraft,points);t.strokePts=points.map(p=>({...p}));return t.strokePts;}const w=t.base;
  if((!game.state.walls.includes(w)||w.hp<=0)&&!game.state.enemies.some(e=>game.api.isWobbleBoss(e)&&e.hp>0&&game.api.wobblePhase(e)===1))return null;
  let remaining=t.free?Infinity:(t.cost+Math.max(0,game.state.stats.ink)+(game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0))/game.state.stats.lineCost;
  const clipped=[points[0]];let length=0;
@@ -458,12 +459,13 @@ function updateLiveWall(points){
 }
 function finishLiveWall(){
  const t=liveStroke;liveStroke=null;if(!t)return false;
+ if(t.crayonDraft){game.api.updateUI();return true;}
  const w=t.base;if(game.state.walls.includes(w)&&w.hp>0){
   finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,t.copies,t.strokePts);game.api.collectDoodleScrap(t.strokePts,t.paid);game.api.updateUI();
  }else{chargeFreehand(t.paid);game.api.connectCrayonReturn(t.strokePts,t.paid);game.api.cutWobbleStroke(t.strokePts);}
  return true;
 }
-function cancelLiveWall(){const t=liveStroke;liveStroke=null;if(t)chargeFreehand(t.paid);}
+function cancelLiveWall(){const t=liveStroke;liveStroke=null;if(t&&!t.crayonDraft)chargeFreehand(t.paid);}
 function liveWallActive(){return liveStroke!==null;}
 
 function applyInkContact(e,dt,wall=null){
