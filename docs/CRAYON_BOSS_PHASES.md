@@ -1,4 +1,4 @@
-# Count Crayon — wave 15, Alpha 0.1.49
+# Count Crayon — wave 15, Alpha 0.1.50
 
 Phase one is implemented as the repeating attack sequence below. Heat-seeking crayons are the next attack in that sequence, rather than a separate health-gated phase. Later health phases remain proposals.
 
