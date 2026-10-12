@@ -321,7 +321,7 @@ function joinStitchStart(t,end,reverse=false){
  resizeConnectorHp(t);
 }
 function finishStitch(t){
- if(t.infinite)return;
+ if(t.infinite||game.api.sneakyRouteEndpoint(t.strokePts[0]))return;
  if(!game.state.stats.doodleStitch)return;
  const excluded=new Set([t.base,...t.copies]),last=t.strokePts.at(-1),previous=t.strokePts.at(-2);
  let end=stitchEndpoint(last,excluded);
@@ -358,7 +358,7 @@ function wallHpForLength(length,closed=false,intersections=0){return game.state.
 function createWall(points,options={}){
   if(points.length<2)return;
   const crayonDraft=game.api.crayonStrokeSource(points[0]);if(crayonDraft){game.api.extendCrayonStroke(crayonDraft,points);return {crayonDraft,strokePts:points.map(p=>({...p})),paid:0};}
-  const start=game.state.stats.doodleStitch&&!game.api.wobbleInfiniteInk?.()?stitchEndpoint(points[0]):null;
+  const start=!game.api.sneakyRouteEndpoint(points[0])&&game.state.stats.doodleStitch&&!game.api.wobbleInfiniteInk?.()?stitchEndpoint(points[0]):null;
   if(start)points=points.map((p,i)=>i===0?{...start.point}:{...p});
   let length=0;
   for(let i=1;i<points.length;i++)length+=game.api.dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
@@ -423,6 +423,7 @@ function chargeFreehand(actualPaid){
 
 }
 function finishWallEffects(base,actualPaid,copies=[],points=base.pts){if(base.wobbleBumper){base.wobbleDraft=false;return}chargeFreehand(actualPaid);
+  if(game.api.redirectSneakyRoute(points)){const remove=new Set([base,...copies]);game.state.walls=game.state.walls.filter(w=>!remove.has(w));return;}
   game.api.repairTouchedWalls(points,new Set([base,...copies]));
 
   game.api.connectCrayonReturn(points,actualPaid);
