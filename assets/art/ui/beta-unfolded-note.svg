@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="520" viewBox="0 0 400 520" preserveAspectRatio="none">
+ <defs>
+  <path id="tear" d="M12 11 27 7 39 12 54 8 69 11 83 6 96 12 113 8 130 10 145 6 157 12 176 8 190 11 208 7 221 12 241 8 259 11 276 7 291 10 308 6 321 12 341 8 360 12 378 7 389 13 386 34 391 52 386 72 390 93 385 116 389 136 384 157 390 181 386 201 391 224 385 245 389 266 384 288 390 310 386 333 391 355 385 377 389 399 384 419 391 442 386 464 390 486 385 508 367 511 351 505 336 512 319 507 302 514 287 507 270 511 253 505 234 512 219 506 202 514 187 508 170 512 151 506 135 513 118 507 102 512 86 506 68 512 52 505 35 510 18 505 9 510 13 488 7 469 12 447 8 428 13 407 7 385 12 365 8 342 13 324 7 302 12 280 8 258 14 237 8 216 12 194 7 174 13 151 8 132 12 111 7 88 13 66 8 46 13 27Z"/>
+  <clipPath id="paper"><use href="#tear"/></clipPath>
+  <pattern id="lines" width="400" height="29" patternUnits="userSpaceOnUse"><path d="M0 28 400 26" stroke="#7b9eb4" stroke-width=".8" opacity=".42"/></pattern>
+  <filter id="grain"><feTurbulence type="fractalNoise" baseFrequency=".45" numOctaves="3" seed="17"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope=".1"/></feComponentTransfer><feBlend in="SourceGraphic" mode="multiply"/></filter>
+  <linearGradient id="fold"><stop stop-color="#ac9981" stop-opacity="0"/><stop offset=".45" stop-color="#ac9981" stop-opacity=".15"/><stop offset=".5" stop-color="#fffef8" stop-opacity=".8"/><stop offset=".58" stop-color="#ac9981" stop-opacity=".12"/><stop offset="1" stop-color="#ac9981" stop-opacity="0"/></linearGradient>
+ </defs>
+ <use href="#tear" fill="#f7f1df" stroke="#b6a587" stroke-width="1"/>
+ <g clip-path="url(#paper)"><path d="M0 0h400v520H0z" fill="#f7f1df" filter="url(#grain)"/><path d="M0 0h400v520H0z" fill="url(#lines)"/><path d="M31 0 29 520" stroke="#cb8c8c" stroke-width="1" opacity=".5"/>
+  <path d="m-20 85 20-20 415 329-20 21Z" fill="url(#fold)"/><path d="m194-10 20 0-83 540-20 0Z" fill="url(#fold)"/><path d="m-10 352 0-17 425-54 0 17Z" fill="url(#fold)"/>
+  <path d="m363 8 23 4-3 31Z" fill="#e2d7bd"/><path d="m363 8 18 32 2-29Z" fill="#fff9e8"/>
+ </g>
+</svg>

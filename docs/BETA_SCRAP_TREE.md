@@ -1,6 +1,6 @@
 # BETA Scraps — first playable tree
 
-Alpha 0.1.55 adds a separate menu and Settings entry alongside the original
+Alpha 0.1.56 presents a separate menu and Settings entry alongside the original
 scrap shop. This is a prototype view of the **existing** economy: one saved
 scrap bank, the same purchased ranks, costs, caps and next-run bonuses. It does
 not replace the original shop, change its tutorial or double any stats.
@@ -35,15 +35,31 @@ Scraps retain their current access; the placeholder nodes do not gate them.
 
 ## Viewing
 
-- Drag empty paper or a node to move; a drag selects/purchases nothing.
-- Mouse wheel or two-finger pinch zooms around the cursor/pinch midpoint.
-- Zoom buttons and Whole tree are available on both platforms.
-- Branch buttons jump to a readable view; Stevie jumps to Pencil Case.
-- Keyboard: Tab selects controls, arrow keys pan the focused viewport,
-  plus/minus zoom and Home fits the page. Focused off-screen nodes are brought
-  into view. Escape follows the existing dialog back behavior.
-- The details panel shows rank, actual price, effects and prerequisites.
-  Purchases use a separate deliberate button and are blocked during a run.
+The tree fills the whole viewport. There is no toolbar, shortcut strip, square
+upgrade box or side panel. Individual nodes are torn, lined paper scraps with
+school tape; their live text remains accessible and readable. A scrap opens a
+paper note on the map with its explanation and a deliberate handwritten
+purchase action. The original shop and transaction wiring are unchanged.
 
-Artwork: `assets/art/ui/beta-scrap-tree.png`, generated for this tree. Live text,
-selection states and the held tool are separate DOM elements over that image.
+- Drag the paper or a node to move; a drag selects/purchases nothing.
+- Mouse wheel or two-finger pinch zooms around the cursor/pinch midpoint.
+- Camera movement stays within the page when zoomed in.
+- Taped Back and see whole page notes remain at the map edges, including safe
+  areas on phones. The scrap bank and brief instructions are handwritten on
+  the page. There are no separate interface trays.
+- Tap a branch heading to move to that area. Tap an individual scrap to unfold
+  its details. Phone entry starts near Stevie at readable scale; see whole page
+  fits the full tree and folds the open note.
+- The details note shows rank, actual price, effects and prerequisites. Tap its
+  handwritten purchase action to buy; it remains blocked during a live run.
+- Panning or pinching folds the note. Fold this back, tapping empty paper or
+  Escape also folds it. Escape with no open note follows the dialog's normal
+  back behavior.
+- Keyboard: Tab reaches map scraps and notes; arrow keys pan the focused
+  viewport, plus/minus zoom and Home fits the page. Focused off-screen scraps
+  are brought into view.
+
+Artwork: `assets/art/ui/beta-scrap-tree.png`. Live text, selection states and
+Stevie's held tool are separate DOM elements over that image. Existing torn
+paper and tape assets supply the nodes. `assets/art/ui/beta-unfolded-note.svg`
+supplies a ragged, lined-paper detail note that scrolls naturally on touch.

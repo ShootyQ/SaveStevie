@@ -184,7 +184,7 @@ function openInfo(kind){
   if(kind==='backup')game.api.renderSaveBackup();
   if(kind==='statistics')game.api.renderStatistics();
   game.dom.$(kind+'Overlay').style.display='grid';game.api.updateScoreHUD();
-  if(kind==='betaScraps')game.api.fitBetaTree();
+  if(kind==='betaScraps')game.api.openBetaTreeView();
   game.api.syncScrapTutorial();
   game.dom.$(infoButtons[kind]).focus?.({preventScroll:true});
   const cards=game.dom.$(kind+'Overlay').querySelector?.('.build-box');
@@ -217,6 +217,7 @@ function handleInfoKey(e){
     if(e.key==='Escape'&&game.state.running&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec){e.preventDefault();openInfo('pause')}
     return;
   }
+  if(activeInfo==='betaScraps'&&game.api.handleBetaTreeKey(e))return;
   if(e.key==='Escape'){
     e.preventDefault();
     if(activeInfo==='pause'&&!game.dom.$('quitConfirmation').hidden){game.dom.$('cancelQuitBtn').onclick();return}
