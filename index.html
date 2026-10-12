@@ -81,7 +81,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.55</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.56</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -336,13 +336,17 @@
 </div>
 
 <div class="overlay" id="betaScrapsOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="betaTreeTitle">
- <div class="beta-tree-book">
-  <header class="beta-tree-heading"><div><span class="section-kicker">STEVIE’S WORK IN PROGRESS</span><h2 id="betaTreeTitle">BETA Scraps</h2></div><strong><span id="betaTreeBank">0</span> scraps</strong><button id="closeBetaScrapsBtn">Back</button></header>
-  <div class="beta-tree-toolbar" aria-label="Tree viewing controls"><button id="betaZoomOut" aria-label="Zoom out">−</button><output id="betaZoomLevel">100%</output><button id="betaZoomIn" aria-label="Zoom in">+</button><button id="betaFit">Whole tree</button><button id="betaCenter">Stevie</button><span>Drag to explore · pinch or scroll to zoom</span></div>
-  <nav id="betaBranchNav" class="beta-branch-nav" aria-label="Jump to a branch"></nav>
-  <div class="beta-tree-content"><div id="betaTreeViewport" class="beta-tree-viewport" tabindex="0" aria-label="Scrap tree. Drag to move, pinch or scroll to zoom. Arrow keys move; plus and minus zoom."><div id="betaTreeBoard" class="beta-tree-board"><img class="beta-tree-background" src="assets/art/ui/beta-scrap-tree.png" alt="Stevie’s handmade tree on crumpled notebook paper" draggable="false"><div id="betaHeldTool" aria-hidden="true"></div><div id="betaTreeNodes"></div></div></div>
-  <aside class="beta-tree-details" aria-labelledby="betaNodeTitle"><span id="betaNodeTier" class="section-kicker"></span><h3 id="betaNodeTitle"></h3><div id="betaNodeArt"></div><p id="betaNodeDescription"></p><p id="betaNodeEffect"></p><p id="betaNodeRequirement"></p><button id="betaBuyNode"></button><p id="betaTreeStatus" role="status" aria-live="polite"></p><p class="beta-tree-footnote">Uses current upgrade prices and limits for this first test. Purchases apply next run. New branch abilities are still being designed.</p></aside></div>
+ <div id="betaTreeViewport" class="beta-tree-viewport" tabindex="0" aria-label="Interactive scrap tree. Drag to explore, pinch or scroll to zoom. Arrow keys move; plus and minus zoom. Tap a scrap to unfold it.">
+  <div id="betaTreeBoard" class="beta-tree-board"><img class="beta-tree-background" src="assets/art/ui/beta-scrap-tree.png" alt="Stevie’s handmade tree on crumpled notebook paper" draggable="false"><div id="betaHeldTool" aria-hidden="true"></div><div id="betaTreeNodes"></div></div>
+  <h2 id="betaTreeTitle" class="beta-map-title">my scrap tree <small>beta!</small></h2>
+  <button id="closeBetaScrapsBtn" class="beta-map-note beta-map-back">← Back</button>
+  <p class="beta-map-wallet"><span id="betaTreeBank">0</span> scraps saved</p>
+  <p class="beta-map-hint">drag the paper · pinch / scroll to zoom<br>tap a scrap to unfold it</p>
+  <button id="betaFit" class="beta-map-note beta-map-fit">see whole page ↗</button>
  </div>
+  <section id="betaNodeNote" class="beta-node-note" aria-labelledby="betaNodeTitle" hidden>
+   <span id="betaNodeTier" class="beta-note-kicker"></span><h3 id="betaNodeTitle"></h3><div id="betaNodeArt"></div><p id="betaNodeDescription"></p><p id="betaNodeEffect"></p><p id="betaNodeRequirement"></p><button id="betaBuyNode" class="beta-paper-action"></button><p id="betaTreeStatus" role="status" aria-live="polite"></p><button id="betaFoldNote" class="beta-fold-note">fold this back ↶</button>
+  </section>
 </div>
 <div class="overlay build-overlay" id="notebookOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="notebookTitle">
   <div class="cardbox build-box notebook-book">
@@ -383,6 +387,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.56 · The paper is the menu</h3><p>BETA Scraps fills the screen with Stevie’s interactive notebook tree. Taped, torn scraps replace boxed upgrade rows. Tap a scrap to unfold its handwritten details and purchase on the map. Drag, pinch or scroll to explore; Back and see whole page are paper notes at the edges. The toolbar, branch shortcuts and side panel are gone. Saved upgrades and prices still match the original scrap shop.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.55 · Stevie’s beta scrap tree</h3><p>BETA Scraps opens an illustrated tree alongside the original scrap shop. Claim its free starting pencil, explore six branches, and buy existing permanent upgrades with saved scraps. Both pages share ranks and current prices. Stevie holds your upgraded drawing tool. Drag, pinch, scroll or use zoom and branch buttons to explore; Shapes and future projects remain locked.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.54 · Less crowd, more royal trouble</h3><p>From wave 8 onward, one in ten scheduled common attackers is skipped: Gribbles, Zoom Nuggets, brutes and elites. Special enemies, first introductions and boss-specific minions keep their roles. King Doodle-Doom’s adds arrive 20% more often, with up to seven alive; every third add is a Zoom Nugget.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.53 · Crayons crawl out</h3><p>Count Crayon’s wax trails branch outward in six directions, then twist toward different parts of the page; only one melts toward Stevie. Each trail takes two or three eraser passes to break, showing pale scrub marks as it wears down. Back-and-forth rubbing, leaving the trail or lifting the eraser counts another pass. Flying volleys now contain four to six minions. Raised crayons use new custom art: hands grab the wax rim, elbows haul up the body, then a belly drag and knee scramble bring them out.</p></article>

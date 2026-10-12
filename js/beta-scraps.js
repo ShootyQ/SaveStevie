@@ -27,8 +27,8 @@ DoodleDefender.systems.betaScraps=function(game){
   {id:'shapeLater',name:'Circles · Squares · Stars',desc:'Shape Studies is locked while we design the drawing mechanics. No scraps can be spent here yet.',later:true,tier:1}
  ];
  const nodes=new Map(definitions.map(n=>[n.id,n]));
- for(const b of branches)b.nodes.forEach((id,i)=>Object.assign(nodes.get(id),{branch:b.id,x:b.x,y:b.y+48+i*53,w:b.w}));
- let selected='start',view={scale:1,x:0,y:0},pointers=new Map(),gesture=null,suppressClick=false;
+ for(const b of branches)b.nodes.forEach((id,i)=>Object.assign(nodes.get(id),{branch:b.id,x:b.x,y:b.y+48+i*61,w:b.w}));
+ let selected='start',noteOpen=false,view={scale:1,x:0,y:0},pointers=new Map(),gesture=null,suppressClick=false;
  const thresholds={1:0,2:3,3:6,4:10};
  function betaNodeState(id){
   const n=nodes.get(id);if(!n)return null;
@@ -48,7 +48,7 @@ DoodleDefender.systems.betaScraps=function(game){
  function buyBetaNode(id){
   const state=betaNodeState(id);if(!state?.canBuy)return false;
   const bought=id==='start'?game.api.claimBetaPencil():game.api.buyNotebookPerk(state.perk.id);
-  if(bought){renderBetaTree();$('betaTreeStatus').textContent=(id==='start'?'Pencil acquired! Choose a branch.':state.perk.name+' is ready for your next run.')+(game.api.notebookSnapshot().storageIssue?' Saving is unavailable; this lasts for this visit.':'');$('betaBuyNode').focus?.({preventScroll:true});}
+  if(bought){selected=id;renderBetaTree();$('betaTreeStatus').textContent=(id==='start'?'Pencil acquired! Choose a branch.':state.perk.name+' is ready for your next run.')+(game.api.notebookSnapshot().storageIssue?' Saving is unavailable; this lasts for this visit.':'');($('betaBuyNode').disabled?$('betaFoldNote'):$('betaBuyNode')).focus?.({preventScroll:true});}
   return bought;
  }
  function renderDetails(){
@@ -58,54 +58,70 @@ DoodleDefender.systems.betaScraps=function(game){
   $('betaNodeEffect').textContent=s.perk?s.perk.effect(s.rank):n.link?'+'+p.levels.tool*8+' base wall HP from your drawing tool':'';
   $('betaNodeRequirement').textContent=s.reason||'Next: '+(s.perk?s.perk.effect(s.rank+1):'Open the beta branches');
   $('betaNodeArt').innerHTML=n.id==='tool'?game.api.toolIllustration(p.levels.tool,''):'';
-  const button=$('betaBuyNode');button.disabled=!s.canBuy;button.textContent=n.link?'View Pencil Case →':s.reason||('Buy '+(n.id==='start'?'Fresh Pencil':'rank '+(s.rank+1))+' · '+s.price+' scraps');
+  const button=$('betaBuyNode');button.disabled=!s.canBuy;button.textContent=n.link?'View Pencil Case →':s.reason||('Spend '+s.price+' scraps → '+(n.id==='start'?'grab my pencil':'rank '+(s.rank+1)));
   if(n.link){button.disabled=false;button.onclick=()=>selectBetaNode(n.link,true);}else button.onclick=()=>buyBetaNode(selected);
  }
- function selectBetaNode(id,center=false){
-  if(!nodes.has(id))return;selected=id;
-  for(const n of definitions)$('beta-node-'+n.id)?.setAttribute?.('aria-pressed',String(n.id===selected));
-  renderDetails();$('betaTreeStatus').textContent='';if(center)centerAt(nodes.get(id));
+ function positionNote(){
+  if(!noteOpen)return;
+  const n=nodes.get(selected),b=bounds(),note=$('betaNodeNote'),r=note.getBoundingClientRect(),w=r.width||Math.min(360,b.w-24),h=r.height||350;
+  const x=view.x+(n.x+n.w/2)*view.scale,y=view.y+n.y*view.scale;
+  note.style.left=Math.max(12,Math.min(b.w-w-12,x-w/2))+'px';
+  const below=y+58*view.scale+16,above=y-h-20;
+  note.style.top=Math.max(85,Math.min(b.h-h-75,below+h<b.h-75?below:above>=85?above:below))+'px';
  }
+ function foldBetaNote(){noteOpen=false;$('betaNodeNote').hidden=true;for(const n of definitions)$('beta-node-'+n.id)?.setAttribute?.('aria-pressed','false');}
+ function selectBetaNode(id,center=true){
+  if(!nodes.has(id))return;selected=id;noteOpen=true;$('betaNodeNote').hidden=false;
+  for(const n of definitions)$('beta-node-'+n.id)?.setAttribute?.('aria-pressed',String(n.id===selected));
+  renderDetails();$('betaTreeStatus').textContent='';if(center)centerAt(nodes.get(id));positionNote();
+ }
+ function openBetaTreeView(){
+  foldBetaNote();const b=bounds();
+  if(b.w>=700){fitBetaTree();return;}
+  view.scale=Math.min(1.2,Math.max(.75,b.h/height));view.x=b.w/2-width*view.scale/2;view.y=(b.h-height*view.scale)/2;applyView();
+ }
+ function handleBetaTreeKey(e){if(e.key==='Escape'&&noteOpen){e.preventDefault?.();foldBetaNote();$('beta-node-'+selected)?.focus?.({preventScroll:true});return true;}return false;}
  function renderBetaTree(){
   const p=game.api.notebookSnapshot();$('betaTreeBank').textContent=p.scraps;
   $('betaHeldTool').innerHTML=game.api.toolIllustration(p.levels.tool,'');
   const list=$('betaTreeNodes');list.innerHTML='';
-  for(const b of branches){const heading=document.createElement('h3');heading.className='beta-branch-title';heading.style.left=b.x+'px';heading.style.top=(b.y-4)+'px';heading.style.width=b.w+'px';heading.textContent=b.name;list.appendChild(heading);}
+  for(const b of branches){const heading=document.createElement('button');heading.className='beta-branch-title';heading.style.left=b.x+'px';heading.style.top=(b.y-4)+'px';heading.style.width=b.w+'px';heading.textContent=b.name;heading.onclick=()=>{foldBetaNote();centerAt(nodes.get(b.nodes[0]));};list.appendChild(heading);}
   for(const n of definitions){const state=betaNodeState(n.id),button=document.createElement('button');button.id='beta-node-'+n.id;button.className='beta-tree-node'+(n.later?' future':state.owned?' owned':state.canBuy?' available':' locked');
-   button.style.left=n.x+'px';button.style.top=n.y+'px';button.style.width=n.w+'px';button.setAttribute?.('aria-pressed',String(selected===n.id));
+   button.style.left=n.x+'px';button.style.top=n.y+'px';button.style.width=n.w+'px';button.setAttribute?.('aria-pressed',String(noteOpen&&selected===n.id));
    const title=document.createElement('strong'),label=document.createElement('span');title.textContent=n.name;label.textContent=n.later?'Coming later':n.link?'+'+p.levels.tool*8+' wall HP · view pencil':n.id==='start'?(state.owned?'✓ Claimed':'0 scraps · start here'):(state.owned?'✓ Complete':state.rank+' / '+state.max+' · '+state.price+' scraps');button.appendChild(title);button.appendChild(label);button.onclick=()=>selectBetaNode(n.id);list.appendChild(button);
   }
-  const nav=$('betaBranchNav');nav.innerHTML='';for(const b of branches){const button=document.createElement('button');button.textContent=b.name;button.onclick=()=>selectBetaNode(b.nodes[0],true);nav.appendChild(button);}
-  renderDetails();$('betaTreeStatus').textContent=p.storageIssue?'Saving is unavailable; purchases last for this visit.':'Both scrap pages share your purchases. No bonuses are counted twice.';
+  renderDetails();positionNote();$('betaTreeStatus').textContent=p.storageIssue?'Saving is unavailable; purchases last for this visit.':'Both scrap pages share your purchases. No bonuses are counted twice.';
  }
  const bounds=()=>{const r=$('betaTreeViewport').getBoundingClientRect();return {w:r.width,h:r.height,left:r.left,top:r.top};};
  function applyView(){
-  const b=bounds(),margin=60;
-  view.x=Math.min(b.w-margin,Math.max(margin-width*view.scale,view.x));view.y=Math.min(b.h-margin,Math.max(margin-height*view.scale,view.y));
-  $('betaTreeBoard').style.transform='translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';$('betaZoomLevel').textContent=Math.round(view.scale*100)+'%';
+  const b=bounds(),pageW=width*view.scale,pageH=height*view.scale;
+  view.x=pageW<=b.w?(b.w-pageW)/2:Math.max(b.w-pageW,Math.min(0,view.x));
+  view.y=pageH<=b.h?(b.h-pageH)/2:Math.max(b.h-pageH,Math.min(0,view.y));
+  $('betaTreeBoard').style.transform='translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';positionNote();
  }
- function fitBetaTree(){const b=bounds();view.scale=Math.min(1,Math.max(.12,Math.min((b.w-12)/width,(b.h-12)/height)));view.x=(b.w-width*view.scale)/2;view.y=(b.h-height*view.scale)/2;applyView();}
+ function fitBetaTree(){foldBetaNote();const b=bounds();view.scale=Math.min(1,Math.max(.12,Math.min((b.w-12)/width,(b.h-12)/height)));view.x=(b.w-width*view.scale)/2;view.y=(b.h-height*view.scale)/2;applyView();}
  function zoomBetaTree(factor,point=null){const b=bounds(),anchor=point||{x:b.w/2,y:b.h/2},old=view.scale;view.scale=Math.min(2.5,Math.max(.12,old*factor));view.x=anchor.x-(anchor.x-view.x)*view.scale/old;view.y=anchor.y-(anchor.y-view.y)*view.scale/old;applyView();}
- function centerAt(n){const b=bounds();view.scale=Math.min(1,Math.max(.6,(b.w-32)/(n.w+30)));view.x=b.w/2-(n.x+n.w/2)*view.scale;view.y=b.h/2-(n.y+24)*view.scale;applyView();}
+ function centerAt(n){const b=bounds();view.scale=Math.min(1,Math.max(.6,(b.w-32)/(n.w+30)));view.x=b.w/2-(n.x+n.w/2)*view.scale;view.y=(noteOpen?b.h*.3:b.h/2)-(n.y+24)*view.scale;applyView();}
  function betaViewSnapshot(){return {...view};}
- function cancelBetaGesture(){pointers.clear();gesture=null;}
+ function cancelBetaGesture(){const ids=[...pointers.keys()];pointers.clear();gesture=null;for(const id of ids)try{$('betaTreeViewport').releasePointerCapture?.(id);}catch{}}
  const viewport=$('betaTreeViewport');
  function relative(e){const b=bounds();return {x:e.clientX-b.left,y:e.clientY-b.top};}
  function beginGesture(){const ps=[...pointers.values()];gesture={points:ps.map(p=>({...p})),view:{...view}};}
- viewport.addEventListener('pointerdown',e=>{if(e.button>0)return;if(!pointers.size)suppressClick=false;pointers.set(e.pointerId,relative(e));beginGesture();if(pointers.size>1){suppressClick=true;for(const id of pointers.keys())viewport.setPointerCapture?.(id);}});
+ viewport.addEventListener('pointerdown',e=>{if(e.button>0)return;if(!pointers.size)suppressClick=false;if(e.target?.closest?.('.beta-node-note,.beta-map-note'))return;pointers.set(e.pointerId,relative(e));beginGesture();if(pointers.size>1){foldBetaNote();suppressClick=true;for(const id of pointers.keys())viewport.setPointerCapture?.(id);}});
  viewport.addEventListener('pointermove',e=>{
   if(!pointers.has(e.pointerId)||!gesture)return;pointers.set(e.pointerId,relative(e));const ps=[...pointers.values()];
-  if(ps.length===1){const dx=ps[0].x-gesture.points[0].x,dy=ps[0].y-gesture.points[0].y;if(Math.hypot(dx,dy)>5){suppressClick=true;viewport.setPointerCapture?.(e.pointerId);}if(!suppressClick)return;view.x=gesture.view.x+dx;view.y=gesture.view.y+dy;}
+  if(ps.length===1){const dx=ps[0].x-gesture.points[0].x,dy=ps[0].y-gesture.points[0].y;if(Math.hypot(dx,dy)>5){foldBetaNote();suppressClick=true;viewport.setPointerCapture?.(e.pointerId);}if(!suppressClick)return;view.x=gesture.view.x+dx;view.y=gesture.view.y+dy;}
   else{const a=gesture.points[0],b=gesture.points[1],startDistance=Math.hypot(a.x-b.x,a.y-b.y)||1,mid={x:(ps[0].x+ps[1].x)/2,y:(ps[0].y+ps[1].y)/2},oldMid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};view.scale=Math.min(2.5,Math.max(.12,gesture.view.scale*Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y)/startDistance));view.x=mid.x-(oldMid.x-gesture.view.x)*view.scale/gesture.view.scale;view.y=mid.y-(oldMid.y-gesture.view.y)*view.scale/gesture.view.scale;}
   e.preventDefault?.();applyView();
  });
  for(const event of ['pointerup','pointercancel','lostpointercapture'])viewport.addEventListener(event,e=>{pointers.delete(e.pointerId);if(pointers.size)beginGesture();else gesture=null;});
  viewport.addEventListener('click',e=>{if(suppressClick){e.preventDefault();e.stopPropagation();suppressClick=false;}},true);
- viewport.addEventListener('wheel',e=>{e.preventDefault();zoomBetaTree(Math.exp(-Math.max(-120,Math.min(120,e.deltaY))*.004),relative(e));},{passive:false});
+ viewport.addEventListener('wheel',e=>{if(e.target?.closest?.('.beta-node-note'))return;e.preventDefault();foldBetaNote();zoomBetaTree(Math.exp(-Math.max(-120,Math.min(120,e.deltaY))*.004),relative(e));},{passive:false});
  viewport.addEventListener('keydown',e=>{if(e.target!==viewport)return;const moves={ArrowLeft:[70,0],ArrowRight:[-70,0],ArrowUp:[0,70],ArrowDown:[0,-70]};if(moves[e.key]){e.preventDefault();view.x+=moves[e.key][0];view.y+=moves[e.key][1];applyView();}else if(['+','=','-','Home'].includes(e.key)){e.preventDefault();if(e.key==='Home')fitBetaTree();else zoomBetaTree(e.key==='-'?.8:1.25);}});
  viewport.addEventListener('focusin',e=>{const n=definitions.find(n=>'beta-node-'+n.id===e.target.id);if(!n)return;const b=bounds(),x=view.x+n.x*view.scale,y=view.y+n.y*view.scale;if(x<0||y<0||x+n.w*view.scale>b.w||y+48*view.scale>b.h)centerAt(n);});
- $('betaZoomIn').onclick=()=>zoomBetaTree(1.25);$('betaZoomOut').onclick=()=>zoomBetaTree(.8);$('betaFit').onclick=fitBetaTree;$('betaCenter').onclick=()=>selectBetaNode('tool',true);
+ $('betaFit').onclick=fitBetaTree;$('betaFoldNote').onclick=()=>{foldBetaNote();$('beta-node-'+selected)?.focus?.({preventScroll:true});};
+ viewport.addEventListener('click',e=>{if(e.target===viewport||e.target===$('betaTreeBoard'))foldBetaNote();});
  $('hubBetaScrapsBtn').onclick=$('optionsBetaScrapsBtn').onclick=()=>game.api.openInfo('betaScraps');$('optionsScrapsBtn').onclick=()=>game.api.openInfo('notebook');$('closeBetaScrapsBtn').onclick=()=>game.api.closeInfo();
  window.addEventListener('resize',()=>{if($('betaScrapsOverlay').style.display==='grid')fitBetaTree();});
- const api={betaNodeState,buyBetaNode,renderBetaTree,selectBetaNode,fitBetaTree,zoomBetaTree,betaViewSnapshot,cancelBetaGesture};Object.assign(game.api,api);return api;
+ const api={openBetaTreeView,foldBetaNote,handleBetaTreeKey,betaNodeState,buyBetaNode,renderBetaTree,selectBetaNode,fitBetaTree,zoomBetaTree,betaViewSnapshot,cancelBetaGesture};Object.assign(game.api,api);return api;
 };
