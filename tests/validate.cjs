@@ -1408,8 +1408,8 @@ console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss l
  };
  assert.ok(cageDamage(1)>0);assert.equal(cageDamage(12),cageDamage(1),'overlapping Tesla cages share one field tick');
  const g=load(true).sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;g.state.inks.electric=3;g.state.synergies.add('Rail Ink');
- for(let i=0;i<20;i++){const e=g.api.spawnEnemy(false,100+i*.5,100,'tank');e.hp=e.maxHp=1000;e.speed=0;e.charged=1}
- g.api.update(.1);assert.ok(g.state.enemies.every(e=>1000-e.hp<=g.api.electricTuning(3).fieldDps*.1+1e-8),'charged crowds do not multiply Rail damage by enemy count');
+ for(let i=0;i<20;i++){const e=g.api.spawnEnemy(false,100+i*.5,100,'tank');e.hp=e.maxHp=1000;e.speed=0;g.api.startRailSurge(e)}
+ g.api.update(.1);assert.ok(g.state.enemies.every(e=>1000-e.hp<=g.api.electricTuning(3).fieldDps*g.api.railInkTuning().waveTime+1e-8),'charged crowds do not multiply Rail damage by enemy count');
  console.log('PASS: overlapping Tesla fields and crowded Rail electricity have bounded per-enemy damage.');
 }
 
@@ -2610,6 +2610,7 @@ require('./enemy-tactics.cjs')(load);
 require('./enemy-crowds.cjs')(load);
 require('./black-ice.cjs')(load);
 require('./thermal-shock.cjs')(load);
+require('./rail-ink.cjs')(load);
 require('./wobblechomp-rework.cjs')(load);
 // Portable progress rejects bad files before writes, and restores as a transaction.
 {

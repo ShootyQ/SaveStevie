@@ -46,7 +46,7 @@ function update(dt){
 
   game.api.spawnWaveEnemies(dt);game.api.updateSneakyOrders(dt);
 
-  const teslaHits=new Set(),railHits=new Set();
+  const teslaHits=new Set();
   // Geometry-based synergies pulse continuously.
   for(const w of game.state.walls){
     if(!w.closed)continue;
@@ -90,7 +90,7 @@ function update(dt){
   game.api.updateSupportInkTime(dt);
   game.api.updatePlaguefire(dt);
   if(game.api.waveFinaleActive())return;
-  game.api.updateLaunchEffects(dt);game.api.updateThermalShockTime(dt);
+  game.api.updateLaunchEffects(dt);game.api.updateThermalShockTime(dt);game.api.updateRailInk(dt);
 
   game.api.updateBossFields(dt);
   for(const e of [...game.state.enemies]){
@@ -110,15 +110,6 @@ function update(dt){
       const decay=(game.state.synergies.has('Venom Ice')&&e.freeze>0)?.08:.28;
       e.poison=Math.max(0,e.poison-dt*decay);
       game.api.dealDamage(e,e.poisonDps*e.poison*.24*dt,'poison')
-    }
-    if(e.charged>0&&game.state.synergies.has('Rail Ink')){
-      for(const n of game.state.enemies){
-        if(n!==e&&!game.api.underPaper(n)&&!railHits.has(n)&&game.api.withinRadius(n.x,n.y,e.x,e.y,38)){
-          railHits.add(n);const damage=game.api.electricTuning(game.state.inks.electric).fieldDps*dt;game.api.dealDamage(n,damage,'electric');
-          if(!railHits.has(e)){railHits.add(e);game.api.dealDamage(e,damage*.5,'electric')}
-          if(Math.random()<1.5*dt)game.api.burst(n.x,n.y,'#91b6ff',2)
-        }
-      }
     }
     if(game.api.waveFinaleActive())break;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}

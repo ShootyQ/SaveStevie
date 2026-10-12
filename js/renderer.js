@@ -915,7 +915,7 @@ function draw(){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1
   }
   game.api.drawSupportInks();
-  game.api.drawInkStatusEffects();game.api.drawThermalShockPops();
+  game.api.drawInkStatusEffects();game.api.drawThermalShockPops();game.api.drawRailInk();
   game.api.drawInkBursts();
   game.api.drawChainLightning();
   for(const f of game.state.floaters){

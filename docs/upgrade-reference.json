@@ -1,5 +1,5 @@
 {
-  "version": "0.1.42",
+  "version": "0.1.43",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -677,7 +677,7 @@
         "Electric Ink",
         "Repulsion Ink"
       ],
-      "effect": "Repelled enemies become charged and zap nearby targets."
+      "effect": "Repelled monsters radiate a small electric surge. Electric paper-ball hits widen the active field and send fresh ripples; overlapping surges share a hit cooldown."
     },
     {
       "name": "Gravity Trap",

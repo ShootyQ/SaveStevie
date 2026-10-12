@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.42
+# Save Stevie upgrade reference — Alpha 0.1.43
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -72,7 +72,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Cannon Ink | Blast Ink + Repulsion Ink | Explosions send ordinary monsters flying, with safe landings, fall damage and a 1.2s stun. Bosses resist launches. |
 | Napalm Scribbles | Fire Ink + Blast Ink | Destroyed Fire + Blast walls leave four-second burning scribbles; overlapping patches do not stack damage. |
 | Venom Ice | Poison Ink + Frost Ink | Poison decays much more slowly while enemies are chilled. |
-| Rail Ink | Electric Ink + Repulsion Ink | Repelled enemies become charged and zap nearby targets. |
+| Rail Ink | Electric Ink + Repulsion Ink | Repelled monsters radiate a small electric surge. Electric paper-ball hits widen the active field and send fresh ripples; overlapping surges share a hit cooldown. |
 | Gravity Trap | Gravity Ink + Closed Loop | Closed loops pull nearby enemies toward their perimeter. |
 | Ring of Fire | Fire Ink + Closed Loop | Closed loops radiate heat and ignite enemies nearby. |
 | Circuit Board | Electric Ink + Architect | Wall intersections become electrical nodes. |
