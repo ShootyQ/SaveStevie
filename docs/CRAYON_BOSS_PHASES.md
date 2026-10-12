@@ -1,4 +1,4 @@
-# Count Crayon — wave 15, Alpha 0.1.50
+# Count Crayon — wave 15, Alpha 0.1.51
 
 Phase one is implemented as the repeating attack sequence below. Heat-seeking crayons are the next attack in that sequence, rather than a separate health-gated phase. Later health phases remain proposals.
 
@@ -7,7 +7,7 @@ Phase one is implemented as the repeating attack sequence below. Heat-seeking cr
 1. **Paint:** a short wind-up precedes six curved coloured routes drawn toward different fort edges in 0.32 seconds. All initial lines are harmless; exactly one carries melting wax and the other five are harmless decoys. Each new route rotates red, blue, green, purple, yellow.
 2. **Melt:** after 0.5 seconds, thick melted wax follows the active route at 190px/s. Only the melt reaching Stevie causes the 10-damage hit. Erasing the painted connection shortens its route: the melt keeps moving until the remaining endpoint, then stops without hurting Stevie. Drawing an extension continues that same melt; erased wax gives no ink refund and briefly protects the paper below from rubbing.
 3. **Quarter-turn:** after painting, Count Crayon moves roughly 90 degrees around the page over 1.6 seconds. Very short pages keep this movement on a safe flank. His body continues erasing contacted walls without explosions, healing or refunds.
-4. **Raise crayons:** he parks for 5.3 seconds and lifts a crayon. Growing pools appear after a 0.7-second chant, then crawl upward into crayon minions after 3.3 seconds. Erase a pool before it finishes rising, or fight the emerged helpers normally. Each helper has 26 HP, 75px/s movement and 7 contact damage; at most six are alive.
+4. **Raise crayons:** he parks for 5.3 seconds and lifts a crayon. Growing pools appear after a 0.7-second chant, then crawl upward into crayon minions after 3.3 seconds. Erase each pool twice before it finishes rising, or fight the emerged helpers normally. The first pass visibly removes a chunk; lift the eraser or leave its footprint before a second pass. Each spawned pool picks one of three custom shapes and one of five colours using combat RNG at creation. A hat peek, wriggle, wax stretch, hop and landing wobble explain its emergence. Each helper has 26 HP, 75px/s movement and 7 contact damage; at most six are alive.
 5. **Hunt:** a 0.8-second boss-centred warning precedes six erasable miniature crayon wizards bursting outward from his body at 260px/s for 0.65 seconds. They choose different flank waypoints, then approach Stevie while planning body-clear routes around live walls. They never phase through or damage cover; closed barriers keep them out until a gap opens. They travel at about 240px/s, deal 7 damage on fort contact and expire after eight seconds. The boss continues around Stevie during this attack, rather than returning to a corner route, then starts the next coloured fan.
 
 ## Return the matching colour
