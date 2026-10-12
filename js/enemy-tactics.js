@@ -121,17 +121,48 @@ DoodleDefender.systems.enemyTactics=function(game){
    else{const a=o.points.at(-2),b=o.points.at(-1),angle=Math.atan2(b.y-a.y,b.x-a.x);ctx.beginPath();ctx.moveTo(b.x-Math.cos(angle-.55)*13,b.y-Math.sin(angle-.55)*13);ctx.lineTo(b.x,b.y);ctx.lineTo(b.x-Math.cos(angle+.55)*13,b.y-Math.sin(angle+.55)*13);ctx.stroke();}ctx.restore();}
   if(s.phase==='escape'){ctx.save();const x=game.api.clamp(e.x,65,game.state.W-65),y=game.api.clamp(e.y-e.r-25,90,game.state.H-30);ctx.fillStyle='#fff8e5';ctx.strokeStyle='#566fb0';ctx.lineWidth=2;ctx.fillRect(x-61,y-17,122,27);ctx.strokeRect(x-61,y-17,122,27);ctx.fillStyle='#354775';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('We’ll be back!',x,y+1);ctx.beginPath();ctx.moveTo(x,y+10);ctx.lineTo(e.x,e.y-e.r);ctx.stroke();ctx.restore();}
  }}
+ // Local neighbours only; accumulated offsets are capped so a crowd never catapults anyone.
+ function crowdEligible(e){return e.hp>0&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!game.api.bossFriendHeld(e);}
+ function separateEnemies(dt){
+  const enemies=game.state.enemies.filter(crowdEligible),size=Math.max(64,...enemies.map(e=>e.r*2+4)),grid=new Map(),offsets=new Map();
+  enemies.forEach((e,i)=>{const x=Math.floor(e.x/size),y=Math.floor(e.y/size),key=x+','+y;if(!grid.has(key))grid.set(key,[]);grid.get(key).push({e,i});offsets.set(e,{x:0,y:0});});
+  for(let i=0;i<enemies.length;i++){const a=enemies[i],gx=Math.floor(a.x/size),gy=Math.floor(a.y/size);
+   for(let x=gx-1;x<=gx+1;x++)for(let y=gy-1;y<=gy+1;y++)for(const {e:b,i:j} of grid.get(x+','+y)||[]){
+    if(j<=i||game.api.doodleClingScale(a)<1||game.api.doodleClingScale(b)<1)continue;
+    let dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy),rest=(a.r+b.r)*.85;if(d>=rest)continue;
+    if(d<.001){dx=1;dy=0;d=1;}
+    const step=Math.min(rest-d,34*dt),ma=a.type==='tank'?4:Math.max(1,a.r/14),mb=b.type==='tank'?4:Math.max(1,b.r/14);
+    const oa=offsets.get(a),ob=offsets.get(b);oa.x-=dx/d*step*mb/(ma+mb);oa.y-=dy/d*step*mb/(ma+mb);ob.x+=dx/d*step*ma/(ma+mb);ob.y+=dy/d*step*ma/(ma+mb);
+   }
+  }
+  for(const [e,o] of offsets){if(e.freeze>0||e.stun>0)continue;const m=Math.hypot(o.x,o.y),scale=m?Math.min(1,24*dt/m):0,dx=o.x*scale,dy=o.y*scale,x=e.x+dx,y=e.y+dy;
+   if(x<e.r||x>game.state.W-e.r||y<e.r||y>game.state.H-e.r||game.api.touchesRefuge({...e,x,y}))continue;
+   game.api.moveEnemySafely(e,dx,dy);
+  }
+ }
  function updateDash(e,dt){
   if(e.freeze>0||e.stun>0){if(e.hurdle){delete e.hurdle;e.stun=Math.max(e.stun,.35);}return true;}
   if(e.hurdle){const h=e.hurdle;h.age=Math.min(h.duration,h.age+dt);const t=h.age/h.duration,x=h.from.x+(h.to.x-h.from.x)*t,y=h.from.y+(h.to.y-h.from.y)*t;
    const other=game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},x,y,new Set([h.wall]));
    if(other){delete e.hurdle;e.stun=.45;game.api.animateEnemyAction(e,'bounce');return true;}
-   e.x=x;e.y=y;if(t>=1){delete e.hurdle;e.dashLanding=.28;game.api.animateEnemyAction(e,'dash-land');}return true;
+   e.x=x;e.y=y;if(t>=1){delete e.hurdle;e.dashLanding=.28;e.crowdJumpCd=.7;game.api.animateEnemyAction(e,'dash-land');}return true;
   }
   e.dashLanding=Math.max(0,(e.dashLanding||0)-dt);
   if(game.api.feastHost(e))return false;
   const target=game.api.enemyTarget(e),dx=target.x-e.x,dy=target.y-e.y,d=Math.hypot(dx,dy)||1,travel=Math.min(d,e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7))*dt);
   const nx=e.x+dx/d*travel,ny=e.y+dy/d*travel,hit=game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r+1},nx,ny);
+  e.crowdJumpCd=Math.max(0,(e.crowdJumpCd||0)-dt);
+  // Look ahead in the running lane, not behind or at neighbouring lanes.
+  const obstacle=!e.crowdJumpCd&&game.state.enemies.filter(n=>n!==e&&n.hp>0&&!game.api.underPaper(n)&&!n.flight&&!n.hurdle&&!game.api.bossFriendHeld(n)).map(n=>{const ox=n.x-e.x,oy=n.y-e.y;return {n,along:(ox*dx+oy*dy)/d,side:Math.abs(ox*dy-oy*dx)/d};}).filter(o=>o.along>=0&&o.along<=e.r+o.n.r+travel+8&&o.side<e.r+o.n.r).sort((a,b)=>a.along-b.along)[0];
+  if(obstacle){
+   let leap=obstacle.along+obstacle.n.r+e.r+14,to={x:e.x+dx/d*leap,y:e.y+dy/d*leap};
+   let wall=game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},to.x,to.y)?.wall;
+   if(wall&&e.hurdlesLeft>0){const q=game.api.nearestPointOnWall(obstacle.n,wall);leap=Math.max(leap,((q.x-e.x)*dx+(q.y-e.y)*dy)/d+e.r+wall.thick/2+12);to={x:e.x+dx/d*leap,y:e.y+dy/d*leap};}
+   const b=game.api.refugeBounds(),fort=game.api.pointSegDist(game.state.player.x,game.state.player.y,e.x,e.y,to.x,to.y)<=Math.hypot(b.halfWidth,b.halfHeight)+e.r+3;
+   if((!wall||e.hurdlesLeft>0)&&!fort&&to.x>=e.r&&to.x<=game.state.W-e.r&&to.y>=e.r&&to.y<=game.state.H-e.r&&!game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},to.x,to.y,new Set(wall?[wall]:[]))){
+    if(wall)e.hurdlesLeft=0;e.hurdle={wall,from:{x:e.x,y:e.y},to,age:0,duration:.42};game.api.animateEnemyAction(e,'hurdle');game.api.floatText(e.x,e.y-e.r-15,'COMING THROUGH!','#aa6b15');return true;
+   }
+  }
   if(!hit){e.x=nx;e.y=ny;game.api.contactStevie(e);return true;}
   if(e.hurdlesLeft>0){
    const q=game.api.nearestPointOnWall(e,hit.wall),distance=Math.hypot(q.x-e.x,q.y-e.y),leap=distance+e.r+hit.wall.thick/2+12,to={x:e.x+dx/d*leap,y:e.y+dy/d*leap};
@@ -157,5 +188,5 @@ DoodleDefender.systems.enemyTactics=function(game){
   return true;
  }
  function moveEnemyTactics(dx,dy){for(const s of leaders.values()){s.nav=null;if(s.exit){s.exit.x+=dx;s.exit.y+=dy;}if(s.order)for(const p of s.order.points){p.x+=dx;p.y+=dy;}}for(const e of game.state.enemies){if(e.hurdle)for(const p of [e.hurdle.from,e.hurdle.to]){p.x+=dx;p.y+=dy;}if(e.sniperErase){e.sniperErase.x+=dx;e.sniperErase.y+=dy;}}}
- const api={updateSneakyOrders,sneakFollowTarget,eraseSneakyRoutes,sneakySnapshot,drawSneakyRoutes,moveEnemyTactics,resetEnemyTactics,updateSneaky,updateDash,eraseSniperLane,sneakRoute};Object.assign(game.api,api);return api;
+ const api={separateEnemies,updateSneakyOrders,sneakFollowTarget,eraseSneakyRoutes,sneakySnapshot,drawSneakyRoutes,moveEnemyTactics,resetEnemyTactics,updateSneaky,updateDash,eraseSniperLane,sneakRoute};Object.assign(game.api,api);return api;
 };
