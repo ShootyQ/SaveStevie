@@ -286,7 +286,8 @@ function repairTouchedWalls(points,excluded=null){
   }
 }
 
-function canStartStroke(point){if(game.api.canStartCrayonStroke(point))return true;const s=game.state.stats;return game.api.wobbleInfiniteInk?.()||(s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6;}
+function strokeInkScale(point){return point&&game.api.sneakyRouteEndpoint(point) ? .15 : 1;}
+function canStartStroke(point){if(game.api.canStartCrayonStroke(point))return true;const s=game.state.stats;return game.api.wobbleInfiniteInk?.()||(s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6*strokeInkScale(point);}
 
 const stitchReach=16;
 function stitchFactor(count){return [.75,.5,.25][count-1]||0;}
@@ -321,7 +322,7 @@ function joinStitchStart(t,end,reverse=false){
  resizeConnectorHp(t);
 }
 function finishStitch(t){
- if(t.infinite||game.api.sneakyRouteEndpoint(t.strokePts[0]))return;
+ if(t.infinite||t.inkScale<1||game.api.sneakyRouteEndpoint(t.strokePts[0]))return;
  if(!game.state.stats.doodleStitch)return;
  const excluded=new Set([t.base,...t.copies]),last=t.strokePts.at(-1),previous=t.strokePts.at(-2);
  let end=stitchEndpoint(last,excluded);
@@ -330,7 +331,7 @@ function finishStitch(t){
  if(!end)return;
  const extra=Math.hypot(previous.x-end.point.x,previous.y-end.point.y)-Math.hypot(previous.x-last.x,previous.y-last.y),length=t.length+extra;
  if(length<8)return;
- const cost=Math.max(6,length*game.state.stats.lineCost),delta=t.free?0:Math.max(0,cost-t.cost),bank=game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0;
+ const cost=Math.max(6,length*game.state.stats.lineCost)*(t.inkScale||1),delta=t.free?0:Math.max(0,cost-t.cost),bank=game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0;
  if(delta>game.state.stats.ink+bank+1e-8)return; // A snapped bridge must be affordable too.
  const used=Math.min(delta,bank),paid=delta-used;game.state.stats.freehandBank-=used;game.state.stats.ink=Math.max(0,game.state.stats.ink-paid);t.paid+=paid;t.base.eraseInk+=paid;t.cost=Math.max(t.cost,cost);t.length=length;
  t.strokePts=t.strokePts.map((p,i)=>i===t.strokePts.length-1?{...end.point}:p);
@@ -364,15 +365,16 @@ function createWall(points,options={}){
   for(let i=1;i<points.length;i++)length+=game.api.dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
   if(length<8)return;
 
+  const inkScale=strokeInkScale(points[0]),minimumInk=6*inkScale;
   const infinite=game.api.wobbleInfiniteInk?.();
   const firstStrokeFree=infinite||game.state.stats.firstFree&&!game.state.stats.firstStrokeUsed;
   const bank=!infinite&&game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0;
   const available=Math.max(0,game.state.stats.ink)+bank;
-  // Every paid stroke costs at least six ink. Never manufacture a two-point
-  // wall when the available ink cannot pay for those points.
-  if(!firstStrokeFree&&available<6){game.api.setMsg('Let your ink refill to 6 before drawing.');return;}
-  if(!firstStrokeFree&&length*game.state.stats.lineCost>available){
-    let remaining=available/game.state.stats.lineCost;
+  // Ordinary strokes cost at least six ink; forged routes scale that minimum
+  // and every added segment to 15%. Clip using the same price paid below.
+  if(!firstStrokeFree&&available<minimumInk){game.api.setMsg('Let your ink refill to 6 before drawing.');return;}
+  if(!firstStrokeFree&&length*game.state.stats.lineCost*inkScale>available){
+    let remaining=available/(game.state.stats.lineCost*inkScale);
     const clipped=[points[0]];
     for(let i=1;i<points.length&&remaining>0;i++){
       const a=points[i-1],b=points[i],segment=game.api.dist(a.x,a.y,b.x,b.y);
@@ -383,7 +385,7 @@ function createWall(points,options={}){
     for(let i=1;i<points.length;i++)length+=game.api.dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
     if(points.length<2||length<8)return;
   }
-  const cost=Math.max(6,length*game.state.stats.lineCost);
+  const cost=Math.max(6,length*game.state.stats.lineCost)*inkScale;
   const bankUsed=firstStrokeFree?0:Math.min(cost,bank);
   const actualPaid=firstStrokeFree?0:Math.max(0,cost-bankUsed);
   game.state.stats.freehandBank-=bankUsed;
@@ -399,13 +401,13 @@ function createWall(points,options={}){
   // long strokes cost more ink but can take much more punishment.
   const hp=game.api.wallHpForLength(length,closed,intersections);
   const life=infinite?Math.min(10,game.state.stats.wallLife):game.state.stats.wallLife;
-  const base={eraseInk:actualPaid,...(infinite?{wobbleBumper:true,wobbleDraft:!!options.live}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
+  const base={eraseInk:actualPaid,...(inkScale<1?{sneakyDraft:true}:{}),...(infinite?{wobbleBumper:true,wobbleDraft:!!options.live}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
   game.state.walls.push(base);
 
   const copies=[];
   // One gesture creates one wall, even with retired flags in a legacy loadout.
   if(infinite){const bumpers=game.state.walls.filter(w=>w.wobbleBumper);if(bumpers.length>40){const remove=new Set(bumpers.slice(0,bumpers.length-40));game.state.walls=game.state.walls.filter(w=>!remove.has(w))}}
-  const t={base,copies,free:firstStrokeFree,infinite,cost,paid:actualPaid,length,strokePts:base.pts,prefix:null,oldMaxHp:0,oldIntersections:0,newIntersections:intersections,factor:1};
+  const t={base,copies,inkScale,free:firstStrokeFree,infinite,cost,paid:actualPaid,length,strokePts:base.pts,prefix:null,oldMaxHp:0,oldIntersections:0,newIntersections:intersections,factor:1};
   if(start)joinStitchStart(t,start);
   if(!options.live){finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,copies,t.strokePts);game.api.collectDoodleScrap(t.strokePts,t.paid);}
   game.api.updateUI();return t;
@@ -423,7 +425,7 @@ function chargeFreehand(actualPaid){
 
 }
 function finishWallEffects(base,actualPaid,copies=[],points=base.pts){if(base.wobbleBumper){base.wobbleDraft=false;return}chargeFreehand(actualPaid);
-  if(game.api.redirectSneakyRoute(points)){const remove=new Set([base,...copies]);game.state.walls=game.state.walls.filter(w=>!remove.has(w));return;}
+  if(base.sneakyDraft){game.api.redirectSneakyRoute(points);const remove=new Set([base,...copies]);game.state.walls=game.state.walls.filter(w=>!remove.has(w));return;}
   game.api.repairTouchedWalls(points,new Set([base,...copies]));
 
   game.api.connectCrayonReturn(points,actualPaid);
@@ -438,14 +440,14 @@ function updateLiveWall(points){
  if(!liveStroke){liveStroke=createWall(points,{live:true})||null;return liveStroke?.strokePts||points;}
  const t=liveStroke;if(t.crayonDraft){game.api.extendCrayonStroke(t.crayonDraft,points);t.strokePts=points.map(p=>({...p}));return t.strokePts;}const w=t.base;
  if((!game.state.walls.includes(w)||w.hp<=0)&&!game.state.enemies.some(e=>game.api.isWobbleBoss(e)&&e.hp>0&&game.api.wobblePhase(e)===1))return null;
- let remaining=t.free?Infinity:(t.cost+Math.max(0,game.state.stats.ink)+(game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0))/game.state.stats.lineCost;
+ let remaining=t.free?Infinity:(t.cost+Math.max(0,game.state.stats.ink)+(game.state.stats.freehandLevel>0?game.state.stats.freehandBank:0))/(game.state.stats.lineCost*(t.inkScale||1));
  const clipped=[points[0]];let length=0;
  for(let i=1;i<points.length&&remaining>0;i++){
   const a=points[i-1],b=points[i],d=game.api.dist(a.x,a.y,b.x,b.y);if(d<=0)continue;
   const used=Math.min(d,remaining);clipped.push({x:a.x+(b.x-a.x)*used/d,y:a.y+(b.y-a.y)*used/d});length+=used;remaining-=used;
  }
  if(length<=t.length)return t.strokePts;
- const cost=Math.max(6,length*game.state.stats.lineCost),delta=t.free?0:Math.max(0,cost-t.cost),bank=game.state.stats.freehandLevel>0?Math.min(delta,game.state.stats.freehandBank):0,paid=delta-bank;
+ const cost=Math.max(6,length*game.state.stats.lineCost)*(t.inkScale||1),delta=t.free?0:Math.max(0,cost-t.cost),bank=game.state.stats.freehandLevel>0?Math.min(delta,game.state.stats.freehandBank):0,paid=delta-bank;
  game.state.stats.freehandBank-=bank;game.state.stats.ink=t.infinite?game.state.stats.maxInk:Math.max(0,game.state.stats.ink-paid);
  t.cost=cost;t.paid+=paid;t.length=length;w.eraseInk+=paid;
  const excluded=new Set([w,...t.copies]);t.newIntersections=Math.max(t.newIntersections,game.api.countIntersections(clipped,excluded));
@@ -466,7 +468,7 @@ function finishLiveWall(){
  }else{chargeFreehand(t.paid);game.api.connectCrayonReturn(t.strokePts,t.paid);game.api.cutWobbleStroke(t.strokePts);}
  return true;
 }
-function cancelLiveWall(){const t=liveStroke;liveStroke=null;if(t&&!t.crayonDraft)chargeFreehand(t.paid);}
+function cancelLiveWall(){const t=liveStroke;liveStroke=null;if(t&&!t.crayonDraft){chargeFreehand(t.paid);if(t.base.sneakyDraft)game.state.walls=game.state.walls.filter(w=>w!==t.base);}}
 function liveWallActive(){return liveStroke!==null;}
 
 function applyInkContact(e,dt,wall=null){
