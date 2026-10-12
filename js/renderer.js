@@ -401,8 +401,8 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   // Damage never fades the body: health belongs in the separate bar.
   if(e.type==='splitter'||e.type==='mini'&&e.twicey)drawTwiceyBody(ctx,e,left,top,width,height,colors);
   else if(e.type==='tank'&&e.chonks&&!motionReduced)drawChonksBody(ctx,tintedDoodle(name,colors),e,left,top,width,height);
-  else {ctx.save();if(e.type==='sniper'&&e.sniperErase)ctx.scale(-1,1);ctx.drawImage(tintedDoodle(name,colors),left,top,width,height);ctx.restore();}
-  if(e.type==='sniper'&&e.sniperErase){ctx.save();const q=e.sniperErase;ctx.strokeStyle='#b77991';ctx.lineWidth=2;ctx.beginPath();ctx.arc(q.x-e.x,q.y-e.y,10,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,q.age/.7));ctx.stroke();for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(q.x-e.x-4+i*5,q.y-e.y+8);ctx.lineTo(q.x-e.x-2+i*5,q.y-e.y+11);ctx.stroke();}ctx.restore();}
+  else ctx.drawImage(tintedDoodle(name,colors),left,top,width,height);
+  if(e.type==='sniper'&&e.sniperErase){const x=left+width*.88,y=top+height*.49;ctx.fillStyle='#dc8ea9';ctx.strokeStyle='#29343b';ctx.lineWidth=1;ctx.fillRect(x-1,y-3,7,6);ctx.strokeRect(x-1,y-3,7,6);ctx.strokeStyle='#f9d8e5';ctx.beginPath();ctx.moveTo(x,y-1);ctx.lineTo(x+4,y-1);ctx.stroke();}
   if(e.waveBoss&&e.type==='stapler'&&e.hp/e.maxHp<=.35){ctx.strokeStyle='#4b3228';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,-e.r);ctx.lineTo(2,-e.r+12);ctx.lineTo(-4,-e.r+18);ctx.lineTo(8,-e.r+30);ctx.stroke()}
   ctx.restore();
   game.api.drawBlackIceLimbs(e);game.api.drawThermalShockEnemy(e);
@@ -750,11 +750,12 @@ function draw(){
   game.api.drawWallExplosions();
   drawSplitAnimations();
   for(const e of game.state.enemies){
-    if(game.api.underPaper(e)||e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0||e.shootCd>.6||
-      !game.api.sniperCanAim(e))continue;
-    const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#3562be';ctx.lineWidth=2;ctx.globalAlpha=.65;
-    ctx.setLineDash([5,7]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();
-    ctx.setLineDash([]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();
+    if(game.api.underPaper(e)||e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0)continue;
+    const erase=e.sniperErase,regular=!erase&&e.shootCd<=.6&&(e.sniperFollowUp>0||game.api.sniperCanAim(e));if(!erase&&!regular)continue;
+    const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle=erase?'#a54e78':'#3562be';ctx.lineWidth=2;ctx.globalAlpha=.65;
+    ctx.setLineDash(erase?[3,8]:[5,7]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();
+    if(erase){ctx.fillStyle='#a54e78';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('ERASER FIRST',e.x,e.y-e.r-12);}ctx.restore();
   }
   game.api.drawBossEncounters();game.api.drawWobbleFields();game.api.drawCrayonBossFields();
   for(const n of game.state.enemies)if(n.type==='jamling'&&n.jamWarning>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b34936';ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,n.r+5,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.jamWarning/1.3));ctx.stroke();ctx.restore()}
@@ -774,6 +775,11 @@ function draw(){
         if(!motionReduced)ctx.rotate(shot.life*5);ctx.beginPath();for(let i=0;i<7;i++){const a=i*Math.PI*2/6,r=i%2?3:5;if(i)ctx.lineTo(Math.cos(a)*r,Math.sin(a)*r);else ctx.moveTo(Math.cos(a)*r,Math.sin(a)*r)}ctx.fill();ctx.strokeStyle='#edb5c6';ctx.lineWidth=1;ctx.stroke();
       }else{ctx.beginPath();ctx.arc(-4,0,4,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ce8fbc';ctx.beginPath();ctx.arc(-5,-1,1.3,0,Math.PI*2);ctx.fill()}
       ctx.restore();continue;
+    }
+    if(shot.eraser){
+      ctx.strokeStyle='#bd7092';ctx.globalAlpha=.25;ctx.lineWidth=1;ctx.setLineDash([2,6]);ctx.beginPath();ctx.arc(0,0,shot.eraseRadius,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+      if(!motionReduced){ctx.strokeStyle='#ba7d97';ctx.globalAlpha=.45;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-39,-4);ctx.lineTo(-30,-4);ctx.moveTo(-36,4);ctx.lineTo(-27,4);ctx.stroke();ctx.globalAlpha=1;}
+      ctx.fillStyle='#efc84c';ctx.strokeStyle='#29343b';ctx.lineWidth=1.2;ctx.fillRect(-26,-3,21,6);ctx.strokeRect(-26,-3,21,6);ctx.fillStyle='#d8b884';ctx.beginPath();ctx.moveTo(-32,0);ctx.lineTo(-26,-3);ctx.lineTo(-26,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#dc8ea9';ctx.fillRect(-5,-5,7,10);ctx.strokeRect(-5,-5,7,10);ctx.strokeStyle='#f9d8e5';ctx.beginPath();ctx.moveTo(-3,-3);ctx.lineTo(0,-3);ctx.stroke();ctx.restore();continue;
     }
     // Normal enemy shots are Pew-Pew's pencils. Keep the nib on the unchanged
     // collision point; the shaft trails behind it just like the old arrow.

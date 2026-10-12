@@ -117,8 +117,8 @@ function update(dt){
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
     if(game.api.thermalPressureActive(e))continue;
     if(game.api.updateBlackIce(e,dt))continue;
-    if(game.api.updateDoodleEnemy(e,dt))continue;
     if(game.api.updateChonksEscort(e,dt))continue;
+    if(!game.api.hasChonksShield(e)&&game.api.updateDoodleEnemy(e,dt))continue;
     game.api.updateEnemyBehavior(e,dt);
     game.api.applySynergies(e,dt);
     if(game.api.thermalPressureActive(e))continue;
