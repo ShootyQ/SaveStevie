@@ -81,7 +81,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.47</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.48</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -227,8 +227,8 @@
   </div>
 </div>
 <div class="overlay build-overlay" id="hubOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="hubTitle">
-  <div class="cardbox build-box notebook-hub">
-    <div class="build-heading"><h2 class="paper-slip" id="hubTitle">My notebook</h2><button class="paper-slip" id="closeHubBtn">Back</button></div>
+  <div class="cardbox build-box notebook-hub"><div class="notebook-sheet">
+    <div class="build-heading"><h2 id="hubTitle">My notebook</h2><button class="paper-slip" id="closeHubBtn">Back</button></div>
     <p class="hub-note">Saved scraps: <span id="splashScraps">0</span></p>
     <nav class="hub-pages" aria-label="Notebook pages">
       <button class="paper-slip" id="hubMonstersBtn">Monster notes</button>
@@ -238,7 +238,7 @@
       <button class="paper-slip" id="hubStatsBtn">My scores</button>
       <button class="paper-slip" id="hubChangelogBtn">New stuff</button>
     </nav>
-  </div>
+  </div></div>
 </div>
 <div class="overlay build-overlay" id="pauseOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
   <div class="cardbox pause-book"><div class="recess-page">
@@ -372,6 +372,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.48 · A notebook worth keeping</h3><p>My notebook now shares Recess’s crumpled-paper sheet and taped scraps. Hand-drawn notes decorate the page buttons, while the title and saved scraps stay readable on the backing paper. Desktop and phone layouts keep every notebook page within reach.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.47 · Stolen plans and a melting wizard</h3><p>Erase a gap in Sneaky’s dotted route, then draw from its green endpoint to send followers down your own paid detour. Without a replacement they hesitate, then pick up the remaining route. Forged directions become green dots; Sneaky notices after four seconds and replaces the plan after six. Followers turn back after being fooled rather than leaving the wave. Count Crayon now waddles with moving boots and a floppy hat, sweeps his crayon to paint, pulls upward to raise helpers, and melts through three body stages as his wax travels. A matching return inflates him with an offended wobble; his shield stays steady.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.46 · Free-flowing crayon wax</h3><p>Drawing from a disconnected crayon route uses its wax rather than your ink—even with an empty tank. Melting wax keeps moving along the route after you cut it, stops at its endpoint, and follows extensions as you draw them. Returns use the same travelling melt. Count Crayon now uses five distinct colours with matching shield symbols: red, blue, green, purple and yellow.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.45 · Count Crayon colours outside the shield</h3><p>Count Crayon quickly paints a harmless route, then melted wax follows it toward Stevie. Cut the connection, then use his stationary crayon-raising window to draw the wax into a matching shield colour. Wrong-colour attempts keep the stub available; each new route changes colour. Growing pools raise little crayon monsters unless erased first. His next attack sends erasable heat-seeking crayons in from both sides, steering around your walls instead of drawing trails.</p></article>

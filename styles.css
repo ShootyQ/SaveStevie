@@ -1209,3 +1209,36 @@ html.native-app .panel:has(.score-hud:not([hidden])) #hitNotice{bottom:calc(var(
 /* Hidden Android system bars must not leave a stale status-bar-sized HUD gap.
    Browser safe-area insets still protect actual display cutouts. */
 html.native-app{--native-top:env(safe-area-inset-top,0px)}
+
+/* The notebook hub belongs on the same rescued sheet as Recess. */
+#hubOverlay{background:rgba(20,27,32,.78)}
+#hubOverlay .notebook-hub{isolation:isolate;width:min(100%,650px);max-height:calc(100dvh - 28px);padding:0;border-radius:0;filter:drop-shadow(3px 9px 5px #0005);scrollbar-width:thin;scrollbar-color:#a69a80 transparent}
+#hubOverlay .notebook-sheet{position:relative;isolation:isolate;padding:42px 55px 48px}
+#hubOverlay .notebook-sheet::before{content:'';position:absolute;inset:0;z-index:-1;background:url('assets/art/ui/recess-sheet.svg') center/100% 100% no-repeat;pointer-events:none}
+#hubOverlay .build-heading{position:static;display:flex;align-items:center;gap:20px;margin:0;padding:0;background:none}
+#hubOverlay #hubTitle{flex:1;padding:0;margin:0;font-size:48px;line-height:1.15;color:#315eb3;transform:rotate(-2deg)}
+#hubOverlay #closeHubBtn{--tilt:2deg;min-width:76px;min-height:54px;padding:13px 15px;font-size:24px;color:#413d35}
+#hubOverlay .hub-note{margin:14px 0 32px;padding:0;font-size:21px;line-height:1.3;color:#514e42}
+#hubOverlay .hub-pages{gap:28px 23px;padding:0 3px}
+#hubOverlay .hub-pages button{--scrap-art:none;min-height:88px;padding:25px 12px;font-size:27px;line-height:1.2;overflow:visible;color:#315d8c}
+#hubOverlay button.paper-slip::before{background:var(--scrap-art,none) center/100% 100% no-repeat,url('assets/art/ui/menu-scrap.png') center/100% 145% no-repeat;filter:drop-shadow(1px 3px 2px #65583f55)}
+#hubOverlay button.paper-slip::after{content:'';position:absolute;top:-10px;left:calc(50% - 30px);width:60px;height:20px;background:url('assets/art/ui/tape.svg') center/100% 100% no-repeat;transform:rotate(-8deg);opacity:.9;pointer-events:none}
+#hubOverlay .hub-pages button:nth-child(even)::after{transform:rotate(9deg)}
+#hubOverlay .hub-pages button:hover::before{filter:drop-shadow(1px 4px 3px #65583f77) brightness(1.04)}
+#hubOverlay button.paper-slip:focus-visible{outline:3px dashed #315eb3;outline-offset:5px}
+#hubOverlay #hubMonstersBtn{--scrap-art:url('assets/art/ui/recess-monster.svg');--tilt:-1.8deg}
+#hubOverlay #hubToolBtn{--scrap-art:url('assets/art/ui/recess-pencil.svg');color:#56683c}
+#hubOverlay #hubNotebookBtn{--scrap-art:url('assets/art/ui/recess-love.svg');color:#85453f}
+#hubOverlay #hubSettingsBtn{--scrap-art:url('assets/art/ui/recess-clean.svg');color:#56683c}
+#hubOverlay #hubStatsBtn{--scrap-art:url('assets/art/ui/recess-math.svg');--tilt:-1deg}
+#hubOverlay #hubChangelogBtn{--scrap-art:url('assets/art/ui/recess-home.svg');color:#85453f}
+@media(max-width:480px){
+ #hubOverlay .notebook-sheet{padding:34px 29px 38px}
+ #hubOverlay .build-heading{gap:12px}
+ #hubOverlay #hubTitle{font-size:35px}
+ #hubOverlay #closeHubBtn{min-width:63px;font-size:22px;padding:12px 10px}
+ #hubOverlay .hub-note{font-size:19px;margin:14px 0 27px}
+ #hubOverlay .hub-pages{gap:25px 17px}
+ #hubOverlay .hub-pages button{min-height:91px;padding:25px 6px;font-size:23px}
+}
+@media(max-height:650px){#hubOverlay .notebook-sheet{padding-top:27px;padding-bottom:35px}#hubOverlay .hub-pages{gap:23px 17px}#hubOverlay .hub-pages button{min-height:78px;padding-block:22px}#hubOverlay .hub-note{margin-block:12px 25px}}
