@@ -7,3 +7,19 @@ Six monsters can receive stable formation slots. Every eligible monster actually
 Pew-Pew still seeks a reachable clear firing position when alone. If none exists, a 0.7-second pink warning precedes an eraser-first pencil travelling at 240px/s. Its swept brush opens each intersected wall, rather than stopping or reflecting. Brush radius is Chonks's body radius plus eight pixels; convoy shots add sideways clearance for the follower's firing offset. These projectiles have a small erasable collision body, give no ink refund and never damage Stevie. A faint pink brush outline shows their wider wall-clearing reach.
 
 After the eraser throw, Pew-Pew waits 1.5 seconds before a normal damaging pencil. Redrawing cover returns that pencil as before. Shield-convoy Pew-Pews prioritise lane clearing over repositioning and run all attack clocks 20% faster (1.25-second follow-up). Regular projectiles have enough lifetime to reach Stevie from a distant clearing shot; normal shots at the existing 90–260px range retain their two-second lifetime. Freeze/stun cancels an unthrown eraser warning and pauses the follow-up clock. Existing manual pause, projectile erasing and wave cleanup apply.
+# Stealing Sneaky's directions (Alpha 0.1.47)
+
+Erasing a dotted route leaves one visible gap and a green upstream endpoint.
+Followers reaching the gap hesitate for 0.65 seconds, then cross to the next
+remaining dots if their bodies fit. Drawing a normal paid stroke from within
+26 pixels of the green endpoint replaces the downstream route with green
+dotted directions. The stroke becomes instructions rather than a player wall;
+it cannot merge with an existing wall through Doodle Stitch.
+
+The forged path remains inside the page. Followers obey wall collisions,
+hesitate briefly at its end, and return to ordinary targeting. Sneaky notices
+after four seconds with “WHO DREW THIS?!” and retires the forgery after six
+seconds. Scout leaders then prepare another plan; a leader already committed
+on his third run continues attacking. Forgery never removes an enemy or awards
+kill/escape credit. Unmodified blocked/erased directions still retire after
+ten seconds; paused game updates freeze these clocks.

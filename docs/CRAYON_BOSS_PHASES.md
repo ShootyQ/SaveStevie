@@ -1,4 +1,4 @@
-# Count Crayon — wave 15, Alpha 0.1.46
+# Count Crayon — wave 15, Alpha 0.1.47
 
 Phase one is implemented as the repeating attack sequence below. Heat-seeking crayons are the next attack in that sequence, rather than a separate health-gated phase. Later health phases remain proposals.
 
@@ -31,3 +31,7 @@ Until later health phases are implemented, defeating this sequence completes wav
 - Emergency Touch-Up: ghost outlines warn which erased section will return.
 
 These are proposals, not shipped abilities.
+
+## Acting and melting
+
+Count Crayon uses his existing artwork as separate hat, torso and boot sections. Walking alternates boot steps and sways the robe and hat; painting sweeps a coloured crayon; raising helpers makes an upward pulling gesture. Travelling melt progressively collapses the body through full wizard, slumped torso and head-and-hat stages, with coloured wax beneath. A matching return restores his body with a short inflated wobble. The shield and combat radius stay fixed. Animation follows paused combat clocks, never changes combat state or uses RNG, and reduced motion keeps the readable body stages without wobbling.

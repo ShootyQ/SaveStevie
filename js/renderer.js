@@ -401,6 +401,7 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   if(profileDirections[e.type]&&!name.startsWith('fast-frame-')&&enemyFacing(e)!==profileDirections[e.type])ctx.scale(-1,1);
   // Damage never fades the body: health belongs in the separate bar.
   if(e.type==='splitter'||e.type==='mini'&&e.twicey)drawTwiceyBody(ctx,e,left,top,width,height,colors);
+  else if(game.api.isCrayonBoss(e)&&game.api.drawCrayonBody(e,tintedDoodle(name,colors),left,top,width,height)){}
   else if(e.type==='tank'&&e.chonks&&!motionReduced)drawChonksBody(ctx,tintedDoodle(name,colors),e,left,top,width,height);
   else ctx.drawImage(tintedDoodle(name,colors),left,top,width,height);
   if(e.type==='sniper'&&e.sniperErase){const x=left+width*.88,y=top+height*.49;ctx.fillStyle='#dc8ea9';ctx.strokeStyle='#29343b';ctx.lineWidth=1;ctx.fillRect(x-1,y-3,7,6);ctx.strokeRect(x-1,y-3,7,6);ctx.strokeStyle='#f9d8e5';ctx.beginPath();ctx.moveTo(x,y-1);ctx.lineTo(x+4,y-1);ctx.stroke();}

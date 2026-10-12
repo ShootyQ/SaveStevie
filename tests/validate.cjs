@@ -2680,7 +2680,7 @@ require('./wobblechomp-rework.cjs')(load);
  g.api.updateSneaky(e,1.1);assert.equal(g.api.sneakySnapshot()[0].runs,1,'sealed route does not get a fake new plan');assert.equal(g.api.sneakySnapshot()[0].route,null);
  ({g,e,ally}=setupScout());g.api.updateSneakyOrders(1);let order=g.api.sneakySnapshot()[0].route;const a=order.points[0],b=order.points[1],mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2},ink=g.state.stats.ink;
  assert.equal(g.api.eraseWallPath(mid,mid,20,{enemy:true}),false,'enemy erasers cannot cancel instructions');g.state.paused=true;assert.equal(g.api.eraseWallPath(mid,mid,20),false);g.state.paused=false;
- assert(g.api.eraseWallPath(mid,mid,20));assert.equal(g.api.sneakySnapshot()[0].route.erased,true);assert.equal(g.api.enemyTarget(ally),g.state.player);assert.equal(g.state.stats.ink,ink,'enemy instructions are not refundable player walls');g.api.updateSneakyOrders(9.8);assert(g.api.sneakySnapshot()[0].route);g.api.updateSneakyOrders(.3);assert.equal(g.api.sneakySnapshot()[0].route,null);
+ assert(g.api.eraseWallPath(mid,mid,20));assert.equal(g.api.sneakySnapshot()[0].route.erased,true);assert.notEqual(g.api.enemyTarget(ally),g.state.player,'erased gap remains a recoverable direction');assert.equal(g.state.stats.ink,ink,'enemy instructions are not refundable player walls');g.api.updateSneakyOrders(9.8);assert(g.api.sneakySnapshot()[0].route);g.api.updateSneakyOrders(.3);assert.equal(g.api.sneakySnapshot()[0].route,null);
  ({g,e,ally}=setupScout());for(let i=0;i<2;i++){g.api.updateSneakyOrders(8.1);g.api.updateSneaky(e,1.1);}assert.equal(g.api.sneakySnapshot()[0].runs,3);assert.equal(g.api.sneakySnapshot()[0].phase,'join');g.api.updateSneakyOrders(1);const distance=Math.hypot(e.x-g.state.player.x,e.y-g.state.player.y);g.api.updateSneaky(e,1);assert(Math.hypot(e.x-g.state.player.x,e.y-g.state.player.y)<distance,'third run commits toward Stevie');g.api.updateSneakyOrders(10);g.api.updateSneaky(e,1);assert.equal(g.api.sneakySnapshot()[0].runs,3,'no fourth scouting run');
  ({g,e,ally}=setupScout());g.state.enemies=[e];g.api.updateSneaky(e,.1);assert.equal(g.api.sneakySnapshot()[0].phase,'scout','spawn gaps are not a wave victory');g.state.timeLeft=0;e.x=755;e.y=300;g.api.update(.01);assert.equal(g.api.sneakySnapshot()[0].phase,'escape');assert(g.state.enemies.includes(e),'bubble and escape happen before victory');
  const escapeState=JSON.stringify(g.api.sneakySnapshot()),position={x:e.x,y:e.y},kills=g.state.kills,waveKills=g.state.waveKills;g.state.paused=true;g.api.update(1);assert.equal(JSON.stringify(g.api.sneakySnapshot()),escapeState);assert.deepEqual({x:e.x,y:e.y},position);g.state.paused=false;
@@ -2700,3 +2700,5 @@ require('./chonks-cap-doom-retreat.cjs')(load);
 require('./paper-ball-balance.cjs')(load);
 
 require('./crayon-boss.cjs')(load);
+
+require('./stolen-routes.cjs')(load);

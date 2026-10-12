@@ -48,13 +48,15 @@ DoodleDefender.systems.enemyTactics=function(game){
   game.api.animateEnemyAction(e,'aim',goal);game.api.floatText(e.x,e.y-e.r-16,s.runs===3?'MY TURN!':'THIS WAY!','#566fb0');
  }
  function eligible(e){return e.hp>0&&!e.waveBoss&&recruits.has(e.type)&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!game.api.feastHost(e)&&!game.api.doodleTarget(e);}
- function orderValid(owner,order){return owner.hp>0&&game.state.enemies.includes(owner)&&leaders.get(owner)?.order===order&&!order.erased;}
+ function orderValid(owner,order){return owner.hp>0&&game.state.enemies.includes(owner)&&leaders.get(owner)?.order===order&&(!order.erased||!!order.gap);}
  function updateSneakyOrders(dt){
   for(const [e,s] of leaders){
    if(e.hp<=0||!game.state.enemies.includes(e)){leaders.delete(e);continue;}
    if(e.freeze>0||e.stun>0||game.api.underPaper(e)||e.flight)continue;
    s.speech=Math.max(0,s.speech-dt);const o=s.order;if(!o)continue;
    o.age+=dt;o.audit-=dt;
+   for(const n of game.state.enemies){const f=followers.get(n);if(f?.order===o&&f.wait>0)f.wait=Math.max(0,f.wait-dt);}
+   if(o.hijacked){o.hijackAge+=dt;if(o.hijackAge>=4&&!o.noticed){o.noticed=true;s.speech=2;game.api.floatText(e.x,e.y-e.r-20,'WHO DREW THIS?!','#956038');}if(o.hijackAge>=6){retireOrder(s);s.wait=.5;game.api.floatText(e.x,e.y-e.r-16,'NEW PLAN!','#566fb0');continue;}}
    if(o.audit<=0){o.audit=.25;const blocked=o.erased||o.points.some((p,i)=>i&&!clear({...e,r:o.clearance},o.points[i-1],p));if(blocked){if(!o.blocked)game.api.floatText(e.x,e.y-e.r-16,'ROUTE BLOCKED!','#a87853');o.blocked=Math.max(.001,o.blocked);}else o.blocked=0;}
    if(o.blocked)o.blocked+=dt;
    if(o.blocked>=10||(!o.blocked&&o.age>=8)){
@@ -73,10 +75,16 @@ DoodleDefender.systems.enemyTactics=function(game){
  function sneakFollowTarget(e){
   if(e.type==='flanker'&&leaders.get(e)?.phase==='escape')return leaders.get(e).exit;
   const f=followers.get(e);if(!f)return null;
-  if(!eligible(e)||!orderValid(f.owner,f.order)||f.order.blocked){followers.delete(e);return null;}
+  if(!eligible(e)||!orderValid(f.owner,f.order)||f.order.blocked&&!f.order.gap){followers.delete(e);return null;}
   if(f.join){if(Math.hypot(e.x-f.join.x,e.y-f.join.y)>Math.max(8,e.r*.6)&&clear(e,e,f.join))return f.join;delete f.join;}
+  const gap=f.order.gap;if(gap&&!f.gapPassed&&f.index<=gap.index+1){
+   if(!clear(e,e,gap.start)){followers.delete(e);return null;}
+   if(Math.hypot(e.x-gap.start.x,e.y-gap.start.y)>Math.max(8,e.r*.6))return gap.start;
+   if(f.wait===undefined){f.wait=.65;return {x:e.x,y:e.y};}if(f.wait>0)return {x:e.x,y:e.y};f.gapPassed=true;f.index=gap.index+1;
+   if(clear(e,e,gap.end)){f.join={...gap.end};return f.join;}
+  }
   const pts=f.order.points;while(f.index<pts.length&&Math.hypot(e.x-pts[f.index].x,e.y-pts[f.index].y)<Math.max(8,e.r*.6))f.index++;
-  if(f.index>=pts.length||!clear(e,e,pts[f.index])){followers.delete(e);return null;}return pts[f.index];
+  if(f.index>=pts.length){if(f.order.hijacked){if(!f.endWait){f.endWait=true;f.wait=.8;game.api.floatText(e.x,e.y-e.r-12,'...HUH?','#278f79');}if(f.wait>0)return {x:e.x,y:e.y};}followers.delete(e);return null;}if(!clear(e,e,pts[f.index])){followers.delete(e);return null;}const p=pts[f.index];if(f.order.hijacked)return {x:game.api.clamp(p.x,e.r+18,game.state.W-e.r-18),y:game.api.clamp(p.y,90+e.r,game.state.H-e.r-35)};return p;
  }
  function navigate(e,s,goal,dt,speed=1){
   let nav=s.nav;const walls=game.state.walls.filter(live);
@@ -117,12 +125,18 @@ DoodleDefender.systems.enemyTactics=function(game){
   if(Math.hypot(e.x-corners[s.corner].x,e.y-corners[s.corner].y)<12){s.corner=(s.corner+1)%4;s.nav=null;}
   navigate(e,s,corners[s.corner],dt,1.35);return true;
  }
- function eraseSneakyRoutes(a,b,r){let changed=false;for(const [e,s] of leaders){const o=s.order;if(!o||o.erased)continue;if(o.points.some((p,i)=>i&&(game.api.segmentIntersection(a,b,o.points[i-1],p)||Math.min(game.api.pointSegDist(p.x,p.y,a.x,a.y,b.x,b.y),game.api.pointSegDist(o.points[i-1].x,o.points[i-1].y,a.x,a.y,b.x,b.y),game.api.pointSegDist(a.x,a.y,o.points[i-1].x,o.points[i-1].y,p.x,p.y),game.api.pointSegDist(b.x,b.y,o.points[i-1].x,o.points[i-1].y,p.x,p.y))<=r+3))){o.erased=true;o.blocked=.001;changed=true;game.api.floatText(e.x,e.y-e.r-16,'HEY! MY PLAN!','#566fb0');}}return changed;}
- function sneakySnapshot(){return [...leaders].filter(([e])=>game.state.enemies.includes(e)&&e.hp>0).map(([e,s])=>({x:e.x,y:e.y,runs:s.runs,phase:s.phase,speech:s.speech,route:s.order?{id:s.order.id,age:s.order.age,blocked:s.order.blocked,erased:s.order.erased,points:s.order.points.map(p=>({...p})),followers:game.state.enemies.filter(n=>followers.get(n)?.order===s.order&&n!==e).length}:null}));}
+ function eraseSneakyRoutes(a,b,r){let changed=false;for(const [e,s] of leaders){const o=s.order;if(!o||o.gap||o.erased)continue;for(let i=1;i<o.points.length;i++){const p=o.points[i-1],q=o.points[i],cuts=game.api.eraserIntervals(p,q,a,b,r+3);if(!cuts.length)continue;const [lo,hi]=cuts[0],at=t=>({x:p.x+(q.x-p.x)*t,y:p.y+(q.y-p.y)*t});o.gap={index:i-1,start:at(lo),end:at(hi)};o.erased=true;o.blocked=.001;changed=true;game.api.floatText(e.x,e.y-e.r-16,'HEY! MY PLAN!','#566fb0');break;}}return changed;}
+ function sneakyRouteEndpoint(p){return [...leaders.values()].some(s=>s.order?.gap&&Math.hypot(p.x-s.order.gap.start.x,p.y-s.order.gap.start.y)<=26);}
+ function redirectSneakyRoute(points){if(!game.api.paperActive()||points.length<2)return false;for(const [e,s] of leaders){const o=s.order,gap=o?.gap;if(!gap||Math.hypot(points[0].x-gap.start.x,points[0].y-gap.start.y)>26)continue;
+  const path=points.filter((p,i)=>i===0||i===points.length-1||i%Math.max(1,Math.ceil(points.length/160))===0).map(p=>({x:game.api.clamp(p.x,60,game.state.W-60),y:game.api.clamp(p.y,120,game.state.H-70)}));o.points=o.points.slice(0,gap.index+1).concat([{...gap.start}],path.slice(1));o.gap=null;o.erased=false;o.blocked=0;o.age=1;o.hijacked=true;o.hijackAge=0;o.noticed=false;
+  for(const n of game.state.enemies){const f=followers.get(n);if(f?.order!==o)continue;delete f.join;delete f.wait;delete f.gapPassed;f.index=Math.min(f.index,o.points.length-1);}
+  game.api.floatText(points[0].x,points[0].y-18,'NEW DIRECTIONS!','#278f79');return true;}return false;}
+ function sneakySnapshot(){return [...leaders].filter(([e])=>game.state.enemies.includes(e)&&e.hp>0).map(([e,s])=>({x:e.x,y:e.y,runs:s.runs,phase:s.phase,speech:s.speech,route:s.order?{id:s.order.id,age:s.order.age,blocked:s.order.blocked,erased:s.order.erased,hijacked:!!s.order.hijacked,hijackAge:s.order.hijackAge||0,gap:s.order.gap?{...s.order.gap}:null,points:s.order.points.map(p=>({...p})),followers:game.state.enemies.filter(n=>followers.get(n)?.order===s.order&&n!==e).length}:null}));}
  function drawSneakyRoutes(){const ctx=game.dom.ctx;for(const [e,s] of leaders){if(e.hp<=0||!game.state.enemies.includes(e)||game.api.underPaper(e))continue;const o=s.order;
-  if(o&&!o.erased){ctx.save();ctx.strokeStyle=o.blocked?'#a87853':'#566fb0';ctx.lineWidth=3;ctx.globalAlpha=o.age<.9?.4:.8;ctx.setLineDash([2,9]);const length=o.points.reduce((sum,p,i)=>sum+(i?Math.hypot(p.x-o.points[i-1].x,p.y-o.points[i-1].y):0),0);let left=length*Math.min(1,o.age/.9),tip=o.points[0];ctx.beginPath();ctx.moveTo(tip.x,tip.y);for(let i=1;i<o.points.length&&left>0;i++){const a=o.points[i-1],b=o.points[i],distance=Math.hypot(b.x-a.x,b.y-a.y),t=Math.min(1,left/(distance||1));tip={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};ctx.lineTo(tip.x,tip.y);left-=distance;}ctx.stroke();ctx.setLineDash([]);
+  if(o&&(!o.erased||o.gap)){ctx.save();ctx.strokeStyle=o.hijacked?'#278f79':o.blocked?'#a87853':'#566fb0';ctx.lineWidth=3;ctx.globalAlpha=o.age<.9?.4:.8;ctx.setLineDash([2,9]);const length=o.points.reduce((sum,p,i)=>sum+(i?Math.hypot(p.x-o.points[i-1].x,p.y-o.points[i-1].y):0),0);let left=length*Math.min(1,o.age/.9),tip=o.points[0];ctx.beginPath();ctx.moveTo(tip.x,tip.y);for(let i=1;i<o.points.length&&left>0;i++){const a=o.points[i-1],b=o.points[i],distance=Math.hypot(b.x-a.x,b.y-a.y),t=Math.min(1,left/(distance||1));tip={x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};if(o.gap?.index===i-1){ctx.lineTo(o.gap.start.x,o.gap.start.y);ctx.moveTo(o.gap.end.x,o.gap.end.y);}ctx.lineTo(tip.x,tip.y);left-=distance;}ctx.stroke();ctx.setLineDash([]);if(o.gap){ctx.fillStyle='#278f79';ctx.beginPath();ctx.arc(o.gap.start.x,o.gap.start.y,6,0,Math.PI*2);ctx.fill();}
    if(o.age<.9&&!game.api.enemyMotionReduced()){ctx.translate(tip.x,tip.y);ctx.rotate(-.6);ctx.fillStyle='#f4bf4e';ctx.fillRect(-3,-25,6,19);ctx.fillStyle='#343638';ctx.beginPath();ctx.moveTo(-3,-6);ctx.lineTo(0,0);ctx.lineTo(3,-6);ctx.fill();}
    else{const a=o.points.at(-2),b=o.points.at(-1),angle=Math.atan2(b.y-a.y,b.x-a.x);ctx.beginPath();ctx.moveTo(b.x-Math.cos(angle-.55)*13,b.y-Math.sin(angle-.55)*13);ctx.lineTo(b.x,b.y);ctx.lineTo(b.x-Math.cos(angle+.55)*13,b.y-Math.sin(angle+.55)*13);ctx.stroke();}ctx.restore();}
+  if(o?.noticed&&s.speech>0){ctx.save();ctx.fillStyle='#fff8e5';ctx.strokeStyle='#956038';ctx.lineWidth=1.5;const x=game.api.clamp(e.x,75,game.state.W-75),y=Math.max(100,e.y-e.r-28);ctx.fillRect(x-73,y-18,146,26);ctx.strokeRect(x-73,y-18,146,26);ctx.fillStyle='#956038';ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillText('WHO DREW THIS?!',x,y);ctx.restore();}
   if(s.phase==='escape'){ctx.save();const x=game.api.clamp(e.x,65,game.state.W-65),y=game.api.clamp(e.y-e.r-25,90,game.state.H-30);ctx.fillStyle='#fff8e5';ctx.strokeStyle='#566fb0';ctx.lineWidth=2;ctx.fillRect(x-61,y-17,122,27);ctx.strokeRect(x-61,y-17,122,27);ctx.fillStyle='#354775';ctx.font='bold 13px sans-serif';ctx.textAlign='center';ctx.fillText('We’ll be back!',x,y+1);ctx.beginPath();ctx.moveTo(x,y+10);ctx.lineTo(e.x,e.y-e.r);ctx.stroke();ctx.restore();}
  }}
  // Local neighbours only; accumulated offsets are capped so a crowd never catapults anyone.
@@ -188,6 +202,6 @@ DoodleDefender.systems.enemyTactics=function(game){
   if(aim.age>=.7){game.api.fireSniper(e,true,host);delete e.sniperErase;e.sniperFollowUp=1.5;e.shootCd=1.5;}
   return true;
  }
- function moveEnemyTactics(dx,dy){for(const s of leaders.values()){s.nav=null;if(s.exit){s.exit.x+=dx;s.exit.y+=dy;}if(s.order)for(const p of s.order.points){p.x+=dx;p.y+=dy;}}for(const e of game.state.enemies){if(e.hurdle)for(const p of [e.hurdle.from,e.hurdle.to]){p.x+=dx;p.y+=dy;}if(e.sniperErase){e.sniperErase.x+=dx;e.sniperErase.y+=dy;}}}
- const api={separateEnemies,updateSneakyOrders,sneakFollowTarget,eraseSneakyRoutes,sneakySnapshot,drawSneakyRoutes,moveEnemyTactics,resetEnemyTactics,updateSneaky,updateDash,eraseSniperLane,sneakRoute};Object.assign(game.api,api);return api;
+ function moveEnemyTactics(dx,dy){for(const s of leaders.values()){s.nav=null;if(s.exit){s.exit.x+=dx;s.exit.y+=dy;}if(s.order?.gap)for(const p of [s.order.gap.start,s.order.gap.end]){p.x+=dx;p.y+=dy;}if(s.order)for(const p of s.order.points){p.x+=dx;p.y+=dy;}}for(const e of game.state.enemies){if(e.hurdle)for(const p of [e.hurdle.from,e.hurdle.to]){p.x+=dx;p.y+=dy;}if(e.sniperErase){e.sniperErase.x+=dx;e.sniperErase.y+=dy;}}}
+ const api={separateEnemies,updateSneakyOrders,sneakFollowTarget,eraseSneakyRoutes,sneakyRouteEndpoint,redirectSneakyRoute,sneakySnapshot,drawSneakyRoutes,moveEnemyTactics,resetEnemyTactics,updateSneaky,updateDash,eraseSniperLane,sneakRoute};Object.assign(game.api,api);return api;
 };
