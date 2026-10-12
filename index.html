@@ -81,7 +81,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.57</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.58</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -337,7 +337,7 @@
 
 <div class="overlay" id="betaScrapsOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="betaTreeTitle">
  <div id="betaTreeViewport" class="beta-tree-viewport" tabindex="0" aria-label="Interactive scrap tree. Drag to explore, pinch or scroll to zoom. Arrow keys move; plus and minus zoom. Tap a scrap to unfold it.">
-  <div id="betaTreeBoard" class="beta-tree-board"><img class="beta-tree-background" src="assets/art/ui/beta-scrap-tree.png" alt="Stevie’s handmade tree on crumpled notebook paper" draggable="false"><div id="betaHeldTool" aria-hidden="true"></div><div id="betaTreeNodes"></div></div>
+  <div id="betaTreeBoard" class="beta-tree-board"><img class="beta-tree-background" src="assets/art/ui/recess-sheet.svg" alt="Crumpled paper for Stevie’s skill paths" draggable="false"><svg id="betaTreePaths" viewBox="0 0 1536 1200" aria-hidden="true"></svg><img class="beta-tree-stevie" src="assets/art/stevie.png" alt="Stevie" draggable="false"><div id="betaHeldTool" aria-hidden="true"></div><p class="beta-path-lesson">one rank opens the next scrap ↓</p><div id="betaTreeNodes"></div></div>
   <h2 id="betaTreeTitle" class="beta-map-title">my scrap tree <small>beta!</small></h2>
   <button id="closeBetaScrapsBtn" class="beta-map-note beta-map-back">← Back</button>
   <p class="beta-map-wallet"><span id="betaTreeBank">0</span> scraps saved</p>
@@ -387,6 +387,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.58 · Follow the scraps</h3><p>The beta tree has quiet crumpled paper, four clear paths and drawn connections. Claim the free pencil, then buy one rank to open the next connected skill: Better Scrunch leads to Doodle Notes, Bigger Ink Well to Refill Practice, and Band-Aids to Starter Eraser. Pencil Case supplies the Fort Building path’s wall durability. Future ink and shapes are two small later scraps. Existing purchases carry across; the original shop and prices stay the same.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.57 · Paper that follows your finger</h3><p>Dragging the beta tree from a scrap now keeps following your finger instead of stopping after the first movement. Touch taps tolerate small finger movements; touching a scrap no longer moves the camera before selection. Phone entry starts closer with taller scrap targets, and resizing keeps your zoom and location. Pinch-to-drag transitions and paper-note scrolling remain supported.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.56 · The paper is the menu</h3><p>BETA Scraps fills the screen with Stevie’s interactive notebook tree. Taped, torn scraps replace boxed upgrade rows. Tap a scrap to unfold its handwritten details and purchase on the map. Drag, pinch or scroll to explore; Back and see whole page are paper notes at the edges. The toolbar, branch shortcuts and side panel are gone. Saved upgrades and prices still match the original scrap shop.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.55 · Stevie’s beta scrap tree</h3><p>BETA Scraps opens an illustrated tree alongside the original scrap shop. Claim its free starting pencil, explore six branches, and buy existing permanent upgrades with saved scraps. Both pages share ranks and current prices. Stevie holds your upgraded drawing tool. Drag, pinch, scroll or use zoom and branch buttons to explore; Shapes and future projects remain locked.</p></article>
