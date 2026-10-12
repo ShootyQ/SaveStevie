@@ -126,7 +126,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
   game.state.enemies.push(enemy);game.api.discoverMonster(type);
-  if(forceBoss){const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
+  if(forceBoss){const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;if(game.api.isCrayonBoss?.(enemy))game.api.initCrayonBoss(enemy);bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
   return enemy;
 }
 
@@ -136,7 +136,7 @@ function killEnemy(e){
   game.state.kills++;game.state.waveKills++;game.api.awardKillScore(e);
   game.api.awardKillScraps(e);game.api.dropDoodleScrap(e);
   game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
-  if(e.waveBoss){if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
+  if(e.waveBoss){if(game.api.isCrayonBoss?.(e))game.api.clearCrayonBoss(e);if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
   game.api.burst(e.x,e.y,e.color,12);
 
   if(e.type==='eraser') game.state.finalBossDefeated=true;
@@ -501,7 +501,7 @@ function updateBossArrival(dt){
  if(!arrival&&game.state.wave===5){beginFirstBossIntro();return}
  if(!arrival&&game.state.wave===10&&game.api.bossTypeForWave()==='wobblechomp'){beginWobbleIntro();return}
  if(!arrival&&game.state.wave===10){const p=game.api.stapleEntrancePoint();game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);arrival={...p,stapleIntro:true,age:0,left:3.3};bossPhase='entrance';game.api.playSound('bossEnter');game.api.setMsg('Something is chewing through the notebook…');return}
- if(!arrival){arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
+ if(!arrival){arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===15?' is coming. Get ready to erase wax and draw colour back!':game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
  arrival.left=Math.max(0,arrival.left-dt);
  if(arrival.left===0){const point={...arrival};game.api.spawnEnemy(true,point.x,point.y);game.api.setMsg('Boss encounter. Defeat '+game.api.monsterName(game.api.bossTypeForWave())+'!')}
 }

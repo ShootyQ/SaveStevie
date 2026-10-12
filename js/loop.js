@@ -99,7 +99,7 @@ function update(dt){
     if(!game.state.enemies.includes(e))continue;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.abilityImmune(e)){for(const k of ['burn','burnDps','poison','poisonDps','freeze','stun','charged','gravitySlow'])e[k]=0;}
-    game.api.clearWobbleControl(e);
+    game.api.clearWobbleControl(e);game.api.clearCrayonControl(e);
     if(game.api.updatePaperEnemy(e,dt))continue;
     if(e.shockRest>0)e.shockRest=Math.max(0,e.shockRest-dt);e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
@@ -132,6 +132,7 @@ function update(dt){
 
     if(game.api.waveFinaleActive())break;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
+    if(game.api.isCrayonBoss(e)){game.api.clearCrayonControl(e);continue;}
     if(game.api.isWobbleBoss(e)){game.api.keepWobbleDistance(e);continue;}
     if(e.type==='wobble-tooth'&&game.api.updateWobbleTooth(e,dt))continue;
     if(game.api.isStapleBoss(e)){

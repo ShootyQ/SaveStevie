@@ -1225,6 +1225,8 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  const b=g.api.bossBrain(king);b.cd=0;g.api.updateBossEncounter(king,.01);assert.equal(g.state.enemyShots.length,0);assert.equal(b.cast.kind,'mirror-orb');g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemyShots.length,1);assert.equal(g.state.enemyShots[0].bossKind,'mirror-orb');
  b.turn=2;b.cd=0;g.api.updateBossEncounter(king,.01);g.api.updateBossEncounter(king,1.2);assert.equal(g.state.enemies.filter(e=>e.bossOwner===king).length,0,'first boss has no summons');
  b.cd=0;g.api.updateBossEncounter(king,.01);king.freeze=1;g.api.updateBossEncounter(king,.1);assert.equal(b.cast,null,'freeze cancels queued attack');king.freeze=0;
+ // Retain the retired rune encounter as an explicit legacy fixture.
+ g.api.isCrayonBoss=()=>false;
  const crayon=setup(15);crayon.x=200;crayon.y=200;const cb=g.api.bossBrain(crayon);cb.cd=0;g.api.updateBossEncounter(crayon,.01);g.api.updateBossEncounter(crayon,1.2);assert.equal(g.api.bossEncounterSnapshot().marks[0].kind,'red');const m=g.api.bossEncounterSnapshot().marks[0];g.state.walls=[{pts:[{x:m.x-50,y:m.y},{x:m.x+50,y:m.y}],thick:8,hp:100}];g.api.updateBossFields(1.2);assert.equal(g.api.bossEncounterSnapshot().marks.length,0,'wall cancels rune');
  g.state.walls=[];cb.turn=2;cb.cd=0;g.api.updateBossEncounter(crayon,.01);g.api.updateBossEncounter(crayon,1.2);g.api.updateBossFields(1.2);assert.equal(g.state.enemies.filter(e=>e.bossOwner===crayon).length,2,'green rune hatches real adds');
  const eraser=setup(20);eraser.x=200;eraser.y=200;const near={pts:[{x:250,y:100},{x:250,y:300}],thick:8,hp:200,maxHp:200},far={pts:[{x:650,y:100},{x:650,y:300}],thick:8,hp:200};g.state.walls=[near,far];const eb=g.api.bossBrain(eraser);eb.cd=0;g.api.updateBossEncounter(eraser,.01);assert.equal(near.hp,200);g.api.updateBossEncounter(eraser,1.2);assert.equal(near.hp,135);assert.equal(far.hp,200);assert.equal(g.api.bossDamageMultiplier(eraser),1.35);
@@ -1235,7 +1237,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  console.log('PASS: boss-only arrivals, enclosure exposure/removal, warned volleys, capped summons, freeze interruption, rune cancellation/hatching, targeted Eraser swipe/clean/recovery, double charge, pure drawing and pause.');
 }
 {
- const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=15;g.api.startWave();const e=g.api.spawnEnemy(true,200,200),b=g.api.bossBrain(e);b.turn=1;b.cd=0;g.api.updateBossEncounter(e,.01);g.api.updateBossEncounter(e,1.2);const ink=g.state.stats.ink;g.api.updateBossFields(1.2);assert.equal(g.state.stats.ink,ink,'warning deals no early ink drain');g.api.updateBossFields(.5);assert.equal(g.state.stats.ink,ink-2,'blue rune drains actual ink');assert.equal(g.state.ink,undefined);
+ const g=load(true).sandbox.testGame;g.api.isCrayonBoss=()=>false; /* retired coloured-rune fixture */ g.api.resetRun();g.state.wave=15;g.api.startWave();const e=g.api.spawnEnemy(true,200,200),b=g.api.bossBrain(e);b.turn=1;b.cd=0;g.api.updateBossEncounter(e,.01);g.api.updateBossEncounter(e,1.2);const ink=g.state.stats.ink;g.api.updateBossFields(1.2);assert.equal(g.state.stats.ink,ink,'warning deals no early ink drain');g.api.updateBossFields(.5);assert.equal(g.state.stats.ink,ink-2,'blue rune drains actual ink');assert.equal(g.state.ink,undefined);
  const snap=g.api.bossEncounterSnapshot(),dx=20,dy=10;g.api.moveBossFields(dx,dy);assert.equal(g.api.bossEncounterSnapshot().marks[0].x,snap.marks[0].x+dx);
  g.state.walls=[{pts:[{x:290,y:100},{x:290,y:600}],thick:8,hp:1000,maxHp:1000}];e.x=250;e.y=300;b.moveCd=0;const target=g.api.bossTarget(e);assert.ok(g.api.bouncePathClear(e,target.x,target.y),'boss chooses a reachable route around a barrier');
  g.state.player.hp=75;g.state.walls=[];e.x=g.state.player.x;e.y=g.state.player.y;g.api.contactStevie(e);assert.equal(g.state.player.hp,75,'Crayon contact warns before damage');g.api.updateBossEncounter(e,1.31);g.api.contactStevie(e);assert.ok(g.state.enemies.includes(e));assert.equal(g.state.player.hp,65);assert.ok(Math.hypot(e.x-g.state.player.x,e.y-g.state.player.y)>e.r+g.state.player.r,'boss backs off after contact');
@@ -1941,6 +1943,8 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  const g=loadLegacyStaple().sandbox.testGame;g.api.resetRun();const p=g.state.player,e=g.api.spawnEnemy(false,p.x-65,p.y,'jamling');const hp=p.hp;
  assert.equal(g.api.jamlingContact(e,.8),true);assert.equal(p.hp,hp);g.api.createWall([{x:p.x-60,y:p.y-15},{x:p.x-60,y:p.y+15}]);g.api.jamlingContact(e,.6);assert.equal(p.hp,hp,'plain paid cover interrupts a minion snap');assert.equal(e.jamWarning,0);
  g.state.walls=[];g.api.jamlingContact(e,1.31);assert.equal(p.hp,hp-5);assert.ok(!g.state.enemies.includes(e));
+ // Retired Count Crayon contact/rune regression; the new phase has dedicated tests.
+ g.api.isCrayonBoss=()=>false;
  g.api.resetRun();g.state.wave=15;g.api.startWave();const c=g.api.spawnEnemy(true,p.x-170,p.y),b=g.api.bossBrain(c);b.cd=0;g.api.updateBossEncounter(c,.01);g.api.updateBossEncounter(c,1.2);
  g.api.createWall([{x:p.x-100,y:p.y-25},{x:p.x-100,y:p.y+25}]);g.api.updateBossFields(2);assert.equal(g.api.bossEncounterSnapshot().marks.length,0);assert.equal(p.hp,p.maxHp,'cover outside fort cancels the rune aimed inside it');
  c.x=p.x-80;c.y=p.y;g.state.walls=[];g.api.updateBossEncounter(c,.7);g.api.contactStevie(c);assert.equal(p.hp,p.maxHp,'Crayon contact warns first');g.api.createWall([{x:p.x-70,y:p.y-25},{x:p.x-70,y:p.y+25}]);g.api.updateBossEncounter(c,.7);g.api.contactStevie(c);assert.equal(p.hp,p.maxHp,'cover cancels Crayon contact windup');
@@ -2689,3 +2693,5 @@ require('./chonks-shield.cjs')(load);
 require('./chonks-cap-doom-retreat.cjs')(load);
 
 require('./paper-ball-balance.cjs')(load);
+
+require('./crayon-boss.cjs')(load);

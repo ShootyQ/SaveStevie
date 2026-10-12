@@ -386,6 +386,7 @@ function tintedDoodle(name,colors){
   return canvas;
 }
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
+ if(game.api.drawCrayonWaxling(e))return true;
   const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
   const framed=/^(grunt|fast|sprinter|sniper|boss)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
   const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?3.4:e.type==='flanker'?4.1:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
@@ -752,7 +753,7 @@ function draw(){
     ctx.setLineDash([5,7]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();
     ctx.setLineDash([]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();
   }
-  game.api.drawBossEncounters();game.api.drawWobbleFields();
+  game.api.drawBossEncounters();game.api.drawWobbleFields();game.api.drawCrayonBossFields();
   for(const n of game.state.enemies)if(n.type==='jamling'&&n.jamWarning>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b34936';ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,n.r+5,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.jamWarning/1.3));ctx.stroke();ctx.restore()}
   for(const shot of game.state.enemyShots){
     if(shot.wobbleOwner){const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));if(!motionReduced){ctx.strokeStyle='rgba(173,110,40,.35)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-5,0);ctx.stroke()}ctx.fillStyle='#edb538';ctx.strokeStyle='#3b3024';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-13,-4);ctx.lineTo(-11,0);ctx.lineTo(-13,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();continue}

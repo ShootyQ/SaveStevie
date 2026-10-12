@@ -70,7 +70,7 @@ function damageNumber(enemy,amount,kind='physical',finishing=false){
 }
 function dealDamage(enemy,amount,kind='physical',source=null){
   if(game.api.chonksProtected(enemy))return;
-  if(game.api.abilityImmune(enemy)&&kind!=='physical'&&kind!=='reflected')return;
+  if(game.api.abilityImmune(enemy)&&!game.api.isCrayonBoss(enemy)&&kind!=='physical'&&kind!=='reflected')return;
   const underground=game.api.underPaper(enemy);if(underground&&!source?.rock)return;
 
   if(enemy.immunity===kind&&amount>0){
