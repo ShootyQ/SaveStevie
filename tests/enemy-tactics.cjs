@@ -20,8 +20,8 @@ module.exports=function(load){
  }
  {
   const {g}=setup();g.state.player.x=600;const e=g.api.spawnEnemy(false,400,350,'sniper'),cage={...wall(450),closed:true,pts:[{x:350,y:280},{x:450,y:280},{x:450,y:420},{x:350,y:420},{x:350,y:280}]};g.state.walls=[cage];g.state.stats.ink=0;let scrubbing=false;
-  for(let i=0;i<500&&!g.api.sniperCanAim(e);i++){g.api.updateSniper(e,.02);scrubbing||=!!e.sniperErase;}
-  assert(scrubbing&&g.api.sniperCanAim(e),'boxed-out Pew-Pew erases his own clear lane');assert.equal(g.state.stats.ink,0,'enemy eraser never refunds ink');assert.equal(g.state.enemyShots.length,0,'opening the lane leaves a fresh aim warning');g.api.updateSniper(e,.02);assert(e.shootCd>.6);
+  for(let i=0;i<500&&!g.api.sniperCanAim(e);i++){g.api.updateSniper(e,.02);g.api.updateEnemyShots(.02);scrubbing||=!!e.sniperErase;}
+  assert(scrubbing&&g.api.sniperCanAim(e),'boxed-out Pew-Pew erases his own clear lane');assert.equal(g.state.stats.ink,0,'enemy eraser never refunds ink');assert(g.state.enemyShots.every(s=>s.eraser),'opening the lane leaves a delayed normal follow-up');g.api.updateSniper(e,.02);assert(e.shootCd>.6);
   g.state.walls=[cage];e.x=424;e.y=350;e.freeze=1;const geometry=JSON.stringify(g.state.walls);g.api.updateSniper(e,2);assert.equal(JSON.stringify(g.state.walls),geometry);assert(!e.sniperErase,'freeze interrupts erasing');
  }
  {

@@ -351,9 +351,11 @@ function shotBlocked(x,y,nx,ny,r=3,ignored=null){
   }
   return false;
 }
-function fireSniper(e){
+function fireSniper(e,eraser=false,host=null){
   const dx=game.state.player.x-e.x,dy=game.state.player.y-e.y,d=Math.hypot(dx,dy)||1;
-  game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:2,r:3,damage:7,sniperOwner:e,reflected:false});
+  if(eraser){const tankRadius=game.catalog.enemyDefs.tank.r,side=host?Math.abs((e.x-host.x)*dy/d-(e.y-host.y)*dx/d):0,radius=Math.max(tankRadius,host?.r||0)+8+Math.min(22,side);
+   game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*240,vy:dy/d*240,life:Math.min(6,(d+100)/240),r:5,damage:0,eraser:true,eraseRadius:radius,sniperOwner:e,reflected:false});game.api.playSound('pencil');
+  }else game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:Math.max(2,Math.min(6,(d+30)/150)),r:3,damage:7,sniperOwner:e,reflected:false});
   game.api.animateEnemyAction(e,'fire');
   game.api.burst(e.x,e.y,'#4b79d8',3);
 }
@@ -381,6 +383,11 @@ function updateEnemyShots(dt){
         shot.x+=shot.vx*Math.min(dt,shot.life);shot.y+=shot.vy*Math.min(dt,shot.life);shot.life-=dt;
         if(shot.life>0)remaining.push(shot);continue;
       }
+    }
+    if(shot.eraser&&shot.sniperOwner){
+      const step=Math.min(dt,Math.max(0,shot.life)),to={x:shot.x+shot.vx*step,y:shot.y+shot.vy*step};
+      game.api.eraseWallPath(shot,to,shot.eraseRadius,{enemy:true});shot.x=to.x;shot.y=to.y;shot.life-=dt;
+      if(shot.life>0&&shot.x>=-30&&shot.x<=game.state.W+30&&shot.y>=-30&&shot.y<=game.state.H+30)remaining.push(shot);continue;
     }
     const step=Math.min(dt,Math.max(0,shot.life)),dx=shot.vx*step,dy=shot.vy*step;
     const nx=shot.x+dx,ny=shot.y+dy,player=game.state.player;
@@ -663,11 +670,17 @@ function sniperRoute(e){
  }
  return best;
 }
-function updateSniper(e,dt){
+function updateSniper(e,dt,options=null){
  if(e.hp<=0)return true;
- if(e.freeze>0||e.stun>0){e.shootCd=Math.max(.65,e.shootCd);delete e.sniperErase;return true;}
- if(sniperCanAim(e)){
-  sniperRoutes.delete(e);delete e.sniperErase;e.shootCd-=dt;
+ if(e.freeze>0||e.stun>0){e.shootCd=Math.max(.65,e.shootCd);if(e.sniperFollowUp>0)e.sniperFollowUp=Math.max(.65,e.sniperFollowUp);delete e.sniperErase;return true;}
+ const convoy=options?.convoy===true,attackDt=dt*(convoy?1.2:1);
+ if(e.sniperFollowUp>0){e.sniperFollowUp=Math.max(0,e.sniperFollowUp-attackDt);e.shootCd=e.sniperFollowUp;
+  if(e.sniperFollowUp===0){fireSniper(e);e.shootCd=1.7;}return true;
+ }
+ if(e.sniperErase)return game.api.eraseSniperLane(e,attackDt,options?.host);
+ if(convoy&&game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y,3)){sniperRoutes.delete(e);return game.api.eraseSniperLane(e,attackDt,options.host);}
+ if(convoy||sniperCanAim(e)){
+  sniperRoutes.delete(e);delete e.sniperErase;e.shootCd-=attackDt;
   if(e.shootCd<=0){fireSniper(e);e.shootCd=1.7}
   return true;
  }
@@ -675,11 +688,11 @@ function updateSniper(e,dt){
  e.shootCd=Math.max(.65,e.shootCd);
  let route=sniperRoutes.get(e);
  if(route)route.left-=dt;
- if(route?.blocked&&route.left>0)return game.api.eraseSniperLane(e,dt);
+ if(route?.blocked&&route.left>0)return game.api.eraseSniperLane(e,attackDt,options?.host);
  if(!route||route.left<=0||!sniperPathClear(e,route.x,route.y)||Math.hypot(route.x-e.x,route.y-e.y)<4){
   const next=sniperRoute(e);route=next?{...next,left:next.detour?2:.4}:{blocked:true,left:.4};sniperRoutes.set(e,route);
  }
- if(!route||route.blocked)return game.api.eraseSniperLane(e,dt);
+ if(!route||route.blocked)return game.api.eraseSniperLane(e,attackDt,options?.host);
  delete e.sniperErase;
  const dx=route.x-e.x,dy=route.y-e.y,d=Math.hypot(dx,dy)||1,travel=Math.min(d,e.speed*enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7))*dt);
  return moveEnemySafely(e,dx/d*travel,dy/d*travel);
@@ -694,7 +707,7 @@ function updateChonks(e,dt){
  if(e.freeze>0||e.stun>0){c.momentum=Math.max(0,c.momentum-dt);return true;}
  if(c.phase==='recover'){c.recovery=Math.max(0,c.recovery-dt);if(!c.recovery){c.phase='walk';c.target=null;}return true;}
  if(game.api.feastHost(e))c.momentum=0;
- const target=game.api.enemyTarget(e),dx=target.x-e.x,dy=target.y-e.y,len=Math.hypot(dx,dy)||1;if(Math.abs(dx)>.1)c.facing=dx<0?-1:1;
+ const target=game.api.enemyTarget(e),dx=target.x-e.x,dy=target.y-e.y,len=Math.hypot(dx,dy)||1;if(Math.abs(dx)>.1)c.facing=dx<0?-1:1;c.moveDirection={x:dx/len,y:dy/len};
  const travel=Math.min(len,e.speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7))*dt),nx=e.x+dx/len*travel,ny=e.y+dy/len*travel;
  const ahead=hit?{wall:hit.wall,t:0}:game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},nx,ny);
  if(ahead){
@@ -711,7 +724,7 @@ function enemyMoveScale(e){return game.api.enemySpeedScale()*game.api.doodleClin
 function enemyTarget(e){
   if(e.waveBoss)return game.api.bossTarget(e);
   const host=feastHost(e);if(host)return game.api.dist(e.x,e.y,host.x,host.y)<host.r+e.r+14?e:host;
-  let target=game.api.doodleTarget(e)||game.api.sneakFollowTarget(e)||game.state.player;
+  let target=(!game.api.hasChonksShield(e)&&game.api.doodleTarget(e))||game.api.sneakFollowTarget(e)||game.state.player;
   if(e.type==='sapper'){
     let distance=Infinity;
     for(const wall of game.state.walls)for(const point of wall.pts){

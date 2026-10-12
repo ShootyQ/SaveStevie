@@ -2611,6 +2611,7 @@ require('./enemy-crowds.cjs')(load);
 require('./black-ice.cjs')(load);
 require('./thermal-shock.cjs')(load);
 require('./rail-ink.cjs')(load);
+require('./smarter-convoys.cjs')(load);
 require('./wobblechomp-rework.cjs')(load);
 // Portable progress rejects bad files before writes, and restores as a transaction.
 {
@@ -2676,7 +2677,7 @@ require('./wobblechomp-rework.cjs')(load);
  assert.equal(g.api.enemyTarget(sniper),g.state.player);assert.equal(g.api.enemyTarget(ruff),g.state.player);
  const shape=JSON.stringify(g.api.sneakySnapshot()),state=JSON.stringify(g.state);g.api.draw();g.api.draw();assert.equal(JSON.stringify(g.api.sneakySnapshot()),shape);assert.equal(JSON.stringify(g.state),state,'drawing routes is pure');
  g.state.walls=[wall(300)];g.api.updateSneakyOrders(.3);assert(g.api.sneakySnapshot()[0].route.blocked>0);g.api.updateSneakyOrders(9.4);assert(g.api.sneakySnapshot()[0].route,'blocked instructions remain for ten seconds');g.api.updateSneakyOrders(.4);assert.equal(g.api.sneakySnapshot()[0].route,null);assert.equal(g.api.enemyTarget(ally),g.state.player,'retiring a plan releases allies');
- g.api.updateSneaky(e,1.1);assert.equal(g.api.sneakySnapshot()[0].runs,2,'blocked route gets a new plan');
+ g.api.updateSneaky(e,1.1);assert.equal(g.api.sneakySnapshot()[0].runs,1,'sealed route does not get a fake new plan');assert.equal(g.api.sneakySnapshot()[0].route,null);
  ({g,e,ally}=setupScout());g.api.updateSneakyOrders(1);let order=g.api.sneakySnapshot()[0].route;const a=order.points[0],b=order.points[1],mid={x:(a.x+b.x)/2,y:(a.y+b.y)/2},ink=g.state.stats.ink;
  assert.equal(g.api.eraseWallPath(mid,mid,20,{enemy:true}),false,'enemy erasers cannot cancel instructions');g.state.paused=true;assert.equal(g.api.eraseWallPath(mid,mid,20),false);g.state.paused=false;
  assert(g.api.eraseWallPath(mid,mid,20));assert.equal(g.api.sneakySnapshot()[0].route.erased,true);assert.equal(g.api.enemyTarget(ally),g.state.player);assert.equal(g.state.stats.ink,ink,'enemy instructions are not refundable player walls');g.api.updateSneakyOrders(9.8);assert(g.api.sneakySnapshot()[0].route);g.api.updateSneakyOrders(.3);assert.equal(g.api.sneakySnapshot()[0].route,null);
