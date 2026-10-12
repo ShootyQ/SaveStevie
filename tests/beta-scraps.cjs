@@ -10,5 +10,14 @@ module.exports=function(load){
  env=load(true,{storage});g=env.sandbox.testGame;assert.equal(g.api.notebookSnapshot().betaPencilClaimed,true);assert.equal(g.api.betaNodeState('doodleScraps').owned,true);assert.equal(g.state.best,12);assert.equal(g.api.notebookSnapshot().scraps,33);
  g.api.fitBetaTree();const before=g.api.betaViewSnapshot();g.api.zoomBetaTree(2,{x:400,y:350});const after=g.api.betaViewSnapshot();assert(after.scale>before.scale);assert(Math.abs((400-before.x)/before.scale-(400-after.x)/after.scale)<1e-8,'zoom keeps an interior anchor stable within page bounds');g.api.zoomBetaTree(1e6);assert.equal(g.api.betaViewSnapshot().scale,2.5);g.api.zoomBetaTree(1e-9);assert.equal(g.api.betaViewSnapshot().scale,.12);
  g.api.openInfo('betaScraps');assert.equal(env.node('betaScrapsOverlay').style.display,'grid');assert(g.state.paused);g.api.closeInfo();assert.equal(env.node('betaScrapsOverlay').style.display,'none');
- console.log('PASS: beta free root, tier gates, shared prices/ranks, capped purchases, no live-run spending, single bonuses, old/new backup and reload compatibility, bounded anchored zoom and overlay pause.');
+
+ // Reproduce implicit child capture transferring to the map, then cancellation.
+ g.api.fitBetaTree();g.api.zoomBetaTree(2,{x:400,y:350});const v=env.node('betaTreeViewport'),touch=(x,id=1)=>({pointerId:id,clientX:x,clientY:350,pointerType:'touch',button:0,target:v,preventDefault(){}}),dragStart=g.api.betaViewSnapshot();
+ v.listeners.pointerdown(touch(400));v.listeners.pointermove(touch(420));v.listeners.lostpointercapture({...touch(420),target:env.node('beta-node-start')});v.listeners.pointermove(touch(440));assert.equal(g.api.betaViewSnapshot().x,dragStart.x+40,'child capture handoff cannot terminate dragging');
+ v.listeners.pointercancel(touch(440));const canceled=g.api.betaViewSnapshot();v.listeners.pointermove(touch(460));assert.equal(g.api.betaViewSnapshot().x,canceled.x,'canceled touch cannot keep moving the map');
+ v.listeners.pointerdown(touch(400,2));v.listeners.pointermove(touch(407,2));assert.equal(g.api.betaViewSnapshot().x,canceled.x,'small touch wobble is not a drag');v.listeners.pointerup(touch(407,2));
+
+ let taps=0;const tapNode={click(){taps++;}},tapEvent={...touch(400,3),target:{closest:selector=>selector==='.beta-tree-node,.beta-branch-title'?tapNode:null}};
+ v.listeners.pointerdown(tapEvent);v.listeners.pointermove({...tapEvent,clientX:407});v.listeners.pointerup(tapEvent);v.listeners.pointerup(tapEvent);assert.equal(taps,1,'accepted touch tap activates once despite wobble or duplicate release');
+ console.log('PASS: beta free root, tier gates, shared prices/ranks, capped purchases, no live-run spending, single bonuses, old/new backup and reload compatibility, bounded zoom, child touch-capture handoff/cancellation, tap slop and overlay pause.');
 };

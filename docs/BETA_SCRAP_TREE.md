@@ -1,6 +1,6 @@
 # BETA Scraps — first playable tree
 
-Alpha 0.1.56 presents a separate menu and Settings entry alongside the original
+Alpha 0.1.57 presents a separate menu and Settings entry alongside the original
 scrap shop. This is a prototype view of the **existing** economy: one saved
 scrap bank, the same purchased ranks, costs, caps and next-run bonuses. It does
 not replace the original shop, change its tutorial or double any stats.
@@ -63,3 +63,17 @@ Artwork: `assets/art/ui/beta-scrap-tree.png`. Live text, selection states and
 Stevie's held tool are separate DOM elements over that image. Existing torn
 paper and tape assets supply the nodes. `assets/art/ui/beta-unfolded-note.svg`
 supplies a ragged, lined-paper detail note that scrolls naturally on touch.
+
+## Touch refinement (0.1.57)
+
+Dragging from a scrap retains tracking when its implicit browser pointer
+capture transfers to the map. Bubbled capture loss from a child is ignored;
+loss of the viewport's own capture still cancels that pointer. Touch/pen taps
+allow 10 screen pixels of movement before starting a drag; mouse uses 5 pixels.
+Pointer focus does not recenter the map. Phone entry starts closer, with room
+for vertical panning and 52px node targets before zoom. Resizing preserves zoom
+and the viewed center instead of fitting the entire tree again.
+Accepted touch taps activate the original scrap once on pointer release, even
+when native click synthesis would discard a small finger wobble. A short guard
+suppresses only the following trusted pointer click; keyboard and programmatic
+activation remain usable. New pointer gestures reset the guard.

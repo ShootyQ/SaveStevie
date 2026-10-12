@@ -28,7 +28,7 @@ DoodleDefender.systems.betaScraps=function(game){
  ];
  const nodes=new Map(definitions.map(n=>[n.id,n]));
  for(const b of branches)b.nodes.forEach((id,i)=>Object.assign(nodes.get(id),{branch:b.id,x:b.x,y:b.y+48+i*61,w:b.w}));
- let selected='start',noteOpen=false,view={scale:1,x:0,y:0},pointers=new Map(),gesture=null,suppressClick=false;
+ let selected='start',noteOpen=false,view={scale:1,x:0,y:0},pointers=new Map(),gesture=null,suppressClick=false,touchGesture=false,lastViewport=null,tapTarget=null,gestureConsumed=false,ignoreNativeClickUntil=0;
  const thresholds={1:0,2:3,3:6,4:10};
  function betaNodeState(id){
   const n=nodes.get(id);if(!n)return null;
@@ -78,7 +78,7 @@ DoodleDefender.systems.betaScraps=function(game){
  function openBetaTreeView(){
   foldBetaNote();const b=bounds();
   if(b.w>=700){fitBetaTree();return;}
-  view.scale=Math.min(1.2,Math.max(.75,b.h/height));view.x=b.w/2-width*view.scale/2;view.y=(b.h-height*view.scale)/2;applyView();
+  view.scale=Math.min(1.4,Math.max(.9,b.h/height*1.2));view.x=b.w/2-width*view.scale/2;view.y=(b.h-height*view.scale)/2;applyView();
  }
  function handleBetaTreeKey(e){if(e.key==='Escape'&&noteOpen){e.preventDefault?.();foldBetaNote();$('beta-node-'+selected)?.focus?.({preventScroll:true});return true;}return false;}
  function renderBetaTree(){
@@ -97,31 +97,50 @@ DoodleDefender.systems.betaScraps=function(game){
   const b=bounds(),pageW=width*view.scale,pageH=height*view.scale;
   view.x=pageW<=b.w?(b.w-pageW)/2:Math.max(b.w-pageW,Math.min(0,view.x));
   view.y=pageH<=b.h?(b.h-pageH)/2:Math.max(b.h-pageH,Math.min(0,view.y));
+  lastViewport={w:b.w,h:b.h};
   $('betaTreeBoard').style.transform='translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';positionNote();
  }
  function fitBetaTree(){foldBetaNote();const b=bounds();view.scale=Math.min(1,Math.max(.12,Math.min((b.w-12)/width,(b.h-12)/height)));view.x=(b.w-width*view.scale)/2;view.y=(b.h-height*view.scale)/2;applyView();}
  function zoomBetaTree(factor,point=null){const b=bounds(),anchor=point||{x:b.w/2,y:b.h/2},old=view.scale;view.scale=Math.min(2.5,Math.max(.12,old*factor));view.x=anchor.x-(anchor.x-view.x)*view.scale/old;view.y=anchor.y-(anchor.y-view.y)*view.scale/old;applyView();}
  function centerAt(n){const b=bounds();view.scale=Math.min(1,Math.max(.6,(b.w-32)/(n.w+30)));view.x=b.w/2-(n.x+n.w/2)*view.scale;view.y=(noteOpen?b.h*.3:b.h/2)-(n.y+24)*view.scale;applyView();}
  function betaViewSnapshot(){return {...view};}
- function cancelBetaGesture(){const ids=[...pointers.keys()];pointers.clear();gesture=null;for(const id of ids)try{$('betaTreeViewport').releasePointerCapture?.(id);}catch{}}
+ function cancelBetaGesture(){const ids=[...pointers.keys()];pointers.clear();gesture=null;tapTarget=null;gestureConsumed=true;ignoreNativeClickUntil=performance.now()+500;for(const id of ids)try{$('betaTreeViewport').releasePointerCapture?.(id);}catch{}}
  const viewport=$('betaTreeViewport');
  function relative(e){const b=bounds();return {x:e.clientX-b.left,y:e.clientY-b.top};}
  function beginGesture(){const ps=[...pointers.values()];gesture={points:ps.map(p=>({...p})),view:{...view}};}
- viewport.addEventListener('pointerdown',e=>{if(e.button>0)return;if(!pointers.size)suppressClick=false;if(e.target?.closest?.('.beta-node-note,.beta-map-note'))return;pointers.set(e.pointerId,relative(e));beginGesture();if(pointers.size>1){foldBetaNote();suppressClick=true;for(const id of pointers.keys())viewport.setPointerCapture?.(id);}});
+ viewport.addEventListener('pointerdown',e=>{if(e.button>0)return;if(!pointers.size){suppressClick=false;gestureConsumed=false;ignoreNativeClickUntil=0;touchGesture=e.pointerType==='touch'||e.pointerType==='pen';tapTarget=e.target?.closest?.('.beta-tree-node,.beta-branch-title')||null;}if(e.target?.closest?.('.beta-node-note,.beta-map-note'))return;pointers.set(e.pointerId,relative(e));beginGesture();if(pointers.size>1){foldBetaNote();suppressClick=true;gestureConsumed=true;for(const id of pointers.keys())viewport.setPointerCapture?.(id);}});
  viewport.addEventListener('pointermove',e=>{
   if(!pointers.has(e.pointerId)||!gesture)return;pointers.set(e.pointerId,relative(e));const ps=[...pointers.values()];
-  if(ps.length===1){const dx=ps[0].x-gesture.points[0].x,dy=ps[0].y-gesture.points[0].y;if(Math.hypot(dx,dy)>5){foldBetaNote();suppressClick=true;viewport.setPointerCapture?.(e.pointerId);}if(!suppressClick)return;view.x=gesture.view.x+dx;view.y=gesture.view.y+dy;}
+  if(ps.length===1){const dx=ps[0].x-gesture.points[0].x,dy=ps[0].y-gesture.points[0].y;if(!suppressClick&&Math.hypot(dx,dy)>(touchGesture?10:5)){foldBetaNote();suppressClick=true;gestureConsumed=true;viewport.setPointerCapture?.(e.pointerId);}if(!suppressClick)return;view.x=gesture.view.x+dx;view.y=gesture.view.y+dy;}
   else{const a=gesture.points[0],b=gesture.points[1],startDistance=Math.hypot(a.x-b.x,a.y-b.y)||1,mid={x:(ps[0].x+ps[1].x)/2,y:(ps[0].y+ps[1].y)/2},oldMid={x:(a.x+b.x)/2,y:(a.y+b.y)/2};view.scale=Math.min(2.5,Math.max(.12,gesture.view.scale*Math.hypot(ps[0].x-ps[1].x,ps[0].y-ps[1].y)/startDistance));view.x=mid.x-(oldMid.x-gesture.view.x)*view.scale/gesture.view.scale;view.y=mid.y-(oldMid.y-gesture.view.y)*view.scale/gesture.view.scale;}
   e.preventDefault?.();applyView();
  });
- for(const event of ['pointerup','pointercancel','lostpointercapture'])viewport.addEventListener(event,e=>{pointers.delete(e.pointerId);if(pointers.size)beginGesture();else gesture=null;});
- viewport.addEventListener('click',e=>{if(suppressClick){e.preventDefault();e.stopPropagation();suppressClick=false;}},true);
+ for(const event of ['pointerup','pointercancel','lostpointercapture'])viewport.addEventListener(event,e=>{
+  // A child's implicit touch capture is released when the map takes over.
+  // Only loss of the map's own capture ends its tracked gesture.
+  if(event==='lostpointercapture'&&e.target!==viewport||!pointers.has(e.pointerId))return;
+  pointers.delete(e.pointerId);
+  const touchTap=event==='pointerup'&&!pointers.size&&touchGesture&&!gestureConsumed;
+  if(event!=='pointerup'){gestureConsumed=true;tapTarget=null;}
+  if(pointers.size)beginGesture();else gesture=null;
+  if(touchTap){
+   e.preventDefault?.();ignoreNativeClickUntil=performance.now()+500;
+   const target=tapTarget;tapTarget=null;
+   if(target)target.click?.();else foldBetaNote();
+  }
+ });
+ viewport.addEventListener('click',e=>{if(suppressClick||e.isTrusted&&e.detail>0&&performance.now()<ignoreNativeClickUntil){e.preventDefault();e.stopPropagation();suppressClick=false;}},true);
  viewport.addEventListener('wheel',e=>{if(e.target?.closest?.('.beta-node-note'))return;e.preventDefault();foldBetaNote();zoomBetaTree(Math.exp(-Math.max(-120,Math.min(120,e.deltaY))*.004),relative(e));},{passive:false});
  viewport.addEventListener('keydown',e=>{if(e.target!==viewport)return;const moves={ArrowLeft:[70,0],ArrowRight:[-70,0],ArrowUp:[0,70],ArrowDown:[0,-70]};if(moves[e.key]){e.preventDefault();view.x+=moves[e.key][0];view.y+=moves[e.key][1];applyView();}else if(['+','=','-','Home'].includes(e.key)){e.preventDefault();if(e.key==='Home')fitBetaTree();else zoomBetaTree(e.key==='-'?.8:1.25);}});
- viewport.addEventListener('focusin',e=>{const n=definitions.find(n=>'beta-node-'+n.id===e.target.id);if(!n)return;const b=bounds(),x=view.x+n.x*view.scale,y=view.y+n.y*view.scale;if(x<0||y<0||x+n.w*view.scale>b.w||y+48*view.scale>b.h)centerAt(n);});
+ viewport.addEventListener('focusin',e=>{if(pointers.size||!e.target.matches?.(':focus-visible'))return;const n=definitions.find(n=>'beta-node-'+n.id===e.target.id);if(!n)return;const b=bounds(),x=view.x+n.x*view.scale,y=view.y+n.y*view.scale;if(x<0||y<0||x+n.w*view.scale>b.w||y+48*view.scale>b.h)centerAt(n);});
  $('betaFit').onclick=fitBetaTree;$('betaFoldNote').onclick=()=>{foldBetaNote();$('beta-node-'+selected)?.focus?.({preventScroll:true});};
  viewport.addEventListener('click',e=>{if(e.target===viewport||e.target===$('betaTreeBoard'))foldBetaNote();});
  $('hubBetaScrapsBtn').onclick=$('optionsBetaScrapsBtn').onclick=()=>game.api.openInfo('betaScraps');$('optionsScrapsBtn').onclick=()=>game.api.openInfo('notebook');$('closeBetaScrapsBtn').onclick=()=>game.api.closeInfo();
- window.addEventListener('resize',()=>{if($('betaScrapsOverlay').style.display==='grid')fitBetaTree();});
+ window.addEventListener('resize',()=>{
+  if($('betaScrapsOverlay').style.display!=='grid'||!lastViewport)return;
+  const b=bounds(),cx=(lastViewport.w/2-view.x)/view.scale,cy=(lastViewport.h/2-view.y)/view.scale;
+  cancelBetaGesture();view.x=b.w/2-cx*view.scale;view.y=b.h/2-cy*view.scale;applyView();
+ });
+ window.addEventListener('blur',cancelBetaGesture);
  const api={openBetaTreeView,foldBetaNote,handleBetaTreeKey,betaNodeState,buyBetaNode,renderBetaTree,selectBetaNode,fitBetaTree,zoomBetaTree,betaViewSnapshot,cancelBetaGesture};Object.assign(game.api,api);return api;
 };
