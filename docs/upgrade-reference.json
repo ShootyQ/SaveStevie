@@ -1,5 +1,5 @@
 {
-  "version": "0.1.41",
+  "version": "0.1.42",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -623,7 +623,7 @@
         "Fire Ink",
         "Frost Ink"
       ],
-      "effect": "Burning frozen enemies crack for burst damage and stun."
+      "effect": "Fire heats a frozen monster into a pressure bomb: glowing cracks, then a steam pop consumes fire and freeze, damages it and briefly staggers nearby monsters. Bosses resist staggering."
     },
     {
       "name": "Tesla Well",

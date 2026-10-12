@@ -90,7 +90,7 @@ function update(dt){
   game.api.updateSupportInkTime(dt);
   game.api.updatePlaguefire(dt);
   if(game.api.waveFinaleActive())return;
-  game.api.updateLaunchEffects(dt);
+  game.api.updateLaunchEffects(dt);game.api.updateThermalShockTime(dt);
 
   game.api.updateBossFields(dt);
   for(const e of [...game.state.enemies]){
@@ -103,7 +103,7 @@ function update(dt){
     if(game.api.updatePaperEnemy(e,dt))continue;
     if(e.shockRest>0)e.shockRest=Math.max(0,e.shockRest-dt);e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
-    game.api.updateSupportInkEnemy(e,dt);
+    game.api.updateSupportInkEnemy(e,dt);game.api.updateThermalShockEnemy(e,dt);
 
     if(e.burn>0){e.burn-=dt;game.api.dealDamage(e,e.burnDps*dt,'fire')}
     if(e.poison>0){
@@ -124,11 +124,13 @@ function update(dt){
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.updateEnemyFlight(e,dt))continue;
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
+    if(game.api.thermalPressureActive(e))continue;
     if(game.api.updateBlackIce(e,dt))continue;
     if(game.api.updateDoodleEnemy(e,dt))continue;
     if(game.api.updateChonksEscort(e,dt))continue;
     game.api.updateEnemyBehavior(e,dt);
     game.api.applySynergies(e,dt);
+    if(game.api.thermalPressureActive(e))continue;
     game.api.eraserAttack(e,dt);
 
     if(game.api.waveFinaleActive())break;

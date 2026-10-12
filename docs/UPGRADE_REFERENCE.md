@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.41
+# Save Stevie upgrade reference — Alpha 0.1.42
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -66,7 +66,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Singularity Ink | Gravity Ink + Blast Ink | Broken walls pull enemies inward before exploding. |
 | Black Ice | Repulsion Ink + Frost Ink | Repelling frozen monsters sends them skating into their friends before a spin-out. Bosses resist the slide. |
 | Leech Ink | Vampire Ink + Poison Ink | Poison damage slowly heals Stevie. |
-| Thermal Shock | Fire Ink + Frost Ink | Burning frozen enemies crack for burst damage and stun. |
+| Thermal Shock | Fire Ink + Frost Ink | Fire heats a frozen monster into a pressure bomb: glowing cracks, then a steam pop consumes fire and freeze, damages it and briefly staggers nearby monsters. Bosses resist staggering. |
 | Tesla Well | Electric Ink + Gravity Ink | Gravity-packed enemies amplify electric chaining. |
 | Event Horizon | Void Ink + Gravity Ink | Enemies near gravity walls have much higher Void proc chance. |
 | Cannon Ink | Blast Ink + Repulsion Ink | Explosions send ordinary monsters flying, with safe landings, fall damage and a 1.2s stun. Bosses resist launches. |
