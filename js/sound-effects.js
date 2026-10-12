@@ -1,6 +1,8 @@
 /* Gesture-unlocked effects; bounded mixing never consumes gameplay randomness. */
 DoodleDefender.systems.soundEffects=function(game){
 const groups={
+ thermalHeat:{files:['thermal-pressure'],gain:.3,gap:.18,cap:2,priority:2},
+ thermalPop:{files:['thermal-pop'],gain:.4,gap:.12,cap:2,priority:3},
  scribble:{files:['scribble-1','scribble-2','scribble-3','scribble-4','scribble-5'],gain:.22,gap:.22,cap:1,priority:0},
  pencil:{files:['pencil-drop'],gain:.3,gap:.18,cap:1,priority:2},
  rock:{files:['rock-hit-1','rock-hit-2'],gain:.5,gap:.06,cap:2,priority:2},

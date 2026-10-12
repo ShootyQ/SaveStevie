@@ -537,7 +537,7 @@ function applyRepulsionContact(e,dt){
     game.api.dealDamage(e,t.repulsionDamage,'physical');
     game.api.animateInkAccent(e,'repulsion',dx,dy);
     if(!game.api.startBlackIce(e,dx,dy)){game.api.moveEnemySafely(e,dx/m*t.repulsionPush*scale,dy/m*t.repulsionPush*scale);e.stun=Math.max(e.stun,.12*scale);}
-    if(game.state.synergies.has('Rail Ink'))e.charged=Math.max(e.charged,1.1);
+    game.api.startRailSurge(e);
   }
 }
 function applyChaosContact(e,dt){
@@ -618,15 +618,7 @@ function applySynergies(e,dt){
     game.api.animateLeech(e,game.state.player.hp-before);
   }
 
-  if(game.state.synergies.has('Thermal Shock')&&e.freeze>0&&e.burn>0){
-    if(!e.thermalCd||e.thermalCd<=0){
-      game.api.dealDamage(e,18+4*(game.state.inks.fire+game.state.inks.frost),'frost');
-      e.stun=Math.max(e.stun,.55);
-      e.thermalCd=1.25;
-      game.api.burst(e.x,e.y,'#ffcf7a',8);
-      game.api.floatText(e.x,e.y,'CRACK','#b96c24');
-    }
-  }
+  game.api.beginThermalShock(e);
 
   if(game.state.synergies.has('Tesla Well')&&game.api.gravityWallHit(e)){
     game.api.dealDamage(e,electricTuning(game.state.inks.electric).fieldDps*.7*dt,'electric');

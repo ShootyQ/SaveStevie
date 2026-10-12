@@ -81,7 +81,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.41</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.43</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -372,6 +372,8 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.43 · Rail Ink radiates</h3><p>Repelled monsters send jagged electric ripples outward, damaging nearby enemies as the surge expands. Electric paper-ball hits widen an active field from 42 pixels by 18 pixels per hit, up to 114, and send fresh ripples. Shared hit recovery keeps overlapping crowds from multiplying the damage. Short-lived outline waves keep the page readable.</p></article>
+      <article class="build-entry"><h3>Alpha 0.1.42 · Tiny pressure cookers</h3><p>Thermal Shock heats a frozen, burning monster for half a second: orange cracks glow through its ice shell before a steam pop throws ice chips and leaves a briefly sooty face. The reaction consumes fire and freeze, damages its host and briefly staggers nearby ordinary monsters. Bosses cannot be staggered by the pop. New creaking-whistle and steam-pop sounds mark the reaction, with a three-second cooldown.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.41 · Black Ice goes skating</h3><p>Repelling a frozen monster now sends it skating backward on a tiny icy patch, with scrambling limbs, skate marks and a spin-out before it gets up. Sliding monsters nudge nearby doodles aside and lose momentum. Walls and the fort stop slides; bosses resist skating. Reduced-motion mode keeps the ice cue without the spinning.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.40 · Doodle traffic</h3><p>Monsters gently spread apart instead of piling into one spot, with heavier Chonks nudging smaller neighbours aside. Crash Dash hurdles monsters in his lane, including a monster and the wall it crowds against. He still gets one wall hurdle; a second barrier stops him. Bosses, underground monsters and airborne doodles stay outside crowd separation.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.39 · Count Crayon fights over the page</h3><p>Wave 15 now plays the first erase-and-return phase: cut growing wax snakes, erase warned blobs before they hatch, and wipe openings in a coloured shield. Draw from a surviving wax trail back to Count Crayon to send melted colour along your pencil line into an erased shield edge. He keeps moving, erases walls in his path, and cannot be frozen, stunned or slowed. This phase completes wave 15; later phases are still to come.</p></article>
@@ -663,6 +665,8 @@
 <script src="js/paper-tricks.js"></script>
 <script src="js/enemy-tactics.js"></script>
 <script src="js/black-ice.js"></script>
+<script src="js/thermal-shock.js"></script>
+<script src="js/rail-ink.js"></script>
 <script src="js/chonks-shield.js"></script>
 <script src="js/crayon-boss.js"></script>
 <script src="js/loop.js"></script>

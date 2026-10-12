@@ -248,6 +248,7 @@ function updateEnemyAnimations(dt){
     m.cue=null;m.cueProgress=0;
     if(e.crew&&!motionReduced&&e.freeze<=0&&e.stun<=0){const c=e.crew;if(c.phase==='hook'||c.phase==='pull'){p.angle-=m.facing*(c.phase==='pull'?.2:.1);p.sx+=.08;p.sy-=.08;}else if(c.phase==='tear'){p.y+=4;p.sy-=.14;p.sx+=.12;}else if(c.phase==='bomb')p.angle-=m.facing*.18;}
     if(e.eraseStumble>0&&e.freeze<=0&&!motionReduced){const skid=game.api.clamp(e.eraseStumble/1.4,0,1);p.angle+=m.facing*.7*skid;p.y+=4*skid;p.sx+=.15*skid;p.sy-=.15*skid;}
+    const thermal=game.api.thermalShockPose(e);if(thermal){Object.assign(p,thermal);m.cue=null;continue;}
     const ice=game.api.blackIcePose(e);if(ice){Object.assign(p,ice);m.cue=null;continue;}
     if(e.freeze>0||e.stun>0)continue;
     // Distinct silhouettes reuse the existing art. These offsets never touch
@@ -404,7 +405,7 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   if(e.type==='sniper'&&e.sniperErase){ctx.save();const q=e.sniperErase;ctx.strokeStyle='#b77991';ctx.lineWidth=2;ctx.beginPath();ctx.arc(q.x-e.x,q.y-e.y,10,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,q.age/.7));ctx.stroke();for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(q.x-e.x-4+i*5,q.y-e.y+8);ctx.lineTo(q.x-e.x-2+i*5,q.y-e.y+11);ctx.stroke();}ctx.restore();}
   if(e.waveBoss&&e.type==='stapler'&&e.hp/e.maxHp<=.35){ctx.strokeStyle='#4b3228';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,-e.r);ctx.lineTo(2,-e.r+12);ctx.lineTo(-4,-e.r+18);ctx.lineTo(8,-e.r+30);ctx.stroke()}
   ctx.restore();
-  game.api.drawBlackIceLimbs(e);
+  game.api.drawBlackIceLimbs(e);game.api.drawThermalShockEnemy(e);
   if(showHealth)drawEnemyHealthBar(e,hpRatio,colors);
   if(e.type==='tank'&&e.chonks)drawChonksWarning(e);
   if(e.type==='splitter'||e.twicey)drawTwiceyCue(e);
@@ -506,7 +507,7 @@ function resize(){
     for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.rockCharge&&!movedCharges.has(wall.rockCharge)){movedCharges.add(wall.rockCharge);wall.rockCharge.x+=dx;wall.rockCharge.y+=dy;}if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
-    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.moveBlackIce(dx,dy);game.api.movePaper(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveDoodleScraps(dx,dy);
+    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.moveBlackIce(dx,dy);game.api.moveThermalShock(dx,dy);game.api.movePaper(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveDoodleScraps(dx,dy);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
@@ -914,7 +915,7 @@ function draw(){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1
   }
   game.api.drawSupportInks();
-  game.api.drawInkStatusEffects();
+  game.api.drawInkStatusEffects();game.api.drawThermalShockPops();game.api.drawRailInk();
   game.api.drawInkBursts();
   game.api.drawChainLightning();
   for(const f of game.state.floaters){

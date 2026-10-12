@@ -123,7 +123,7 @@ function startWave(options={}){
   game.api.selectMusicTrack(game.api.chapterForWave().id);
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
-  game.api.resetAbilityEffects();
+  game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();
   game.api.resetLaunchEffects();
   game.api.resetSupportInks();
   game.api.resetPlaguefire();game.api.resetPaper();
@@ -149,7 +149,7 @@ function waveComplete(){
   game.state.betweenWaves=true;
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
-  game.api.resetAbilityEffects();
+  game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();
   game.api.resetLaunchEffects();
   game.api.resetSupportInks();game.api.resetBossEncounters();
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);
@@ -197,7 +197,7 @@ function returnToMenu(){
   game.state.running=false;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
   game.state.drawing=false;game.state.currentWall=null;
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
-  game.api.resetAbilityEffects();
+  game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();
   game.api.resetLaunchEffects();game.api.resetSupportInks();game.api.resetBossEncounters();game.api.resetPlaguefire();
   for(const id of ['upgradeOverlay','waveOverlay','victoryOverlay','gameOverOverlay','specializeOverlay'])game.dom.$(id).style.display='none';
   game.dom.startOverlay.style.display='grid';game.api.selectMusicTrack('splash');game.api.updateUI();game.dom.$('startBtn').focus?.();
