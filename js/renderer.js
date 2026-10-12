@@ -248,6 +248,7 @@ function updateEnemyAnimations(dt){
     m.cue=null;m.cueProgress=0;
     if(e.crew&&!motionReduced&&e.freeze<=0&&e.stun<=0){const c=e.crew;if(c.phase==='hook'||c.phase==='pull'){p.angle-=m.facing*(c.phase==='pull'?.2:.1);p.sx+=.08;p.sy-=.08;}else if(c.phase==='tear'){p.y+=4;p.sy-=.14;p.sx+=.12;}else if(c.phase==='bomb')p.angle-=m.facing*.18;}
     if(e.eraseStumble>0&&e.freeze<=0&&!motionReduced){const skid=game.api.clamp(e.eraseStumble/1.4,0,1);p.angle+=m.facing*.7*skid;p.y+=4*skid;p.sx+=.15*skid;p.sy-=.15*skid;}
+    const crayon=game.api.crayonBossPose(e);if(crayon){Object.assign(p,crayon);m.cue='summon';continue;}
     const thermal=game.api.thermalShockPose(e);if(thermal){Object.assign(p,thermal);m.cue=null;continue;}
     const ice=game.api.blackIcePose(e);if(ice){Object.assign(p,ice);m.cue=null;continue;}
     if(e.freeze>0||e.stun>0)continue;
@@ -405,7 +406,7 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   if(e.type==='sniper'&&e.sniperErase){const x=left+width*.88,y=top+height*.49;ctx.fillStyle='#dc8ea9';ctx.strokeStyle='#29343b';ctx.lineWidth=1;ctx.fillRect(x-1,y-3,7,6);ctx.strokeRect(x-1,y-3,7,6);ctx.strokeStyle='#f9d8e5';ctx.beginPath();ctx.moveTo(x,y-1);ctx.lineTo(x+4,y-1);ctx.stroke();}
   if(e.waveBoss&&e.type==='stapler'&&e.hp/e.maxHp<=.35){ctx.strokeStyle='#4b3228';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-8,-e.r);ctx.lineTo(2,-e.r+12);ctx.lineTo(-4,-e.r+18);ctx.lineTo(8,-e.r+30);ctx.stroke()}
   ctx.restore();
-  game.api.drawBlackIceLimbs(e);game.api.drawThermalShockEnemy(e);
+  game.api.drawBlackIceLimbs(e);game.api.drawThermalShockEnemy(e);game.api.drawCrayonBossGesture(e);
   if(showHealth)drawEnemyHealthBar(e,hpRatio,colors);
   if(e.type==='tank'&&e.chonks)drawChonksWarning(e);
   if(e.type==='splitter'||e.twicey)drawTwiceyCue(e);
