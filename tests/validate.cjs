@@ -2608,6 +2608,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 require('./paper-ball-notes.cjs')(load);
 require('./enemy-tactics.cjs')(load);
 require('./enemy-crowds.cjs')(load);
+require('./black-ice.cjs')(load);
 require('./wobblechomp-rework.cjs')(load);
 // Portable progress rejects bad files before writes, and restores as a transaction.
 {

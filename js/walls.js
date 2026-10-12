@@ -536,8 +536,7 @@ function applyRepulsionContact(e,dt){
     const dx=e.x-game.state.player.x,dy=e.y-game.state.player.y,m=Math.hypot(dx,dy)||1;
     game.api.dealDamage(e,t.repulsionDamage,'physical');
     game.api.animateInkAccent(e,'repulsion',dx,dy);
-    game.api.moveEnemySafely(e,dx/m*t.repulsionPush*scale,dy/m*t.repulsionPush*scale);
-    e.stun=Math.max(e.stun,.12*scale);
+    if(!game.api.startBlackIce(e,dx,dy)){game.api.moveEnemySafely(e,dx/m*t.repulsionPush*scale,dy/m*t.repulsionPush*scale);e.stun=Math.max(e.stun,.12*scale);}
     if(game.state.synergies.has('Rail Ink'))e.charged=Math.max(e.charged,1.1);
   }
 }

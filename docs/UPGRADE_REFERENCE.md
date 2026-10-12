@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.38
+# Save Stevie upgrade reference — Alpha 0.1.41
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -64,7 +64,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Plaguefire | Fire Ink + Poison Ink | Defeated burning, poisoned enemies leave growing ten-second Plaguefire pools that scorch holes in the paper. |
 | Cryoshock | Frost Ink + Electric Ink | Frozen enemies conduct boosted chain lightning. |
 | Singularity Ink | Gravity Ink + Blast Ink | Broken walls pull enemies inward before exploding. |
-| Black Ice | Repulsion Ink + Frost Ink | Frozen enemies are shoved harder and stay slowed. |
+| Black Ice | Repulsion Ink + Frost Ink | Repelling frozen monsters sends them skating into their friends before a spin-out. Bosses resist the slide. |
 | Leech Ink | Vampire Ink + Poison Ink | Poison damage slowly heals Stevie. |
 | Thermal Shock | Fire Ink + Frost Ink | Burning frozen enemies crack for burst damage and stun. |
 | Tesla Well | Electric Ink + Gravity Ink | Gravity-packed enemies amplify electric chaining. |
