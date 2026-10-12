@@ -23,3 +23,9 @@ seconds. Scout leaders then prepare another plan; a leader already committed
 on his third run continues attacking. Forgery never removes an enemy or awards
 kill/escape credit. Unmodified blocked/erased directions still retire after
 ten seconds; paused game updates freeze these clocks.
+
+## Alpha 0.1.54 pressure pass
+
+From wave 8 onward, scheduled Gribble, Zoom Nugget, Homework Hulk and Professor Problems arrivals share a per-wave budget: every tenth ordinary candidate is skipped. Regular arrivals, relocated pairs and chapter groups all use it. First introductions bypass thinning. Direct boss-owned spawns and offspring remain outside that budget. Special enemy types retain their scheduling; waves 1–7 remain unchanged.
+
+King Doodle-Doom's helper gap is divided by 1.2 relative to the previous rate in both health phases. His living helper cap is seven (the nearest whole count to a 20% increase from six), and every third add is a Zoom Nugget. All adds retain boss ownership and are eligible for his usual pickup/throw behavior.

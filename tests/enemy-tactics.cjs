@@ -25,7 +25,7 @@ module.exports=function(load){
   g.state.walls=[cage];e.x=424;e.y=350;e.freeze=1;const geometry=JSON.stringify(g.state.walls);g.api.updateSniper(e,2);assert.equal(JSON.stringify(g.state.walls),geometry);assert(!e.sniperErase,'freeze interrupts erasing');
  }
  {
-  const {g}=setup();g.state.wave=5;const e=g.api.spawnEnemy(true,100,350),b=g.api.bossBrain(e);assert(Math.abs(g.api.firstBossTuning(e).helperGap-4.5/1.1)<1e-9);g.state.synergies.add('Hot Rocks');g.state.synergies.add('Snowball Fight');
+  const {g}=setup();g.state.wave=5;const e=g.api.spawnEnemy(true,100,350),b=g.api.bossBrain(e);assert(Math.abs(g.api.firstBossTuning(e).helperGap-4.5/(1.1*1.2))<1e-9);g.state.synergies.add('Hot Rocks');g.state.synergies.add('Snowball Fight');
   b.cast={kind:'mirror-orb',left:1,duration:1};const cast=b.cast,p={x:e.x,y:e.y,target:e,speed:290,damage:20,life:2,doodlePayload:{fire:3,electric:3,frost:3,poison:3,eraser:2,orbit:1,credit:1,split:3,ink:1}};const hp=e.hp;
   g.api.hitPaper(p,e);assert(e.hp<hp,'physical paper still hurts the guarded boss');assert.equal(g.api.afterPaperHit(p,e),false,'paper-note procs cannot attach to king');assert.equal(p.paperMode,undefined);assert.equal(b.cast,cast);for(const k of ['burn','poison','freeze','stun','gravitySlow'])assert.equal(e[k],0,k+' immune');
   const immuneHp=e.hp;for(const kind of ['fire','poison','electric','frost','blast','void','erase','vampire'])g.api.dealDamage(e,100,kind);assert.equal(e.hp,immuneHp);

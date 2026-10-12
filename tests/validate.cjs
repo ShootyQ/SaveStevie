@@ -1625,8 +1625,8 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  function effectiveTop(height){return height<400?65:110}
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.wave=5;g.api.startWave();const boss=g.api.spawnEnemy(true,180,160),b=g.api.bossBrain(boss);b.driveByCd=999; // Isolate the scheduled pickup; bonus flings have their own regression.
  g.api.spawnWaveEnemies(1.4);assert.equal(g.state.enemies.length,1);g.api.spawnWaveEnemies(.11);assert.equal(g.state.enemies.length,2);
- for(let i=0;i<30;i++)g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,6,'helper stream is capped');
- const friend=g.state.enemies.find(n=>n.bossOwner===boss);g.api.killEnemy(friend);g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,6,'stream replaces defeated helpers');
+ for(let i=0;i<30;i++)g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,7,'helper stream is capped');
+ const friend=g.state.enemies.find(n=>n.bossOwner===boss);g.api.killEnemy(friend);g.api.spawnWaveEnemies(7);assert.equal(g.state.enemies.filter(n=>n.bossOwner===boss).length,7,'stream replaces defeated helpers');
  const n=g.state.enemies.find(n=>n.bossOwner===boss);g.state.enemies=[boss,n];n.x=210;n.y=165;b.turn=3;b.cd=0;g.api.updateBossEncounter(boss,.01);assert.equal(b.pickup.friend,n,'seeks nearest available helper');
  g.api.updateBossEncounter(boss,.01);assert.equal(b.cast.kind,'friend-fling');assert.ok(!n.flight,'warning precedes flight');const target={...b.cast.landing},distance=Math.hypot(n.x-g.state.player.x,n.y-g.state.player.y),hp=n.hp;
  assert.ok(Math.hypot(target.x-g.state.player.x,target.y-g.state.player.y)<distance-20);
@@ -2702,3 +2702,5 @@ require('./paper-ball-balance.cjs')(load);
 require('./crayon-boss.cjs')(load);
 
 require('./stolen-routes.cjs')(load);
+
+require('./common-pressure.cjs')(load);

@@ -437,8 +437,8 @@ function eraserAttack(e,dt){
   }
 }
 
-let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,introducedSpawned=0,bossPhase='timed',arrival=null;
-function resetEnemyWave(){game.api.resetChonksShield?.();game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;game.api.resetBossEncounters()}
+let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,introducedSpawned=0,bossPhase='timed',arrival=null,commonArrivals=0;
+function resetEnemyWave(){game.api.resetChonksShield?.();game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;commonArrivals=0;game.api.resetBossEncounters()}
 function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
@@ -513,12 +513,20 @@ function updateBossArrival(dt){
  arrival.left=Math.max(0,arrival.left-dt);
  if(arrival.left===0){const point={...arrival};game.api.spawnEnemy(true,point.x,point.y);game.api.setMsg('Boss encounter. Defeat '+game.api.monsterName(game.api.bossTypeForWave())+'!')}
 }
+// Trim only scheduled plain attackers, not offspring, introductions or boss adds.
+const commonSpawnTypes=new Set(['grunt','fast','brute','elite']);
+function spawnScheduledEnemy(x=null,y=null,type=null,protectedIntro=false){
+ if(game.state.wave<8||protectedIntro)return game.api.spawnEnemy(false,x,y,type);
+ const chosen=type||game.api.enemyType();
+ if(commonSpawnTypes.has(chosen)&&++commonArrivals%10===0)return null;
+ return game.api.spawnEnemy(false,x,y,chosen);
+}
 function spawnChapterGroup(){
   const wave=game.state.wave;if(wave<6)return;
   const types=wave<=10?(wave>=9?['sniper','fast']:wave>=7?['flanker','fast']:['tank','fast']):wave<=15?(wave>=13?['medic','bulwark','brood']:['bulwark','brood']):['sapper','elite','sprinter'];
   const fromLeft=groupsSpawned%2===0;
   if(wave===13)types.push('basil');
-  for(let i=0;i<types.length;i++)game.api.spawnEnemy(false,fromLeft?-26:game.state.W+26,game.state.H*(.35+.12*i),types[i]);
+  for(let i=0;i<types.length;i++)spawnScheduledEnemy(fromLeft?-26:game.state.W+26,game.state.H*(.35+.12*i),types[i]);
 }
 
 function wavePressure(wave=game.state.wave){
@@ -537,14 +545,14 @@ function spawnWaveEnemies(dt){
   if(game.state.timeLeft<=0)return;
   const elapsed=game.state.waveTime-game.state.timeLeft;
   if([4,6,9,11,14,16,19,21].includes(game.state.wave)&&relocatedSpawned<3&&elapsed>=[12,28,44][relocatedSpawned]){
-    for(let i=0;i<2;i++)game.api.spawnEnemy(false,null,null,game.state.wave>=16?'sapper':game.state.wave>=11?'brood':game.state.wave>=6?'fast':'grunt');relocatedSpawned++;
+    for(let i=0;i<2;i++)spawnScheduledEnemy(null,null,game.state.wave>=16?'sapper':game.state.wave>=11?'brood':game.state.wave>=6?'fast':'grunt');relocatedSpawned++;
   }
   if(game.state.wave>=6&&groupsSpawned<2&&elapsed>=[20,40][groupsSpawned]){game.api.spawnChapterGroup();groupsSpawned++}
   game.state.spawnTimer-=dt;
   if(game.state.spawnTimer<=0){
     const newcomers=game.catalog.monsters.filter(m=>m.wave===game.state.wave&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser'].includes(m.type));
     const newcomer=newcomers[introducedSpawned];
-    const spawned=game.api.spawnEnemy(false,null,null,newcomer?.type||null);
+    const spawned=spawnScheduledEnemy(null,null,newcomer?.type||null,!!newcomer);
     if(newcomer&&spawned)introducedSpawned++;
     game.state.spawnTimer=game.state.wave<=5?game.api.spawnGap():game.state.spawnTimer+game.api.spawnGap();
   }
@@ -811,7 +819,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { hitPaper,throwPaper,resetScrubberRub,eraseScrubber,resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { hitPaper,throwPaper,resetScrubberRub,eraseScrubber,resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie,spawnScheduledEnemy, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };
