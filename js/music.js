@@ -36,12 +36,13 @@ function playMusic(){
     request?.then(()=>{if(attempt===playAttempt){blocked=false;updateMusicButton()}}).catch(()=>{if(attempt===playAttempt){blocked=true;updateMusicButton()}});
   }catch{if(attempt===playAttempt){blocked=true;updateMusicButton()}}
 }
-function selectMusicTrack(id){
-  // Alternate the two chapter songs by wave, without using gameplay randomness.
-  if(id==='pop-quiz-panic'&&game.state.wave>=6&&game.state.wave<=10&&game.state.wave%2===1)id='pop-quiz-panic-alt';
+function middleTrack(id){return id==='pop-quiz-panic'||id==='pop-quiz-panic-alt';}
+function selectMusicTrack(id,options={}){
+  // Wave changes retain the current chapter song and playback position.
+  if(!options.advance&&id==='pop-quiz-panic'&&game.state.wave>=6&&game.state.wave<=10&&middleTrack(track))id=track;
   if(!tracks[id]||id===track)return false;
   track=id;playAttempt++;blocked=false;audio.pause?.();
-  audio.loop=id!=='victory';
+  audio.loop=id!=='victory'&&!middleTrack(id);
   const version=document.documentElement?.dataset?.build;
   audio.src='assets/audio/'+tracks[id].file+(version?'?v='+encodeURIComponent(version):'');
   try{audio.currentTime=0}catch{}
@@ -61,7 +62,7 @@ function suspendMusic(value){suspended=!!value;if(suspended){playAttempt++;audio
 button.onclick=toggleMusic;introButton.onclick=toggleMusic;
 document.addEventListener?.('visibilitychange',()=>{if(document.hidden){playAttempt++;audio.pause?.()}else playMusic()});
 audio.addEventListener?.('error',()=>{blocked=true;updateMusicButton()});
-audio.addEventListener?.('ended',()=>{if(track==='victory')selectMusicTrack(game.api.chapterForWave().id)});
+audio.addEventListener?.('ended',()=>{if(track==='victory')selectMusicTrack(game.api.chapterForWave().id);else if(middleTrack(track)&&game.state.wave>=6&&game.state.wave<=10)selectMusicTrack(track==='pop-quiz-panic'?'pop-quiz-panic-alt':'pop-quiz-panic',{advance:true})});
 // Respect saved mute; retry denied autoplay inside the next real gesture.
 function retryMusicOnGesture(event){
   if(event?.target?.closest?.('#musicBtn, #splashMusicBtn, #startBtn'))return;
