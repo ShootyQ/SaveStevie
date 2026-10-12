@@ -796,7 +796,7 @@ function contactStevie(e){
   if(game.api.shotBlocked(e.x,e.y,player.x,player.y,0))return false;
   if(e.waveBoss)return game.api.bossContact(e);
   const damage=e.dmg*(1-game.state.stats.playerArmor);
-  damageStevie(damage,game.api.monsterName(e.type)+' contact',e);
+  damageStevie(damage,(e.waxling?'Raised crayon':game.api.monsterName(e.type))+' contact',e);
   game.api.floatText(player.x,player.y-28,'-'+Number(damage.toFixed(1)),'#b44141');
   game.api.burst(e.x,e.y,e.color,12);
   // Contact removal is not a player kill: no rewards, healing, or split children.
