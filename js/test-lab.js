@@ -15,8 +15,8 @@ function renderLoadout(){
  if(!loadout.length){const p=document.createElement('p');p.className='option-help';p.textContent='Starting kit only. Add effects or utilities above.';box.appendChild(p)}
  loadout.forEach((entry,i)=>{
   const row=document.createElement('div');row.className='test-loadout-row';
-  const text=document.createElement('span');text.textContent=entry.name+' · '+entry.rarity+' × '+entry.copies;
-  const remove=document.createElement('button');remove.className='secondary';remove.textContent='Remove';remove.setAttribute?.('aria-label','Remove '+entry.name);remove.onclick=()=>{loadout.splice(i,1);renderLoadout()};row.appendChild(text);row.appendChild(remove);box.appendChild(row);
+  const text=document.createElement('span');text.textContent=game.api.paperLabel(entry.name)+' · '+entry.rarity+' × '+entry.copies;
+  const remove=document.createElement('button');remove.className='secondary';remove.textContent='Remove';remove.setAttribute?.('aria-label','Remove '+game.api.paperLabel(entry.name));remove.onclick=()=>{loadout.splice(i,1);renderLoadout()};row.appendChild(text);row.appendChild(remove);box.appendChild(row);
  });
  $('repeatTestBtn').hidden=!last;
 }
@@ -27,7 +27,7 @@ function syncTestRarity(){
 }
 function openTestLab(){
  $('testLabPanel').hidden=false;$('testLabBtn').setAttribute?.('aria-expanded','true');
- if(!$('testUpgrade').children.length)for(const base of game.catalog.upgrades){const option=document.createElement('option');option.value=base.name;option.textContent=base.name;$('testUpgrade').appendChild(option)}
+ if(!$('testUpgrade').children.length)for(const base of game.catalog.upgrades){const option=document.createElement('option');option.value=base.name;option.textContent=game.api.paperLabel(base.name);$('testUpgrade').appendChild(option)}
  if(!$('testUpgrade').value)$('testUpgrade').value=game.catalog.upgrades[0].name;
  syncTestRarity();renderLoadout();$('testWave').focus?.();$('testLabPanel').scrollIntoView?.({block:'start',behavior:'auto'});
 }

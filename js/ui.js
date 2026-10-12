@@ -53,7 +53,7 @@ function updateUI(){
   if(stackKey!==lastStacks){lastStacks=stackKey;
     game.dom.upgradeList.innerHTML='';
     stacks.forEach(([k,v])=>{
-      const b=document.createElement('div');b.className='badge';b.textContent=k+' ×'+v;game.dom.upgradeList.appendChild(b);
+      const b=document.createElement('div');b.className='badge';b.textContent=game.api.paperLabel(k)+' ×'+v;game.dom.upgradeList.appendChild(b);
     });
   }
   const inkKey=JSON.stringify(game.state.inks);
@@ -72,7 +72,7 @@ function roman(n){return ['','I','II','III','IV','V'][n]||n}
 
 let synergyQueue=[],synergySeen=new Set(),synergyCurrent=null,synergyRevealsEnabled=true;
 function showSynergySplash(name,desc,major=false){
-  if(synergySeen.has(name)){game.api.setMsg('Synergy active again: '+name);return}
+  if(synergySeen.has(name)){game.api.setMsg('Synergy active again: '+game.api.paperLabel(name));return}
   if(synergyCurrent?.name===name||synergyQueue.some(d=>d.name===name))return;
   synergyQueue.push({name,desc,major});
 }
@@ -88,12 +88,12 @@ function beginSynergyReveal(){
   synergyQueue=synergyQueue.filter(d=>game.state.synergies.has(d.name));
   if(!synergyQueue.length)return false;
   synergyCurrent=synergyQueue.shift();const d=synergyCurrent,box=game.dom.$('synergySplash');
-  game.dom.$('synergySplashName').textContent=d.name;
+  game.dom.$('synergySplashName').textContent=game.api.paperLabel(d.name);
   game.dom.$('synergySplashDesc').textContent=d.desc;
   game.dom.$('synergyRevealLabel').textContent=d.major?'MAJOR SYNERGY!':'NEW SYNERGY!';
   const def=game.catalog.synergyDefs.find(x=>x.name===d.name),source=String(def?.req||'');
   const ingredients=game.catalog.upgrades.filter(u=>{const key={'Fire Ink':'fire','Frost Ink':'frost','Electric Ink':'electric','Poison Ink':'poison','Gravity Ink':'gravity','Blast Ink':'blast','Vampire Ink':'vampire','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos'}[u.name];return key?source.includes('inks.'+key):source.includes("stacks['"+u.name+"']")});
-  game.dom.$('synergyRevealArt').innerHTML=ingredients.map(u=>'<div class="synergy-ingredient">'+game.api.upgradeArtworkMarkup(u)+'<span>'+u.name+'</span></div>').join('<b aria-hidden="true">+</b>');
+  game.dom.$('synergyRevealArt').innerHTML=ingredients.map(u=>'<div class="synergy-ingredient">'+game.api.upgradeArtworkMarkup(u)+'<span>'+game.api.paperLabel(u.name)+'</span></div>').join('<b aria-hidden="true">+</b>');
   box.dataset.major=String(d.major);box.style.display='grid';game.api.endDraw?.();game.api.stopSoundEffects();
   game.dom.$('continueSynergyBtn').focus?.();return true;
 }
@@ -118,11 +118,11 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Living Fountain Pen':()=>`×${f(game.api.regenStackEffect('Living Fountain Pen',n))} ink regeneration; diminishing returns`,
     'Bottomless Pen':()=>`+${40*n} max ink; +${f(game.api.regenStackEffect('Bottomless Pen',n))} ink/s; diminishing returns`, 'Fortress Geometry':()=>`+${50*n}% closed-wall durability; `+loopDetails(n,'Closed Loop'),
     'Bandages':()=>`+${8*n} HP healed between waves`, 'Helmet':()=>`${f(Math.min(.55,.1*n)*100)}% damage reduction (cap 55%)`,
-    'Electric Rocks':()=>`Level ${Math.min(6,n)}: rocks charge a 48px wall patch for 2.4s; Electric Ink bursts hit up to 8 monsters for ${3+Math.min(6,n)} damage, with 1.1s wall recovery`,
-    'Pocket Rocks':()=>`+${game.api.rockTotal('Pocket Rocks',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
-    'Better Rocks':()=>`+${game.api.rockTotal('Better Rocks',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
-    'Emergency Medicine':()=>`Up to ${2*n} HP per kill; shared 6 HP/s combat budget`, 'Really Good Rocks':()=>`+${game.api.rockTotal('Really Good Rocks',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
-    'Stevie Has Had Enough':()=>`+${game.api.rockTotal('Stevie Has Had Enough',n)} rock damage across ${n} levels; smaller initial gains grow with investment; throws preserve faster upgrades`,
+    'Electric Rocks':()=>`Level ${Math.min(6,n)}: paper balls charge a 48px wall patch for 2.4s; Electric Ink bursts hit up to 8 monsters for ${3+Math.min(6,n)} damage, with 1.1s wall recovery`,
+    'Pocket Rocks':()=>`Paper-ball strength ×${n}; damage gains diminish toward 30 base damage, while Doodle Notes add throwing tricks; faster throws are preserved`,
+    'Better Rocks':()=>`Paper-ball strength ×${n}; damage gains diminish toward 30 base damage, while Doodle Notes add throwing tricks; faster throws are preserved`,
+    'Emergency Medicine':()=>`Up to ${2*n} HP per kill; shared 6 HP/s combat budget`, 'Really Good Rocks':()=>`Paper-ball strength ×${n}; damage gains diminish toward 30 base damage, while Doodle Notes add throwing tricks; faster throws are preserved`,
+    'Stevie Has Had Enough':()=>`Paper-ball strength ×${n}; damage gains diminish toward 30 base damage, while Doodle Notes add throwing tricks; faster throws are preserved`,
     'Loaded Deck':()=>`One-time unlock: normal rewards are Uncommon or better`,
     'Reroll Coupon':()=>`+2 rerolls per level (inventory cap 5)`,
     'Collector':()=>`One-time unlock: ×1.8 selection weight for unowned upgrades`,
@@ -156,10 +156,10 @@ function renderBuild(){
   game.dom.$('buildStats').innerHTML=totals.map(([name,value])=>`<div class="build-stat">${name}<strong>${value}</strong></div>`).join('');
   game.dom.$('buildUpgrades').innerHTML=Object.entries(game.state.stacks).map(([name,n])=>{
     const u=game.catalog.upgrades.find(u=>u.name===name);
-    return `<article class="build-entry"><h4>${name} ×${n}</h4><p>${u?.desc||''}</p><p class="build-effect">${upgradeEffect(name,n)}</p></article>`;
+    return `<article class="build-entry"><h4>${game.api.paperLabel(name)} ×${n}</h4><p>${u?.desc||''}</p><p class="build-effect">${upgradeEffect(name,n)}</p></article>`;
   }).join('')||'<p>No upgrades yet. Earn your first one after a wave.</p>';
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
-    `<article class="build-entry"><h4>${def.major?'★ ':''}${def.name}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
+    `<article class="build-entry"><h4>${def.major?'★ ':''}${game.api.paperLabel(def.name)}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
 }
 const infoButtons={backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}

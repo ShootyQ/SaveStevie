@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.27
+# Save Stevie upgrade reference — Alpha 0.1.38
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -19,7 +19,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Bigger Ink Tank | Drawing / ink economy | +35 max ink. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Quick Refill | Drawing / ink economy | Adds ink regeneration: +2 ink/s first pick, smaller bonuses on repeats. | Repeatable; caps/diminishing returns may apply; Repeat level n adds 2 / (1 + 0.4 × (n−1)) ink/s. |
 | Thick Ink | Walls / shapes | +20 base wall durability. Long strokes multiply this further. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
-| First Aid | Stevie / rocks / survival | +18 max HP and heal 18. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
+| First Aid | Stevie / paper balls / survival | +18 max HP and heal 18. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Fine Tip | Drawing / ink economy | Lines cost 12% less ink. | Repeatable; caps/diminishing returns may apply; Each level multiplies ink cost by 0.88; a paid stroke still costs at least 6 ink. |
 | Fat Marker | Walls / shapes | +2 line width and +15 wall HP. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Lucky Scribble | Rewards / recovery | +8 Luck: improves rarity odds for future upgrades and rerolls. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
@@ -34,13 +34,13 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Living Fountain Pen | Drawing / ink economy | 35% faster ink regeneration on the first pick; smaller multipliers on repeats. | Repeatable; caps/diminishing returns may apply; Repeat level n multiplies regeneration by 1 + 0.35 / (1 + 0.5 × (n−1)). |
 | Bottomless Pen | Drawing / ink economy | Per level: +40 max ink and +2 ink/s at first, with smaller regeneration bonuses on repeats. | Repeatable; caps/diminishing returns may apply; Each level adds 40 max ink; regeneration repeats use 2 / (1 + 0.4 × (n−1)). |
 | Fortress Geometry | Walls / shapes | Per level: +50% closed-shape durability. Shares Closed Loop’s diminishing ink refund, completion repair and enclosed-enemy damage bonus (15% / 15% / 10% at the first utility level). | Repeatable; caps/diminishing returns may apply; Shares diminishing loop utility with Closed Loop; free strokes/copies do not earn ink refunds. |
-| Bandages | Stevie / rocks / survival | Heal 8 extra HP between waves. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
-| Helmet | Stevie / rocks / survival | Stevie takes 10% less contact damage. | Repeatable; caps/diminishing returns may apply; Damage reduction capped at 55%; awarded levels respect remaining cap. |
-| Pocket Rocks | Stevie / rocks / survival | Unlock rock throwing: +4 first-level damage, later gains grow to +9. Throws every 1.6s; preserves faster throws. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
-| Better Rocks | Stevie / rocks / survival | +6 first-level rock damage, later gains grow to +12. Each level shortens throws by 0.08s, down to 0.65s. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
-| Emergency Medicine | Stevie / rocks / survival | Heal 2 HP per kill, sharing the 6 HP/s combat healing budget. | Repeatable; caps/diminishing returns may apply; Shared combat-healing budget: 6 HP/s. |
-| Really Good Rocks | Stevie / rocks / survival | +12 first-level rock damage, later gains grow to +24. Each level shortens throws by 0.08s, down to 0.55s. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
-| Stevie Has Had Enough | Stevie / rocks / survival | +8 first-level rock damage, later gains grow to +15. Each level shortens throws by 0.14s, down to 0.45s. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
+| Bandages | Stevie / paper balls / survival | Heal 8 extra HP between waves. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
+| Helmet | Stevie / paper balls / survival | Stevie takes 10% less contact damage. | Repeatable; caps/diminishing returns may apply; Damage reduction capped at 55%; awarded levels respect remaining cap. |
+| Paper Balls | Stevie / paper balls / survival | Unlock paper-ball throwing. Starts near 2 damage; repeat picks and stronger builds gain less, approaching 30 base damage. Throws every 1.6s; preserves faster throws. | Repeatable; caps/diminishing returns may apply; Base damage approaches 30 with diminishing per-rank gains; Doodle Note projectile reactions retain their own damage rules. |
+| Tightly Crumpled | Stevie / paper balls / survival | Improve paper-ball damage with diminishing gains toward 30 base damage. Each level shortens throws by 0.08s, down to 0.65s. | Repeatable; caps/diminishing returns may apply; Base damage approaches 30 with diminishing per-rank gains; Doodle Note projectile reactions retain their own damage rules. |
+| Emergency Medicine | Stevie / paper balls / survival | Heal 2 HP per kill, sharing the 6 HP/s combat healing budget. | Repeatable; caps/diminishing returns may apply; Shared combat-healing budget: 6 HP/s. |
+| Perfect Paper Balls | Stevie / paper balls / survival | A stronger paper-ball damage boost, with diminishing gains toward 30 base damage. Each level shortens throws by 0.08s, down to 0.55s. | Repeatable; caps/diminishing returns may apply; Base damage approaches 30 with diminishing per-rank gains; Doodle Note projectile reactions retain their own damage rules. |
+| Stevie Has Had Enough | Stevie / paper balls / survival | Improve paper-ball damage with diminishing gains toward 30 base damage. Each level shortens throws by 0.14s, down to 0.45s. | Repeatable; caps/diminishing returns may apply; Base damage approaches 30 with diminishing per-rank gains; Doodle Note projectile reactions retain their own damage rules. |
 | Loaded Deck | Rewards / recovery | Future normal rewards cannot roll below Uncommon. | One-time unlock; One-time unlock; ordinary rewards only, no extra Legendary chances. |
 | Reroll Coupon | Rewards / recovery | +2 rerolls immediately. | Repeatable; caps/diminishing returns may apply; Stored rerolls capped at 5; awarded levels respect remaining cap. |
 | Collector | Rewards / recovery | Slightly favors upgrades you have not taken yet. | One-time unlock; One-time unlock; unowned card weights multiplied by 1.8. |
@@ -80,9 +80,9 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Blood Patch | Vampire Ink + Patchwork | Repairing walls also heals Stevie. |
 | Needlepoint | Poison Ink + Fine Tip | Cheap thin lines stack poison much faster. |
 | Heavy Artillery | Blast Ink + Fat Marker | Thicker walls create larger explosions. |
-| Hot Rocks | Fire Ink + Pocket Rocks | Stevie's rocks ignite enemies. |
-| Snowball Fight | Frost Ink + Pocket Rocks | Stevie's rocks chill and sometimes freeze enemies. |
-| Thunderstones | Electric Ink + Pocket Rocks | Stevie's rocks chain lightning and burst sparks from Electric Ink walls. |
+| Hot Paper | Fire Ink + Paper Balls | Stevie's paper balls ignite enemies. |
+| Snowball Fight | Frost Ink + Paper Balls | Stevie's paper balls chill and sometimes freeze enemies. |
+| Thunder Paper | Electric Ink + Paper Balls | Stevie's paper balls chain lightning and burst sparks from Electric Ink walls. |
 | Stevie the Unreasonable | Vampire Ink + Stevie Has Had Enough | Stevie heals from his own attacks. |
 | Human Pinball | Repulsion Ink + Helmet | Contact explosions knock nearby enemies away from Stevie. |
 | THE STORM | Electric Ink + Frost Ink + Gravity Ink | Gravity clusters, frost holds, lightning shreds the whole pack. |
@@ -102,7 +102,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Refill Practice | +1 starting ink regeneration per second per rank. Stacks with run upgrades. | 3 | 5, 12, 24 |
 | Extra Credit | Start every run with four reward choices instead of three. Boss rewards already have four. | 1 | 25 |
 | Lunchbox Band-Aids | +8 starting/max Stevie HP per rank. | 4 | 5, 12, 24, 40 |
-| Paper Ball Practice | Start throwing crumpled paper: 3 damage per rank. Higher ranks throw a little faster. | 3 | 5, 12, 24 |
+| Paper Ball Practice | Start throwing crumpled paper: 2 damage per rank. Higher ranks throw a little faster. | 3 | 5, 12, 24 |
 | Lunch Money | +1 starting reroll per rank. Each cleared wave still supplies a free reroll. | 2 | 5, 12 |
 | Lucky Eraser | +2 starting Luck per rank, improving upgrade rarity odds. | 4 | 5, 12, 24, 40 |
 
@@ -138,10 +138,10 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | --- | --- |
 | Drawing | A valid segment becomes a working wall while dragging. Paid strokes cost at least 6 ink; default cost is 0.31 ink/pixel. HP = base wall HP × length/180, with loop/intersection bonuses. Growth preserves existing damage and lifetime. |
 | Erasing | PC: right-drag. Touch: hold Erase with one thumb while the other finger rubs; Settings supports tap-to-toggle and left-side controls. Healthy paid wall sections recover 25% ink, or 30% with Starter Eraser; damage reduces recovery. Only Rubble Ruff can be erased as an enemy. |
-| Paper wear and tunnels | About 1 second of local active eraser rubbing tears a hole. Each wave starts with fresh paper; wear and holes reset, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. One 30% entry decision per hole encounter, with no approach-alignment requirement. Bosses never enter. Underground monsters ignore surface effects and damage; rocks still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page. |
+| Paper wear and tunnels | About 1 second of local active eraser rubbing tears a hole. Each wave starts with fresh paper; wear and holes reset, stay clear of the fort and form shortcuts only to exits at least 45px closer to Stevie. One 30% entry decision per hole encounter, with no approach-alignment requirement. Bosses never enter. Underground monsters ignore surface effects and damage; paper balls still hit. Rub near the moving bump for 2 seconds to force a warned emergence and 1.2-second daze. Bosses and airborne boss helpers stay above the page. |
 | Erase combat | Erase small hostile pencils/spikes, sacrificing return damage. Erasing paid electric ink between surviving wall ends discharges up to 12 + 2 × Electric Ink level damage, limited to 0.8 × removed paid ink, with a 0.8-second wall cooldown retained by fragments. Erase Chonks’s recovery support or Boingus’s fresh rebound support to stun for 1.4 seconds; each monster has a 6-second stumble cooldown. Trip Line: erase a wall within 0.45 seconds of Crash Dash or a moving Chonks reaching it to earn a safe skid and 1.4-second stumble. Bosses and airborne enemies are excluded. Firebreak: erase strips through existing Napalm/Plaguefire patches; cleared ground remains excluded from that patch’s visuals and damage, including later growth. New patches can reignite it. |
 | Closed shapes | A stroke with more than six points and endpoints less than 22 pixels apart is a closed loop. Closed Loop/Fortress Geometry add durability and paid completion utility; related synergies add effects. |
-| Stevie throws paper balls | Unlocked through throwing upgrades, Paper Ball Practice or a Doodle Scrap discovery. Automatically targets a nearby enemy within 210 pixels before range notes. Desktop WASD steers throws while held; releasing restores auto-aim. Touch keeps auto-aim. Damage and rate grow with investment; Pocket Rocks also unlocks rock/ink synergies. |
+| Stevie throws paper balls | Unlocked through throwing upgrades, Paper Ball Practice or a Doodle Scrap discovery. Automatically targets a nearby enemy within 210 pixels before range notes. Desktop WASD steers throws while held; releasing restores auto-aim. Touch keeps auto-aim. Base paper-ball damage gains diminish toward 30; notebook practice adds 2 starting damage per rank, and discovery alone starts at 2. Doodle Notes add behaviors and may increase individual projectile damage. Paper Balls also unlocks paper/ink synergies. |
 | Doodle Scraps | Permanent Notebook unlock costs 25 saved scraps. Wave budgets: 25% zero, 40% one, 25% two, 10% three; eligible normal kills reveal the budget, with 10 combat seconds between discoveries. One pickup at a time, lasts 45 seconds. Draw through it to pause and choose one of two distinct notes of the same rarity. Tier odds: Common 55%, Uncommon 28%, Rare 13%, Epic 3.7%, Legendary 0.3% per discovery. Five Legendary paper-ball behaviors are available. All notes and duplicate copies stack for the run, with bounded control/procs and diminishing range. New notes do not change throws already in flight. No wave-reward slots used; development tests and boss/helpers excluded. |
 | Specialization: Fortress | Defense-category upgrade weights ×3. Does not directly add wall HP. |
 | Specialization: Ink Alchemist | Ink-category upgrade weights ×3. Does not directly add ink levels. |

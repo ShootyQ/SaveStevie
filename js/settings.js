@@ -11,13 +11,13 @@ function setAudioVolume(name,value){
   try{localStorage.setItem(key,JSON.stringify(preferences));storageIssue=false;}catch{storageIssue=true;}
   game.api.applyMusicVolume?.();game.api.applyEffectsVolume?.();renderOptions();return true;
 }
-const controlsKey='saveStevieControlsV1';let controls={eraserToggle:false,eraserLeft:!!(document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches)};
-try{const saved=JSON.parse(localStorage.getItem(controlsKey)||'null');if(saved&&typeof saved==='object')for(const name of Object.keys(controls))if(typeof saved[name]==='boolean')controls[name]=saved[name];}catch{}
+const controlsKey='saveStevieControlsV1';let controls={eraserSize:(document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches)?'large':'normal',eraserToggle:false,eraserLeft:!!(document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches)};
+try{const saved=JSON.parse(localStorage.getItem(controlsKey)||'null');if(saved&&typeof saved==='object')for(const name of Object.keys(controls))if(name==='eraserSize'?['normal','large','extra-large'].includes(saved[name]):typeof saved[name]==='boolean')controls[name]=saved[name];}catch{}
 function drawingControls(){return {...controls};}
 function setDrawingControl(name,value){
- if(!Object.hasOwn(controls,name)||typeof value!=='boolean')return false;
+ if(!Object.hasOwn(controls,name)||(name==='eraserSize'?!['normal','large','extra-large'].includes(value):typeof value!=='boolean'))return false;
  controls[name]=value;try{localStorage.setItem(controlsKey,JSON.stringify(controls));}catch{}
- game.api.cancelDrawingInput?.();game.api.syncDrawingControls?.();renderOptions();return true;
+ game.api.cancelDrawingInput?.();game.api.syncDrawingControls?.();if(name==='eraserSize')game.api.resize?.();renderOptions();return true;
 }
 // Session-only manual rewards. Once used, a run stays unranked until reset.
 let devEnabled=false,testRun=false;
@@ -38,7 +38,7 @@ function renderDevMode(){
 }
 function renderOptions(){
   renderDevMode();
-  game.dom.$('eraserToggle').checked=controls.eraserToggle;game.dom.$('eraserLeft').checked=controls.eraserLeft;
+  game.dom.$('eraserSize').value=controls.eraserSize;game.dom.$('eraserToggle').checked=controls.eraserToggle;game.dom.$('eraserLeft').checked=controls.eraserLeft;
   for(const [name,id] of [['musicVolume','musicVolume'],['effectsVolume','effectsVolume']]){
     game.dom.$(id).value=Math.round(preferences[name]*100);game.dom.$(id+'Value').textContent=Math.round(preferences[name]*100)+'%';
   }
@@ -60,7 +60,7 @@ function renderStatistics(){
 let reportContext='';
 function renderProblemReport(){
  const s=game.state,version=game.dom.$('appVersion').textContent||'Alpha',ua=window.navigator?.userAgent||'Unavailable';
- const list=obj=>Object.entries(obj).filter(([,n])=>n>0).map(([name,n])=>name+' ×'+n).join(', ')||'None';
+ const list=obj=>Object.entries(obj).filter(([,n])=>n>0).map(([name,n])=>game.api.paperLabel(name)+' ×'+n).join(', ')||'None';
  reportContext=[
   'Save Stevie problem report',
   'Version: '+version,
@@ -107,6 +107,7 @@ const api={renderProblemReport,updateProblemReport,copyProblemReport,saveProblem
 for(const name of ['musicVolume','effectsVolume'])game.dom.$(name).oninput=e=>setAudioVolume(name,Number(e.target.value)/100);
 game.dom.$('optionsIntros').onchange=e=>game.api.setMonsterIntrosEnabled(e.target.checked);
 game.dom.$('devModeBtn').onclick=()=>setDevMode(!devEnabled);
+game.dom.$('eraserSize').onchange=e=>setDrawingControl('eraserSize',e.target.value);
 for(const name of ['eraserToggle','eraserLeft'])game.dom.$(name).onchange=e=>setDrawingControl(name,e.target.checked);
 game.dom.$('reportProblemBtn').onclick=()=>game.api.openInfo('report');
 game.dom.$('closeReportBtn').onclick=()=>game.api.closeInfo();

@@ -69,7 +69,7 @@ function renderTool(id){
   const sockets=Array.from({length:tool.slots},(_,i)=>{
     const u=effects[i];return `<span class="tool-socket" style="--socket-x:${toolArt(tool.rank).sockets[i]}%;--socket-y:${toolArt(tool.rank).y}%">${u?`${upgradeArtworkMarkup(u,24)}<span class="socket-level">${game.state.stacks[u.name]}</span>`:'<span class="socket-plus">+</span>'}</span>`;
   }).join('');
-  const synergies=game.catalog.synergyDefs.filter(d=>d.req()).map(d=>d.name).join(' · ');
+  const synergies=game.catalog.synergyDefs.filter(d=>d.req()).map(d=>game.api.paperLabel(d.name)).join(' · ');
   game.dom.$(id).innerHTML=`<div class="tool-heading"><div><span class="section-kicker">YOUR DRAWING TOOL</span><strong>${tool.name}</strong></div><span class="tool-rank">Rank ${tool.rank} · +${tool.rank*8} wall HP · ${effects.length}/${tool.slots} effects</span></div>${toolIllustration(tool.rank,sockets)}<div class="tool-slots">${slots}</div><p class="tool-synergies">${synergies?'✦ Active synergies: '+synergies:'Two compatible effects can unlock a synergy. Make this pencil yours.'}</p>`;bindArtworkFallback(game.dom.$(id));
 }
 const rarityLevels={common:1,uncommon:2,rare:3,legendary:4};
@@ -114,12 +114,12 @@ function upgradePreview(u){
     'Fortress Geometry':()=>loopPreview(.5),
     'Bandages':()=>pair('Between-wave healing',5+s.playerRegen,5+s.playerRegen+8*levels,' HP'),
     'Helmet':()=>pair('Contact damage reduction',s.playerArmor*100,Math.min(.55,s.playerArmor+.1*levels)*100,'%'),
-    'Electric Rocks':()=>pair('Electric rock level',s.electricRocks||0,Math.min(6,(s.electricRocks||0)+levels)),
-    'Pocket Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+game.api.rockTotal('Pocket Rocks',n+levels)-game.api.rockTotal('Pocket Rocks',n)),
-    'Better Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+game.api.rockTotal('Better Rocks',n+levels)-game.api.rockTotal('Better Rocks',n)),
+    'Electric Rocks':()=>pair('Static paper level',s.electricRocks||0,Math.min(6,(s.electricRocks||0)+levels)),
+    'Pocket Rocks':()=>pair('Paper-ball damage',s.rockDamage,game.api.paperUpgradeAfter('Pocket Rocks',n,levels,s.rockDamage)),
+    'Better Rocks':()=>pair('Paper-ball damage',s.rockDamage,game.api.paperUpgradeAfter('Better Rocks',n,levels,s.rockDamage)),
     'Emergency Medicine':()=>pair('Healing per kill',s.killHeal,s.killHeal+2*levels,' HP'),
-    'Really Good Rocks':()=>pair('Rock damage',s.rockDamage,s.rockDamage+game.api.rockTotal('Really Good Rocks',n+levels)-game.api.rockTotal('Really Good Rocks',n)),
-    'Stevie Has Had Enough':()=>pair('Rock damage',s.rockDamage,s.rockDamage+game.api.rockTotal('Stevie Has Had Enough',n+levels)-game.api.rockTotal('Stevie Has Had Enough',n)),
+    'Really Good Rocks':()=>pair('Paper-ball damage',s.rockDamage,game.api.paperUpgradeAfter('Really Good Rocks',n,levels,s.rockDamage)),
+    'Stevie Has Had Enough':()=>pair('Paper-ball damage',s.rockDamage,game.api.paperUpgradeAfter('Stevie Has Had Enough',n,levels,s.rockDamage)),
     'Reroll Coupon':()=>pair('Rerolls available',game.state.rerolls,Math.min(5,game.state.rerolls+2*levels))
   };
   const result=previews[u.name]?.()||{label:'Unlock',before:'Not unlocked',after:'Unlocked'};
@@ -157,7 +157,7 @@ function checkSynergies(){
   }
   if(newly.length){
     const def=newly[newly.length-1];
-    game.dom.synergyNote.innerHTML='<div class="synergy">'+(def.major?'MAJOR ':'')+'SYNERGY: '+def.name+' — '+def.desc+'</div>';
+    game.dom.synergyNote.innerHTML='<div class="synergy">'+(def.major?'MAJOR ':'')+'SYNERGY: '+game.api.paperLabel(def.name)+' — '+def.desc+'</div>';
     for(const unlocked of newly)game.api.showSynergySplash(unlocked.name,unlocked.desc,!!unlocked.major);
   }else game.dom.synergyNote.innerHTML='';
 }
@@ -208,11 +208,11 @@ game.catalog.upgrades = [
   // Stevie
   {name:'Bandages',cat:'stevie',desc:'Heal 8 extra HP between waves.',apply:()=>game.state.stats.playerRegen+=8},
   {name:'Helmet',cat:'stevie',desc:'Stevie takes 10% less contact damage.',apply:()=>game.state.stats.playerArmor=Math.min(.55,game.state.stats.playerArmor+.1)},
-  {name:'Pocket Rocks',cat:'stevie',desc:'Unlock rock throwing: +4 first-level damage, later gains grow to +9. Throws every 1.6s; preserves faster throws.',apply:()=>game.api.applyRockUpgrade('Pocket Rocks')},
-  {name:'Better Rocks',cat:'stevie',desc:'+6 first-level rock damage, later gains grow to +12. Each level shortens throws by 0.08s, down to 0.65s.',apply:()=>game.api.applyRockUpgrade('Better Rocks')},
+  {name:'Pocket Rocks',cat:'stevie',desc:'Unlock paper-ball throwing. Starts near 2 damage; repeat picks and stronger builds gain less, approaching 30 base damage. Throws every 1.6s; preserves faster throws.',apply:()=>game.api.applyRockUpgrade('Pocket Rocks')},
+  {name:'Better Rocks',cat:'stevie',desc:'Improve paper-ball damage with diminishing gains toward 30 base damage. Each level shortens throws by 0.08s, down to 0.65s.',apply:()=>game.api.applyRockUpgrade('Better Rocks')},
   {name:'Emergency Medicine',cat:'stevie',desc:'Heal 2 HP per kill, sharing the 6 HP/s combat healing budget.',apply:()=>game.state.stats.killHeal+=2},
-  {name:'Really Good Rocks',cat:'stevie',desc:'+12 first-level rock damage, later gains grow to +24. Each level shortens throws by 0.08s, down to 0.55s.',apply:()=>game.api.applyRockUpgrade('Really Good Rocks')},
-  {name:'Stevie Has Had Enough',cat:'stevie',desc:'+8 first-level rock damage, later gains grow to +15. Each level shortens throws by 0.14s, down to 0.45s.',apply:()=>game.api.applyRockUpgrade('Stevie Has Had Enough')},
+  {name:'Really Good Rocks',cat:'stevie',desc:'A stronger paper-ball damage boost, with diminishing gains toward 30 base damage. Each level shortens throws by 0.08s, down to 0.55s.',apply:()=>game.api.applyRockUpgrade('Really Good Rocks')},
+  {name:'Stevie Has Had Enough',cat:'stevie',desc:'Improve paper-ball damage with diminishing gains toward 30 base damage. Each level shortens throws by 0.14s, down to 0.45s.',apply:()=>game.api.applyRockUpgrade('Stevie Has Had Enough')},
 
   // Economy / luck
   {name:'Loaded Deck',cat:'economy',desc:'Future normal rewards cannot roll below Uncommon.',apply:()=>game.state.stats.uncommonFloor=true},
@@ -319,10 +319,10 @@ function inspectReward(u,card,pin=false,keyboard=false){
  const preview=game.api.upgradePreview(u),stack=game.state.stacks[u.name]||0;
  const slot=effectKeys[u.name]&&!stack?(equippedEffects().length>=game.state.tool.slots?'Choose which effect to replace after selecting this upgrade.':'Uses an empty effect slot.'):(effectKeys[u.name]?'Improves your equipped effect.':'Uses no effect slot.');
  const related=game.catalog.synergyDefs.filter(def=>!game.state.discoveredSynergies.has(def.name)&&((u.name==='Fire Ink'&&def.name==='Plaguefire'&&game.state.inks.poison)||(u.name==='Poison Ink'&&def.name==='Plaguefire'&&game.state.inks.fire)||(u.name==='Frost Ink'&&def.name==='Cryoshock'&&game.state.inks.electric)||(u.name==='Electric Ink'&&def.name==='Cryoshock'&&game.state.inks.frost)));
- game.dom.$('upgradeDetailsTitle').textContent=u.name;
+ game.dom.$('upgradeDetailsTitle').textContent=game.api.paperLabel(u.name);
  game.dom.$('upgradeDetailsBody').innerHTML=`<div class="upgrade-detail-intro">${upgradeArtworkMarkup(u,72)}<div><span class="rarity">${u.rarity} · ${oneTimeUpgrades.has(u.name)?'One-time unlock':'+'+upgradeLevels(u)+' level'+(upgradeLevels(u)>1?'s':'')}</span><p>${u.desc}</p></div></div><div class="reward-change"><span class="change-label">${preview.label}</span><div class="change-values"><div><small>NOW</small><strong>${preview.before}</strong></div><span aria-hidden="true">→</span><div><small>AFTER</small><strong>${preview.after}</strong></div></div></div><div class="effect-comparison"><p><b>Now:</b> ${preview.beforeDetail}</p><p><b>After:</b> ${preview.afterDetail}</p></div><p class="slot-hint">${slot}</p>${related.map(def=>'<p class="reward-synergy">Pairs into '+def.name+' · '+def.desc+'</p>').join('')}`;
  bindArtworkFallback(game.dom.$('upgradeDetailsBody'));game.dom.$('upgradeDetails').hidden=false;
- game.dom.$('takeUpgradeBtn').textContent=effectKeys[u.name]&&!stack&&equippedEffects().length>=game.state.tool.slots?'Choose replacement':'Take '+u.name;
+ game.dom.$('takeUpgradeBtn').textContent=effectKeys[u.name]&&!stack&&equippedEffects().length>=game.state.tool.slots?'Choose replacement':'Take '+game.api.paperLabel(u.name);
  game.dom.$('takeUpgradeBtn').disabled=false;
  if(pin)game.dom.$('upgradeDetails').scrollIntoView?.({block:'nearest',behavior:'auto'});
  if(keyboard)game.dom.$('takeUpgradeBtn').focus?.();
@@ -380,8 +380,8 @@ function renderUpgradeCards(picks,count=picks.length){
  game.dom.cardsEl.innerHTML='';game.dom.cardsEl.className='cards '+(count===4?'four':count===1?'dev-preview':'');
  picks.forEach(u=>{
   const c=document.createElement('div');c.className='ucard '+u.rarity;const stack=game.state.stacks[u.name]||0,preview=game.api.upgradePreview(u);
-  c.innerHTML=`${upgradeArtworkMarkup(u,72)}<div class="rarity">${u.rarity} · ${oneTimeUpgrades.has(u.name)?'UNLOCK':'+'+upgradeLevels(u)+' LEVEL'+(upgradeLevels(u)>1?'S':'')}</div><h3>${u.name}</h3><span class="card-level">${oneTimeUpgrades.has(u.name)?'One-time':effectKeys[u.name]?preview.before+' → '+preview.after:(stack?'Owned ×'+stack:'Utility')}</span>`;
-  bindArtworkFallback(c);c.setAttribute?.('role','button');c.setAttribute?.('tabindex','0');c.setAttribute?.('aria-controls','upgradeDetails');c.setAttribute?.('aria-expanded','false');c.setAttribute?.('aria-label',u.name+', '+u.rarity+'. Inspect upgrade.');
+  c.innerHTML=`${upgradeArtworkMarkup(u,72)}<div class="rarity">${u.rarity} · ${oneTimeUpgrades.has(u.name)?'UNLOCK':'+'+upgradeLevels(u)+' LEVEL'+(upgradeLevels(u)>1?'S':'')}</div><h3>${game.api.paperLabel(u.name)}</h3><span class="card-level">${oneTimeUpgrades.has(u.name)?'One-time':effectKeys[u.name]?preview.before+' → '+preview.after:(stack?'Owned ×'+stack:'Utility')}</span>`;
+  bindArtworkFallback(c);c.setAttribute?.('role','button');c.setAttribute?.('tabindex','0');c.setAttribute?.('aria-controls','upgradeDetails');c.setAttribute?.('aria-expanded','false');c.setAttribute?.('aria-label',game.api.paperLabel(u.name)+', '+u.rarity+'. Inspect upgrade.');
   c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inspectReward(u,c,true,true)}else if(e.key==='Escape'){e.preventDefault();clearRewardPreview(true)}};
   c.onclick=()=>inspectReward(u,c,true);
   c.onpointerenter=e=>{if(!hoverPreviewSuppressed&&e.pointerType==='mouse'&&typeof matchMedia==='function'&&matchMedia('(hover: hover)').matches)inspectReward(u,c)};
@@ -393,7 +393,7 @@ function renderUpgradeCards(picks,count=picks.length){
 function renderDevReward(){
   const available=game.catalog.upgrades.filter(u=>game.api.upgradeAvailable(u)),select=game.dom.$('devUpgrade');
   const previous=select.value;
-  select.innerHTML=available.map(u=>`<option value="${u.name}">${u.name}${effectKeys[u.name]?' · effect':' · utility'}</option>`).join('');
+  select.innerHTML=available.map(u=>`<option value="${u.name}">${game.api.paperLabel(u.name)}${effectKeys[u.name]?' · effect':' · utility'}</option>`).join('');
   select.value=available.some(u=>u.name===previous)?previous:available[0]?.name||'';
   const base=available.find(u=>u.name===select.value);
   for(const option of game.dom.$('devRarity').options||[])option.disabled=!!base?.exclusiveRarity&&option.value!==base.exclusiveRarity;
@@ -434,6 +434,7 @@ function chooseSpecialization(spec){
   game.api.openUpgrade();
   game.api.setMsg('Specialization: '+({defense:'Fortress',ink:'Ink Alchemist',chaos:'Chaos'}[spec]))
 }
+for(const u of [...game.catalog.upgrades,...game.catalog.synergyDefs])u.desc=game.api.paperLabel(u.desc);
 const api = { inspectReward, takeInspectedReward, clearRewardPreview, upgradeArtworkInfo, upgradeArtworkMarkup, applyUpgrade, isOneTimeUpgrade:name=>oneTimeUpgrades.has(name), toolIllustration, renderDevReward, upgradeLevels, upgradePreview, equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
 Object.assign(game.api, api);
 game.dom.$('takeUpgradeBtn').onclick=takeInspectedReward;game.dom.$('closeUpgradeDetails').onclick=()=>clearRewardPreview(true);

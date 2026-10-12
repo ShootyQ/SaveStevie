@@ -60,7 +60,7 @@ DoodleDefender.systems.doodleScraps=function(game){
   else{drop.life-=dt;if(drop.life<=0)drop=null;}return false;
  }
  function chooseDoodle(index){if(!offers[index]||game.dom.$('doodleOverlay').style.display!=='grid')return false;const n=offers[index],oldInterval=paperThrowInterval();element=n.id;counts[n.id]=(counts[n.id]||0)+1;if(n.id==='quick'&&oldInterval>0)game.state.player.rockCd*=paperThrowInterval()/oldInterval;
-  if(!game.state.stats.rockRate){game.state.stats.rockDamage=Math.max(4,game.state.stats.rockDamage);game.state.stats.rockRate=1.6;}
+  if(!game.state.stats.rockRate){game.state.stats.rockDamage=Math.max(2,game.state.stats.rockDamage);game.state.stats.rockRate=1.6;}
   game.api.setMsg(n.name+' added! All your Doodle Scraps stack.');game.api.closeInfo(false);return true;
  }
  function dismissDoodleChoice(){offers=[];}
