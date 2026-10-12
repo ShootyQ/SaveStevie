@@ -1247,9 +1247,9 @@ html.native-app{--native-top:env(safe-area-inset-top,0px)}
 #hubOverlay #hubBetaScrapsBtn{color:#6c4590;--scrap-art:url('assets/art/ui/recess-pencil.svg')}
 #betaScrapsOverlay{position:fixed;inset:0;z-index:30;width:100%;height:100dvh;padding:0;background:#e9dfca;overflow:hidden;align-items:stretch;justify-items:stretch}
 html.native-app #betaScrapsOverlay{padding:0}
-.beta-tree-viewport{position:relative;width:100%;height:100%;overflow:hidden;background:#ede5d2 url('assets/art/ui/recess-sheet.svg') center/100% 100% no-repeat;touch-action:none;user-select:none;cursor:grab;color:#303c3d}
+.beta-tree-viewport{position:relative;width:100%;height:100%;overflow:hidden;overflow:clip;background:#ede5d2 url('assets/art/ui/recess-sheet.svg') center/100% 100% no-repeat;touch-action:none;user-select:none;cursor:grab;color:#303c3d}
 .beta-tree-viewport:active{cursor:grabbing}.beta-tree-viewport:focus-visible{outline:3px dashed #315eb3;outline-offset:-6px}
-.beta-tree-board{position:absolute;top:0;left:0;width:1536px;height:1200px;transform-origin:0 0;will-change:transform}.beta-tree-background{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.beta-tree-board{position:absolute;top:0;left:0;width:2400px;height:2000px;transform-origin:0 0;will-change:transform}.beta-tree-background{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .beta-branch-title{position:absolute;margin:0;padding:0 5px;min-height:34px;box-shadow:none;border:0;border-radius:0;background:none;color:#294b70;font-family:'Stevie Pencil',cursive;font-size:30px;line-height:1;cursor:pointer;text-shadow:0 1px #fff;transform:rotate(-1deg)}
 .beta-branch-title:hover{background:none;box-shadow:none;color:#416f32;transform:rotate(1deg)}
 .beta-tree-node{--tilt:-1deg;position:absolute;isolation:isolate;min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 16px;border:0;border-radius:0;background:none;color:#29383d;box-shadow:none;cursor:pointer;font-family:'Stevie Pencil',cursive;font-size:23px;line-height:1.05;text-align:left;transform:rotate(var(--tilt))}
@@ -1274,9 +1274,8 @@ html.native-app #betaScrapsOverlay{padding:0}
 
 /* Clear purchase paths: sparse paper, one arrow between each skill. */
 #betaTreePaths{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.beta-tree-stevie{position:absolute;left:695px;top:65px;width:146px;height:167px;object-fit:contain;pointer-events:none}
-#betaHeldTool{left:755px;top:132px;width:92px;height:46px;transform:rotate(-72deg)}
-.beta-path-lesson{position:absolute;left:548px;top:343px;width:440px;margin:0;text-align:center;font:23px 'Stevie Pencil',cursive;color:#6e6557;pointer-events:none}
+.beta-tree-stevie{position:absolute;left:1090px;top:740px;width:220px;height:252px;object-fit:contain;pointer-events:none}
+#betaHeldTool{left:1180px;top:841px;width:138px;height:69px;transform:rotate(-72deg)}
 .beta-branch-title{font-size:31px;min-height:40px;cursor:default}
 .beta-tree-node{min-height:88px;display:block;text-align:center;font-size:28px;padding:15px 20px}
 .beta-tree-node strong{display:block}.beta-tree-node span{display:block;font-size:20px;white-space:normal;margin-top:8px}
@@ -1285,3 +1284,7 @@ html.native-app #betaScrapsOverlay{padding:0}
 .beta-tree-node.future{font-size:25px;opacity:.65;min-height:80px}
 .beta-tree-node.future::after{opacity:.55}.beta-tree-node.locked{color:#847a69}
 #beta-node-start{font-size:30px}.beta-branch-title:hover{transform:rotate(-1deg);color:#294b70}
+
+/* Handwritten directions belong to the radial map, not a separate toolbar. */
+.beta-branch-title{font-size:23px;min-height:44px;cursor:pointer}
+.beta-branch-title:hover{color:#416f32;transform:rotate(1deg)}
