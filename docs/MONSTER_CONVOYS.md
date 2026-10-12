@@ -11,7 +11,7 @@ After the eraser throw, Pew-Pew waits 1.5 seconds before a normal damaging penci
 
 Erasing a dotted route leaves one visible gap and a green upstream endpoint.
 Followers reaching the gap hesitate for 0.65 seconds, then cross to the next
-remaining dots if their bodies fit. Drawing a normal paid stroke from within
+remaining dots if their bodies fit. Drawing a stroke costing 15% of normal ink (including the minimum cost) from within
 26 pixels of the green endpoint replaces the downstream route with green
 dotted directions. The stroke becomes instructions rather than a player wall;
 it cannot merge with an existing wall through Doodle Stitch.
