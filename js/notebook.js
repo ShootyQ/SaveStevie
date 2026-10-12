@@ -23,6 +23,7 @@ try{
   const saved=JSON.parse(localStorage.getItem(key)||'null');
   if(saved&&[1,2].includes(saved.version)&&typeof saved.levels==='object'&&saved.levels!==null){
     progress.scrapTutorialDone=saved.scrapTutorialDone===true;
+    progress.betaPencilClaimed=saved.betaPencilClaimed===true;
     progress.scraps=cleanNumber(saved.scraps);progress.lifetimeScraps=Math.max(progress.scraps,cleanNumber(saved.lifetimeScraps));
     for(const p of perks)progress.levels[p.id]=Math.min(p.max,cleanNumber(saved.levels[p.id]));
     if(saved.version===1){
@@ -83,6 +84,12 @@ function buyNotebookPerk(id){
   const bought=game.dom.$('notebookBuy-'+id);
   (bought.disabled?game.dom.$('closeNotebookBtn'):bought).focus?.({preventScroll:true});return true;
 }
+// The beta view shares ranks and transactions; its free starting node grants no duplicate stats.
+function claimBetaPencil(){
+  if(!canSpendScraps()||progress.betaPencilClaimed)return false;
+  progress.betaPencilClaimed=true;saveNotebook();return true;
+}
+function notebookPerkPrice(id){const p=perks.find(p=>p.id===id);return p?perkPrice(p,progress.levels[id]):null;}
 function resetNotebookProgress(){
   if(!window.confirm('Start over? This erases all scraps, permanent Notebook perks, your best-wave record, and the current run on this browser. Music and monster-intro settings stay.'))return false;
   const fresh={version:2,scraps:0,lifetimeScraps:0,levels:Object.fromEntries(perks.map(p=>[p.id,0]))};
@@ -136,6 +143,6 @@ function syncScrapTutorial(){
 function finishScrapTutorial(){if(!progress.levels.starterEraser)return false;progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial();return true;}
 function openNotebook(){game.api.openInfo('notebook')}
 function closeNotebook(){game.api.closeInfo()}
-const api={adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
+const api={claimBetaPencil,notebookPerkPrice,adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;
 };
