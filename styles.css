@@ -1195,3 +1195,17 @@ html.native-app .panel:has(.score-hud:not([hidden])) #hitNotice{bottom:calc(122p
 #pauseOverlay .recess-page{padding-bottom:29px}
 @media(max-width:480px){#pauseOverlay .pause-actions button.paper-slip{min-height:59px;padding-block:18px}#pauseOverlay .pause-actions{gap:15px}}
 @media(max-height:650px){#pauseOverlay .pause-actions button.paper-slip{min-height:54px;padding-block:15px}}
+
+/* Button size changes its touch target, never the eraser brush radius. */
+html{--eraser-button-height:44px;--eraser-button-width:108px;--control-tray-height:52px}
+html[data-eraser-size="large"]{--eraser-button-height:60px;--eraser-button-width:144px;--control-tray-height:68px}
+html[data-eraser-size="extra-large"]{--eraser-button-height:76px;--eraser-button-width:184px;--control-tray-height:84px}
+.bottom,html.native-app .bottom{height:calc(var(--control-tray-height) + var(--native-bottom,0px));flex-basis:var(--control-tray-height);align-items:flex-end}
+.bottom #eraserBtn,html.native-app .bottom #eraserBtn{height:var(--eraser-button-height);min-height:var(--eraser-button-height);flex:0 1 var(--eraser-button-width);max-width:var(--eraser-button-width);font-size:22px}
+html.native-app .score-hud{bottom:calc(var(--control-tray-height) + 10px + var(--native-bottom))}
+html.native-app .panel:has(.score-hud:not([hidden])) #hitNotice{bottom:calc(var(--control-tray-height) + 70px + var(--native-bottom))}
+.eraser-size-setting{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:16px 0}
+.eraser-size-setting select{font:inherit;min-height:44px;padding:7px;color:#26343d;background:#fffaf0;border:1px solid #bba985;border-radius:5px}
+/* Hidden Android system bars must not leave a stale status-bar-sized HUD gap.
+   Browser safe-area insets still protect actual display cutouts. */
+html.native-app{--native-top:env(safe-area-inset-top,0px)}

@@ -9,6 +9,7 @@ let strokePointer=null,modifierPointer=null,held=false,toggled=false,rightDrag=f
 function canPaint(){return game.state.running&&!game.state.paused&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec&&!game.api.synergyRevealActive()&&!game.api.waveFinaleActive()&&!game.api.wobbleRepairActive()&&!game.api.bossEntranceActive();}
 function eraserActive(){return rightDrag||held||toggled;}
 function syncDrawingControls(){
+ if(document.documentElement)document.documentElement.dataset.eraserSize=game.api.drawingControls().eraserSize;
  const button=game.dom.$('eraserBtn'),active=eraserActive();button.textContent=active?'Erasing':'Erase';button.setAttribute?.('aria-pressed',String(active));button.classList?.toggle('eraser-left',game.api.drawingControls().eraserLeft);button.classList?.toggle('is-erasing',active);button.title=game.api.drawingControls().eraserToggle?'Tap to switch between drawing and erasing':'Hold while your other finger erases. PC: right-drag to erase.';
  game.dom.canvas.style.cursor=active?'none':'crosshair';
 }

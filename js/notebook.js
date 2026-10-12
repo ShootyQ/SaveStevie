@@ -12,7 +12,7 @@ const perks=game.catalog.notebookPerks=[
   {id:'inkRegen',name:'Refill Practice',max:3,art:'quick-refill',desc:'+1 starting ink regeneration per second per rank. Stacks with run upgrades.',effect:n=>'+'+n+' starting ink/s'},
   {id:'extraChoice',name:'Extra Credit',max:1,art:'greedy-goblin',desc:'Start every run with four reward choices instead of three. Boss rewards already have four.',effect:n=>n?'4 reward choices from the first wave':'3 normal reward choices'},
   {id:'health',name:'Lunchbox Band-Aids',max:4,art:'bandages',desc:'+8 starting/max Stevie HP per rank.',effect:n=>'+'+8*n+' Stevie HP'},
-  {id:'rocks',name:'Paper Ball Practice',max:3,art:'pocket-rocks',desc:'Start throwing crumpled paper: 3 damage per rank. Higher ranks throw a little faster.',effect:n=>n?(3*n)+' starting paper-ball damage · '+Number((1.6-.1*n).toFixed(1))+'s between throws':'Starting paper balls not unlocked'},
+  {id:'rocks',name:'Paper Ball Practice',max:3,art:'pocket-rocks',desc:'Start throwing crumpled paper: 2 damage per rank. Higher ranks throw a little faster.',effect:n=>n?(2*n)+' starting paper-ball damage · '+Number((1.6-.1*n).toFixed(1))+'s between throws':'Starting paper balls not unlocked'},
   {id:'rerolls',name:'Lunch Money',max:2,art:'reroll-coupon',desc:'+1 starting reroll per rank. Each cleared wave still supplies a free reroll.',effect:n=>'+'+n+' starting rerolls'},
   {id:'luck',name:'Lucky Eraser',max:4,art:'lucky-scribble',desc:'+2 starting Luck per rank, improving upgrade rarity odds.',effect:n=>'+'+2*n+' starting Luck'}
 ];
@@ -70,7 +70,7 @@ function applyNotebookLoadout(){
   s.inkRegen+=l.inkRegen;s.extraChoice=!!l.extraChoice;
   s.maxInk+=l.inkTank*20;s.ink=s.maxInk;s.wallHp+=l.tool*8;
   p.maxHp+=l.health*8;p.hp=p.maxHp;
-  s.rockDamage=l.rocks*3;s.rockRate=l.rocks?Number((1.6-.1*l.rocks).toFixed(1)):0;
+  s.rockDamage=l.rocks*2;s.rockRate=l.rocks?Number((1.6-.1*l.rocks).toFixed(1)):0;
   s.luck+=l.luck*2;game.state.rerolls+=l.rerolls;
 }
 function canSpendScraps(){return !game.state.running}
@@ -108,7 +108,7 @@ function renderNotebook(){
   game.dom.$('notebookNotice').textContent=storageIssue?'This browser is not saving progress. Scraps and purchases are kept for this visit.':locked?'Your run is paused. Purchases unlock after it ends and apply to the next run.':'Spend scraps on your next attempt. Permanent perks stack with the upgrades you earn during a run.';
   if(migrationRefund)game.dom.$('notebookNotice').textContent+=' Fresh Pencil was retired: '+migrationRefund+' scraps returned for your drawing tool.';
   const l=progress.levels;
-  game.dom.$('notebookLoadout').textContent='Next run: '+toolForRank(l.tool).name+' · '+toolForRank(l.tool).slots+' effect slots · '+(160+l.inkTank*20)+' ink · '+(5+l.inkRegen)+' ink/s · '+(65+l.tool*8)+' wall HP · 8 wall damage/s · '+(75+l.health*8)+' Stevie HP · '+l.rerolls+' starting rerolls · '+(l.extraChoice?4:3)+' reward choices · '+(l.luck*2)+' Luck'+(l.rocks?' · '+l.rocks*3+' rock damage':'')+' · '+Math.round((.25+.05*l.starterEraser)*100)+'% erase recovery';
+  game.dom.$('notebookLoadout').textContent='Next run: '+toolForRank(l.tool).name+' · '+toolForRank(l.tool).slots+' effect slots · '+(160+l.inkTank*20)+' ink · '+(6+l.inkRegen)+' ink/s · '+(65+l.tool*8)+' wall HP · 8 wall damage/s · '+(75+l.health*8)+' Stevie HP · '+l.rerolls+' starting rerolls · '+(l.extraChoice?4:3)+' reward choices · '+(l.luck*2)+' Luck'+(l.rocks?' · '+l.rocks*2+' paper-ball damage':'')+' · '+Math.round((.25+.05*l.starterEraser)*100)+'% erase recovery';
   const list=game.dom.$('notebookPerks');list.innerHTML='';
   for(const perk of perks){
     const rank=l[perk.id],maxed=rank===perk.max,price=perkPrice(perk,rank),card=document.createElement('article');card.className='notebook-perk'+(perk.id==='starterEraser'&&scrapLessonPending()?' scrap-guide-target':'');

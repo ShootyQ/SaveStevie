@@ -12,6 +12,8 @@ b.sandbox.testGame.api.applyNotebookLoadout=legacyStartingKit;
 // Scoring is intentionally redesigned; retain flat kill points only in v8
 // parity comparisons. The real distance/streak authority has focused tests.
 b.sandbox.testGame.api.awardKillScore=()=>{b.sandbox.testGame.state.score+=10;};
+// Preserve original labels only in the unchanged v8 HUD comparison.
+b.sandbox.testGame.api.paperLabel=text=>text;
 // Keep release-only drawing and the old HP clamps in the unchanged-system
 // parity fixture; smooth durability and live strokes have focused checks below.
 b.sandbox.testGame.api.updateLiveWall=points=>points;
@@ -160,7 +162,7 @@ choose('Fire Ink');choose('Fire Ink');
 assert.equal(bg.state.inks.fire,2);assert.match(bg.api.upgradeEffect('Fire Ink'),/9 burn damage/);
 choose('Pocket Rocks');choose('Better Rocks');const rate=bg.state.stats.rockRate;
 choose('Pocket Rocks');assert.equal(bg.state.stats.rockRate,rate,'repeated Pocket Rocks preserves faster throws');
-assert.equal(bg.state.stats.rockDamage,15);
+assert.equal(bg.state.stats.rockDamage,5.92);
 choose('Doodle Stitch');choose('Doodle Stitch');
 assert.equal(bg.state.stacks['Doodle Stitch'],1,'one-time unlock cannot be wasted twice');
 for(let i=0;i<6;i++)choose('Helmet');
@@ -173,7 +175,7 @@ bg.api.update(.033);assert.equal(bg.state.timeLeft,snapshot,'review pauses comba
 assert.match(build.node('buildUpgrades').innerHTML,/Bigger Ink Tank ×2/);
 assert.match(build.node('buildUpgrades').innerHTML,/\+70 max ink/);
 assert.match(build.node('buildStats').innerHTML,/230/);
-assert.match(build.node('buildSynergies').innerHTML,/Hot Rocks/);
+assert.match(build.node('buildSynergies').innerHTML,/Hot Paper/);
 bg.api.closeBuild();assert.equal(bg.state.paused,false);
 bg.state.paused=true;bg.api.openBuild();bg.api.closeBuild();assert.equal(bg.state.paused,true,'closing preserves an existing pause');
 bg.api.resetRun();bg.api.renderBuild();assert.match(build.node('buildUpgrades').innerHTML,/No upgrades yet/);assert.match(build.node('buildSynergies').innerHTML,/No active synergies/);
@@ -680,7 +682,7 @@ const storage={getItem:k=>stored.get(k)??null,setItem:(k,v)=>stored.set(k,String
 const env=load(true,{storage}),g=env.sandbox.testGame;
 assert.equal(g.api.buyNotebookPerk('inkTank'),false,'no free purchases');
 g.api.resetRun();
-assert.deepEqual([g.state.stats.maxInk,g.state.stats.inkRegen,g.state.stats.wallHp,g.state.stats.wallDamage,g.state.player.maxHp,g.state.rerolls],[160,5,65,8,75,0]);
+assert.deepEqual([g.state.stats.maxInk,g.state.stats.inkRegen,g.state.stats.wallHp,g.state.stats.wallDamage,g.state.player.maxHp,g.state.rerolls],[160,6,65,8,75,0]);
 for(let i=0;i<25;i++){const e=g.api.spawnEnemy(false,100,100,'grunt');g.api.killEnemy(e);g.api.killEnemy(e)}
 assert.equal(g.api.notebookSnapshot().scraps,1,'25 actual kills, no double rewards');
 const contact=g.api.spawnEnemy(false,g.state.player.x,g.state.player.y,'grunt');g.api.contactStevie(contact);assert.equal(g.api.notebookSnapshot().scraps,1,'contact removals do not earn scraps');
@@ -704,8 +706,8 @@ const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:2000,lifeti
 const rich=load(true,{storage:richStore}).sandbox.testGame;
 for(const p of rich.catalog.notebookPerks){for(let rank=0;rank<p.max;rank++)assert.equal(rich.api.buyNotebookPerk(p.id),true);assert.equal(rich.api.buyNotebookPerk(p.id),false,'rank cap')}
 assert.equal(rich.api.notebookSnapshot().scraps,1298,'all rank prices charged exactly');
-rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,8);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);rich.api.rollCards();assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,145,107,9,1.3,2,8]);
-rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.3,'rock unlock preserves faster starter throws');assert.equal(rich.state.stats.rockDamage,13);
+rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,9);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);rich.api.rollCards();assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,145,107,6,1.3,2,8]);
+rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.3,'rock unlock preserves faster starter throws');assert.equal(rich.state.stats.rockDamage,7.55);
 const dirty=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:-5,lifetimeScraps:'oops',levels:{inkTank:999,health:-2,rocks:1.5,luck:'4'}}):null,setItem(){}}}).sandbox.testGame;
 assert.equal(dirty.api.notebookSnapshot().scraps,0);dirty.api.resetRun();assert.equal(dirty.state.stats.maxInk,260);assert.equal(dirty.state.player.maxHp,75);assert.equal(dirty.state.stats.rockDamage,0);assert.equal(dirty.state.stats.luck,0);
 const blocked=load(true,{storage:{getItem:()=>null,setItem(){throw Error('blocked')}}}),sg=blocked.sandbox.testGame;
@@ -790,7 +792,7 @@ g.state.paused=true;g.api.update(1);assert.equal(g.api.healStevie(100),0,'pause 
 g.state.player.hp=0;assert.equal(g.api.healStevie(100),0,'combat healing never revives Stevie');
 g.api.resetRun();g.state.player.hp=20;g.state.synergies.add('Stevie the Unreasonable');const rockTarget=g.api.spawnEnemy(false,100,200,'tank');g.state.projectiles=Array.from({length:4},()=>({x:100,y:200,target:rockTarget,speed:0,damage:100,life:1}));g.api.updateProjectiles(.01);assert.equal(g.state.player.hp,26,'rock-healing synergy shares the same combat budget');
 g.api.resetRun();const choose=name=>g.api.chooseUpgrade(g.catalog.upgrades.find(u=>u.name===name));
-choose('Quick Refill');assert.equal(g.state.stats.inkRegen,7);choose('Quick Refill');assert.ok(Math.abs(g.state.stats.inkRegen-(7+2/1.4))<1e-10);assert.match(g.api.upgradeEffect('Quick Refill'),/3.43/);
+choose('Quick Refill');assert.equal(g.state.stats.inkRegen,8);choose('Quick Refill');assert.ok(Math.abs(g.state.stats.inkRegen-(8+2/1.4))<1e-10);assert.match(g.api.upgradeEffect('Quick Refill'),/3.43/);
 const before=g.state.stats.inkRegen;choose('Living Fountain Pen');choose('Living Fountain Pen');assert.ok(Math.abs(g.state.stats.inkRegen-before*1.35*(1+.35/1.5))<1e-10);
 const preBottomless=g.state.stats.inkRegen;choose('Bottomless Pen');choose('Bottomless Pen');assert.ok(Math.abs(g.state.stats.inkRegen-preBottomless-2-2/1.4)<1e-10);
 g.api.resetRun();g.state.stats.tripleLine=true;g.state.stats.doubleLine=true;g.api.createWall([{x:100,y:100},{x:280,y:100}]);assert.equal(g.state.walls.length,1,'retired flags never generate copies');
@@ -1393,9 +1395,9 @@ console.log('PASS: paid loop refund/repair, all-damage enclosure, overlap/boss l
  g.api.updateBossEncounter(e,.01);assert.equal(g.api.bossBrain(e).enclosed,true);assert.equal(g.api.bossDamageMultiplier(e),1.35);
  g.api.updateBossEncounter(e,1.8);assert.equal(g.api.bossBrain(e).cast.kind,'breakout');assert.equal(g.state.walls.length,1);
  g.api.updateBossEncounter(e,1.2);assert.equal(g.state.walls.length,0,'breakout only tears the cage after warning');
- for(const name of ['Pocket Rocks','Better Rocks','Really Good Rocks','Stevie Has Had Enough']){assert.ok(g.api.rockGain(name,1)<g.api.rockGain(name,4));assert.ok(g.api.rockGain(name,100)>=g.api.rockGain(name,4))}
- g.api.resetRun();const rocks=g.catalog.upgrades.find(u=>u.name==='Better Rocks');g.api.chooseUpgrade({...rocks,rarity:'rare'});assert.equal(g.state.stats.rockDamage,24,'Rare applies three smaller growing gains');
- const preview=g.api.upgradePreview({...rocks,rarity:'common'});assert.equal(preview.before,'24');assert.equal(preview.after,'36');
+ for(const name of ['Pocket Rocks','Better Rocks','Really Good Rocks','Stevie Has Had Enough']){assert.ok(g.api.rockGain(name,1)>g.api.rockGain(name,4));assert.ok(g.api.rockGain(name,100)<g.api.rockGain(name,4))}
+ g.api.resetRun();const rocks=g.catalog.upgrades.find(u=>u.name==='Better Rocks');g.api.chooseUpgrade({...rocks,rarity:'rare'});assert.equal(g.state.stats.rockDamage,6.56,'Rare applies three diminishing paper-ball gains');
+ const preview=g.api.upgradePreview({...rocks,rarity:'common'});assert.equal(preview.before,'6.56');assert.equal(preview.after,'7.86');
  console.log('PASS: timed boss lead-in, survivor cleanup, paused warnings, portrait resize and arrival safety, body-stroke crushing, shared boss damage budgets, enclosure breakout and rarity rock progression.');
 }
 {
@@ -2556,7 +2558,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  g.state.paused=true;g.api.update(5);assert.equal(g.api.doodleScrapsSnapshot().clock,snap.clock);g.state.paused=false;
  assert.equal(g.api.collectDoodleScrap([{x:drop.x-20,y:drop.y+50},{x:drop.x+20,y:drop.y+50}],0),false,'drawing must reach the pickup');
  g.api.createWall([{x:drop.x-20,y:drop.y},{x:drop.x+20,y:drop.y}]);assert(g.api.doodleScrapsSnapshot().drop.reel>0);
- const time=g.state.timeLeft;g.api.update(.5);assert.equal(g.state.paused,true);assert.equal(g.state.timeLeft,time);snap=g.api.doodleScrapsSnapshot();assert.equal(snap.offers.length,2);assert.notEqual(snap.offers[0],snap.offers[1]);const selected=snap.offers[0];assert(g.api.chooseDoodle(0));assert.equal(g.state.paused,false);assert.equal(g.api.paperElement(),selected);assert.equal(g.state.stats.rockDamage,4);assert.equal(g.state.stats.rockRate,1.6);assert.equal(g.state.tool.slots,2);assert.equal(Object.keys(g.state.stacks).length,0,'does not spend a wave upgrade');assert.equal(g.api.chooseDoodle(0),false,'choice is single use');
+ const time=g.state.timeLeft;g.api.update(.5);assert.equal(g.state.paused,true);assert.equal(g.state.timeLeft,time);snap=g.api.doodleScrapsSnapshot();assert.equal(snap.offers.length,2);assert.notEqual(snap.offers[0],snap.offers[1]);const selected=snap.offers[0];assert(g.api.chooseDoodle(0));assert.equal(g.state.paused,false);assert.equal(g.api.paperElement(),selected);assert.equal(g.state.stats.rockDamage,2);assert.equal(g.state.stats.rockRate,1.6);assert.equal(g.state.tool.slots,2);assert.equal(Object.keys(g.state.stacks).length,0,'does not spend a wave upgrade');assert.equal(g.api.chooseDoodle(0),false,'choice is single use');
  const old=g.api.paperElement();g.api.updateDoodleScraps(21);for(let i=0;i<1000&&!g.api.doodleScrapsSnapshot().drop;i++)g.api.dropDoodleScrap(foe);snap=g.api.doodleScrapsSnapshot();assert(snap.drop);assert.equal(g.api.collectDoodleScrap([{x:snap.drop.x,y:snap.drop.y-20},{x:snap.drop.x,y:snap.drop.y+20}],0),true,'freehand lines can collect too');g.api.updateDoodleScraps(.5);const second=g.api.doodleScrapsSnapshot().offers[1];g.api.chooseDoodle(1);assert(g.api.noteLevel(old)>0,'earlier discovery retained');assert(g.api.noteLevel(second)>0);assert.equal(Object.values(g.api.paperPayload()).reduce((a,b)=>a+b,0),2,'discoveries stack');
  for(const id of ['fire','poison','frost','electric','eraser']){
   const e=g.api.spawnEnemy(false,null,null,'grunt');e.hp=e.maxHp=100;e.x=300;e.y=200;e.chainCd=0;g.api.applyDoodleHit(e,id);
@@ -2685,3 +2687,5 @@ require('./scoring.cjs')(load);
 require('./chonks-shield.cjs')(load);
 
 require('./chonks-cap-doom-retreat.cjs')(load);
+
+require('./paper-ball-balance.cjs')(load);
