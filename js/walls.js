@@ -351,7 +351,10 @@ function finishStitch(t){
  for(const copy of t.copies)copy.stitchCount=w.stitchCount;
 }
 function closeCreatedWall(t){
- const w=t.base;w.closed=game.api.dist(w.pts[0].x,w.pts[0].y,w.pts.at(-1).x,w.pts.at(-1).y)<22&&w.pts.length>6;
+ const w=t.base;
+ // Circle Studies and loop perks must agree before sizing closed-wall HP.
+ const circle=!w.wobbleBumper&&!w.sneakyDraft&&!game.api.firstLessonActive()&&game.api.notebookSnapshot().levels.circles>0&&game.api.circleGeometry(w.pts);
+ w.closed=!!circle||game.api.dist(w.pts[0].x,w.pts[0].y,w.pts.at(-1).x,w.pts.at(-1).y)<22&&w.pts.length>6;
  resizeConnectorHp(t,w.closed);
  if(w.hp<=0)game.state.walls=game.state.walls.filter(a=>a!==w);
 }
@@ -434,8 +437,8 @@ function finishWallEffects(base,actualPaid,copies=[],points=base.pts){if(base.wo
   game.api.cutWobbleStroke(points);
   game.api.cutTwiceyStroke(points);
   game.api.connectDoodleDots(points);
-  game.api.finishCircle(base);
   if(base.closed)rewardClosedLoop(base,actualPaid);
+  game.api.finishCircle(base);
 }
 // A held stroke owns real wall objects. Growing changes those objects, rather
 // than replacing them, so combat damage and remaining lifetime are retained.
