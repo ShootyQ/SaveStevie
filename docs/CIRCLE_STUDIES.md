@@ -1,4 +1,4 @@
-# Circle Studies — Alpha 0.1.63
+# Circle Studies — Alpha 0.1.64
 
 Shapes opens after defeating Wobblechomp in a normal wave-10 fight. Existing saves with best wave 11 or higher qualify. Circle Studies costs 25 scraps once and uses the shared Notebook wallet; it also appears in the original shop. Purchases apply to every later run. Test fights do not unlock the branch.
 
@@ -6,7 +6,7 @@ Draw a roughly round, almost closed loop 30–140 pixels across. Quick circles w
 
 Turrets are unavailable throughout boss waves (every fifth wave, including endless waves). Empty circles stay ordinary walls, with no offer or automatic conversion. Boss entrances and direct boss spawns clear active turrets and pending offers. Enemy-filled circles can still Enclose, respecting normal boss immunities.
 
-An empty circle outside Stevie’s fort offers Turret? with confirm and cancel. Three seconds of active gameplay without a choice defaults to confirm; pauses and menus stop the timer. Cancel retains the paid ordinary wall. If a monster enters before confirmation, the circle becomes an enclosure. One turret may be active. Further empty circles stay ordinary walls.
+An empty circle outside Stevie’s fort offers Turret? with confirm and cancel. Three seconds of active gameplay without a choice defaults to confirm; pauses and menus stop the timer. Cancel retains the paid ordinary wall. If a monster enters before confirmation, the circle becomes an enclosure. One turret may be active. Confirming another empty circle crumbles the existing turret and replaces it with a fresh ten-second cannon; the three-second default also replaces it. Canceling or turning the new circle into an enclosure preserves the old turret. Replacement costs only the ink paid to draw the new circle and does not refund the old one.
 
 The turret fires for ten seconds with a fixed 210-pixel acquisition range, 290-pixel/second paper-ball speed and 1.25-second interval. It copies Stevie’s current physical damage with a 50% bonus, with a base 3-damage shot before Stevie has unlocked throwing. Shots copy paper elements, status effects and paper-note behaviours; range and Rapid Scribble notes are excluded, including from descendants. Second Draft uses its own meter. Underline launches keep the fixed targeting range. Already-fired balls finish their normal lifecycles.
 

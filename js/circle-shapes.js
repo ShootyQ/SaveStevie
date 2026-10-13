@@ -37,7 +37,6 @@ DoodleDefender.systems.circleShapes=function(game){
   if(occupied(w)){enclosure(w);return true;}
   if(!turretsAllowed()){game.api.floatText(c.x,c.y-c.r-12,'No turrets on boss waves','#896847');return false;}
   if(!outsideFort(c)){game.api.floatText(c.x,c.y-c.r-12,'Give Stevie some room!','#896847');return false;}
-  if(turret){game.api.floatText(c.x,c.y-c.r-12,'One turret at a time','#896847');return false;}
   pending={wall:w,circle:c,left:tuning.choiceSeconds};syncCirclePrompt();return true;
  }
  function resolveCircleChoice(yes,automatic=false){
@@ -46,7 +45,8 @@ DoodleDefender.systems.circleShapes=function(game){
   const p=pending;pending=null;syncCirclePrompt();if(!yes||!live(p.wall))return true;
   // A monster can enter during the offer. Never seal it into an ignored turret.
   if(occupied(p.wall)){enclosure(p.wall);return true;}
-  if(!turretsAllowed()||turret||!outsideFort(p.circle))return true;
+  if(!turretsAllowed()||!outsideFort(p.circle))return true;
+  if(turret){const c=turret.circle;turret.wall.life=0;for(let i=0;i<16&&game.state.particles.length<1800;i++){const angle=i*Math.PI*2/16;game.state.particles.push({x:c.x+Math.cos(angle)*10,y:c.y+Math.sin(angle)*8,vx:Math.cos(angle)*(28+i%3*12),vy:Math.sin(angle)*40+20,life:.35+i%4*.08,color:i%4===0?'#7a8f9d':'#f6edd7'});}}
   p.wall.shapeTurret=true;p.wall.circleEnclosure=false;p.wall.life=p.wall.maxLife=tuning.seconds;
   game.state.walls=game.state.walls.filter(w=>w!==p.wall);
   turret={wall:p.wall,circle:p.circle,left:tuning.seconds,age:0,cd:.25,angle:0,recoil:0,draft:0};
@@ -62,7 +62,7 @@ DoodleDefender.systems.circleShapes=function(game){
  }
  function updateCircleShapes(dt){
   contacts=new WeakSet();clock+=dt;if(!turretsAllowed()){pending=null;turret=null;syncCirclePrompt();return;}let turretDt=dt;const existing=turret,choiceLeft=pending?.left;
-  if(pending){if(!live(pending.wall)){pending=null;}else{pending.left-=dt;if(pending.left<=1e-8){resolveCircleChoice(true,true);if(!existing&&turret)turretDt=Math.max(0,dt-choiceLeft);}}}
+  if(pending){if(!live(pending.wall)){pending=null;}else{pending.left-=dt;if(pending.left<=1e-8){resolveCircleChoice(true,true);if(turret&&turret!==existing)turretDt=Math.max(0,dt-choiceLeft);}}}
   if(turret){const t=turret;t.left=Math.max(0,t.left-turretDt);t.age+=turretDt;t.wall.life=t.left;t.recoil=Math.max(0,t.recoil-turretDt);if(t.left<=0||t.wall.hp<=0||game.api.wobbleInfiniteInk()){turret=null;}else{
    t.cd-=turretDt;const target=game.api.nearestEnemy(t.circle.x,t.circle.y,tuning.range);
    if(target&&t.cd<=0){const origin={x:t.circle.x,y:t.circle.y-4};const shot=game.api.throwPaper(target,origin,null,true,{turret:true});if(shot){t.cd=tuning.interval;t.angle=Math.atan2(target.y-origin.y,target.x-origin.x);t.recoil=.2;
