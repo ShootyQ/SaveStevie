@@ -7,24 +7,25 @@ DoodleDefender.systems.circleShapes=function(game){
  const turretsAllowed=()=>game.state.wave%5!==0&&!game.api.bossEntranceActive()&&!game.state.enemies.some(e=>e.waveBoss&&e.hp>0);
  const enabled=()=>game.api.notebookSnapshot().levels.circles>0;
  function circleGeometry(points,allowLarge=false){
-  if(!Array.isArray(points)||points.length<7||points.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))return null;
+  if(!Array.isArray(points)||points.length<6||points.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))return null;
   const g=game.api.wallGeometry(points),width=g.maxX-g.minX,height=g.maxY-g.minY,diameter=Math.max(width,height),r=(width+height)/4;
-  if(diameter<tuning.minDiameter||!allowLarge&&diameter>tuning.maxDiameter||Math.min(width,height)/diameter<.72||Math.hypot(points[0].x-points.at(-1).x,points[0].y-points.at(-1).y)>Math.min(22,r*.5))return null;
+  if(diameter<tuning.minDiameter||!allowLarge&&diameter>tuning.maxDiameter||Math.min(width,height)/diameter<.5||Math.hypot(points[0].x-points.at(-1).x,points[0].y-points.at(-1).y)>Math.min(32,r*.85))return null;
   const x=(g.minX+g.maxX)/2,y=(g.minY+g.maxY)/2;
   const clean=points.filter((p,i)=>!i||Math.hypot(p.x-points[i-1].x,p.y-points[i-1].y)>.5);
   if(Math.hypot(clean[0].x-clean.at(-1).x,clean[0].y-clean.at(-1).y)<.5)clean.pop();
-  if(clean.length<6)return null;
+  if(clean.length<5)return null;
   let radialError=0;const turns=[],lengths=[0];
   for(let i=0;i<clean.length;i++){const a=clean[i],b=clean[(i+1)%clean.length],prev=clean[(i+clean.length-1)%clean.length];lengths.push(lengths.at(-1)+Math.hypot(b.x-a.x,b.y-a.y));radialError+=(Math.hypot(a.x-x,a.y-y)-r)**2;const incoming=Math.atan2(a.y-prev.y,a.x-prev.x),outgoing=Math.atan2(b.y-a.y,b.x-a.x);turns.push(Math.abs(Math.atan2(Math.sin(outgoing-incoming),Math.cos(outgoing-incoming))));}
   const turnTotal=turns.reduce((a,b)=>a+b,0),sharp=turns.sort((a,b)=>b-a).slice(0,4).reduce((a,b)=>a+b,0);
-  if(!lengths.at(-1)||Math.sqrt(radialError/clean.length)/r>.18||!turnTotal||sharp/turnTotal>.74)return null;
+  if(!lengths.at(-1)||Math.sqrt(radialError/clean.length)/r>.32||!turnTotal||sharp/turnTotal>.9)return null;
+  // Doodle loops may be oval, lopsided or angular, with a short closing gap.
   // Resample evenly, then soften pointer jitter for the roundness test only.
   // Keep the original points and sharp corners so squares remain walls.
   const sampled=[];let segment=0;
   for(let i=0;i<32;i++){const d=lengths.at(-1)*i/32;while(segment<clean.length-1&&lengths[segment+1]<d)segment++;const a=clean[segment],b=clean[(segment+1)%clean.length],span=lengths[segment+1]-lengths[segment],t=span?(d-lengths[segment])/span:0;sampled.push({x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t});}
   const smooth=sampled.map((p,i)=>{const a=sampled[(i+31)%32],b=sampled[(i+1)%32];return{x:(a.x+2*p.x+b.x)/4,y:(a.y+2*p.y+b.y)/4};});let length=0,area=0;
   for(let i=0;i<smooth.length;i++){const a=smooth[i],b=smooth[(i+1)%smooth.length];length+=Math.hypot(b.x-a.x,b.y-a.y);area+=a.x*b.y-b.x*a.y;}
-  if(!length||4*Math.PI*Math.abs(area/2)/(length*length)<.78)return null;
+  if(!length||4*Math.PI*Math.abs(area/2)/(length*length)<.62)return null;
   return {x,y,r,diameter};
  }
  function occupied(w){return game.state.enemies.some(e=>surface(e)&&game.api.insideLoop(e,w));}
