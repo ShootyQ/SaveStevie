@@ -207,7 +207,7 @@ const pressureCounts=[];
 for(const wave of [8,10,14,15,20]){
   const old=arrivals(wave,true),now=arrivals(wave);
   pressureCounts.push({wave,old:old.count,new:now.count,ratio:Number((now.count/old.count).toFixed(2))});
-  if(wave===14)assert.ok(now.count/old.count>=1&&now.count/old.count<2.5,'wave 14 retains pressure with fewer arrivals');
+  if(wave===14)assert.ok(now.count/old.count>=.5&&now.count/old.count<2.5,'wave 14 retains pressure with fewer arrivals');
   if(wave%5===0)assert.ok(now.count>1,'boss waves have a timed ordinary fight');
   if(wave%5===0)assert.equal(now.bosses,0,'boss waits until after the timed fight');
 }
@@ -769,7 +769,7 @@ console.log('PASS: chapter boundaries, asset coverage, new-run reset, stable bac
 const env=load(true),g=env.sandbox.testGame;
 for(const [wave,scale] of [[1,1],[5,1.2],[10,1.9],[15,2.8],[20,4],[25,4.9]])assert.ok(Math.abs(g.api.enemyHpScale(wave)-scale)<1e-10);
 g.api.resetRun();assert.equal(g.state.spawnTimer,1.5);assert.equal(g.api.spawnGap(),2.7);
-for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['tank','sniper','fast']],[13,['tank','sniper','fast']],[16,['tank','sniper','fast']]]){
+for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['tank','sniper','fast']],[13,['tank','sniper']],[16,['tank','sniper']]]){
  g.state.wave=wave;g.api.startWave();g.state.spawnTimer=999;g.state.timeLeft=40;g.api.spawnChapterGroup();
  assert.deepEqual(Array.from(g.state.enemies,e=>e.type),members);
  g.state.timeLeft=20;g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,members.length*2);
@@ -2714,3 +2714,5 @@ require('./circle-shapes.cjs')(load);
 require('./late-wave-roster.cjs')(load);
 
 require('./turret-upgrades.cjs')(load);
+
+require('./specialist-pressure.cjs')(load);

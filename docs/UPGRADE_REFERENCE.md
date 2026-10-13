@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.69
+# Save Stevie upgrade reference — Alpha 0.1.70
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -95,7 +95,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 
 | Perk | Current effect | Ranks | Costs per rank |
 | --- | --- | --- | --- |
-| Circle Studies | After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. The turret branch improves range, duration, capacity, firing rate and build time. A new turret replaces the oldest when your capacity is full. Turrets are unavailable on boss waves. | 1 | 25 |
+| Circle Studies | After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. The turret branch improves range, duration, capacity, firing rate and build time. A new turret replaces the oldest when your capacity is full. Turrets work during the timed wave and disappear when its boss enters. | 1 | 25 |
 | Long Paper Barrel | After Circle Studies: +30 turret targeting range per rank, from 210 to 300. Doodle Note range bonuses still belong to Stevie. | 3 | 10, 20, 35 |
 | Stubborn Folds | After Circle Studies: +3 seconds per turret per rank, from 10 to 19 seconds. Replacement always starts a fresh lifetime. | 3 | 10, 20, 35 |
 | Cannon Club | After Circle Studies: +1 active turret per rank, up to three. Building beyond your limit crumbles the oldest cannon. | 2 | 30, 60 |

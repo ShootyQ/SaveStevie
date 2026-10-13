@@ -63,13 +63,13 @@ function updatePaperEnemy(e,dt){
  if(e.eraseStumble>0)e.eraseStumble=Math.max(0,e.eraseStumble-dt);
  let t=e.paperTunnel;
  if(!t){
-  if(e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.hurdle||e.thermalShock?.phase==='pressure'||['catapulter','wallpuller','papertearer','wobble-tooth'].includes(e.type)||e.catapultHeld||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
+  if(e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.hurdle||e.thermalShock?.phase==='pressure'||['catapulter','wallpuller','papertearer','wobble-tooth'].includes(e.type)||e.catapultHeld||e.specialistJob?.kind==='catapult'||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
   const holes=game.state.paper.holes,player=game.state.player,entry=holes.find(h=>Math.hypot(h.x-e.x,h.y-e.y)<=h.r+e.r*.35);
   if(e.paperEncounter&&!holes.some(h=>h.id===e.paperEncounter&&Math.hypot(h.x-e.x,h.y-e.y)<=h.r+e.r*.35+18))delete e.paperEncounter;
   if(!entry||e.paperEncounter===entry.id)return false;
   const startDistance=Math.hypot(entry.x-player.x,entry.y-player.y),exit=holes.filter(h=>h!==entry&&safePaperPoint(h,e.r+22)&&Math.hypot(h.x-player.x,h.y-player.y)<startDistance-45).sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y))[0];
   if(!exit)return false;
-  e.paperEncounter=entry.id;if(Math.random()>=tuning.entryChance)return false;
+  const directed=e.specialistJob?.kind==='tunnel'&&e.specialistJob.entryId===entry.id&&holes.some(h=>h.id===e.specialistJob.exitId);e.paperEncounter=entry.id;if(!directed&&Math.random()>=tuning.entryChance)return false;delete e.specialistJob;
   t=e.paperTunnel={phase:'enter',entry:{x:e.x,y:e.y},hole:{x:entry.x,y:entry.y},entryTimer:tuning.entryDuration,exit:{x:exit.x,y:exit.y},rub:0,rubbedAt:-Infinity,age:0};clearSurfaceEffects(e);if(e.type==='basil')game.api.finishFeast(e);game.api.floatText(e.x,e.y-24,'ZIP!','#855c3e');if(!game.state.paper.tunnelHint){game.state.paper.tunnelHint=true;game.api.setMsg('Follow the moving bump! Rub near it for 2 seconds to force the monster up. Rocks still hit underground.');}
  }
  clearSurfaceEffects(e);t.age+=dt;

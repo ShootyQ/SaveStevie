@@ -4,7 +4,7 @@ DoodleDefender.systems.circleShapes=function(game){
  let pending=null,turrets=[],placementHint=null,clock=0,contacts=new WeakSet();
  const live=w=>w&&w.hp>0&&w.life>0&&game.state.walls.includes(w);
  const surface=e=>e.hp>0&&!e.flight&&!game.api.underPaper(e)&&!game.api.bossFriendHeld(e)&&!e.catapultHeld;
- const turretsAllowed=()=>game.state.wave%5!==0&&!game.api.bossEntranceActive()&&!game.state.enemies.some(e=>e.waveBoss&&e.hp>0);
+ const turretsAllowed=()=>(game.state.wave%5!==0||game.api.bossWavePhase()==='timed')&&!game.api.bossEntranceActive()&&!game.state.enemies.some(e=>e.waveBoss&&e.hp>0);
  const enabled=()=>game.api.notebookSnapshot().levels.circles>0;
  function turretSettings(){const l=game.api.notebookSnapshot().levels;return {...tuning,range:tuning.range+30*(l.turretRange||0),seconds:tuning.seconds+3*(l.turretDuration||0),capacity:1+(l.turretCapacity||0),interval:tuning.interval-.1*(l.turretRate||0),choiceSeconds:tuning.choiceSeconds-(l.turretFold||0)};}
  function circleGeometry(points,allowLarge=false){
@@ -38,7 +38,7 @@ DoodleDefender.systems.circleShapes=function(game){
   const c=circleGeometry(w.pts);if(!c){const large=circleGeometry(w.pts,true);if(large?.diameter>tuning.maxDiameter)game.api.floatText(large.x,large.y-large.r-12,'Try a smaller circle','#896847');return false;}w.closed=true;w.circleShape=c;
   if(Math.hypot(w.pts[0].x-w.pts.at(-1).x,w.pts[0].y-w.pts.at(-1).y)>.01)w.pts=w.pts.concat([{...w.pts[0]}]);
   if(occupied(w)){enclosure(w);return true;}
-  if(!turretsAllowed()){game.api.floatText(c.x,c.y-c.r-12,'No turrets on boss waves','#896847');return false;}
+  if(!turretsAllowed()){game.api.floatText(c.x,c.y-c.r-12,'No turrets during boss fights','#896847');return false;}
   if(!outsideFort(c)){turretTooClose(c);return false;}
   placementHint=null;pending={wall:w,circle:c,left:turretSettings().choiceSeconds};syncCirclePrompt();return true;
  }

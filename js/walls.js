@@ -651,7 +651,7 @@ function applySynergies(e,dt){
     if(Math.random()<.9*dt)game.api.burst(e.x,e.y,'#a8c3ff',3);
   }
 }
-const api = { stitchFactor,wallHpForLength,updateLiveWall,finishLiveWall,cancelLiveWall,liveWallActive,eraserIntervals, eraseWallPath, flingBossFriend, launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
+const api = { liveWallObject:()=>liveStroke?.base||null,stitchFactor,wallHpForLength,updateLiveWall,finishLiveWall,cancelLiveWall,liveWallActive,eraserIntervals, eraseWallPath, flingBossFriend, launchEnemy, enemyFlightHeight, updateEnemyFlight, resetLaunchEffects, updateLaunchEffects, moveLaunchEffects, drawLaunchGround, launchEffectsSnapshot, electricTuning, loopUtilityTuning, insideLoop, loopDamageMultiplier, remainingInkTuning, applyRepulsionContact, applyChaosContact, canStartStroke, nearestWallHit, wallNear, damageWall, repairTouchedWalls, createWall, applyInkContact, applyOneInk, chainLightning, applySynergies };
 Object.assign(game.api, api);
 return api;
 };

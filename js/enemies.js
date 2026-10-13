@@ -37,7 +37,7 @@ const pressure=game.catalog.pressureSettings={startWave:5,fullWave:20,maxMultipl
 game.catalog.enemyGuide=game.catalog.monsters.filter(m=>['wardling','sprinter','brood','bulwark','medic','sapper'].includes(m.type)).map(m=>({wave:m.wave,type:m.type,name:m.name,desc:m.ability+' '+m.tip}));
 
 // Keep late waves focused on the early cast and the two interactive builders.
-const lateRoster=new Set([...game.catalog.monsters.filter(m=>m.wave<=9&&!['splitter','mini','boss'].includes(m.type)).map(m=>m.type),'wallpuller','catapulter']);
+const lateRoster=new Set([...game.catalog.monsters.filter(m=>m.wave<=9&&!['splitter','mini','boss'].includes(m.type)).map(m=>m.type),'wallpuller','catapulter','papertearer']);
 function scheduledTypeAvailable(type){return game.state.wave<11||lateRoster.has(type);}
 function enemyType(){
   const pool=['grunt','grunt'];
@@ -445,8 +445,8 @@ function eraserAttack(e,dt){
   }
 }
 
-let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,introducedSpawned=0,bossPhase='timed',arrival=null,commonArrivals=0;
-function resetEnemyWave(){game.api.resetChonksShield?.();game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;commonArrivals=0;game.api.resetBossEncounters()}
+let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,introducedSpawned=0,bossPhase='timed',arrival=null,commonArrivals=0,specialistAdds=0;
+function resetEnemyWave(){game.api.resetChonksShield?.();game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;commonArrivals=0;specialistAdds=0;game.api.resetBossEncounters()}
 function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
@@ -476,9 +476,9 @@ function clearWobbleEntranceWalls(){
  game.state.walls=[];game.state.projectiles=[];game.state.enemyShots=[];
  game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetSupportInks();game.api.resetLaunchEffects();game.api.resetPlaguefire();
 }
-function beginWobbleIntro(){
+function beginWobbleIntro(){game.api.resetCircleShapes();
  game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);game.api.loadWobbleArtwork();
- arrival={wobbleIntro:true,side:game.state.player.x>=game.state.W/2?'left':'right',age:0,left:6.132};refreshBossArrival();bossPhase='entrance';game.api.playSound('bossStomp');game.api.setMsg('Pencils down… Wobblechomp is stomping in!');
+ arrival={wobbleIntro:true,side:game.state.player.x>=game.state.W/2?'left':'right',age:0,left:6.132};refreshBossArrival();bossPhase='entrance';game.api.resetCircleShapes();game.api.playSound('bossStomp');game.api.setMsg('Pencils down… Wobblechomp is stomping in!');
 }
 function updateWobbleIntro(dt){
  if(!arrival?.wobbleIntro||document.hidden)return;const a=arrival,before=a.age;a.age=Math.min(6.132,a.age+dt);a.left=6.132-a.age;
@@ -492,7 +492,7 @@ function firstBossIntroPose(){
  const a=arrival,t=game.api.clamp(a.age/3.375,0,1),reduced=game.api.enemyMotionReduced();
  return {x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.stage,frame:reduced?0:a.stage==='stomp'?Math.floor(a.age*8)%4:a.stage==='roar'?4+Math.min(3,Math.floor((a.age-3.375)/2.757*4)):8,zoom:reduced?1:1+.65*game.api.clamp(t*2,0,1)*(a.stage==='smash'?game.api.clamp((6.582-a.age)/.45,0,1):1),hop:reduced||a.stage!=='stomp'?0:Math.abs(Math.sin(a.age*9))*5};
 }
-function beginFirstBossIntro(){
+function beginFirstBossIntro(){game.api.resetCircleShapes();
  const {W,player}=game.state;game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);
  arrival={intro:true,side:player.x>=W/2?'left':'right',age:0,left:6.582,stage:'stomp'};refreshBossArrival();bossPhase='entrance';
  game.api.playSound('bossStomp');game.api.setMsg('Pencils down… King Doodle-Doom is stomping in!');
@@ -516,13 +516,24 @@ function updateBossArrival(dt){
  if(bossSpawned||game.state.enemies.some(e=>e.hp>0||e.flight))return;
  if(!arrival&&game.state.wave===5){beginFirstBossIntro();return}
  if(!arrival&&game.state.wave===10&&game.api.bossTypeForWave()==='wobblechomp'){beginWobbleIntro();return}
- if(!arrival&&game.state.wave===10){const p=game.api.stapleEntrancePoint();game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);arrival={...p,stapleIntro:true,age:0,left:3.3};bossPhase='entrance';game.api.playSound('bossEnter');game.api.setMsg('Something is chewing through the notebook…');return}
- if(!arrival){arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===15?' is coming. Get ready to erase wax and draw colour back!':game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
+ if(!arrival&&game.state.wave===10){game.api.resetCircleShapes();const p=game.api.stapleEntrancePoint();game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);arrival={...p,stapleIntro:true,age:0,left:3.3};bossPhase='entrance';game.api.resetCircleShapes();game.api.playSound('bossEnter');game.api.setMsg('Something is chewing through the notebook…');return}
+ if(!arrival){game.api.resetCircleShapes();arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===15?' is coming. Get ready to erase wax and draw colour back!':game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
  arrival.left=Math.max(0,arrival.left-dt);
  if(arrival.left===0){const point={...arrival};game.api.spawnEnemy(true,point.x,point.y);game.api.setMsg('Boss encounter. Defeat '+game.api.monsterName(game.api.bossTypeForWave())+'!')}
 }
 // Trim only scheduled plain attackers, not offspring, introductions or boss adds.
 const commonSpawnTypes=new Set(['grunt','fast','brute','elite']);
+function specialistReinforcements(point,count,job){
+ if(game.state.wave<13||game.state.timeLeft<=0||bossPhase!=='timed')return [];
+ const sides=[{d:point.x,x:-26,y:point.y},{d:game.state.W-point.x,x:game.state.W+26,y:point.y},{d:point.y-90,x:point.x,y:-26},{d:game.state.H-point.y,x:point.x,y:game.state.H+26}],edge=sides.sort((a,b)=>a.d-b.d)[0],spawned=[];
+ for(let i=0;i<count&&specialistAdds<10;i++){const n=game.api.spawnEnemy(false,edge.x,edge.y,'grunt');if(!n)break;specialistAdds++;n.specialistJob={...job};n.speed*=1.4;spawned.push(n);}
+ return spawned;
+}
+function specialistTarget(e){const job=e.specialistJob;if(!job)return null;
+ if(job.kind==='catapult'){const owner=game.state.enemies.find(n=>n.catapultId===job.id&&n.hp>0),c=owner?.catapult;if(c&&['build','ready','aim'].includes(c.phase))return Math.hypot(e.x-c.x,e.y-c.y)<42?e:{x:c.x,y:c.y};}
+ else {const hole=game.state.paper.holes.find(h=>h.id===job.entryId),exit=game.state.paper.holes.find(h=>h.id===job.exitId);if(hole&&exit)return hole;}
+ delete e.specialistJob;return null;
+}
 function spawnScheduledEnemy(x=null,y=null,type=null,protectedIntro=false){
  if(game.state.wave<8||protectedIntro&&game.state.wave<11)return game.api.spawnEnemy(false,x,y,type);
  const chosen=type||game.api.enemyType();
@@ -533,7 +544,7 @@ function spawnScheduledEnemy(x=null,y=null,type=null,protectedIntro=false){
 }
 function spawnChapterGroup(){
   const wave=game.state.wave;if(wave<6)return;
-  const types=wave<=10?(wave>=9?['sniper','fast']:wave>=7?['flanker','fast']:['tank','fast']):groupsSpawned%2===0?['tank','sniper','fast']:['wallpuller','bouncer','grunt'];
+  const types=wave>=13?(groupsSpawned%2===0?['tank','sniper']:['wallpuller','grunt']):wave<=10?(wave>=9?['sniper','fast']:wave>=7?['flanker','fast']:['tank','fast']):groupsSpawned%2===0?['tank','sniper','fast']:['wallpuller','bouncer','grunt'];
   const fromLeft=groupsSpawned%2===0;
   for(let i=0;i<types.length;i++)spawnScheduledEnemy(fromLeft?-26:game.state.W+26,game.state.H*(.35+.12*i),types[i]);
 }
@@ -547,7 +558,7 @@ function spawnGap(){
   const wave=game.state.wave,base=wave===1?game.catalog.balance.openingGap:wave===2?2.05:wave===3?1.78:wave===4?1.58:wave===5?1.42:Math.max(.34,1.48-wave*.034);
   const elapsed=game.state.waveTime-game.state.timeLeft;
   const surge=wave>pressure.startWave?(elapsed%pressure.surgeCycle>=pressure.surgeCycle-pressure.surgeSeconds?pressure.surgeMultiplier:pressure.quietMultiplier):1;
-  return Math.max(.12,base/(game.api.wavePressure()*surge))/(wave>=11?.8:1);
+  return Math.max(.12,base/(game.api.wavePressure()*surge))/(wave>=13?.48:wave>=11?.8:1);
 }
 function spawnWaveEnemies(dt){
   if(game.state.wave%5===0&&(bossPhase!=='timed'||game.state.timeLeft<=0)){if(bossPhase!=='fight')updateBossArrival(dt);else if(game.state.wave===5)game.api.updateFirstBossHelpers(dt);return}
@@ -741,7 +752,7 @@ function enemyMoveScale(e){return game.api.enemySpeedScale()*game.api.doodleClin
 function enemyTarget(e){
   if(e.waveBoss)return game.api.bossTarget(e);
   const host=feastHost(e);if(host)return game.api.dist(e.x,e.y,host.x,host.y)<host.r+e.r+14?e:host;
-  let target=(!game.api.hasChonksShield(e)&&game.api.doodleTarget(e))||game.api.sneakFollowTarget(e)||game.state.player;
+  let target=game.api.specialistTarget(e)||(!game.api.hasChonksShield(e)&&game.api.doodleTarget(e))||game.api.sneakFollowTarget(e)||game.state.player;
   if(e.type==='sapper'){
     let distance=Infinity;
     for(const wall of game.state.walls)for(const point of wall.pts){
@@ -829,7 +840,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { hitPaper,throwPaper,resetScrubberRub,eraseScrubber,resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie,spawnScheduledEnemy, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { specialistReinforcements,specialistTarget,hitPaper,throwPaper,resetScrubberRub,eraseScrubber,resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie,spawnScheduledEnemy, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };
