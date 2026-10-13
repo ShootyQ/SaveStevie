@@ -114,6 +114,7 @@ function update(dt){
     if(game.api.waveFinaleActive())break;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.updateEnemyFlight(e,dt))continue;
+    if(game.api.heldByCatapulter(e))continue;
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
     if(game.api.thermalPressureActive(e))continue;
     if(game.api.updateBlackIce(e,dt))continue;
@@ -141,6 +142,7 @@ function update(dt){
     }
     if(e.type==='scrubber'){game.api.updateScrubber(e,dt);continue;}
     if(e.type==='jamling'&&game.api.jamlingContact(e,dt))continue;
+    if(game.api.updateCatapulter(e,dt))continue;
     if(game.api.updateHardhat(e,dt))continue;
     if(game.api.updateEraseSlide(e,dt))continue;
     if(game.api.contactStevie(e))continue;

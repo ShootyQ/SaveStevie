@@ -88,6 +88,7 @@ function eraseWallPath(a,b,r=20,options={}){
   changed=ground||plague||changed;
   changed=game.api.eraseChonksShields(a,b,r)||changed;
   changed=game.api.eraseHardhatTools(a,b,r)||changed;
+  changed=game.api.eraseCatapults(a,b,r)||changed;
   changed=game.api.eraseProjectiles(a,b,r)||changed;
   changed=game.api.eraseDoodlePath(a,b,r)||changed;
   changed=game.api.eraseSneakyRoutes(a,b,r)||changed;
@@ -161,6 +162,7 @@ function flingBossFriend(e,target){
 function enemyFlightHeight(e){const f=e.flight;return f?Math.sin(Math.min(1,f.age/f.duration)*Math.PI)*f.height:0}
 function updateEnemyFlight(e,dt){
  const f=e.flight;if(!f)return false;
+ if(f.catapult)return game.api.updateCatapultFlight(e,dt);
  f.age=Math.min(f.duration,f.age+dt);const t=f.age/f.duration;
  e.x=f.startX+(f.targetX-f.startX)*t;e.y=f.startY+(f.targetY-f.startY)*t;
  if(t>=1){

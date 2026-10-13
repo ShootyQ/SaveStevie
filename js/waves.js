@@ -86,7 +86,7 @@ function waveDuration(){
 }
 
 function resetRun(options={}){
-  game.api.resetScoring();
+  game.api.resetScoring();game.api.resetCatapulterRun();
   game.api.resetPaper();game.api.resetDoodleScraps();game.api.resetScrubberHint();
   game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();

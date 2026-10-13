@@ -1,6 +1,7 @@
 /* enemies: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.enemies = function createEnemiesSystem(game) {
 const defs=game.catalog.enemyDefs={
+    catapulter:{r:17,hp:60,speed:44,dmg:0,color:'#b941a4'},
     grunt:{r:11,hp:20,speed:30,dmg:6,color:'#cf5b51'},
     wallpuller:{r:15,hp:52,speed:34,dmg:6,color:'#3bbcb8'},
     papertearer:{r:15,hp:60,speed:30,dmg:6,color:'#9d66cb'},
@@ -38,6 +39,7 @@ game.catalog.enemyGuide=game.catalog.monsters.filter(m=>['wardling','sprinter','
 function enemyType(){
   const pool=['grunt','grunt'];
   for(const m of game.catalog.monsters){
+    if(m.type==='catapulter'&&!game.api.canSpawnCatapulter())continue;
     if(m.wave<=game.state.wave&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser'].includes(m.type))pool.push(m.type);
   }
   return game.api.pick(pool.filter(type=>!['wallpuller','papertearer'].includes(type)||!game.state.enemies.some(e=>e.type===type&&e.hp>0)).filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
@@ -108,6 +110,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='flanker'&&game.state.enemies.filter(e=>e.type==='flanker'&&e.hp>0).length>=2)return null;
   if(type==='scrubber'&&game.state.enemies.filter(e=>e.type==='scrubber'&&e.hp>0).length>=3)return null;
   if(type==='basil'&&game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length>=2)return null;
+  if(type==='catapulter'&&!game.api.canSpawnCatapulter())return null;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
   const earlyBoss=forceBoss&&(game.state.wave===5||game.state.wave===10),bossHp=forceBoss&&game.state.wave===5?3:earlyBoss?1.8:1,bossSpeed=forceBoss&&game.state.wave===5?7.8:earlyBoss?2:1;
   const enemy={
@@ -125,6 +128,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='sniper')enemy.returnHitsNeeded=game.state.wave<=12?1:game.state.wave<=18?2:3;
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
+  if(type==='catapulter')enemy.catapultId=game.api.registerCatapulter();
   game.state.enemies.push(enemy);game.api.discoverMonster(type);
   if(forceBoss){const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;if(game.api.isCrayonBoss?.(enemy))game.api.initCrayonBoss(enemy);bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
   return enemy;

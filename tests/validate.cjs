@@ -533,9 +533,9 @@ const storage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>{saved.set
 const env=load(true,{intros:true,storage}),g=env.sandbox.testGame;
 assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
-assert.equal(g.catalog.monsters.length,28);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,28);
+assert.equal(g.catalog.monsters.length,29);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,29);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],2:['scrubber','fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['wallpuller','bulwark'],12:['gnawer'],13:['basil','medic'],14:['papertearer','brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],2:['scrubber','fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['catapulter','wallpuller','bulwark'],12:['gnawer'],13:['basil','medic'],14:['papertearer','brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -555,14 +555,14 @@ g.api.resetRun();env.node('hideMonsterIntros').checked=true;g.api.continueMonste
 assert.equal(saved.get('saveStevieMonsterIntros'),'off');assert.equal(g.api.monsterIntrosEnabled(),false);assert.equal(saved.get('doodleDefenderBestV4'),'14');
 g.api.resetRun();assert.equal(g.api.infoOpen(),false,'disabled setting survives new runs');g.state.wave=20;g.api.startWave();assert.equal(g.api.infoOpen(),false);
 const reloaded=load(true,{intros:true,storage});assert.equal(reloaded.sandbox.testGame.api.monsterIntrosEnabled(),false,'disabled setting survives page reload');
-g.state.paused=false;for(const m of g.catalog.monsters)g.api.discoverMonster(m.type);g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,28);
+g.state.paused=false;for(const m of g.catalog.monsters)g.api.discoverMonster(m.type);g.api.openCompendium();assert.equal(g.state.paused,true);assert.equal((env.node('monsterCards').innerHTML.match(/class="monster-card"/g)||[]).length,g.catalog.monsters.length);
 const before=JSON.stringify(g.state);g.api.update(.2);assert.equal(JSON.stringify(g.state),before);
 g.api.closeCompendium();assert.equal(g.state.paused,false);g.state.paused=true;g.api.openCompendium();g.api.closeCompendium();assert.equal(g.state.paused,true);
 g.api.setMonsterIntrosEnabled(true);assert.equal(saved.get('saveStevieMonsterIntros'),'on');g.api.resetRun();assert.equal(g.api.infoOpen(),true,'setting can be re-enabled');
 g.api.resetRun();assert.equal(g.state.paused,true,'reset replaces an open introduction safely');g.api.handleInfoKey({key:'Escape',preventDefault(){}});assert.equal(g.state.paused,false,'Escape explicitly continues the introduction');
 const blocked={getItem(k){if(k==='saveStevieAudioV1')throw Error('blocked');return null},setItem(k){if(k==='saveStevieAudioV1')throw Error('blocked')}};const fallback=load(true,{intros:true,storage:{getItem:key=>key==='doodleDefenderBestV4'?null:blocked.getItem(),setItem:blocked.setItem}}).sandbox.testGame;
 fallback.api.setMonsterIntrosEnabled(false);fallback.api.resetRun();assert.equal(fallback.state.paused,false,'blocked preference storage does not prevent gameplay');
-console.log('PASS: all 28 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
+console.log('PASS: all 29 compendium entries, wave introduction groups, complete pause, resume/reset, dialog locking, manual pause restoration, persistent/re-enabled settings, blocked preference storage, and preserved records.');
 }
 
 
@@ -659,7 +659,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 // A mixed-status crowd must reuse its tinted sprites instead of allocating each frame.
 {
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
-const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['basil','scrubber','flanker','wallpuller','papertearer','wobblechomp','wobble-tooth'].includes(type));
+const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['catapulter','basil','scrubber','flanker','wallpuller','papertearer','wobblechomp','wobble-tooth'].includes(type));
 for(let i=0;i<76;i++){
  const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][Math.floor(i/types.length)%4];
  e.burn=mask&1?2:0;e.poison=mask&2?2:0;e.freeze=mask&4?2:0;e.charged=mask&8?2:0;e.gravitySlow=mask&16?.4:0;
@@ -2706,3 +2706,5 @@ require('./stolen-routes.cjs')(load);
 require('./common-pressure.cjs')(load);
 
 require('./beta-scraps.cjs')(load);
+require('./catapulter.cjs')(load);
+require('./catapulter-animation.cjs')(load);
