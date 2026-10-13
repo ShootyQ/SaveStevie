@@ -1,4 +1,4 @@
-# Circle Studies — Alpha 0.1.62
+# Circle Studies — Alpha 0.1.63
 
 Shapes opens after defeating Wobblechomp in a normal wave-10 fight. Existing saves with best wave 11 or higher qualify. Circle Studies costs 25 scraps once and uses the shared Notebook wallet; it also appears in the original shop. Purchases apply to every later run. Test fights do not unlock the branch.
 

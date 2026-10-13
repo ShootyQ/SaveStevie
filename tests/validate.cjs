@@ -207,7 +207,7 @@ const pressureCounts=[];
 for(const wave of [8,10,14,15,20]){
   const old=arrivals(wave,true),now=arrivals(wave);
   pressureCounts.push({wave,old:old.count,new:now.count,ratio:Number((now.count/old.count).toFixed(2))});
-  if(wave===14)assert.ok(now.count/old.count>=2&&now.count/old.count<2.5,'wave 14 roughly doubles arrivals');
+  if(wave===14)assert.ok(now.count/old.count>=1&&now.count/old.count<2.5,'wave 14 retains pressure with fewer arrivals');
   if(wave%5===0)assert.ok(now.count>1,'boss waves have a timed ordinary fight');
   if(wave%5===0)assert.equal(now.bosses,0,'boss waits until after the timed fight');
 }
@@ -215,8 +215,8 @@ console.log('PASS: 60-second arrival counts '+JSON.stringify(pressureCounts));
 pg.state.wave=20;pg.api.startWave();pg.state.timeLeft=51;const surgeGap=pg.api.spawnGap();pg.state.timeLeft=57;
 assert.ok(surgeGap<pg.api.spawnGap(),'short surge increases frequency');
 assert.equal(pg.api.enemySpeedScale(),1.28);
-for(const [wave,type] of [[9,'wardling'],[3,'sprinter'],[10,'brood'],[11,'bulwark'],[13,'medic'],[15,'sapper']]){
-  const pick=pg.api.pick;let pool;
+for(const [wave,type] of [[9,'wardling'],[3,'sprinter'],[10,'brood'],[11,'wallpuller'],[11,'catapulter']]){
+  pg.state.enemies=[];pg.api.resetCatapulterRun();const pick=pg.api.pick;let pool;
   pg.api.pick=list=>{pool=list;return list[0]};pg.state.wave=wave-1;pg.api.enemyType();assert.ok(!pool.includes(type));
   pg.state.wave=wave;pg.api.enemyType();assert.ok(pool.includes(type));pg.api.pick=pick;
 }
@@ -769,7 +769,7 @@ console.log('PASS: chapter boundaries, asset coverage, new-run reset, stable bac
 const env=load(true),g=env.sandbox.testGame;
 for(const [wave,scale] of [[1,1],[5,1.2],[10,1.9],[15,2.8],[20,4],[25,4.9]])assert.ok(Math.abs(g.api.enemyHpScale(wave)-scale)<1e-10);
 g.api.resetRun();assert.equal(g.state.spawnTimer,1.5);assert.equal(g.api.spawnGap(),2.7);
-for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['bulwark','brood']],[13,['medic','bulwark','brood','basil']],[16,['sapper','elite','sprinter']]]){
+for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['tank','sniper','fast']],[13,['tank','sniper','fast']],[16,['tank','sniper','fast']]]){
  g.state.wave=wave;g.api.startWave();g.state.spawnTimer=999;g.state.timeLeft=40;g.api.spawnChapterGroup();
  assert.deepEqual(Array.from(g.state.enemies,e=>e.type),members);
  g.state.timeLeft=20;g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,members.length*2);
@@ -1705,13 +1705,13 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.api.pick=pool=>pool.includes('basil')?'basil':pool[0];
- g.state.wave=12;assert.notEqual(g.api.enemyType(),'basil');g.state.wave=13;assert.equal(g.api.enemyType(),'basil');
+ g.state.wave=12;assert.notEqual(g.api.enemyType(),'basil');g.state.wave=13;assert.notEqual(g.api.enemyType(),'basil','later-wave cast is temporarily parked');
  assert.equal(g.api.monsterName('basil'),'Basil');g.api.spawnEnemy(false,200,200,'basil');const e=g.state.enemies.at(-1);assert.equal(e.type,'basil');assert.ok(e.hp>0);
  g.api.updateEnemyAnimations(.05);e.x+=5;g.api.updateEnemyAnimations(.05);assert.ok(g.api.enemyAnimationPose(e).y<0,'Basil hops while moving');
  g.api.animateEnemyAction(e,'bite',{x:e.x+10,y:e.y});g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyActionCue(e),'bite');
  const pose=JSON.stringify(g.api.enemyAnimationPose(e));e.freeze=1;e.x+=2;g.api.updateEnemyAnimations(.1);assert.equal(g.api.enemyActionCue(e),null,'freeze stops dining');
  assert.notEqual(pose,JSON.stringify(g.api.enemyAnimationPose(e)));assert.ok(fs.existsSync(path.join(root,'assets/art/basil.png')));
- console.log('PASS: Basil unlocks at wave 13, spawns, appears in the guide, hops, bites and stops dining when frozen.');
+ console.log('PASS: Basil is parked in normal waves but retains explicit spawning, guide art, hops, bites and freeze behaviour.');
 }
 
 // Last-defeat close-up delays clear/rewards and cannot override loss or split children.
@@ -1761,8 +1761,8 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  basil.freeze=0;basil.feastCd=0;g.api.updateFeast(basil,.1);basil.hp=0;assert.equal(g.api.feastHost(guests[0]),null,'defeated host cannot lure');
  basil.hp=10;const second=g.api.spawnEnemy(false,70,70,'basil');assert.ok(second);assert.equal(g.api.spawnEnemy(false,75,75,'basil'),null,'two-host cap');
  const before=JSON.stringify(g.state),random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('art consumes RNG')};g.api.draw();assert.equal(JSON.stringify(g.state),before);env.sandbox.Math.random=random;
- g.state.enemies=[];g.state.wave=12;g.api.pick=pool=>{assert.ok(!pool.includes('basil'));return pool[0]};g.api.enemyType();g.state.wave=13;g.api.pick=pool=>{assert.ok(pool.includes('basil'));return 'basil'};assert.equal(g.api.enemyType(),'basil');
- console.log('PASS: Basil wave-13 pool, bounded guests/hosts, real lure/seating, warned 2× rush and expiry, pause, freeze/death cancellation, boss exclusions and pure artwork.');
+ g.state.enemies=[];g.state.wave=12;g.api.pick=pool=>{assert.ok(!pool.includes('basil'));return pool[0]};g.api.enemyType();g.state.wave=13;g.api.pick=pool=>{assert.ok(!pool.includes('basil'));return pool[0]};assert.notEqual(g.api.enemyType(),'basil');
+ console.log('PASS: Basil excluded from ordinary wave-13 pool, bounded guests/hosts, real lure/seating, warned 2× rush and expiry, pause, freeze/death cancellation, boss exclusions and pure artwork.');
 }
 
 {
@@ -2710,3 +2710,5 @@ require('./catapulter.cjs')(load);
 require('./catapulter-animation.cjs')(load);
 
 require('./circle-shapes.cjs')(load);
+
+require('./late-wave-roster.cjs')(load);
