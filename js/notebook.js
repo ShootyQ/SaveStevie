@@ -3,8 +3,9 @@ DoodleDefender.systems.notebook = function createNotebook(game) {
 const key='saveStevieNotebookV1',costs=[5,12,24,40,60],maxCurrency=1e9;
 const toolForRank=rank=>rank>=10?{name:'Scented Sharpie',slots:4}:rank>=6?{name:'Simple Pen',slots:3}:rank>=3?{name:'Mechanical Pencil',slots:2}:{name:'Pencil',slots:2};
 const toolCosts=[5,8,12,16,20,24,30,36,44,55];
-const perkPrice=(perk,rank)=>perk.id==='starterEraser'?0:perk.id==='tool'?toolCosts[rank]:['extraChoice','doodleScraps'].includes(perk.id)?25:costs[rank];
+const perkPrice=(perk,rank)=>perk.id==='starterEraser'?0:perk.id==='tool'?toolCosts[rank]:['circles','extraChoice','doodleScraps'].includes(perk.id)?25:costs[rank];
 const perks=game.catalog.notebookPerks=[
+  {id:'circles',name:'Circle Studies',max:1,art:'closed-loop',desc:'After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate.',effect:n=>n?'Enclosures and paper turrets · permanent':'Unlock circles · 25 scraps · beat wave 10 first'},
   {id:'starterEraser',name:'Starter Eraser',max:1,art:'recycling',desc:'Stevie’s free first purchase. Adds 5 percentage points to ink recovery when erasing; applies to every new run.',effect:n=>n?'+5% erase recovery · permanent':'Claim free after your first adventure'},
   {id:'doodleScraps',name:'Doodle Scraps',max:1,art:'collector',desc:'Unlock mysterious paper drops in future runs, from any wave. Draw through one and choose a stacking trick for Stevie’s paper balls. Discover elemental throws, wall rides, decoys and Connect the Dots. Finds last only for that run.',effect:n=>n?'Doodle Scraps can drop from wave 1':'Unlock discoveries · 25 scraps'},
   {id:'tool',name:'Your Drawing Tool',max:10,art:'thick-ink',desc:'Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Every rank has its own artwork and adds +8 base wall HP. Pens unlock a third effect slot; Sharpies unlock a fourth.',effect:n=>toolForRank(n).name+' · '+toolForRank(n).slots+' effect slots · +'+8*n+' base wall HP'},
@@ -23,7 +24,7 @@ try{
   const saved=JSON.parse(localStorage.getItem(key)||'null');
   if(saved&&[1,2].includes(saved.version)&&typeof saved.levels==='object'&&saved.levels!==null){
     progress.scrapTutorialDone=saved.scrapTutorialDone===true;
-    progress.betaPencilClaimed=saved.betaPencilClaimed===true;
+    progress.betaPencilClaimed=saved.betaPencilClaimed===true;if(saved.wobbleDefeated===true)progress.wobbleDefeated=true;
     progress.scraps=cleanNumber(saved.scraps);progress.lifetimeScraps=Math.max(progress.scraps,cleanNumber(saved.lifetimeScraps));
     for(const p of perks)progress.levels[p.id]=Math.min(p.max,cleanNumber(saved.levels[p.id]));
     if(saved.version===1){
@@ -75,9 +76,12 @@ function applyNotebookLoadout(){
   s.luck+=l.luck*2;game.state.rerolls+=l.rerolls;
 }
 function canSpendScraps(){return !game.state.running}
+function shapeStudiesAvailable(){return progress.wobbleDefeated===true||game.state.best>10||progress.levels.circles>0;}
+function recordShapeVictory(e){if(game.api.devRunActive()||game.state.endless||game.state.wave!==10||!e.waveBoss||e.type!=='wobblechomp'||e.hp>0)return false;progress.wobbleDefeated=true;saveNotebook();return true;}
 function buyNotebookPerk(id){
   const perk=perks.find(p=>p.id===id);if(!perk||!canSpendScraps())return false;
   const rank=progress.levels[id],price=perkPrice(perk,rank);
+  if(id==='circles'&&!shapeStudiesAvailable())return false;
   if(rank>=perk.max||progress.scraps<price||id==='starterEraser'&&progress.lifetimeScraps===0)return false;
   progress.scraps-=price;progress.levels[id]++;if(id==='starterEraser')progress.scrapTutorialDone=true;saveNotebook();updateScrapCounters();renderNotebook();syncScrapTutorial();
   game.dom.$('notebookNotice').textContent=(id==='starterEraser'?'Stevie: You did it! That purchase stays with us. Your next run recovers 30% of paid ink from healthy erased walls. ':'')+perk.name+' is now rank '+progress.levels[id]+'. Ready for your next run!'+(storageIssue?' This browser is not saving progress; this purchase lasts for this visit.':'');
@@ -123,8 +127,8 @@ function renderNotebook(){
     const toolArt=perk.id==='tool'?`<div class="tool-rank-comparison"><div><span>Current · rank ${rank}</span>${game.api.toolIllustration(rank)}</div>${maxed?'':`<div><span>Next · rank ${rank+1}</span>${game.api.toolIllustration(rank+1)}</div>`}</div>`:'';
     card.innerHTML=`${toolArt}<div class="notebook-perk-heading">${perk.id==='tool'?'':`<img src="${art}${query}" alt="" width="48" height="48">`}<div><h3>${perk.name}</h3><span>Rank ${rank} / ${perk.max}</span></div></div><p>${perk.desc}</p><p class="notebook-effect">${perk.effect(rank)}</p><p class="notebook-next">${maxed?'All ranks unlocked.':'Next rank: '+perk.effect(rank+1)}</p>`;
     const button=document.createElement('button');button.id='notebookBuy-'+perk.id;
-    button.disabled=maxed||locked||progress.scraps<price||perk.id==='starterEraser'&&progress.lifetimeScraps===0;
-    button.textContent=perk.id==='starterEraser'&&progress.lifetimeScraps===0?'Unlocks after your first adventure':maxed?'Fully upgraded':locked?'Available after this run':'Buy rank '+(rank+1)+' · '+price+' scraps';
+    button.disabled=maxed||locked||progress.scraps<price||perk.id==='circles'&&!shapeStudiesAvailable()||perk.id==='starterEraser'&&progress.lifetimeScraps===0;
+    button.textContent=perk.id==='circles'&&!shapeStudiesAvailable()?'Beat wave 10 to unlock Shapes':perk.id==='starterEraser'&&progress.lifetimeScraps===0?'Unlocks after your first adventure':maxed?'Fully upgraded':locked?'Available after this run':'Buy rank '+(rank+1)+' · '+price+' scraps';
     button.onclick=()=>buyNotebookPerk(perk.id);card.appendChild(button);list.appendChild(card);
   }
 }
@@ -143,6 +147,6 @@ function syncScrapTutorial(){
 function finishScrapTutorial(){if(!progress.levels.starterEraser)return false;progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial();return true;}
 function openNotebook(){game.api.openInfo('notebook')}
 function closeNotebook(){game.api.closeInfo()}
-const api={claimBetaPencil,notebookPerkPrice,adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
+const api={shapeStudiesAvailable,recordShapeVictory,claimBetaPencil,notebookPerkPrice,adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;
 };

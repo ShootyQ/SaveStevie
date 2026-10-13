@@ -21,7 +21,7 @@ module.exports=function(load){
  v.listeners.pointerdown(tapEvent);v.listeners.pointermove({...tapEvent,clientX:407});v.listeners.pointerup(tapEvent);v.listeners.pointerup(tapEvent);assert.equal(taps,1,'accepted touch tap activates once despite wobble or duplicate release');
 
  const graph=Array.from(g.api.betaTreeSnapshot());for(const node of graph){const seen=new Set();let current=node;while(current.parent){assert(!seen.has(current.id),'skill paths are acyclic');seen.add(current.id);current=graph.find(n=>n.id===current.parent);assert(current,'every path has a real parent');}}
- assert.equal(graph.find(n=>n.id==='doodleScraps').parent,'rocks');assert.equal(graph.find(n=>n.id==='inkRegen').parent,'inkTank');assert.equal(graph.filter(n=>n.later).length,2,'unfinished branches remain two quiet placeholders');
+ assert.equal(graph.find(n=>n.id==='doodleScraps').parent,'rocks');assert.equal(graph.find(n=>n.id==='inkRegen').parent,'inkTank');assert.equal(graph.filter(n=>n.later).length,1,'only the ink branch remains a future placeholder');
 
  for(let i=0;i<graph.length;i++){const a=graph[i];assert(a.x>=0&&a.y>=0&&a.x+a.w<=2400&&a.y+a.h<=2000,'every scrap fits the expanded paper');for(const b of graph.slice(i+1))assert(a.x+a.w+20<=b.x||b.x+b.w+20<=a.x||a.y+a.h+20<=b.y||b.y+b.h+20<=a.y,'scraps have at least 20px separation');}
  const fork=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:2,scraps:100,lifetimeScraps:100,betaPencilClaimed:true,levels:{}}):null,setItem(){}}}).sandbox.testGame;

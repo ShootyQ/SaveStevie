@@ -7,8 +7,8 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
-const coreArtwork=new Set(['catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
+const doodleNames=['paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const coreArtwork=new Set(['paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
 const artworkLoads=new Map(),artworkSupported=typeof Image!=='undefined';
 function artworkStatus(){const loaded=[...coreArtwork].filter(name=>!!doodles[name]).length;return {ready:!artworkSupported||loaded===coreArtwork.size,loaded,total:coreArtwork.size,failed:[...artworkLoads].filter(([,r])=>r.failed).map(([name])=>name),loading:[...artworkLoads].filter(([,r])=>r.loading).map(([name])=>name)};}
 function syncArtworkUI(){
@@ -533,7 +533,7 @@ function resize(){
     for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.rockCharge&&!movedCharges.has(wall.rockCharge)){movedCharges.add(wall.rockCharge);wall.rockCharge.x+=dx;wall.rockCharge.y+=dy;}if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
-    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.moveBlackIce(dx,dy);game.api.moveThermalShock(dx,dy);game.api.movePaper(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveCatapults(dx,dy);game.api.moveDoodleScraps(dx,dy);
+    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.moveBlackIce(dx,dy);game.api.moveThermalShock(dx,dy);game.api.movePaper(dx,dy);game.api.moveCircleShapes(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveCatapults(dx,dy);game.api.moveDoodleScraps(dx,dy);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
@@ -772,7 +772,7 @@ function draw(){
   }
 
   // Ranged threats are readable before and after firing.
-  game.api.drawSparkGaps();game.api.drawHardhatCrew();game.api.drawCatapults();game.api.drawSneakyRoutes();
+  game.api.drawCircleShapes();game.api.drawSparkGaps();game.api.drawHardhatCrew();game.api.drawCatapults();game.api.drawSneakyRoutes();
   game.api.drawWallExplosions();
   drawSplitAnimations();
   for(const e of game.state.enemies){
