@@ -7,7 +7,7 @@ DoodleDefender.systems.betaScraps=function(game){
   {id:'fort',name:'Fort ↗',title:'Fort Building',x:1240,y:660,w:180,first:'tool'},
   {id:'survival',name:'Survival →',title:'Survival Kit',x:1275,y:962,w:150,first:'health'},
   {id:'elements',name:'Weird ink ↘',title:'Weird Ink Club',x:1250,y:1260,w:175,first:'inkLater'},
-  {id:'shapes',name:'Shapes ↙',title:'Shape Studies',x:985,y:1260,w:175,first:'shapeLater'}
+  {id:'shapes',name:'Shapes ↙',title:'Shape Studies',x:985,y:1260,w:175,first:'circles'}
  ];
  const definitions=[
   {id:'start',name:'Fresh Pencil',desc:'Stevie: Start here! Grab your free pencil, then pick a direction. Buying one rank opens every connected next scrap. Forks are choices, not permanent commitments: you can buy both sides. Your saved purchases stay with you.',x:1040,y:1040,w:320},
@@ -22,7 +22,7 @@ DoodleDefender.systems.betaScraps=function(game){
   {id:'starterEraser',perk:'starterEraser',name:'Starter Eraser',parent:'health',branch:'survival',x:1980,y:786,w:300},
   {id:'luck',perk:'luck',name:'Lucky Eraser',parent:'health',branch:'survival',x:1980,y:1246,w:300},
   {id:'inkLater',name:'Weird Ink Club',desc:'New elemental unlocks are still being designed. This branch has room to grow. Your current elemental rewards and synergies work as usual.',parent:'start',later:true,branch:'elements',x:1410,y:1596,w:300},
-  {id:'shapeLater',name:'Shape Studies',desc:'Circles, squares and stars are a later project. This branch has room to grow. Nothing can be purchased here yet.',parent:'start',later:true,branch:'shapes',x:650,y:1596,w:300}
+  {id:'circles',perk:'circles',name:'Circle Studies',parent:'start',branch:'shapes',x:650,y:1596,w:300}
  ];
  const nodes=new Map(definitions.map(n=>[n.id,n]));
  const nodeRank=(id,p)=>id==='start'?Number(p.betaPencilClaimed===true):p.levels[nodes.get(id)?.perk]||0;
@@ -33,6 +33,7 @@ DoodleDefender.systems.betaScraps=function(game){
   const price=id==='start'?0:perk?game.api.notebookPerkPrice(n.perk):null,max=perk?.max??1;
   let reason='';
   if(n.later)reason='Coming later · not purchasable';
+  else if(n.perk==='circles'&&!game.api.shapeStudiesAvailable())reason='Beat wave 10 Wobblechomp to open Shapes';
   else if(n.link)reason='Included with your Pencil Case ranks';
   else if(rank>=max)reason='Fully owned';
   else if(!game.api.canSpendScraps())reason='Finish this run before purchasing';
@@ -40,7 +41,7 @@ DoodleDefender.systems.betaScraps=function(game){
   else if(n.parent&&rank===0&&!nodeRank(n.parent,p))reason='Buy '+nodes.get(n.parent).name+' once to open this scrap';
   else if(n.perk==='starterEraser'&&!p.lifetimeScraps)reason='Available after your first adventure';
   else if(price!==null&&p.scraps<price)reason='Need '+(price-p.scraps)+' more scraps';
-  return {id,rank,max,price,reason,canBuy:!reason,owned:rank>=max,perk,parent:n.parent||null,unlocked:!n.later&&(id==='start'||p.betaPencilClaimed===true&&(rank>0||nodeRank(n.parent,p)>0))};
+  return {id,rank,max,price,reason,canBuy:!reason,owned:rank>=max,perk,parent:n.parent||null,unlocked:!n.later&&(n.perk!=='circles'||game.api.shapeStudiesAvailable())&&(id==='start'||p.betaPencilClaimed===true&&(rank>0||nodeRank(n.parent,p)>0))};
  }
  function buyBetaNode(id){
   const state=betaNodeState(id);if(!state?.canBuy)return false;
@@ -86,7 +87,7 @@ DoodleDefender.systems.betaScraps=function(game){
   for(const b of branches){const heading=document.createElement('button');heading.className='beta-branch-title';heading.id='beta-branch-'+b.id;heading.setAttribute?.('aria-label',b.title+' branch');heading.style.left=b.x+'px';heading.style.top=(b.y-4)+'px';heading.style.width=b.w+'px';heading.textContent=b.name;heading.onclick=()=>selectBetaNode(b.first);list.appendChild(heading);}
   for(const n of definitions){const state=betaNodeState(n.id),button=document.createElement('button');button.id='beta-node-'+n.id;button.className='beta-tree-node'+(n.later?' future':state.rank>0?' owned':state.canBuy?' available':' locked');
    button.style.left=n.x+'px';button.style.top=n.y+'px';button.style.width=n.w+'px';button.setAttribute?.('aria-pressed',String(noteOpen&&selected===n.id));
-   const title=document.createElement('strong'),label=document.createElement('span');title.textContent=n.name;label.textContent=n.later?'later…':n.id==='start'?(state.owned?'✓ Start complete':'0 scraps · start here'):state.owned?'✓ Complete':!state.unlocked&&state.rank===0?'After '+nodes.get(n.parent).name:state.rank+' / '+state.max+' · '+state.price+' scraps';button.appendChild(title);button.appendChild(label);button.onclick=()=>selectBetaNode(n.id);list.appendChild(button);
+   const title=document.createElement('strong'),label=document.createElement('span');title.textContent=n.name;label.textContent=n.perk==='circles'&&!game.api.shapeStudiesAvailable()?'Beat wave 10 · Shapes locked':n.later?'later…':n.id==='start'?(state.owned?'✓ Start complete':'0 scraps · start here'):state.owned?'✓ Complete':!state.unlocked&&state.rank===0?'After '+nodes.get(n.parent).name:state.rank+' / '+state.max+' · '+state.price+' scraps';button.appendChild(title);button.appendChild(label);button.onclick=()=>selectBetaNode(n.id);list.appendChild(button);
   }
   renderPaths();renderDetails();positionNote();$('betaTreeStatus').textContent=p.storageIssue?'Saving is unavailable; purchases last for this visit.':'Both scrap pages share your purchases. No bonuses are counted twice.';
  }

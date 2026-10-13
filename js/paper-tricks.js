@@ -8,7 +8,7 @@ DoodleDefender.systems.paperTricks=function(game){
  function initPaperTricks(p){const n=p.doodlePayload;if(!n)return;p.splitLeft=n.split||0;if(n.split)p.family={hit:new Set(),claimed:new Set(p.target?[p.target]:[]),created:1};}
  function inherit(p,target,x,y,damage,extra={}){
   if(game.state.projectiles.length>=maxBalls)return null;
-  const q={x,y,target,speed:p.speed,damage,life:Math.max(1.2,game.api.paperRange(p.doodlePayload)/p.speed+.5),electricLevel:p.electricLevel,paperElement:p.paperElement,doodlePayload:{...p.doodlePayload},splitLeft:p.splitLeft||0,family:p.family,noCarbon:p.noCarbon,scale:p.scale||1,copiedWalls:new Set(p.copiedWalls||[]),...extra};
+  const q={x,y,target,turretShot:p.turretShot,speed:p.speed,damage,life:Math.max(1.2,game.api.paperRange(p.doodlePayload)/p.speed+.5),electricLevel:p.electricLevel,paperElement:p.paperElement,doodlePayload:{...p.doodlePayload},splitLeft:p.splitLeft||0,family:p.family,noCarbon:p.noCarbon,scale:p.scale||1,copiedWalls:new Set(p.copiedWalls||[]),...extra};
   if(q.family){if(q.family.created>=maxBalls)return null;q.family.created++;if(target)q.family.claimed.add(target);}
   game.state.projectiles.push(q);return q;
  }

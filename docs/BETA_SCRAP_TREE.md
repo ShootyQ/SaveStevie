@@ -1,6 +1,6 @@
 # BETA Scraps — follow the skill paths
 
-Alpha 0.1.59 uses a 2400 × 2000 crumpled sheet with Stevie at the center and
+Alpha 0.1.61 uses a 2400 × 2000 crumpled sheet with Stevie at the center and
 six directions for connected purchase paths and future experiments. The original
 shop remains available with its existing wiring and prices. Both views share
 one saved scrap bank and perk ranks; bonuses are not counted twice.
@@ -27,8 +27,8 @@ new prerequisite paths. Already purchased partial ranks may continue upgrading
 without repurchasing an ancestor. This does not grant missing parent ranks or
 stats. Unpurchased follow-up skills need their named parent rank.
 
-Weird Ink Club and Shape Studies have roomy **later** directions below Stevie.
-They cannot spend scraps. Other speculative nodes were removed from this view.
+Weird Ink Club remains a future direction below Stevie. Shape Studies opens after a normal wave-10 Wobblechomp victory (or an existing best wave beyond 10). Claim the free root, then buy Circle Studies once for **25 scraps**. The saved `wobbleDefeated` flag travels with backups; test runs do not unlock it.
+Weird Ink Club cannot be purchased yet. Other speculative nodes were removed from this view.
 Existing ink rewards, synergies and legendary discoveries keep their current
 access; they are not gated by the later scraps.
 

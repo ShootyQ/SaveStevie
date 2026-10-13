@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.60
+# Save Stevie upgrade reference — Alpha 0.1.61
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -95,6 +95,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 
 | Perk | Current effect | Ranks | Costs per rank |
 | --- | --- | --- | --- |
+| Circle Studies | After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. | 1 | 5 |
 | Starter Eraser | Stevie’s free first purchase. Adds 5 percentage points to ink recovery when erasing; applies to every new run. | 1 | 0 |
 | Doodle Scraps | Unlock mysterious paper drops in future runs, from any wave. Draw through one and choose a stacking trick for Stevie’s paper balls. Discover elemental throws, wall rides, decoys and Connect the Dots. Finds last only for that run. | 1 | 25 |
 | Your Drawing Tool | Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Every rank has its own artwork and adds +8 base wall HP. Pens unlock a third effect slot; Sharpies unlock a fourth. | 10 | 5, 8, 12, 16, 20, 24, 30, 36, 44, 55 |

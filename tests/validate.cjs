@@ -702,10 +702,10 @@ reloaded.state.wave=20;reloaded.api.startWave();reloaded.api.killEnemy(reloaded.
 reloaded.api.resumeScrapRun();reloaded.api.awardScraps(3);assert.equal(reloaded.api.notebookSnapshot().scraps,21,'endless continues earning');
 reloaded.api.finishScrapRun();reloaded.api.awardScraps(20);assert.equal(reloaded.api.notebookSnapshot().scraps,21,'finished runs cannot earn');
 assert.ok(Number(stored.get('doodleDefenderBestV4'))>=15,'existing best never erased');
-const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:2000,lifetimeScraps:2000,levels:{}}):null,setItem(){}};
+const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:2000,lifetimeScraps:2000,levels:{}}):k==='doodleDefenderBestV4'?'11':null,setItem(){}};
 const rich=load(true,{storage:richStore}).sandbox.testGame;
 for(const p of rich.catalog.notebookPerks){for(let rank=0;rank<p.max;rank++)assert.equal(rich.api.buyNotebookPerk(p.id),true);assert.equal(rich.api.buyNotebookPerk(p.id),false,'rank cap')}
-assert.equal(rich.api.notebookSnapshot().scraps,1298,'all rank prices charged exactly');
+assert.equal(rich.api.notebookSnapshot().scraps,1273,'all rank prices charged exactly');
 rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,9);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);rich.api.rollCards();assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,145,107,6,1.3,2,8]);
 rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.3,'rock unlock preserves faster starter throws');assert.equal(rich.state.stats.rockDamage,7.55);
 const dirty=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:-5,lifetimeScraps:'oops',levels:{inkTank:999,health:-2,rocks:1.5,luck:'4'}}):null,setItem(){}}}).sandbox.testGame;
@@ -2708,3 +2708,5 @@ require('./common-pressure.cjs')(load);
 require('./beta-scraps.cjs')(load);
 require('./catapulter.cjs')(load);
 require('./catapulter-animation.cjs')(load);
+
+require('./circle-shapes.cjs')(load);

@@ -1288,3 +1288,5 @@ html.native-app #betaScrapsOverlay{padding:0}
 /* Handwritten directions belong to the radial map, not a separate toolbar. */
 .beta-branch-title{font-size:23px;min-height:44px;cursor:pointer}
 .beta-branch-title:hover{color:#416f32;transform:rotate(1deg)}
+
+.circle-prompt{position:absolute;z-index:8;display:flex;align-items:center;gap:5px;max-width:calc(100% - 16px);padding:5px 8px;background:#fff8e4;border:1px solid #a28b63;border-radius:3px;box-shadow:1px 3px 0 #927c4c55;transform:rotate(-1deg);font:22px "Stevie Pencil",cursive;color:#4d5360;touch-action:manipulation}.circle-prompt[hidden]{display:none}.circle-prompt span{white-space:nowrap}.circle-prompt button{min-width:44px;min-height:44px;padding:3px;border:1px solid #8d896c;background:#f8f1d8;border-radius:5px;font-size:24px;color:#3e7754}.circle-prompt button:last-child{color:#a35456}.circle-prompt button:focus-visible{outline:3px solid #396fb3;outline-offset:2px}

@@ -126,6 +126,7 @@ function firstBossLobs(e,targets){
 }
 function shotCircleTime(x,y,nx,ny,cx,cy,r){const dx=nx-x,dy=ny-y,px=x-cx,py=y-cy,a=dx*dx+dy*dy,c=px*px+py*py-r*r;if(c<=0)return 0;if(!a)return null;const b=2*(px*dx+py*dy),disc=b*b-4*a*c;if(disc<0)return null;const t=(-b-Math.sqrt(disc))/(2*a);return t>=0&&t<=1?t:null}
 function returnWallHit(s,nx,ny,ignored=null,walls=game.state.walls){
+ if(walls===game.state.walls)walls=walls.concat(game.api.shapeBarrierWalls());
  let best=null;
  for(const w of walls){if(ignored?.has(w)||w.hp<=0||w.life<=0)continue;const pad=w.thick/2+s.r;
   for(let i=1;i<w.pts.length;i++){

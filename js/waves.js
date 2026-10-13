@@ -86,7 +86,7 @@ function waveDuration(){
 }
 
 function resetRun(options={}){
-  game.api.resetScoring();game.api.resetCatapulterRun();
+  game.api.resetCircleShapes();game.api.resetScoring();game.api.resetCatapulterRun();
   game.api.resetPaper();game.api.resetDoodleScraps();game.api.resetScrubberHint();
   game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
@@ -118,6 +118,7 @@ function resetRun(options={}){
 }
 
 function startWave(options={}){
+  game.api.resetCircleShapes();
   game.api.beginScoreWave();
   game.api.resetWaveFinale();
   game.api.selectMusicTrack(game.api.chapterForWave().id);
@@ -146,7 +147,7 @@ function waveComplete(){
   if(game.api.waveFinaleActive())return;
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending()||(game.state.wave%5!==0&&game.state.enemies.length>0)||(game.state.wave%5===0&&!game.api.bossFightResolved()))return;
   game.api.stopSoundEffects();
-  game.state.betweenWaves=true;
+  game.state.betweenWaves=true;game.api.resetCircleShapes();
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
   game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();

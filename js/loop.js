@@ -41,6 +41,7 @@ function update(dt){
     if(w.life<=0)game.state.walls=game.state.walls.filter(x=>x!==w);
   }
 
+  game.api.updateCircleShapes(dt);
   if(!game.api.wobbleInfiniteInk()){game.api.updateStevie(dt);game.api.updateProjectiles(dt)}game.api.updateEnemyShots(dt);
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
 
@@ -116,6 +117,9 @@ function update(dt){
     if(game.api.updateEnemyFlight(e,dt))continue;
     if(game.api.heldByCatapulter(e))continue;
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
+    game.api.applyCircleEnclosure(e,dt);if(e.hp<=0)continue;
+    game.api.circleTurretContact(e,dt);if(e.hp<=0)continue;
+    if(game.api.avoidCircleTurret(e,dt))continue;
     if(game.api.thermalPressureActive(e))continue;
     if(game.api.updateBlackIce(e,dt))continue;
     if(game.api.updateChonksEscort(e,dt))continue;
@@ -225,7 +229,7 @@ function update(dt){
   }
 
   if(game.api.waveFinaleActive()){game.api.updateUI();return;}
-  game.api.separateEnemies(dt);
+  game.api.separateEnemies(dt);game.api.constrainCircleTurret();
   for(const p of game.state.particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;p.vx*=.96;p.vy*=.96}
   game.state.particles=game.state.particles.filter(p=>p.life>0);
   game.api.updateDamageNumbers(dt);

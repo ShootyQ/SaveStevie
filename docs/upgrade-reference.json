@@ -1,5 +1,5 @@
 {
-  "version": "0.1.60",
+  "version": "0.1.61",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -839,6 +839,17 @@
     }
   ],
   "notebook": [
+    {
+      "name": "Circle Studies",
+      "effect": "After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate.",
+      "maxRanks": 1,
+      "costs": [
+        5
+      ],
+      "rankOne": "Enclosures and paper turrets · permanent",
+      "atMax": "Enclosures and paper turrets · permanent",
+      "source": "js/notebook.js"
+    },
     {
       "name": "Starter Eraser",
       "effect": "Stevie’s free first purchase. Adds 5 percentage points to ink recovery when erasing; applies to every new run.",

@@ -434,6 +434,7 @@ function finishWallEffects(base,actualPaid,copies=[],points=base.pts){if(base.wo
   game.api.cutWobbleStroke(points);
   game.api.cutTwiceyStroke(points);
   game.api.connectDoodleDots(points);
+  game.api.finishCircle(base);
   if(base.closed)rewardClosedLoop(base,actualPaid);
 }
 // A held stroke owns real wall objects. Growing changes those objects, rather
@@ -474,6 +475,8 @@ function cancelLiveWall(){const t=liveStroke;liveStroke=null;if(t&&!t.crayonDraf
 function liveWallActive(){return liveStroke!==null;}
 
 function applyInkContact(e,dt,wall=null){
+  if(game.api.enclosureAlreadyHit(e))return 0;
+  if(wall?.shapeTurret)return game.api.chonksProtected(e)?0:game.state.stats.wallDamage;
   if(game.api.chonksProtected(e))return 0;
   if(game.api.underPaper(e))return 0;
   if(game.api.abilityImmune(e))return game.state.stats.wallDamage;

@@ -24,7 +24,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
  function wobblePositionSafe(x,y){return clearance(x,y)>=keepout()}
  // Body contact consumes cover without ink explosions, healing or control effects.
  function shredWobbleWalls(e,from=e,to=e,except=null){
-  const ignored=new Set([...(except?[except]:[]),...(state(e).phase===2?game.state.walls.filter(w=>w.wobbleDraft):[])]),removed=[];
+  const ignored=new Set([...game.api.shapeBarrierWalls(),...(except?[except]:[]),...(state(e).phase===2?game.state.walls.filter(w=>w.wobbleDraft):[])]),removed=[];
   for(let i=0;i<game.state.walls.length;i++){const hit=game.api.bossShotWallHit({x:from.x,y:from.y,r:Math.max(e.r,32)},to.x,to.y,ignored);if(!hit)break;ignored.add(hit.wall);removed.push(hit);}
   if(!removed.length)return;
   const gone=new Set(removed.map(q=>q.wall));game.state.walls=game.state.walls.filter(w=>!gone.has(w));

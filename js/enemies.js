@@ -136,6 +136,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
 
 function killEnemy(e){
   if(!game.state.enemies.includes(e))return;
+  game.api.recordShapeVictory(e);
   game.api.playSound('defeated');
   game.state.kills++;game.state.waveKills++;game.api.awardKillScore(e);
   game.api.awardKillScraps(e);game.api.dropDoodleScrap(e);
@@ -283,10 +284,10 @@ function updateRockWalls(dt){
 }
 
 // Each throw captures its run notes, so collecting a new scrap cannot alter a ball in flight.
-function throwPaper(target,origin=null,aim=null,secondary=false){
+function throwPaper(target,origin=null,aim=null,secondary=false,options={}){
  if(game.state.projectiles.length>=game.api.paperBallLimit()||!target&&!aim)return false;
  const player=game.state.player,p={x:origin?.x??player.x,y:origin?.y??player.y-8,target,speed:290,damage:game.state.stats.rockDamage,life:1.2,electricLevel:rockElectricLevel(),paperElement:game.api.paperElement()};
- const payload=game.api.paperPayload();if(Object.keys(payload).length){p.doodlePayload=payload;p.life=Math.max(1.2,game.api.paperRange()/290+.3);}
+ const payload=game.api.paperPayload();if(options.turret){delete payload.range;delete payload.quick;p.turretShot=true;p.damage=Math.max(2,p.damage)*1.5;p.life=210/p.speed+.3;}if(Object.keys(payload).length){p.doodlePayload=payload;p.life=Math.max(1.2,game.api.paperRange(payload)/290+.3);}
  if(aim){p.manual=true;p.target=null;p.vx=aim.x*p.speed;p.vy=aim.y*p.speed;p.life=game.api.paperRange()/p.speed;}
  game.api.initPaperTricks(p);game.state.projectiles.push(p);
  if(!secondary){game.api.startStevieThrow(target||{x:player.x+aim.x*100,y:player.y+aim.y*100});game.api.secondDraft(target);}
@@ -340,7 +341,7 @@ function updateProjectiles(dt){
 // wall cannot be skipped even when the browser drops frames.
 function shotBlocked(x,y,nx,ny,r=3,ignored=null){
   const from={x,y},to={x:nx,y:ny};
-  for(const wall of game.state.walls){
+  for(const wall of game.state.walls.concat(game.api.shapeBarrierWalls())){
     if(ignored?.has(wall))continue;
     const bounds=game.api.wallGeometry(wall.pts),pad=wall.thick/2+r;
     const minX=Math.min(x,nx)-pad,maxX=Math.max(x,nx)+pad,minY=Math.min(y,ny)-pad,maxY=Math.max(y,ny)+pad;
@@ -787,6 +788,7 @@ function steerBounce(e,dt){
 function moveEnemySafely(e,dx,dy){
   if(game.api.underPaper(e))return false;
   const x=e.x+dx,y=e.y+dy;
+  if(!game.api.shapeMoveClear(e,x,y))return false;
   if(game.api.isWobbleBoss(e)){if(!game.api.wobbleMoveClear(e,x,y))return false;game.api.shredWobbleWalls(e,e,{x,y});e.x=x;e.y=y;return true}
   if(e.waveBoss?!game.api.bossMoveClear(e,x,y):!game.api.bouncePathClear(e,x,y,0))return false;
   e.x=x;e.y=y;return true;

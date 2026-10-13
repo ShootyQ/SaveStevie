@@ -1,0 +1,11 @@
+# Circle Studies — Alpha 0.1.61
+
+Shapes opens after defeating Wobblechomp in a normal wave-10 fight. Existing saves with best wave 11 or higher qualify. Circle Studies costs 25 scraps once and uses the shared Notebook wallet; it also appears in the original shop. Purchases apply to every later run. Test fights do not unlock the branch.
+
+Draw a roughly round, almost closed loop 30–140 pixels across. Irregular freehand circles are accepted; squares, long ellipses, open arcs and oversized circles remain ordinary walls. Enemies on the paper inside at release immediately trigger Enclose. While inside an intact ring they receive 1.5× normal wall contact, including the existing ink interactions and their normal immunities. Contact does not stack with touching the perimeter or overlapping enclosures. Breaking or erasing the ring stops the area contact.
+
+An empty circle outside Stevie’s fort offers Turret? with confirm and cancel. Three seconds of active gameplay without a choice defaults to confirm; pauses and menus stop the timer. Cancel retains the paid ordinary wall. If a monster enters before confirmation, the circle becomes an enclosure. One turret may be active. Further empty circles stay ordinary walls.
+
+The turret fires for ten seconds with a fixed 210-pixel acquisition range, 290-pixel/second paper-ball speed and 1.25-second interval. It copies Stevie’s current physical damage with a 50% bonus, with a base 3-damage shot before Stevie has unlocked throwing. Shots copy paper elements, status effects and paper-note behaviours; range and Rapid Scribble notes are excluded, including from descendants. Second Draft uses its own meter. Underline launches keep the fixed targeting range. Already-fired balls finish their normal lifecycles.
+
+The original circle’s HP/max HP and base wall damage are retained, but its ink effects are removed. Monsters detour around the turret and ordinary erasing/attacks do not target it. The barrel folds in, recoils and fades with a circular lifetime indicator. Wave transitions clear turrets and pending choices. Future specialist enemies can use the retained wall durability to destroy them.
