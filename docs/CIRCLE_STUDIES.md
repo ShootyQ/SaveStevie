@@ -1,10 +1,10 @@
-# Circle Studies — Alpha 0.1.68
+# Circle Studies — Alpha 0.1.70
 
 Shapes opens after defeating Wobblechomp in a normal wave-10 fight. Existing saves with best wave 11 or higher qualify. Circle Studies costs 25 scraps once and uses the shared Notebook wallet; it also appears in the original shop. Purchases apply to every later run. Test fights do not unlock the branch.
 
 Draw a roughly round, almost closed loop 30–140 pixels across. Quick circles with at least five distinct points, lopsided ovals and angular freehand loops are accepted. Short overlapping ends and closing gaps up to 32 pixels (scaled down for small loops) are tolerated. Recognition smooths pointer jitter without changing your actual wall; oversized round loops show a smaller-circle hint. Squares, long ellipses, open arcs and oversized circles remain ordinary walls. Enemies on the paper inside at release immediately trigger Enclose. While inside an intact ring they receive 1.5× normal wall contact, including the existing ink interactions and their normal immunities. Contact does not stack with touching the perimeter or overlapping enclosures. Breaking or erasing the ring stops the area contact.
 
-Turrets are unavailable throughout boss waves (every fifth wave, including endless waves). Empty circles stay ordinary walls, with no offer or automatic conversion. Boss entrances and direct boss spawns clear active turrets and pending offers. Enemy-filled circles can still Enclose, respecting normal boss immunities.
+Turrets work during the timed ordinary portion of every wave, including every fifth wave. They are unavailable once the boss warning, entrance or fight begins. Empty circles stay ordinary walls, with no offer or automatic conversion. Boss entrances and direct boss spawns clear active turrets and pending offers. Enemy-filled circles can still Enclose, respecting normal boss immunities.
 
 Recognized circles count as closed before wall HP is calculated, so Closed Loop and Fortress Geometry durability, paid-ink refunds and completion repair apply before the turret offer. A valid empty circle too near Stevie’s fort stays a wall and shows a two-second “Turret too close” paper bubble. The placement check repeats on confirmation.
 

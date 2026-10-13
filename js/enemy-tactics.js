@@ -47,7 +47,7 @@ DoodleDefender.systems.enemyTactics=function(game){
   if(s.runs>=3)s.phase='join';
   game.api.animateEnemyAction(e,'aim',goal);game.api.floatText(e.x,e.y-e.r-16,s.runs===3?'MY TURN!':'THIS WAY!','#566fb0');
  }
- function eligible(e){return !e.catapultHeld&&e.hp>0&&!e.waveBoss&&recruits.has(e.type)&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!game.api.feastHost(e)&&!game.api.doodleTarget(e);}
+ function eligible(e){return !e.catapultHeld&&!e.specialistJob&&e.hp>0&&!e.waveBoss&&recruits.has(e.type)&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!game.api.feastHost(e)&&!game.api.doodleTarget(e);}
  function orderValid(owner,order){return owner.hp>0&&game.state.enemies.includes(owner)&&leaders.get(owner)?.order===order&&(!order.erased||!!order.gap);}
  function updateSneakyOrders(dt){
   for(const [e,s] of leaders){
@@ -84,7 +84,7 @@ DoodleDefender.systems.enemyTactics=function(game){
    if(clear(e,e,gap.end)){f.join={...gap.end};return f.join;}
   }
   const pts=f.order.points;while(f.index<pts.length&&Math.hypot(e.x-pts[f.index].x,e.y-pts[f.index].y)<Math.max(8,e.r*.6))f.index++;
-  if(f.index>=pts.length){if(f.order.hijacked){if(!f.endWait){f.endWait=true;f.wait=.8;game.api.floatText(e.x,e.y-e.r-12,'...HUH?','#278f79');}if(f.wait>0)return {x:e.x,y:e.y};}followers.delete(e);return null;}if(!clear(e,e,pts[f.index])){followers.delete(e);return null;}const p=pts[f.index];if(f.order.hijacked)return {x:game.api.clamp(p.x,e.r+18,game.state.W-e.r-18),y:game.api.clamp(p.y,90+e.r,game.state.H-e.r-35)};return p;
+  if(f.index>=pts.length){if(f.order.hijacked){if(!f.endWait){f.endWait=true;f.wait=2;e.stun=Math.max(e.stun,2);game.api.floatText(e.x,e.y-e.r-12,'...HUH?','#278f79');}if(f.wait>0)return {x:e.x,y:e.y};}followers.delete(e);return null;}if(!clear(e,e,pts[f.index])){followers.delete(e);return null;}const p=pts[f.index];if(f.order.hijacked)return {x:game.api.clamp(p.x,e.r+18,game.state.W-e.r-18),y:game.api.clamp(p.y,90+e.r,game.state.H-e.r-35)};return p;
  }
  function navigate(e,s,goal,dt,speed=1){
   let nav=s.nav;const walls=game.state.walls.filter(live);

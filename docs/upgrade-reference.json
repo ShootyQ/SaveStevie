@@ -1,5 +1,5 @@
 {
-  "version": "0.1.68",
+  "version": "0.1.70",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -841,7 +841,7 @@
   "notebook": [
     {
       "name": "Circle Studies",
-      "effect": "After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. The turret branch improves range, duration, capacity, firing rate and build time. A new turret replaces the oldest when your capacity is full. Turrets are unavailable on boss waves.",
+      "effect": "After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. The turret branch improves range, duration, capacity, firing rate and build time. A new turret replaces the oldest when your capacity is full. Turrets work during the timed wave and disappear when its boss enters.",
       "maxRanks": 1,
       "costs": [
         25

@@ -7,7 +7,13 @@ DoodleDefender.systems.catapulter=function(game){
  function registerCatapulter(){return ++appearances;}
  function resetCatapulterRun(){appearances=0;}
  function say(e,text){if(e.catapult){e.catapult.speech=text;e.catapult.speechLeft=2;}}
- function site(e){const p=game.state.player,dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy)||1,reach=Math.min(240,Math.max(135,Math.min(game.state.W,game.state.H)*.4));return {x:game.api.clamp(p.x+dx/d*reach,48,game.state.W-48),y:game.api.clamp(p.y+dy/d*reach,115,game.state.H-80)};}
+ function site(e){const {W,H,player:p}=game.state;
+  // Keep the whole erasable machine visible on the long axis of phone screens.
+  if(H>W*1.15)return {x:game.api.clamp(e.x,72,W-72),y:e.y<p.y?132:H-92};
+  if(W>H*1.5)return {x:e.x<p.x?72:W-72,y:game.api.clamp(e.y,150,H-95)};
+  const choices=[{x:72,y:game.api.clamp(e.y,150,H-95)},{x:W-72,y:game.api.clamp(e.y,150,H-95)},{x:game.api.clamp(e.x,72,W-72),y:132},{x:game.api.clamp(e.x,72,W-72),y:H-92}];return choices.sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y))[0];
+ }
+ function recruit(e){const c=e.catapult;if((c.recruited||0)>=6)return;const squad=game.api.specialistReinforcements({x:c.x,y:c.y},2,{kind:'catapult',id:e.catapultId});c.recruited=(c.recruited||0)+squad.length;if(squad.length)say(e,'VOLUNTEERS! LINE UP!');}
  function release(e){const c=e.catapult;if(c?.passenger){delete c.passenger.catapultHeld;c.passenger=null;}if(c){c.target=null;c.phase='ready';c.left=1;}}
  function buildProgress(c){return game.api.clamp(1-c.left/tuning.setup,0,1);}
  function catapulterFrame(e){const c=e.catapult;if(!c||game.api.enemyMotionReduced())return null;if(c.phase==='walk'||c.phase==='flee')return 'catapulter-frame-'+Math.floor((c.walkDistance||0)/8)%4;if(c.phase==='build'){const p=buildProgress(c);return 'catapulter-frame-'+(p<.25?4:p<.5?5:6+Math.floor((p-.5)*12)%2);}if(c.phase==='aim')return 'catapulter-frame-5';return null;}
@@ -37,14 +43,15 @@ DoodleDefender.systems.catapulter=function(game){
    c.x=game.api.clamp(e.x+(e.x<game.state.player.x?45:-45),48,game.state.W-48);c.y=e.y+20;c.phase='build';c.left=tuning.setup;say(e,'SOME ASSEMBLY REQUIRED!');return true;
   }
   c.left-=dt;
-  if(c.phase==='build'){if(c.left<=1e-8){c.phase='ready';c.left=.5;say(e,'ERASE MY CATAPULT? RUDE.');}return true;}
+  if(c.phase==='build'){if(c.left<=1e-8){c.phase='ready';c.left=.5;say(e,'ERASE MY CATAPULT? RUDE.');recruit(e);}return true;}
   if(c.phase==='aim'){
    if(!c.passenger||c.passenger.hp<=0||!game.state.enemies.includes(c.passenger)){release(e);return true;}
    if(c.left<=1e-8){const n=c.passenger,spoon=spoonPoint(e,true);delete n.catapultHeld;n.x=spoon.x;n.y=spoon.y;n.flight={catapult:true,startX:n.x,startY:n.y,targetX:c.target.x,targetY:c.target.y,age:0,duration:tuning.flight,height:72,spin:n.x<c.target.x?1:-1};c.passenger=null;c.phase='ready';c.target=null;c.left=tuning.cooldown;c.kick=.6;game.api.floatText(n.x,n.y-30,'Weeeeeee!','#854488');game.api.playSound('wall');}return true;
   }
   c.kick=Math.max(0,(c.kick||0)-dt);if(c.left>0)return true;
   const n=game.state.enemies.filter(n=>n!==e&&basics.has(n.type)&&n.hp>0&&!n.waveBoss&&!n.bossOwner&&!n.flight&&!n.catapultHeld&&!game.api.bossFriendHeld(n)&&!game.api.underPaper(n)&&n.stun<=0&&n.freeze<=0&&Math.hypot(n.x-c.x,n.y-c.y)<120&&game.api.bouncePathClear(n,c.x,c.y,0)).sort((a,b)=>Math.hypot(a.x-c.x,a.y-c.y)-Math.hypot(b.x-c.x,b.y-c.y))[0];
-  if(n){c.passenger=n;n.catapultHeld=e.catapultId;n.x=c.x+(c.x<game.state.player.x?-32:32);n.y=c.y-34;c.target={x:game.state.player.x,y:game.state.player.y};c.phase='aim';c.left=tuning.warning;const spoon=spoonPoint(e);n.x=spoon.x;n.y=spoon.y;say(e,'INCOMING! DRAW A CATCHER!');}return true;
+  if(!n){if(!game.state.enemies.some(n=>n.hp>0&&n.specialistJob?.kind==='catapult'&&n.specialistJob.id===e.catapultId))recruit(e);c.left=1;return true;}
+  if(n){delete n.specialistJob;c.passenger=n;n.catapultHeld=e.catapultId;n.x=c.x+(c.x<game.state.player.x?-32:32);n.y=c.y-34;c.target={x:game.state.player.x,y:game.state.player.y};c.phase='aim';c.left=tuning.warning;const spoon=spoonPoint(e);n.x=spoon.x;n.y=spoon.y;say(e,'INCOMING! DRAW A CATCHER!');}return true;
  }
  function updateCatapultFlight(e,dt){
   const f=e.flight;if(!f?.catapult)return false;
