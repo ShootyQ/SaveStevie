@@ -1249,7 +1249,7 @@ html.native-app{--native-top:env(safe-area-inset-top,0px)}
 html.native-app #betaScrapsOverlay{padding:0}
 .beta-tree-viewport{position:relative;width:100%;height:100%;overflow:hidden;overflow:clip;background:#ede5d2 url('assets/art/ui/recess-sheet.svg') center/100% 100% no-repeat;touch-action:none;user-select:none;cursor:grab;color:#303c3d}
 .beta-tree-viewport:active{cursor:grabbing}.beta-tree-viewport:focus-visible{outline:3px dashed #315eb3;outline-offset:-6px}
-.beta-tree-board{position:absolute;top:0;left:0;width:2400px;height:2000px;transform-origin:0 0;will-change:transform}.beta-tree-background{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.beta-tree-board{position:absolute;top:0;left:0;width:2400px;height:2600px;transform-origin:0 0;will-change:transform}.beta-tree-background{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .beta-branch-title{position:absolute;margin:0;padding:0 5px;min-height:34px;box-shadow:none;border:0;border-radius:0;background:none;color:#294b70;font-family:'Stevie Pencil',cursive;font-size:30px;line-height:1;cursor:pointer;text-shadow:0 1px #fff;transform:rotate(-1deg)}
 .beta-branch-title:hover{background:none;box-shadow:none;color:#416f32;transform:rotate(1deg)}
 .beta-tree-node{--tilt:-1deg;position:absolute;isolation:isolate;min-height:52px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 16px;border:0;border-radius:0;background:none;color:#29383d;box-shadow:none;cursor:pointer;font-family:'Stevie Pencil',cursive;font-size:23px;line-height:1.05;text-align:left;transform:rotate(var(--tilt))}
@@ -1290,3 +1290,13 @@ html.native-app #betaScrapsOverlay{padding:0}
 .beta-branch-title:hover{color:#416f32;transform:rotate(1deg)}
 
 .circle-prompt{position:absolute;z-index:8;display:flex;align-items:center;gap:5px;max-width:calc(100% - 16px);padding:5px 8px;background:#fff8e4;border:1px solid #a28b63;border-radius:3px;box-shadow:1px 3px 0 #927c4c55;transform:rotate(-1deg);font:22px "Stevie Pencil",cursive;color:#4d5360;touch-action:manipulation}.circle-prompt[hidden]{display:none}.circle-prompt span{white-space:nowrap}.circle-prompt button{min-width:44px;min-height:44px;padding:3px;border:1px solid #8d896c;background:#f8f1d8;border-radius:5px;font-size:24px;color:#3e7754}.circle-prompt button:last-child{color:#a35456}.circle-prompt button:focus-visible{outline:3px solid #396fb3;outline-offset:2px}
+
+/* Old doodles live in the margins, below the interactive tree. */
+.beta-tree-margins{position:absolute;inset:0;pointer-events:none;user-select:none}
+.beta-margin-monster,.beta-rejected-doodle,.beta-margin-note,.beta-milk-stain{position:absolute;margin:0;transform:rotate(var(--tilt,0deg));font:24px/1.14 'Stevie Pencil',cursive;color:#796e5f;pointer-events:none}
+.beta-margin-monster{width:150px;opacity:.6;text-align:center}
+.beta-margin-monster img{width:90px;height:100px;object-fit:contain;filter:saturate(.75);pointer-events:none}
+.beta-margin-monster figcaption{font-size:22px;transform:rotate(-4deg);margin:5px -30px 0}
+.beta-rejected-doodle{width:240px;opacity:.48}.beta-rejected-doodle p{margin:0;font-size:23px;transform:rotate(3deg)}
+.beta-margin-note{opacity:.42;max-width:310px}.beta-note-face{font-size:31px;color:#67715d}
+.beta-milk-stain{width:215px}.beta-milk-stain p{font-size:21px;opacity:.35;margin:-4px 0 0;transform:rotate(-8deg)}
