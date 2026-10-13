@@ -1,8 +1,10 @@
-# Circle Studies — Alpha 0.1.61
+# Circle Studies — Alpha 0.1.62
 
 Shapes opens after defeating Wobblechomp in a normal wave-10 fight. Existing saves with best wave 11 or higher qualify. Circle Studies costs 25 scraps once and uses the shared Notebook wallet; it also appears in the original shop. Purchases apply to every later run. Test fights do not unlock the branch.
 
 Draw a roughly round, almost closed loop 30–140 pixels across. Irregular freehand circles are accepted; squares, long ellipses, open arcs and oversized circles remain ordinary walls. Enemies on the paper inside at release immediately trigger Enclose. While inside an intact ring they receive 1.5× normal wall contact, including the existing ink interactions and their normal immunities. Contact does not stack with touching the perimeter or overlapping enclosures. Breaking or erasing the ring stops the area contact.
+
+Turrets are unavailable throughout boss waves (every fifth wave, including endless waves). Empty circles stay ordinary walls, with no offer or automatic conversion. Boss entrances and direct boss spawns clear active turrets and pending offers. Enemy-filled circles can still Enclose, respecting normal boss immunities.
 
 An empty circle outside Stevie’s fort offers Turret? with confirm and cancel. Three seconds of active gameplay without a choice defaults to confirm; pauses and menus stop the timer. Cancel retains the paid ordinary wall. If a monster enters before confirmation, the circle becomes an enclosure. One turret may be active. Further empty circles stay ordinary walls.
 
