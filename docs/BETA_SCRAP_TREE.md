@@ -71,3 +71,5 @@ labels inside the skill scraps. Node geometry stays inside the expanded page
 with at least 20 pixels of separation (the actual layout leaves much more).
 Tests verify fork prerequisites, both-side availability, exact costs and the
 next-run reroll, choice, Luck, health and ink bonuses.
+
+Alpha 0.1.68 expands Shape Studies below Circle Studies: Long Paper Barrel → Busy Barrels, Stubborn Folds → Quick Origami, and Cannon Club. The page grows to 2400 × 2600 to keep these taped scraps apart; the existing zoom, pan and branch jumps remain. Prices and effects are listed in `CIRCLE_STUDIES.md`.

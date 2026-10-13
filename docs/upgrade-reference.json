@@ -1,5 +1,5 @@
 {
-  "version": "0.1.67",
+  "version": "0.1.68",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -841,13 +841,76 @@
   "notebook": [
     {
       "name": "Circle Studies",
-      "effect": "After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. A new turret replaces the old one. Turrets are unavailable on boss waves.",
+      "effect": "After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. The turret branch improves range, duration, capacity, firing rate and build time. A new turret replaces the oldest when your capacity is full. Turrets are unavailable on boss waves.",
       "maxRanks": 1,
       "costs": [
-        5
+        25
       ],
       "rankOne": "Enclosures and paper turrets · permanent",
       "atMax": "Enclosures and paper turrets · permanent",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Long Paper Barrel",
+      "effect": "After Circle Studies: +30 turret targeting range per rank, from 210 to 300. Doodle Note range bonuses still belong to Stevie.",
+      "maxRanks": 3,
+      "costs": [
+        10,
+        20,
+        35
+      ],
+      "rankOne": "240 turret range",
+      "atMax": "300 turret range",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Stubborn Folds",
+      "effect": "After Circle Studies: +3 seconds per turret per rank, from 10 to 19 seconds. Replacement always starts a fresh lifetime.",
+      "maxRanks": 3,
+      "costs": [
+        10,
+        20,
+        35
+      ],
+      "rankOne": "13 seconds per turret",
+      "atMax": "19 seconds per turret",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Cannon Club",
+      "effect": "After Circle Studies: +1 active turret per rank, up to three. Building beyond your limit crumbles the oldest cannon.",
+      "maxRanks": 2,
+      "costs": [
+        30,
+        60
+      ],
+      "rankOne": "2 active turrets",
+      "atMax": "3 active turrets",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Busy Barrels",
+      "effect": "After Long Paper Barrel: reduce turret firing interval by 0.1 seconds per rank, from 1.25 to 0.95 seconds. Doodle Note throw-speed bonuses still belong to Stevie.",
+      "maxRanks": 3,
+      "costs": [
+        10,
+        20,
+        35
+      ],
+      "rankOne": "1.15 seconds between turret shots",
+      "atMax": "0.95 seconds between turret shots",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Quick Origami",
+      "effect": "After Stubborn Folds: shorten the automatic build wait by one second per rank, from three to one. You can still confirm or cancel immediately.",
+      "maxRanks": 2,
+      "costs": [
+        15,
+        30
+      ],
+      "rankOne": "2 seconds to auto-build",
+      "atMax": "1 second to auto-build",
       "source": "js/notebook.js"
     },
     {

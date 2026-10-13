@@ -8,15 +8,15 @@ DoodleDefender.systems.paperTricks=function(game){
  function initPaperTricks(p){const n=p.doodlePayload;if(!n)return;p.splitLeft=n.split||0;if(n.split)p.family={hit:new Set(),claimed:new Set(p.target?[p.target]:[]),created:1};}
  function inherit(p,target,x,y,damage,extra={}){
   if(game.state.projectiles.length>=maxBalls)return null;
-  const q={x,y,target,turretShot:p.turretShot,speed:p.speed,damage,life:Math.max(1.2,game.api.paperRange(p.doodlePayload)/p.speed+.5),electricLevel:p.electricLevel,paperElement:p.paperElement,doodlePayload:{...p.doodlePayload},splitLeft:p.splitLeft||0,family:p.family,noCarbon:p.noCarbon,scale:p.scale||1,copiedWalls:new Set(p.copiedWalls||[]),...extra};
+  const q={x,y,target,turretShot:p.turretShot,turretRange:p.turretRange,speed:p.speed,damage,life:Math.max(1.2,(p.turretShot?(p.turretRange||210):game.api.paperRange(p.doodlePayload))/p.speed+.5),electricLevel:p.electricLevel,paperElement:p.paperElement,doodlePayload:{...p.doodlePayload},splitLeft:p.splitLeft||0,family:p.family,noCarbon:p.noCarbon,scale:p.scale||1,copiedWalls:new Set(p.copiedWalls||[]),...extra};
   if(q.family){if(q.family.created>=maxBalls)return null;q.family.created++;if(target)q.family.claimed.add(target);}
   game.state.projectiles.push(q);return q;
  }
- function launch(p,target){p.target=target;p.manual=false;p.rail=null;p.paperMode=null;p.orbitTarget=null;p.perchWall=null;p.guided=true;p.life=Math.max(1.2,game.api.paperRange(p.doodlePayload)/p.speed+.5);p.hitDelay=.1;}
+ function launch(p,target){p.target=target;p.manual=false;p.rail=null;p.paperMode=null;p.orbitTarget=null;p.perchWall=null;p.guided=true;p.life=Math.max(1.2,(p.turretShot?(p.turretRange||210):game.api.paperRange(p.doodlePayload))/p.speed+.5);p.hitDelay=.1;}
  function splitPaper(p,e){
   if(p.hasSplit||!p.family)return;p.hasSplit=true;p.family.hit.add(e);p.family.claimed.delete(e);if(!p.splitLeft)return;
   const retain=.5+Math.min(.15,.03*((p.doodlePayload.split||1)-1));
-  for(let i=0;i<2;i++){const target=nearest(e.x,e.y,150+game.api.paperRange(p.doodlePayload)*.2,e,p.family);if(!target)break;inherit(p,target,e.x,e.y,p.damage*retain,{splitLeft:p.splitLeft-1,scale:Math.max(.45,(p.scale||1)*.82),paperTrail:[{x:e.x,y:e.y}],splitChild:true});}
+  for(let i=0;i<2;i++){const target=nearest(e.x,e.y,150+(p.turretShot?(p.turretRange||210):game.api.paperRange(p.doodlePayload))*.2,e,p.family);if(!target)break;inherit(p,target,e.x,e.y,p.damage*retain,{splitLeft:p.splitLeft-1,scale:Math.max(.45,(p.scale||1)*.82),paperTrail:[{x:e.x,y:e.y}],splitChild:true});}
   game.api.burst(e.x,e.y,'#9b66b0',4);
  }
  function nearestPerch(p,r=150){let best=null,distance=r;for(const w of game.state.walls){if(!activeWall(w))continue;const q=game.api.nearestPointOnWall(p,w),d=Math.hypot(q.x-p.x,q.y-p.y);if(d<distance){distance=d;best={wall:w,point:q};}}return best;}
@@ -38,7 +38,7 @@ DoodleDefender.systems.paperTricks=function(game){
   for(const w of game.state.walls){if(!activeWall(w)||p.copiedWalls.has(w))continue;let hit=null;
    for(const seg of game.api.wallGeometry(w.pts).segments){const cuts=game.api.eraserIntervals(a,b,seg.a,seg.b,w.thick/2+4);if(cuts.length&&(!hit||cuts[0][0]<hit.t))hit={t:cuts[0][0],seg};}
    if(!hit)continue;p.copiedWalls.add(w);const {seg,t}=hit,dx=seg.b.x-seg.a.x,dy=seg.b.y-seg.a.y,len=Math.hypot(dx,dy)||1,nx=-dy/len,ny=dx/len,x=a.x+(b.x-a.x)*t,y=a.y+(b.y-a.y)*t;
-   for(let rank=0;rank<p.doodlePayload.carbon;rank++)for(const sign of [-1,1]){const angle=rank*.14*sign,ux=(nx*Math.cos(angle)-ny*Math.sin(angle))*sign,uy=(nx*Math.sin(angle)+ny*Math.cos(angle))*sign;inherit(p,null,x+ux*(w.thick/2+5),y+uy*(w.thick/2+5),p.damage*2,{manual:true,vx:ux*410,vy:uy*410,speed:410,life:game.api.paperRange(p.doodlePayload)/410+.3,noCarbon:true,carbonCopy:true,guided:true,paperTrail:[{x,y}]});}
+   for(let rank=0;rank<p.doodlePayload.carbon;rank++)for(const sign of [-1,1]){const angle=rank*.14*sign,ux=(nx*Math.cos(angle)-ny*Math.sin(angle))*sign,uy=(nx*Math.sin(angle)+ny*Math.cos(angle))*sign;inherit(p,null,x+ux*(w.thick/2+5),y+uy*(w.thick/2+5),p.damage*2,{manual:true,vx:ux*410,vy:uy*410,speed:410,life:(p.turretShot?(p.turretRange||210):game.api.paperRange(p.doodlePayload))/410+.3,noCarbon:true,carbonCopy:true,guided:true,paperTrail:[{x,y}]});}
    game.api.burst(x,y,'#7868ae',5);
   }
  }
