@@ -2707,3 +2707,4 @@ require('./common-pressure.cjs')(load);
 
 require('./beta-scraps.cjs')(load);
 require('./catapulter.cjs')(load);
+require('./catapulter-animation.cjs')(load);

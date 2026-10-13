@@ -7,8 +7,8 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
-const coreArtwork=new Set(['catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
+const doodleNames=['catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const coreArtwork=new Set(['catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
 const artworkLoads=new Map(),artworkSupported=typeof Image!=='undefined';
 function artworkStatus(){const loaded=[...coreArtwork].filter(name=>!!doodles[name]).length;return {ready:!artworkSupported||loaded===coreArtwork.size,loaded,total:coreArtwork.size,failed:[...artworkLoads].filter(([,r])=>r.failed).map(([name])=>name),loading:[...artworkLoads].filter(([,r])=>r.loading).map(([name])=>name)};}
 function syncArtworkUI(){
@@ -36,6 +36,8 @@ function loadDoodle(name,retry=false){
       }
       doodles['scrubber-wiped-'+stage]=frame;
     }
+    if(name==='catapulter-animations')cropCatapultFrames(image,'catapulter',1659,.32,[[8,8,460,463],[475,45,345,426],[833,6,423,465],[1296,0,363,472],[8,506,440,416],[426,518,449,407],[846,466,417,461],[1232,549,419,376]]);
+    if(name==='catapult-animations')cropCatapultFrames(image,'catapult',1774,.30,[[7,263,434,159],[451,88,437,334],[893,48,439,375],[1334,42,440,381],[0,529,489,339],[480,420,434,448],[910,440,452,428],[1330,487,444,381]]);
     const sheet=name==='sprinter-animations'?{type:'sprinter',rows:2,count:8}:name==='boss-animations'?{type:'boss',rows:4,count:16}:name==='grunt-animations'?{type:'grunt',rows:4,count:16}:name==='fast-animations'?{type:'fast',rows:2,count:8}:name==='sniper-animations'?{type:'sniper',rows:3,count:12}:null;
     if(sheet){
       // Crop equal cells once at load; draw/tint cached frames without allocations.
@@ -63,6 +65,23 @@ function loadDoodle(name,retry=false){
   };
   image.onerror=()=>{record.loading=false;record.failed=true;syncArtworkUI();if(record.retries<2){record.retries++;setTimeout(()=>loadDoodle(name,true),record.retries*400);}};
   image.src='assets/art/'+name+'.png'+(artworkVersion?'?v='+artworkVersion:'')+(retry?(artworkVersion?'&':'?')+'artRetry='+record.attempt:'');
+}
+// Uneven hand-drawn gutters: keep every pose at one scale and a fixed foot
+// baseline. Remove tiny neighbouring-cell fragments once, rather than per frame.
+function cropCatapultFrames(image,type,referenceWidth,scale,rects){
+ const ratio=image.naturalWidth/referenceWidth;
+ rects.forEach(([x,y,w,h],i)=>{
+  const source=document.createElement('canvas');source.width=w;source.height=h;const sc=source.getContext('2d');sc.drawImage(image,x*ratio,y*ratio,w*ratio,h*ratio,0,0,w,h);
+  const pixels=sc.getImageData?.(0,0,w,h);
+  if(pixels?.data){const data=pixels.data,count=w*h,labels=new Int32Array(count),queue=new Int32Array(count);let label=0,best=0,largest=0;
+   for(let start=0;start<count;start++){if(labels[start]||data[start*4+3]<20)continue;let head=0,tail=1;queue[0]=start;labels[start]=++label;
+    while(head<tail){const at=queue[head++],column=at%w;for(const next of [column?at-1:-1,column<w-1?at+1:-1,at-w,at+w])if(next>=0&&next<count&&!labels[next]&&data[next*4+3]>=20){labels[next]=label;queue[tail++]=next;}}
+    if(tail>largest){largest=tail;best=label;}
+   }
+   for(let at=0;at<count;at++)if(labels[at]!==best)data[at*4+3]=0;sc.putImageData(pixels,0,0);
+  }
+  const frame=document.createElement('canvas');frame.width=160;frame.height=160;frame.naturalWidth=160;frame.naturalHeight=160;frame.getContext('2d').drawImage(source,80-w*scale/2,156-h*scale,w*scale,h*scale);doodles[type+'-frame-'+i]=frame;
+ });
 }
 if(artworkSupported)for(const name of doodleNames)loadDoodle(name);
 game.dom.$('retryArtworkBtn').onclick=retryArtwork;syncArtworkUI();
@@ -179,6 +198,7 @@ function prepareSapperStrike(e){if(!motionReduced)motionFor(e).readyUntil=motion
 function enemyActionCue(e){return motionReduced?null:(enemyMotion.get(e)?.cue||null)}
 function enemyActionFrame(e){return motionReduced?null:(enemyMotion.get(e)?.sprite||null)}
 function enemySpriteFrame(e){
+  if(e.type==='catapulter')return game.api.catapulterFrame(e);
   if(e.introFrame!==undefined&&doodles['boss-frame-0'])return 'boss-frame-'+e.introFrame;
   if(e.type==='sprinter'&&doodles['sprinter-frame-0'])return 'sprinter-frame-'+(motionReduced?0:(enemyMotion.get(e)?.dashFrame||0));
   if(game.api.isFirstBoss(e)&&doodles['boss-frame-0'])return motionReduced?null:'boss-frame-'+(enemyMotion.get(e)?.kingFrame||0);
@@ -191,6 +211,7 @@ function enemySpriteFrame(e){
 // profile monsters point right. Front-facing silhouettes keep their artwork.
 const profileDirections={catapulter:1,wallpuller:1,papertearer:1,scrubber:1,fast:1,sprinter:1,flanker:1,mini:1,basil:1,jamling:1,sniper:1,stapler:-1};
 function enemyFacing(e){
+  if(e.type==='catapulter'&&e.catapult&&['build','ready','aim'].includes(e.catapult.phase))return e.catapult.x>=e.x?1:-1;
   const m=enemyMotion.get(e);
   if(e.type==='sniper'&&(m?.action==='fire'&&m.actionAge<.3||e.shootCd<=.6&&game.api.sniperCanAim(e)))return game.state.player.x<e.x?-1:1;
   if(m?.actionAge<.3&&['bite','slam'].includes(m.action))return m.actionFacing;
@@ -391,13 +412,15 @@ function tintedDoodle(name,colors){
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
  if(game.api.drawCrayonWaxling(e))return true;
   const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
-  const framed=/^(grunt|fast|sprinter|sniper|boss)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
+  const framed=/^(catapulter|grunt|fast|sprinter|sniper|boss)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
   const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['catapulter','wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?3.4:e.type==='flanker'?4.1:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
-  if(e.type==='catapulter'&&e.catapult&&!motionReduced&&e.freeze<=0&&e.stun<=0){const c=e.catapult;ctx.translate(0,Math.sin(c.age*(c.phase==='tantrum'?20:9))*(c.phase==='build'?2:c.phase==='tantrum'?4:1));ctx.rotate(Math.sin(c.age*12)*(c.phase==='tantrum'?.12:c.phase==='build'?.04:.015));}
+  if(e.type==='catapulter'){const p=game.api.catapulterPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
   // Squash around the feet so hit reactions remain small and planted.
+  // Seat the passenger's feet in the spoon; blend back to normal flight art.
+  if(e.catapultHeld||e.flight?.catapult)ctx.translate(0,-e.r*1.4*(e.catapultHeld?1:Math.max(0,1-e.flight.age/e.flight.duration)));
   const foot=top+height;ctx.translate(0,foot);ctx.scale(pose.sx,pose.sy);ctx.translate(0,-foot);
   if(profileDirections[e.type]&&!name.startsWith('fast-frame-')&&enemyFacing(e)!==profileDirections[e.type])ctx.scale(-1,1);
   // Damage never fades the body: health belongs in the separate bar.
