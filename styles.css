@@ -1300,3 +1300,26 @@ html.native-app #betaScrapsOverlay{padding:0}
 .beta-rejected-doodle{width:240px;opacity:.48}.beta-rejected-doodle p{margin:0;font-size:23px;transform:rotate(3deg)}
 .beta-margin-note{opacity:.42;max-width:310px}.beta-note-face{font-size:31px;color:#67715d}
 .beta-milk-stain{width:215px}.beta-milk-stain p{font-size:21px;opacity:.35;margin:-4px 0 0;transform:rotate(-8deg)}
+
+/* Settings shares Recess's crumpled sheet and taped, torn notes. */
+#optionsOverlay .options-book{width:min(100%,680px);max-width:680px;max-height:calc(100dvh - 28px);padding:24px;border:0;border-radius:0;box-shadow:none;background:url('assets/art/ui/recess-sheet.svg') center/100% 100% no-repeat;filter:drop-shadow(3px 7px 5px #0005);scrollbar-width:thin;scrollbar-color:#a69a80 transparent}
+#optionsOverlay .options-book .build-heading{position:sticky;top:0;z-index:4;background:linear-gradient(#faf4e8 86%,#faf4e8aa);padding:6px 4px 12px}
+#optionsOverlay .options-book .section-kicker{color:#6f614a}
+#optionsOverlay .options-book .settings-whisper{display:flex;align-items:center;gap:12px;font-size:20px;line-height:1.2;color:#56574c;margin:12px 4px 22px}
+.settings-whisper img{width:42px;height:55px;object-fit:contain;flex-shrink:0}
+#optionsOverlay .options-book .option-section{isolation:isolate;background:none;border:0;border-radius:0;box-shadow:none;padding:25px 24px 34px;margin:26px 0;transform:rotate(-.25deg)}
+#optionsOverlay .options-book .option-section:nth-of-type(2){transform:rotate(.25deg)}
+#optionsOverlay .options-book .option-section::after{content:'';position:absolute;inset:0;z-index:-1;background:repeating-linear-gradient(transparent 0 29px,#b1c4d550 29px 30px),url('assets/art/ui/recess-sheet.svg') center/100% 100% no-repeat;clip-path:polygon(1% 1%,14% 0,29% 1%,45% 0,64% 1%,81% 0,99% 1%,100% 21%,99% 48%,100% 72%,99% 99%,80% 100%,61% 99%,39% 100%,20% 99%,0 100%,1% 75%,0 48%,1% 24%);pointer-events:none}
+#optionsOverlay .options-book .option-section::before{z-index:1;opacity:.85}
+#optionsOverlay .options-book .option-help{font-size:14px;line-height:1.55;color:#4d585a}
+#optionsOverlay .options-book .monster-setting{font-size:16px;gap:11px;align-items:flex-start;color:#354348}
+#optionsOverlay .options-book input[type=checkbox]{width:26px;height:26px;flex-shrink:0;accent-color:#426843}
+#optionsOverlay .options-book input[type=range]{min-height:44px}
+#optionsOverlay .options-book select{min-height:44px;max-width:100%;font-size:16px}
+#optionsOverlay .options-book .build-heading>button,#optionsOverlay .options-book .option-section button,#optionsOverlay .options-book .options-links button{position:relative;isolation:isolate;border:0;border-radius:0;background:none;box-shadow:none;min-height:48px;padding:10px 18px;margin:5px 0;color:#315d8c;font:23px/1.15 'Stevie Pencil',cursive}
+#optionsOverlay .options-book .build-heading>button::before,#optionsOverlay .options-book .option-section button::before,#optionsOverlay .options-book .options-links button::before{content:'';position:absolute;inset:-2px;z-index:-1;background:url('assets/art/ui/menu-scrap.png') center/100% 100% no-repeat;filter:drop-shadow(1px 2px 1px #65583f35);pointer-events:none}
+#optionsOverlay .options-book .options-links{gap:10px 14px;margin:14px 0 22px}
+#optionsOverlay .options-book #splashMusicBtn{background:none;border:0;box-shadow:none;margin-bottom:14px}
+.settings-margin-note{position:absolute;right:22px;bottom:8px;color:#807262;opacity:.65;font:16px/1 'Stevie Pencil',cursive;transform:rotate(-3deg);pointer-events:none}
+.beta-class-note{font-size:23px;line-height:1.2}.beta-class-note s{text-decoration-thickness:2px;text-decoration-color:#95675c}
+@media(max-width:480px){#optionsOverlay .options-book{padding:16px 12px}#optionsOverlay .options-book .option-section{padding:23px 16px 34px}#optionsOverlay .options-book .build-heading h2{font-size:38px}#optionsOverlay .options-book .settings-whisper{font-size:19px}#optionsOverlay .options-book .option-help{font-size:14px}#optionsOverlay .options-book .monster-setting{font-size:15px}}
