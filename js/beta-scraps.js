@@ -1,6 +1,6 @@
 /* An experimental view of the existing Notebook, not a second stat economy. */
 DoodleDefender.systems.betaScraps=function(game){
- const $=game.dom.$,width=2400,height=2000,hub={x:1200,y:1000};
+ const $=game.dom.$,width=2400,height=2600,hub={x:1200,y:1000};
  const branches=[
   {id:'paper',name:'Paper ←',title:'Crumpled Paper',x:980,y:962,w:145,first:'rocks'},
   {id:'ink',name:'Ink Lab ↖',title:'Ink Lab',x:930,y:660,w:240,first:'inkTank'},
@@ -22,7 +22,12 @@ DoodleDefender.systems.betaScraps=function(game){
   {id:'starterEraser',perk:'starterEraser',name:'Starter Eraser',parent:'health',branch:'survival',x:1980,y:786,w:300},
   {id:'luck',perk:'luck',name:'Lucky Eraser',parent:'health',branch:'survival',x:1980,y:1246,w:300},
   {id:'inkLater',name:'Weird Ink Club',desc:'New elemental unlocks are still being designed. This branch has room to grow. Your current elemental rewards and synergies work as usual.',parent:'start',later:true,branch:'elements',x:1410,y:1596,w:300},
-  {id:'circles',perk:'circles',name:'Circle Studies',parent:'start',branch:'shapes',x:650,y:1596,w:300}
+  {id:'circles',perk:'circles',name:'Circle Studies',parent:'start',branch:'shapes',x:650,y:1596,w:300},
+  {id:'turretRange',perk:'turretRange',name:'Long Paper Barrel',parent:'circles',branch:'shapes',x:100,y:1906,w:300},
+  {id:'turretDuration',perk:'turretDuration',name:'Stubborn Folds',parent:'circles',branch:'shapes',x:500,y:1906,w:300},
+  {id:'turretCapacity',perk:'turretCapacity',name:'Cannon Club',parent:'circles',branch:'shapes',x:900,y:1906,w:300},
+  {id:'turretRate',perk:'turretRate',name:'Busy Barrels',parent:'turretRange',branch:'shapes',x:220,y:2276,w:300},
+  {id:'turretFold',perk:'turretFold',name:'Quick Origami',parent:'turretDuration',branch:'shapes',x:740,y:2276,w:300}
  ];
  const nodes=new Map(definitions.map(n=>[n.id,n]));
  const nodeRank=(id,p)=>id==='start'?Number(p.betaPencilClaimed===true):p.levels[nodes.get(id)?.perk]||0;

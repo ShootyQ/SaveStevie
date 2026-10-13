@@ -45,7 +45,7 @@ DoodleDefender.systems.doodleTricks=function(game){
  }
  function advanceDoodleRail(p,dt){if(!p.rail)return false;const rail=p.rail;if(!game.state.walls.includes(rail.wall)||rail.wall.hp<=0||rail.wall.life<=0){p.rail=null;return false;}let travel=p.speed*dt;
   while(travel>0&&p.rail){const q=rail.points[rail.index],dx=q.x-p.x,dy=q.y-p.y,len=Math.hypot(dx,dy);if(len<.01){rail.index++;if(rail.index>=rail.points.length){p.rail=null;break;}continue;}const step=Math.min(len,travel),from={x:p.x,y:p.y};p.x+=dx/len*step;p.y+=dy/len*step;p.vx=dx/len*p.speed;p.vy=dy/len*p.speed;travel-=step;game.api.copyPaperWalls(p,from,p);}
-  if(!p.rail){p.target=game.api.nearestEnemy(p.x,p.y,game.api.paperRange(p.doodlePayload)+(p.turretShot?0:100+Math.min(100,(p.doodlePayload.underline-1)*30)));p.manual=!p.target;p.life=Math.max(p.life,1.3);game.api.burst(p.x,p.y,'#63a38d',5);}return true;
+  if(!p.rail){p.target=game.api.nearestEnemy(p.x,p.y,p.turretShot?(p.turretRange||210):game.api.paperRange(p.doodlePayload)+100+Math.min(100,(p.doodlePayload.underline-1)*30));p.manual=!p.target;p.life=Math.max(p.life,1.3);game.api.burst(p.x,p.y,'#63a38d',5);}return true;
  }
  function moveDoodleTricks(dx,dy){for(const d of decoys){d.x+=dx;d.y+=dy;}for(const s of snaps){s.ax+=dx;s.bx+=dx;s.ay+=dy;s.by+=dy;}for(const e of game.state.enemies)if(e.noteBubbleCenter){e.noteBubbleCenter.x+=dx;e.noteBubbleCenter.y+=dy;}for(const p of game.state.projectiles)if(p.rail)for(const q of p.rail.points){q.x+=dx;q.y+=dy;}}
  function drawDoodleTricks(){const ctx=game.dom.ctx,time=game.api.doodleClock(),reduced=game.api.enemyMotionReduced();ctx.save();

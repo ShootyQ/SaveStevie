@@ -290,7 +290,7 @@ function updateRockWalls(dt){
 function throwPaper(target,origin=null,aim=null,secondary=false,options={}){
  if(game.state.projectiles.length>=game.api.paperBallLimit()||!target&&!aim)return false;
  const player=game.state.player,p={x:origin?.x??player.x,y:origin?.y??player.y-8,target,speed:290,damage:game.state.stats.rockDamage,life:1.2,electricLevel:rockElectricLevel(),paperElement:game.api.paperElement()};
- const payload=game.api.paperPayload();if(options.turret){delete payload.range;delete payload.quick;p.turretShot=true;p.damage=Math.max(2,p.damage)*1.5;p.life=210/p.speed+.3;}if(Object.keys(payload).length){p.doodlePayload=payload;p.life=Math.max(1.2,game.api.paperRange(payload)/290+.3);}
+ const payload=game.api.paperPayload();if(options.turret){delete payload.range;delete payload.quick;p.turretShot=true;p.damage=Math.max(2,p.damage)*1.5;p.turretRange=options.turretRange||210;p.life=p.turretRange/p.speed+.3;}if(Object.keys(payload).length){p.doodlePayload=payload;p.life=Math.max(1.2,(p.turretShot?p.turretRange:game.api.paperRange(payload))/290+.3);}
  if(aim){p.manual=true;p.target=null;p.vx=aim.x*p.speed;p.vy=aim.y*p.speed;p.life=game.api.paperRange()/p.speed;}
  game.api.initPaperTricks(p);game.state.projectiles.push(p);
  if(!secondary){game.api.startStevieThrow(target||{x:player.x+aim.x*100,y:player.y+aim.y*100});game.api.secondDraft(target);}
