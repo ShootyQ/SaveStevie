@@ -1,7 +1,7 @@
 /* Circle Studies: one gesture, occupied enclosures or one temporary paper cannon. */
 DoodleDefender.systems.circleShapes=function(game){
  const $=game.dom.$,tuning={minDiameter:30,maxDiameter:140,choiceSeconds:3,seconds:10,range:210,interval:1.25,boost:1.5};
- let pending=null,turret=null,clock=0,contacts=new WeakSet();
+ let pending=null,turret=null,placementHint=null,clock=0,contacts=new WeakSet();
  const live=w=>w&&w.hp>0&&w.life>0&&game.state.walls.includes(w);
  const surface=e=>e.hp>0&&!e.flight&&!game.api.underPaper(e)&&!game.api.bossFriendHeld(e)&&!e.catapultHeld;
  const turretsAllowed=()=>game.state.wave%5!==0&&!game.api.bossEntranceActive()&&!game.state.enemies.some(e=>e.waveBoss&&e.hp>0);
@@ -30,6 +30,7 @@ DoodleDefender.systems.circleShapes=function(game){
  }
  function occupied(w){return game.state.enemies.some(e=>surface(e)&&game.api.insideLoop(e,w));}
  function outsideFort(c){const p=game.api.refugePoint(c.x,c.y);return Math.hypot(c.x-p.x,c.y-p.y)>c.r+10;}
+ function turretTooClose(c){placementHint={x:c.x,y:c.y-c.r,left:2};}
  function enclosure(w){w.circleEnclosure=true;game.api.floatText(w.circleShape.x,w.circleShape.y-w.circleShape.r-10,'ENCLOSE! ×1.5','#477a65');}
  function finishCircle(w){
   if(!enabled()||!live(w)||w.wobbleBumper||w.sneakyDraft||game.api.firstLessonActive())return false;
@@ -37,8 +38,8 @@ DoodleDefender.systems.circleShapes=function(game){
   if(Math.hypot(w.pts[0].x-w.pts.at(-1).x,w.pts[0].y-w.pts.at(-1).y)>.01)w.pts=w.pts.concat([{...w.pts[0]}]);
   if(occupied(w)){enclosure(w);return true;}
   if(!turretsAllowed()){game.api.floatText(c.x,c.y-c.r-12,'No turrets on boss waves','#896847');return false;}
-  if(!outsideFort(c)){game.api.floatText(c.x,c.y-c.r-12,'Give Stevie some room!','#896847');return false;}
-  pending={wall:w,circle:c,left:tuning.choiceSeconds};syncCirclePrompt();return true;
+  if(!outsideFort(c)){turretTooClose(c);return false;}
+  placementHint=null;pending={wall:w,circle:c,left:tuning.choiceSeconds};syncCirclePrompt();return true;
  }
  function resolveCircleChoice(yes,automatic=false){
   if(!pending)return false;
@@ -46,14 +47,15 @@ DoodleDefender.systems.circleShapes=function(game){
   const p=pending;pending=null;syncCirclePrompt();if(!yes||!live(p.wall))return true;
   // A monster can enter during the offer. Never seal it into an ignored turret.
   if(occupied(p.wall)){enclosure(p.wall);return true;}
-  if(!turretsAllowed()||!outsideFort(p.circle))return true;
+  if(!turretsAllowed())return true;
+  if(!outsideFort(p.circle)){turretTooClose(p.circle);return true;}
   if(turret){const c=turret.circle;turret.wall.life=0;for(let i=0;i<16&&game.state.particles.length<1800;i++){const angle=i*Math.PI*2/16;game.state.particles.push({x:c.x+Math.cos(angle)*10,y:c.y+Math.sin(angle)*8,vx:Math.cos(angle)*(28+i%3*12),vy:Math.sin(angle)*40+20,life:.35+i%4*.08,color:i%4===0?'#7a8f9d':'#f6edd7'});}}
   p.wall.shapeTurret=true;p.wall.circleEnclosure=false;p.wall.life=p.wall.maxLife=tuning.seconds;
   game.state.walls=game.state.walls.filter(w=>w!==p.wall);
   turret={wall:p.wall,circle:p.circle,left:tuning.seconds,age:0,cd:.25,angle:0,recoil:0,draft:0};
   game.api.floatText(p.circle.x,p.circle.y-p.circle.r-10,'PAPER TURRET!','#42698e');game.api.playSound('pencil');return true;
  }
- function resetCircleShapes(){pending=null;turret=null;clock=0;contacts=new WeakSet();syncCirclePrompt();}
+ function resetCircleShapes(){pending=null;turret=null;placementHint=null;clock=0;contacts=new WeakSet();syncCirclePrompt();}
  function syncCirclePrompt(){
   const show=!!pending&&turretsAllowed()&&game.state.running&&!game.state.paused&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec&&!game.api.infoOpen()&&!game.api.synergyRevealActive()&&!game.api.bossEntranceActive();
   const box=$('circlePrompt');box.hidden=!show;if(!show)return;
@@ -62,7 +64,7 @@ DoodleDefender.systems.circleShapes=function(game){
   box.style.top=game.api.clamp(pending.circle.y-pending.circle.r-65,80,Math.max(80,game.state.H-65))+'px';
  }
  function updateCircleShapes(dt){
-  contacts=new WeakSet();clock+=dt;if(!turretsAllowed()){pending=null;turret=null;syncCirclePrompt();return;}let turretDt=dt;const existing=turret,choiceLeft=pending?.left;
+  contacts=new WeakSet();clock+=dt;if(placementHint){placementHint.left-=dt;if(placementHint.left<=0)placementHint=null;}if(!turretsAllowed()){pending=null;turret=null;syncCirclePrompt();return;}let turretDt=dt;const existing=turret,choiceLeft=pending?.left;
   if(pending){if(!live(pending.wall)){pending=null;}else{pending.left-=dt;if(pending.left<=1e-8){resolveCircleChoice(true,true);if(turret&&turret!==existing)turretDt=Math.max(0,dt-choiceLeft);}}}
   if(turret){const t=turret;t.left=Math.max(0,t.left-turretDt);t.age+=turretDt;t.wall.life=t.left;t.recoil=Math.max(0,t.recoil-turretDt);if(t.left<=0||t.wall.hp<=0||game.api.wobbleInfiniteInk()){turret=null;}else{
    t.cd-=turretDt;const target=game.api.nearestEnemy(t.circle.x,t.circle.y,tuning.range);
@@ -88,14 +90,16 @@ DoodleDefender.systems.circleShapes=function(game){
  }
  function constrainCircleTurret(){if(!turret||!turretsAllowed())return;const c=turret.circle;for(const e of game.state.enemies){if(!surface(e)||e.hurdle||e.wobbleLanding)continue;const dx=e.x-c.x,dy=e.y-c.y,d=Math.hypot(dx,dy),r=c.r+e.r+5;if(d<r){const angle=d?Math.atan2(dy,dx):Math.atan2(e.y-game.state.player.y,e.x-game.state.player.x);e.x=c.x+Math.cos(angle)*r;e.y=c.y+Math.sin(angle)*r;}}}
  function circleTurretContact(e,dt){if(!turret||!turretsAllowed()||!surface(e))return;const c=turret.circle;if(Math.abs(Math.hypot(e.x-c.x,e.y-c.y)-c.r)<=e.r+turret.wall.thick/2+8&&!game.api.chonksProtected(e))game.api.dealDamage(e,game.state.stats.wallDamage*dt,'physical');}
- function moveCircleShapes(dx,dy){const circles=new Set(game.state.walls.map(w=>w.circleShape).filter(Boolean));if(pending)circles.add(pending.circle);if(turret){circles.add(turret.circle);turret.wall.pts=turret.wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));}for(const c of circles){c.x+=dx;c.y+=dy;}syncCirclePrompt();}
+ function moveCircleShapes(dx,dy){if(placementHint){placementHint.x+=dx;placementHint.y+=dy;}const circles=new Set(game.state.walls.map(w=>w.circleShape).filter(Boolean));if(pending)circles.add(pending.circle);if(turret){circles.add(turret.circle);turret.wall.pts=turret.wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));}for(const c of circles){c.x+=dx;c.y+=dy;}syncCirclePrompt();}
  function drawCircleShapes(){
   syncCirclePrompt();const ctx=game.dom.ctx,reduced=game.api.enemyMotionReduced();ctx.save();
   for(const w of game.state.walls){if(!w.circleEnclosure||!w.closed||!live(w))continue;const c=w.circleShape;ctx.strokeStyle='#488b78';ctx.fillStyle='rgba(74,145,119,.045)';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(c.x,c.y,c.r*.93,0,Math.PI*2);ctx.fill();ctx.stroke();if(!reduced){ctx.globalAlpha=.25;const radius=c.r*(1-(clock%1.2)/1.2);ctx.beginPath();ctx.arc(c.x,c.y,radius,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}}
   if(pending&&turretsAllowed()){const c=pending.circle;ctx.strokeStyle='#a48650';ctx.lineWidth=2;ctx.setLineDash([3,5]);ctx.beginPath();ctx.arc(c.x,c.y,c.r-3,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}
   if(turret&&turretsAllowed()){const t=turret,c=t.circle;ctx.globalAlpha=Math.min(1,t.left);ctx.strokeStyle='#4f5352';ctx.lineWidth=t.wall.thick;ctx.lineCap='round';ctx.beginPath();t.wall.pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();ctx.lineWidth=2;ctx.strokeStyle='#557f9a';ctx.beginPath();ctx.arc(c.x,c.y,c.r-5,-Math.PI/2,-Math.PI/2+Math.PI*2*t.left/tuning.seconds);ctx.stroke();
    const image=game.api.doodleArtwork('paper-turret'),size=Math.min(48,Math.max(28,c.r)),fold=reduced?1:Math.min(1,t.age/.25),recoil=reduced?0:Math.sin(t.recoil/.2*Math.PI)*4;ctx.save();ctx.translate(c.x,c.y);ctx.rotate(Math.cos(t.angle)<0?t.angle-Math.PI:t.angle);ctx.scale(Math.cos(t.angle)<0?-fold:fold,fold);if(image)ctx.drawImage(image,-size/2-recoil,-size*.4,size,size*.8);ctx.restore();
-  }ctx.restore();
+  }
+  if(placementHint){const h=placementHint,text='Turret too close';ctx.globalAlpha=Math.min(1,h.left*3);ctx.font='bold 16px "Stevie Pencil", cursive';const width=ctx.measureText(text).width+24,x=game.api.clamp(h.x,width/2+8,game.state.W-width/2-8),y=game.api.clamp(h.y-42,80,Math.max(80,game.state.H-42));ctx.fillStyle='#fff8df';ctx.strokeStyle='#956847';ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(x-width/2,y,width,30,7);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(x-5,y+30);ctx.lineTo(x,y+37);ctx.lineTo(x+5,y+30);ctx.fill();ctx.stroke();ctx.fillStyle='#795034';ctx.textAlign='center';ctx.fillText(text,x,y+21);}
+  ctx.restore();
  }
  function circleShapesSnapshot(){return {pending:pending?{...pending.circle,left:pending.left}:null,turret:turret?{...turret.circle,left:turret.left,hp:turret.wall.hp,maxHp:turret.wall.maxHp,cd:turret.cd}:null,enclosures:game.state.walls.filter(w=>w.circleEnclosure&&w.closed).length};}
  const api={circleGeometry,finishCircle,resolveCircleChoice,resetCircleShapes,updateCircleShapes,applyCircleEnclosure,avoidCircleTurret,constrainCircleTurret,circleTurretContact,shapeMoveClear,drawCircleShapes,moveCircleShapes,circleShapesSnapshot,shapeBarrierWalls:()=>turret&&turretsAllowed()?[turret.wall]:[],enclosureAlreadyHit:e=>contacts.has(e),circleShapeTuning:()=>({...tuning})};Object.assign(game.api,api);
