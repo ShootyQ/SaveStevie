@@ -17,7 +17,7 @@ function updateUI(){
   const overtime=game.dom.$('bossOvertime'),bossWave=game.state.wave%5===0;
   const active=game.state.running&&!game.state.betweenWaves&&!game.state.inUpgrade&&!game.api.waveFinaleActive();
   const fighting=bossWave&&game.api.bossWavePhase()==='fight',arrival=game.api.bossArrivalSnapshot();
-  overtime.style.display=active&&(fighting||game.state.timeLeft===0)?'block':'none';
+  overtime.style.display=active&&(fighting||game.state.timeLeft===0)&&!(fighting&&game.api.bossTypeForWave()==='wobblechomp')?'block':'none';
   if(fighting)text(overtime,'Defeat '+game.api.monsterName(game.api.bossTypeForWave()));
   else if(arrival)text(overtime,game.api.monsterName(game.api.bossTypeForWave())+' arriving · '+Math.ceil(arrival.left)+'s');
   else if(game.state.timeLeft===0)text(overtime,'Clear the remaining monsters · '+game.state.enemies.filter(e=>e.hp>0).length+' left');

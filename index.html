@@ -81,7 +81,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.73</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.74</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -400,6 +400,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.74 · Wobblechomp bites back</h3><p>Wobblechomp rolls in, splats and roars. Damage advances phase one; randomized attacks, hungry wall gulps and optional one-slash limb removal replace the six-cut checklist. Angled walls redirect his warned charges in the showdown. Four spike hits win, each with a flying splat. Hit the well to unlock infinite ink, or hit the fallen eye to stop its wall-erasing laser. Both phases resist outside conditions, and missed charges hurt. The optional victory doodle is now one automatically attached waving arm.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.73 · Return to sender… and friends</h3><p>Reflected Pew-Pew pencils pierce through exposed regular monsters on their way back, defeating every one they touch. Chonk shields, underground protection and boss mechanics still apply. Pew-Pew keeps his later-wave return requirements.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.72 · Clear space for the doodles</h3><p>Health, ink and wave stats sit above the playable paper, so monsters no longer hide behind them. Android controls have their own space below the arena. Monster-introduction buttons use clear light lettering on blue.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.71 · Stevie scribbled this</h3><p>Settings notes and the writing on the actual scrap-tree upgrades now use uneven handwritten letters, wandering baselines and crooked spacing. Names, ranks and costs stay readable.</p></article>
@@ -674,7 +675,7 @@
     <p id="wobbleRepairSpeech" role="status" aria-live="polite"></p>
     <canvas id="wobbleRepairScene" width="480" height="320" aria-label="Wobblechomp receiving your drawn appendages"></canvas>
     <p id="wobbleRepairHint"></p>
-    <button id="wobbleRepairHelp">Help Wobblechomp draw his bits back</button><button id="wobbleRepairContinue">Take the win · continue</button>
+    <button id="wobbleRepairHelp">Draw a silly arm</button><button id="wobbleRepairContinue">Take the win · continue</button>
     <div id="wobbleRepairDrawing" hidden>
       <canvas id="wobbleRepairPad" width="480" height="320" aria-label="Draw a replacement appendage outline from attachment dot 1 back to dot 2"></canvas>
       <div class="wobble-repair-actions"><button id="wobbleRepairClear">Try again</button><button id="wobbleRepairPreset">Use Stevie’s doodle</button><button id="wobbleRepairAttach">Attach my doodle →</button></div>
