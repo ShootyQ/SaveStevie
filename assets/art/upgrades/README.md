@@ -18,3 +18,5 @@ art in `js/backdraft.js`, driven by the shared wall heat and simulation clock.
 Reduced motion removes pocket pulsing and animated ember drift.
 
 `iceberg.svg` is original vector art for the Legendary Frost Ink · Iceberg reward: a graphite-outlined, faceted ice shelf with cracks and snowflakes.
+
+`tesla.svg` is original vector artwork for Legendary Electric Ink · Tesla, with copper coil windings, a blue terminal and pale lightning.

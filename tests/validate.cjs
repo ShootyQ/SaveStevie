@@ -1009,6 +1009,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
    assert.equal(g.state.stacks[base.name],expected,rarity+' '+base.name+' levels');
    if(rarity==='legendary'&&base.name==='Fire Ink'){assert.equal(g.state.stats.backdraft,true,'legendary fire adds its special behavior');reference.state.stats.backdraft=true;}
    if(rarity==='legendary'&&base.name==='Frost Ink'){assert.equal(g.state.stats.iceberg,true,'legendary frost adds its special behavior');reference.state.stats.iceberg=true;}
+   if(rarity==='legendary'&&base.name==='Electric Ink'){assert.equal(g.state.stats.tesla,true,'legendary electric adds its special behavior');reference.state.stats.tesla=true;}
    assert.deepEqual(JSON.parse(JSON.stringify(g.state.stats)),JSON.parse(JSON.stringify(reference.state.stats)),rarity+' '+base.name+' matches common-level stats');
    assert.deepEqual(JSON.parse(JSON.stringify(g.state.inks)),JSON.parse(JSON.stringify(reference.state.inks)));
    if(base.cat==='ink')assert.equal(preview.after,'Level '+levels);
@@ -2496,6 +2497,7 @@ require('./enemy-crowds.cjs')(load);
 require('./black-ice.cjs')(load);
 require('./backdraft.cjs')(load);
 require('./iceberg.cjs')(load);
+require('./tesla.cjs')(load);
 require('./thermal-shock.cjs')(load);
 require('./rail-ink.cjs')(load);
 require('./smarter-convoys.cjs')(load);
