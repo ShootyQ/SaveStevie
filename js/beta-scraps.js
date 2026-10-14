@@ -1,6 +1,18 @@
 /* An experimental view of the existing Notebook, not a second stat economy. */
 DoodleDefender.systems.betaScraps=function(game){
  const $=game.dom.$,width=2400,height=2600,hub={x:1200,y:1000};
+ // Keep the real label accessible while giving each written word a pencil baseline.
+ function handwrite(element){
+  const doc=element.ownerDocument;if(!doc)return;
+  const text=element.textContent;element.textContent='';
+  for(const part of text.split(/(\s+)/)){
+   if(!part)continue;
+   if(/^\s+$/.test(part)){element.appendChild(doc.createTextNode(part));continue;}
+   const word=doc.createElement('span');word.className='scribble-word';
+   for(const character of part){const letter=doc.createElement('span');letter.className='scribble-letter';letter.textContent=character;word.appendChild(letter);}
+   element.appendChild(word);
+  }
+ }
  const branches=[
   {id:'paper',name:'Paper ←',title:'Crumpled Paper',x:980,y:962,w:145,first:'rocks'},
   {id:'ink',name:'Ink Lab ↖',title:'Ink Lab',x:930,y:660,w:240,first:'inkTank'},
@@ -94,6 +106,7 @@ DoodleDefender.systems.betaScraps=function(game){
    button.style.left=n.x+'px';button.style.top=n.y+'px';button.style.width=n.w+'px';button.setAttribute?.('aria-pressed',String(noteOpen&&selected===n.id));
    const title=document.createElement('strong'),label=document.createElement('span');title.textContent=n.name;label.textContent=n.perk==='circles'&&!game.api.shapeStudiesAvailable()?'Beat wave 10 · Shapes locked':n.later?'later…':n.id==='start'?(state.owned?'✓ Start complete':'0 scraps · start here'):state.owned?'✓ Complete':!state.unlocked&&state.rank===0?'After '+nodes.get(n.parent).name:state.rank+' / '+state.max+' · '+state.price+' scraps';button.appendChild(title);button.appendChild(label);button.onclick=()=>selectBetaNode(n.id);list.appendChild(button);
   }
+  for(const element of list.querySelectorAll?.('.beta-branch-title,strong,.beta-tree-node > span')||[])handwrite(element);
   renderPaths();renderDetails();positionNote();$('betaTreeStatus').textContent=p.storageIssue?'Saving is unavailable; purchases last for this visit.':'Both scrap pages share your purchases. No bonuses are counted twice.';
  }
  function renderPaths(){
