@@ -47,7 +47,7 @@ DoodleDefender.systems.doodleScraps=function(game){
   const choices=rollNotes();let x=game.api.clamp(e.x,26,game.state.W-26),y=game.api.clamp(e.y,100,game.state.H-30);
   if(Math.hypot(x-game.state.player.x,y-game.state.player.y)<80)y=game.api.clamp(game.state.player.y-100,100,game.state.H-30);
   drop={x,y,life:45,reel:0,choices:choices.map(n=>n.id),rarity:choices[0].rarity,art:choices[0].art};lastDrop=clock;found++;waveDrops++;
-  game.api.setMsg('A '+drop.rarity+' Doodle Scrap! Draw through it to collect.');return true;
+  game.api.playSound('doodleAppear');game.api.setMsg('A '+drop.rarity+' Doodle Scrap! Draw through it to collect.');return true;
  }
  function collectDoodleScrap(points,paid){if(!drop||drop.reel)return false;for(let i=1;i<points.length;i++)if(game.api.pointSegDist(drop.x,drop.y,points[i-1].x,points[i-1].y,points[i].x,points[i].y)<=24){drop.reel=.001;drop.fromX=drop.x;drop.fromY=drop.y;return true;}return false;}
  function openDoodleChoice(ids){offers=ids.map(id=>notes.find(n=>n.id===id));

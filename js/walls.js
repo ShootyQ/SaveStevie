@@ -229,6 +229,7 @@ function damageWall(wall,amount,x,y){
   if(wall.hp<=0||!game.state.walls.includes(wall))return;
   wall.hp-=amount;
   if(wall.hp<=0){
+    game.api.playSound('wallBreak');
     if(game.state.stats.explode||game.state.inks.blast>0){
       let radius=70+game.state.inks.blast*12;
       let dmg=35+game.state.inks.blast*20;

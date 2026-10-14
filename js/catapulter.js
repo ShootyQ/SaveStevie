@@ -46,7 +46,7 @@ DoodleDefender.systems.catapulter=function(game){
   if(c.phase==='build'){if(c.left<=1e-8){c.phase='ready';c.left=.5;say(e,'ERASE MY CATAPULT? RUDE.');recruit(e);}return true;}
   if(c.phase==='aim'){
    if(!c.passenger||c.passenger.hp<=0||!game.state.enemies.includes(c.passenger)){release(e);return true;}
-   if(c.left<=1e-8){const n=c.passenger,spoon=spoonPoint(e,true);delete n.catapultHeld;n.x=spoon.x;n.y=spoon.y;n.flight={catapult:true,startX:n.x,startY:n.y,targetX:c.target.x,targetY:c.target.y,age:0,duration:tuning.flight,height:72,spin:n.x<c.target.x?1:-1};c.passenger=null;c.phase='ready';c.target=null;c.left=tuning.cooldown;c.kick=.6;game.api.floatText(n.x,n.y-30,'Weeeeeee!','#854488');game.api.playSound('wall');}return true;
+   if(c.left<=1e-8){const n=c.passenger,spoon=spoonPoint(e,true);delete n.catapultHeld;n.x=spoon.x;n.y=spoon.y;n.flight={catapult:true,startX:n.x,startY:n.y,targetX:c.target.x,targetY:c.target.y,age:0,duration:tuning.flight,height:72,spin:n.x<c.target.x?1:-1};c.passenger=null;c.phase='ready';c.target=null;c.left=tuning.cooldown;c.kick=.6;game.api.floatText(n.x,n.y-30,'Weeeeeee!','#854488');game.api.playSound('woodImpact');}return true;
   }
   c.kick=Math.max(0,(c.kick||0)-dt);if(c.left>0)return true;
   const n=game.state.enemies.filter(n=>n!==e&&basics.has(n.type)&&n.hp>0&&!n.waveBoss&&!n.bossOwner&&!n.flight&&!n.catapultHeld&&!game.api.bossFriendHeld(n)&&!game.api.underPaper(n)&&n.stun<=0&&n.freeze<=0&&Math.hypot(n.x-c.x,n.y-c.y)<120&&game.api.bouncePathClear(n,c.x,c.y,0)).sort((a,b)=>Math.hypot(a.x-c.x,a.y-c.y)-Math.hypot(b.x-c.x,b.y-c.y))[0];

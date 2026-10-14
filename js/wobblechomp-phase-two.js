@@ -53,7 +53,7 @@ DoodleDefender.WobblePhaseTwo=function(game,{state,rig,topMargin}){
    const p=game.state.player,t=circleTime(a,to,p,e.r+p.r+10);if(t!==null&&(!first||t<first.t))first={t,player:true};
    const used=left*(first?.t??1);e.x+=s.rollVX*used;e.y+=s.rollVY*used;s.rollDistance+=chargeSpeed()*used;left-=used;
    if(!first)break;
-   if(first.wall){const w=first.wall.wall,n=normal(e,first.wall,e.x,e.y);w.hp=0;game.state.walls=game.state.walls.filter(q=>q!==w);bounce(s,n);game.api.burst(e.x,e.y,'#b2a17d',8);game.api.playSound('rock');game.api.floatText(e.x,e.y-38,'BOING!','#28796d');e.x+=s.rollVX/chargeSpeed()*2;e.y+=s.rollVY/chargeSpeed()*2;left=Math.max(0,left-.002);}
+   if(first.wall){const w=first.wall.wall,n=normal(e,first.wall,e.x,e.y);w.hp=0;game.state.walls=game.state.walls.filter(q=>q!==w);bounce(s,n);game.api.burst(e.x,e.y,'#b2a17d',8);game.api.playSound('wallBreak');game.api.floatText(e.x,e.y-38,'BOING!','#28796d');e.x+=s.rollVX/chargeSpeed()*2;e.y+=s.rollVY/chargeSpeed()*2;left=Math.max(0,left-.002);}
    else if(first.player){game.api.damageStevie(16*(1-game.state.stats.playerArmor),'Wobblechomp warned charge',e);s.chargeCount++;flyAway(e,s);}
    else{hitTarget(e,s,first.name);if(s.rollState==='charge'){e.x+=s.rollVX/chargeSpeed()*2;e.y+=s.rollVY/chargeSpeed()*2;}}
   }
