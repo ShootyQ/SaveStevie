@@ -112,3 +112,23 @@ throws skip crumpling; turret shots use their own sound. Assembly is a single
 shared voice while any living, unstunned catapulter is building, stopping when
 construction ends, is erased, or is interrupted. Pause, visibility, volume,
 reset, priorities and six-voice limits continue to apply.
+
+## Monster movement and wall attacks (Alpha 0.1.78)
+
+Fourteen supplied clips are renamed and converted to mono 24 kHz PCM WAV:
+
+| Runtime files | Supplied files | Trigger |
+| --- | --- | --- |
+| `chonks-step-1/2.wav` | chonkwalk1/2 | Every 18 px of Chonks walking |
+| `dash-run.wav` | crashdash run | Actual running movement; one quiet shared loop |
+| `dash-jump.wav` | crashdash jump | Begin a wall or crowd hurdle |
+| `boing-bounce-1/2.wav` | boingusbounce1/2 | Boingus ricochets from a wall |
+| `gribble-wall-1/2.wav` | scribbleatwall and (2) | Scribble Gribble attacks a wall |
+| `monster-wall-1/2/3.wav` | monsteratwall and (2)/(3) | Other ordinary monsters attack a wall |
+| `turret-fire-2/3/4.wav` | paper_turret_firing #2/#3/#4 | Rotate with the original turret firing clip |
+
+Footstep distance lives outside gameplay state, resets each run, and does not
+advance during Chonks' recovery or immobility. Running stops after 0.14 seconds
+without actual movement. Bites/bounces/jumps trigger on actions, not rendering;
+variants rotate without consuming combat RNG. Group cooldowns, caps and six
+shared voices keep crowds from stacking dozens of movement and chewing clips.

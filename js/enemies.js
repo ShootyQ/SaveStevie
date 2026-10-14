@@ -229,7 +229,7 @@ function updateTwicey(e,dt){
  }
  if(hit){
   e.attackCd-=dt;
-  if(e.attackCd<=0){game.api.damageWall(hit.wall,e.dmg*(c.role==='chewer'?1.4:1),e.x,e.y);e.attackCd=c.role==='chewer'?.55:.8;game.api.animateEnemyAction(e,'bite',game.api.nearestPointOnWall(e,hit.wall));}
+  if(e.attackCd<=0){game.api.playMonsterWall(e);game.api.damageWall(hit.wall,e.dmg*(c.role==='chewer'?1.4:1),e.x,e.y);e.attackCd=c.role==='chewer'?.55:.8;game.api.animateEnemyAction(e,'bite',game.api.nearestPointOnWall(e,hit.wall));}
   if(c.phase==='dash'){c.phase='walk';c.timer=2.1;}
  }
  const dx=target.x-e.x,dy=target.y-e.y,len=Math.hypot(dx,dy)||1,travel=Math.min(len,speed*dt);
@@ -755,10 +755,10 @@ function updateChonks(e,dt){
   const point=game.api.nearestPointOnWall(e,ahead.wall),vx=point.x-e.x,vy=point.y-e.y,d=Math.hypot(vx,vy)||1;
   const layered=!game.api.bouncePathClear(e,e.x+vx/d*(d+60),e.y+vy/d*(d+60),0,new Set([ahead.wall]));
   c.bumpDamage=shield?ahead.wall.hp:e.dmg*(1+2.5*c.momentum)*(1-game.api.clamp(e.gravitySlow,0,.7));c.target=ahead.wall;
-  game.api.damageWall(ahead.wall,c.bumpDamage,point.x,point.y);game.api.animateEnemyAction(e,'belly-bump',point);game.api.floatText(e.x,e.y-e.r-12,layered?'FLOP!':'RAM!','#a56930');
+  game.api.playMonsterWall(e);game.api.damageWall(ahead.wall,c.bumpDamage,point.x,point.y);game.api.animateEnemyAction(e,'belly-bump',point);game.api.floatText(e.x,e.y-e.r-12,layered?'FLOP!':'RAM!','#a56930');
   c.phase='recover';c.recovery=c.recoveryTotal=shield?.3:layered?2:1;c.momentum=shield?.6:0;return true;
  }
- e.x=nx;e.y=ny;c.momentum=game.api.clamp(c.momentum+travel/180,0,1);game.api.contactStevie(e);return true;
+ game.api.playChonksStep(e,travel);e.x=nx;e.y=ny;c.momentum=game.api.clamp(c.momentum+travel/180,0,1);game.api.contactStevie(e);return true;
 }
 function enemyMoveScale(e){return game.api.enemySpeedScale()*game.api.doodleClingScale(e)*(e.type==='basil'&&e.feastPhase!=='idle'?0:e.feastRush>0?2:feastHost(e)?1.6:e.type==='tank'?1+1.4*(e.chonks?.momentum||0):e.type==='sprinter'?(1+.45*game.api.clamp((e.screenAge||0)/3,0,1))*(e.dashTime>=2.6?1.35:1):1)}
 function enemyTarget(e){

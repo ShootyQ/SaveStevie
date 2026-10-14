@@ -1292,7 +1292,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
   createBufferSource(){const s={connect(){},disconnect(){},start(...args){this.args=args},stop(){this.onended?.()}};sources.push(s);return s}
  };
  env.sandbox.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(4)});
- g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,49);
+ g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,63);
  const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('sound must not use combat RNG')};
  assert.equal(g.api.playSound('scribble'),true);assert.equal(sources[0].args[2],.28);assert.equal(g.api.playSound('scribble'),false);
  sources[0].onended();ctx.currentTime=.3;assert.equal(g.api.playSound('scribble'),true);assert.equal(g.api.soundEffectsSnapshot().voices[0].name,'scribble-2');
@@ -1312,7 +1312,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  const tears=[],pops=[];for(let i=0;i<4;i++){ctx.currentTime+=1;g.api.stopSoundEffects();assert(g.api.playSound('paperTear'));tears.push(g.api.soundEffectsSnapshot().voices[0].name);ctx.currentTime+=1;g.api.stopSoundEffects();assert(g.api.playSound('paperPop'));pops.push(g.api.soundEffectsSnapshot().voices[0].name)}
  assert.deepEqual(tears,['paper-tear-1','paper-tear-2','paper-tear-3','paper-tear-1']);assert.deepEqual(pops,['paper-pop-1','paper-pop-2','paper-pop-1','paper-pop-2']);
  g.api.resetSoundEffects();const tunnel={hp:20,paperTunnel:{phase:'travel'}};g.state.enemies=[tunnel];g.api.syncSoundEffects();assert(g.api.soundEffectsSnapshot().voices.some(v=>v.kind==='paperCrawl'));tunnel.paperTunnel.phase='emerge';g.api.syncSoundEffects();assert(!g.api.soundEffectsSnapshot().voices.some(v=>v.kind==='paperCrawl'),'crawling ends when last monster surfaces');
- env.sandbox.Math.random=random;console.log('PASS: forty-nine decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
+ env.sandbox.Math.random=random;console.log('PASS: sixty-three decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
 })().catch(error=>{console.error(error);process.exitCode=1});
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
