@@ -1258,7 +1258,7 @@ html.native-app #betaScrapsOverlay{padding:0}
 .beta-tree-node:nth-of-type(even){--tilt:1.3deg}.beta-tree-node strong{font-weight:400}.beta-tree-node span{font-size:16px;white-space:nowrap;color:#544e42}
 .beta-tree-node.available{color:#386330}.beta-tree-node.owned{color:#386330}.beta-tree-node.owned span{color:#386330}.beta-tree-node.locked,.beta-tree-node.future{color:#756a59}.beta-tree-node:hover{background:none;box-shadow:none;transform:rotate(calc(var(--tilt) - 1deg))}.beta-tree-node[aria-pressed=true]::before{filter:drop-shadow(0 0 3px #315eb399) drop-shadow(1px 4px 1px #65583f45)}
 .beta-tree-node:focus-visible,.beta-branch-title:focus-visible{outline:3px dashed #315eb3;outline-offset:6px}
-#beta-node-tool,#beta-node-start{display:block;text-align:center}#beta-node-tool span,#beta-node-start span{display:block;margin-top:5px}
+#beta-node-tool,#beta-node-start{display:block;text-align:center}#beta-node-tool > span,#beta-node-start > span{display:block;margin-top:5px}
 #betaHeldTool{position:absolute;left:809px;top:494px;width:148px;height:74px;transform:rotate(-67deg);pointer-events:none}#betaHeldTool .instrument-hero{width:100%;margin:0}
 .beta-map-title{position:absolute;z-index:1;left:50%;top:calc(10px + env(safe-area-inset-top,0px));transform:translateX(-50%) rotate(-2deg);font-family:'Stevie Pencil',cursive;font-size:29px;line-height:1;margin:0;color:#315eb3;text-shadow:1px 1px #fff7dc;pointer-events:none}.beta-map-title small{font-size:15px;color:#925644}
 .beta-map-note{position:absolute;z-index:2;isolation:isolate;border:0;border-radius:0;background:none;color:#314a3e;box-shadow:none;font-family:'Stevie Pencil',cursive;min-height:48px;padding:12px 18px;font-size:23px;transform:rotate(-3deg);cursor:pointer}
@@ -1322,4 +1322,15 @@ html.native-app #betaScrapsOverlay{padding:0}
 #optionsOverlay .options-book #splashMusicBtn{background:none;border:0;box-shadow:none;margin-bottom:14px}
 .settings-margin-note{position:absolute;right:22px;bottom:8px;color:#807262;opacity:.65;font:16px/1 'Stevie Pencil',cursive;transform:rotate(-3deg);pointer-events:none}
 .beta-class-note{font-size:23px;line-height:1.2}.beta-class-note s{text-decoration-thickness:2px;text-decoration-color:#95675c}
-@media(max-width:480px){#optionsOverlay .options-book{padding:16px 12px}#optionsOverlay .options-book .option-section{padding:23px 16px 34px}#optionsOverlay .options-book .build-heading h2{font-size:38px}#optionsOverlay .options-book .settings-whisper{font-size:19px}#optionsOverlay .options-book .option-help{font-size:14px}#optionsOverlay .options-book .monster-setting{font-size:15px}}
+/* Static pencil lettering: whole words wrap, individual letters wander. */
+.scribble-word{display:inline-block;white-space:nowrap;font-family:'Stevie Pencil',cursive;font-weight:400;letter-spacing:-.015em;transform:rotate(-1deg)}
+.scribble-word:nth-child(3n){transform:rotate(2deg);letter-spacing:.015em}
+.scribble-letter{display:inline-block;transform:translateY(.025em) rotate(-3deg)}
+.scribble-letter:nth-child(3n){transform:translateY(-.04em) rotate(4deg) scaleY(1.06)}
+.scribble-letter:nth-child(4n){transform:translateY(.065em) rotate(-5deg) scaleX(.94)}
+.scribble-letter:nth-child(5n){transform:translateY(-.02em) rotate(2deg) scaleY(.94)}
+.beta-tree-node .scribble-word,.beta-tree-node .scribble-letter{display:inline-block;font-size:inherit;color:inherit;margin:0;line-height:inherit}
+.beta-tree-node .scribble-word{white-space:nowrap}
+.beta-tree-node .scribble-letter{white-space:pre}
+#optionsOverlay .options-book .option-help{font-family:'Stevie Pencil',cursive;font-size:18px;line-height:1.35;font-weight:400}
+@media(max-width:480px){#optionsOverlay .options-book{padding:16px 12px}#optionsOverlay .options-book .option-section{padding:23px 16px 34px}#optionsOverlay .options-book .build-heading h2{font-size:38px}#optionsOverlay .options-book .settings-whisper{font-size:19px}#optionsOverlay .options-book .option-help{font-size:18px}#optionsOverlay .options-book .monster-setting{font-size:15px}}
