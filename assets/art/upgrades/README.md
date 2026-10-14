@@ -11,3 +11,10 @@ with the static site and receive the same deployment version as existing art.
 Cards keep a decorative pen fallback if an asset fails to load. Asset names
 match the lower-case, hyphenated upgrade names; the selection and stacking
 rules are unchanged.
+
+`backdraft.svg` is original hand-drawn-style vector art for legendary Fire Ink.
+In-game pressure pockets and the layered flame front are procedural Canvas
+art in `js/backdraft.js`, driven by the shared wall heat and simulation clock.
+Reduced motion removes pocket pulsing and animated ember drift.
+
+`iceberg.svg` is original vector art for the Legendary Frost Ink · Iceberg reward: a graphite-outlined, faceted ice shelf with cracks and snowflakes.

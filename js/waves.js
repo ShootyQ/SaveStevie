@@ -97,6 +97,7 @@ function resetRun(options={}){
   game.dom.$('lastHitText').textContent='';
   game.state.wave=1;game.state.kills=0;game.state.score=0;game.state.waveKills=0;game.state.rerolls=0;game.state.endless=false;game.state.specialization='none';game.state.finalOvertime=false;game.state.finalBossDefeated=false;
   game.state.walls=[];game.state.enemies=[];game.state.particles=[];game.state.floaters=[];game.state.projectiles=[];game.state.enemyShots=[];game.state.synergies.clear();
+  delete game.state.stats.backdraft;delete game.state.stats.iceberg;
   Object.assign(game.state.stats,{
     maxInk:160,ink:160,inkRegen:6,eraseRefund:.25,wallHp:65,wallDamage:8,wallSlow:0,wallStun:0,
     refund:0,luck:0,playerRegen:0,explode:false,
@@ -124,7 +125,7 @@ function startWave(options={}){
   game.api.selectMusicTrack(game.api.chapterForWave().id);
   game.api.resetStevieAnimation();
   game.api.resetEnemyAnimations();
-  game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();
+  game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetBackdraft();
   game.api.resetLaunchEffects();
   game.api.resetSupportInks();
   game.api.resetPlaguefire();game.api.resetPaper();
@@ -150,7 +151,7 @@ function waveComplete(){
   game.state.betweenWaves=true;game.api.resetCircleShapes();
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
-  game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();
+  game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetBackdraft();
   game.api.resetLaunchEffects();
   game.api.resetSupportInks();game.api.resetBossEncounters();
   for(const e of game.state.enemies)game.api.burst(e.x,e.y,'#d9d2bf',8);
@@ -198,7 +199,7 @@ function returnToMenu(){
   game.state.running=false;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
   game.state.drawing=false;game.state.currentWall=null;
   game.state.walls=[];game.state.enemies=[];game.state.projectiles=[];game.state.enemyShots=[];
-  game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();
+  game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetBackdraft();
   game.api.resetLaunchEffects();game.api.resetSupportInks();game.api.resetBossEncounters();game.api.resetPlaguefire();
   for(const id of ['upgradeOverlay','waveOverlay','victoryOverlay','gameOverOverlay','specializeOverlay'])game.dom.$(id).style.display='none';
   game.dom.startOverlay.style.display='grid';game.api.selectMusicTrack('splash');game.api.updateUI();game.dom.$('startBtn').focus?.();

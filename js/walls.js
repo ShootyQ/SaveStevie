@@ -76,6 +76,7 @@ function eraseWallPath(a,b,r=20,options={}){
    if(length<2||total<=0)continue;
    const fraction=length/total;kept+=fraction;result.push({...wall,pts,hp:wall.hp*fraction,maxHp:wall.maxHp*fraction,eraseInk:(wall.eraseInk||0)*fraction,closed:false});
   }
+  if(!options.enemy&&!lesson)game.api.ventBackdraft(wall,a,b);
   if(!options.enemy&&!lesson)game.api.eraseWallReaction(wall,result.slice(firstPiece),a,b,r,(wall.eraseInk||0)*Math.max(0,1-kept));
   if(!options.enemy&&wall.eraseInk>0&&wall.maxHp>0)recovered+=wall.eraseInk*Math.max(0,1-kept)*game.api.clamp(wall.hp/wall.maxHp,0,1)*game.api.clamp(game.state.stats.eraseRefund??.25,0,.6);
  }
@@ -361,7 +362,7 @@ function closeCreatedWall(t){
 }
 
 let liveStroke=null;
-function wallHpForLength(length,closed=false,intersections=0){return game.state.stats.wallHp*(length/180)*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);}
+function wallHpForLength(length,closed=false,intersections=0){return game.api.icebergMultiplier()*game.state.stats.wallHp*(length/180)*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);}
 function createWall(points,options={}){
   if(points.length<2)return;
   const crayonDraft=game.api.crayonStrokeSource(points[0]);if(crayonDraft){game.api.extendCrayonStroke(crayonDraft,points);return {crayonDraft,strokePts:points.map(p=>({...p})),paid:0};}
@@ -508,7 +509,7 @@ function applyInkContact(e,dt,wall=null){
   if(game.state.inks.chaos>0)applyChaosContact(e,dt);
 
   if(game.state.inks.fire>0){
-    if(e.immunity!=='fire')game.api.playSound('fire');
+    if(e.immunity!=='fire'){game.api.playSound('fire');game.api.chargeBackdraft(wall,e,dt);}
     e.burn=Math.max(e.burn,1.5+game.state.inks.fire*.6);
     e.burnDps=Math.max(e.burnDps,3+game.state.inks.fire*3);
   }
