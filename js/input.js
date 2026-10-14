@@ -71,6 +71,11 @@ function toggleScreen(){
 }
 function bind() {
 window.addEventListener('resize',game.api.resize);
+// A header, font or control-size change can resize the arena without resizing the window.
+if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{
+ const r=game.dom.canvas.getBoundingClientRect();
+ if(Math.abs(r.width-game.state.W)>.5||Math.abs(r.height-game.state.H)>.5)game.api.resize();
+}).observe(game.dom.canvas);
 window.visualViewport?.addEventListener('resize',game.api.resize);
 document.addEventListener?.('fullscreenchange',()=>{game.api.resize();updateScreenButton()});
 game.dom.$('fullscreenBtn').onclick=toggleScreen;updateScreenButton();

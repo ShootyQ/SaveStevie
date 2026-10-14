@@ -11,7 +11,9 @@ function updateUI(){
   game.api.updateScoreHUD();
   game.api.syncScrapTutorial();
   game.api.updateChapterBackground();
-  game.dom.$('app').classList?.toggle('menu-view',!game.state.running&&game.dom.startOverlay.style.display!=='none');
+  const app=game.dom.$('app'),menu=!game.state.running&&game.dom.startOverlay.style.display!=='none',wasMenu=app.classList?.contains?.('menu-view');
+  app.classList?.toggle('menu-view',menu);
+  if(typeof wasMenu==='boolean'&&wasMenu!==menu)game.api.resize();
   const overtime=game.dom.$('bossOvertime'),bossWave=game.state.wave%5===0;
   const active=game.state.running&&!game.state.betweenWaves&&!game.state.inUpgrade&&!game.api.waveFinaleActive();
   const fighting=bossWave&&game.api.bossWavePhase()==='fight',arrival=game.api.bossArrivalSnapshot();

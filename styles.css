@@ -1334,3 +1334,16 @@ html.native-app #betaScrapsOverlay{padding:0}
 .beta-tree-node .scribble-letter{white-space:pre}
 #optionsOverlay .options-book .option-help{font-family:'Stevie Pencil',cursive;font-size:18px;line-height:1.35;font-weight:400}
 @media(max-width:480px){#optionsOverlay .options-book{padding:16px 12px}#optionsOverlay .options-book .option-section{padding:23px 16px 34px}#optionsOverlay .options-book .build-heading h2{font-size:38px}#optionsOverlay .options-book .settings-whisper{font-size:19px}#optionsOverlay .options-book .option-help{font-size:18px}#optionsOverlay .options-book .monster-setting{font-size:15px}}
+
+/* The HUD is a real tray above the arena, never an overlay on enemies. */
+#app > .hud,html.native-app #app > .hud{position:relative;inset:auto;flex:0 0 auto;padding:7px 9px 8px;background:var(--paper);border-bottom:1px solid #ae997966}
+#app.menu-view > .hud{display:none}
+html.native-app #app > .hud{padding:calc(6px + var(--native-top) + var(--dev-inset,0px)) calc(6px + var(--native-right)) 7px calc(6px + var(--native-left))}
+html.native-app .bottom{position:relative;inset:auto;flex:0 0 calc(var(--control-tray-height) + var(--native-bottom));height:calc(var(--control-tray-height) + var(--native-bottom))}
+#chapterPaper,html.native-app #chapterPaper{inset:0}
+html.native-app .score-hud{bottom:10px}
+html.native-app #hitNotice,html.native-app .panel:has(.score-hud:not([hidden])) #hitNotice{bottom:70px}
+html.native-app #freehandMeter{top:8px!important}
+html.native-app #bossOvertime{top:8px}
+/* Match each filled action's lettering to its actual background. */
+#monsterIntroOverlay #continueMonsterIntroBtn{background:#315d8c;color:#fffaf0;border-color:#24466d;text-shadow:none;opacity:1}
