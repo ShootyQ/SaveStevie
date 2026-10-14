@@ -132,3 +132,8 @@ advance during Chonks' recovery or immobility. Running stops after 0.14 seconds
 without actual movement. Bites/bounces/jumps trigger on actions, not rendering;
 variants rotate without consuming combat RNG. Group cooldowns, caps and six
 shared voices keep crowds from stacking dozens of movement and chewing clips.
+
+Alpha 0.1.80 silences Scribble Gribble's wall-attack samples. Other monsters'
+wall impacts and chewing remain. Waves 6–10 now play track A, then B, repeating
+on each song's `ended` event. Wave changes preserve the current track/time;
+the wave-10 boss entrance interrupts the playlist for boss music.
