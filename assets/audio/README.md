@@ -132,3 +132,7 @@ advance during Chonks' recovery or immobility. Running stops after 0.14 seconds
 without actual movement. Bites/bounces/jumps trigger on actions, not rendering;
 variants rotate without consuming combat RNG. Group cooldowns, caps and six
 shared voices keep crowds from stacking dozens of movement and chewing clips.
+
+Alpha 0.1.79 restores the original pointer-drawing `scribble-*` grains and
+`pencil-drop` on line creation. The newer pen-writing/pencil-lift samples remain
+available in the effects library but are no longer used for ordinary drawing.

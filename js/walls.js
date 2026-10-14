@@ -396,7 +396,7 @@ function createWall(points,options={}){
   const actualPaid=firstStrokeFree?0:Math.max(0,cost-bankUsed);
   game.state.stats.freehandBank-=bankUsed;
   game.state.stats.ink=infinite?game.state.stats.maxInk:Math.max(0,game.state.stats.ink-actualPaid);
-  if(!options.live)game.api.playSound('pencilLift');
+  game.api.playSound('pencil');
   game.state.stats.strokeCount++;
   game.state.stats.firstStrokeUsed=true;
 
