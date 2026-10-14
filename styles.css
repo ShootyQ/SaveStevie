@@ -1347,3 +1347,26 @@ html.native-app #freehandMeter{top:8px!important}
 html.native-app #bossOvertime{top:8px}
 /* Match each filled action's lettering to its actual background. */
 #monsterIntroOverlay #continueMonsterIntroBtn{background:#315d8c;color:#fffaf0;border-color:#24466d;text-shadow:none;opacity:1}
+
+/* Stevie has actually carried this page around in his backpack. */
+.beta-page-wear{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.beta-new-doodle{opacity:.67}.beta-new-note{opacity:.52;max-width:255px;font-size:25px}
+.beta-milk-stain{width:300px;opacity:.64;mix-blend-mode:multiply}.beta-milk-stain img{display:block;width:100%;height:auto}
+.beta-tree-stevie{z-index:2}#betaHeldTool{z-index:1;left:1131.5px;width:148px;height:74px;transform:rotate(110deg)}
+#beta-node-tool{padding:18px 45px 10px;min-height:100px;overflow:visible}
+#beta-node-tool::before{inset:-13px -18px;background:url('assets/art/ui/pencil-case.svg') center/100% 100% no-repeat}
+#beta-node-tool::after{display:none}#beta-node-tool strong{position:relative;font-size:29px;color:#354f43}
+#beta-node-tool > span{position:relative;font-size:19px;color:#4e5947}
+.case-node-preview{position:absolute;left:5px;top:-53px;width:145px;transform:rotate(-12deg);z-index:-1;pointer-events:none}.case-node-preview .instrument-hero{width:100%;margin:0}
+.beta-node-note.pencil-case-note{width:min(600px,calc(100% - 24px));background-image:url('assets/art/ui/beta-unfolded-note.svg');padding:27px 25px 18px}
+.pencil-case-note #betaNodeArt{display:block}.pencil-case-note h3{margin-bottom:2px}.case-owner{color:#69694d;transform:rotate(-2deg);font-size:17px!important;margin:4px 0 12px!important}
+.case-unzip{height:24px;background:repeating-linear-gradient(90deg,#ddc995 0 3px,#424d39 3px 5px);border:7px solid #74836a;border-radius:45% 4px 35% 4px;box-shadow:0 3px 0 #40543d;transform:rotate(1deg);position:relative;margin:12px 0 8px}
+.case-unzip::after{content:'';position:absolute;right:-4px;top:-9px;width:12px;height:30px;border:3px solid #514b39;background:#d6bf86;border-radius:4px;transform:rotate(15deg)}
+.case-collection{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px 12px;padding:16px 13px 18px;background:#899779 url('assets/art/ui/pencil-case.svg') center/cover;border:3px solid #4b5a43;border-radius:4% 2% 6% 3%;box-shadow:inset 0 0 0 4px #d2c69c;position:relative}
+.case-tool{margin:0;min-width:0;padding:4px 5px 6px;position:relative;background:#f4ebd4;clip-path:polygon(1% 2%,98% 0,100% 96%,2% 100%);transform:rotate(-2deg)}
+.case-tool:nth-child(even){transform:rotate(2deg)}#betaNodeArt .case-tool .instrument-hero{width:100%;max-width:none;margin:-6px 0 -12px}.case-tool figcaption{text-align:center;line-height:1.05;color:#444c3e;font-size:17px}.case-tool b{font-weight:400;display:block}.case-tool small{display:block;font-size:13px;margin-top:4px;color:#687041}
+.case-tool.future-tool{background:#d5d6bd}.case-tool.future-tool .instrument-hero{opacity:.35;filter:grayscale(1)}.case-tool.next-tool{background:#fff0bd}.case-tool.next-tool small{color:#8b5527}.case-tool.earned small{color:#396741}.case-scribble{font-size:16px!important;text-align:right;color:#756552;transform:rotate(-2deg);margin:7px 0!important}
+.pencil-case-note .case-collection{animation:case-unfold .25s ease-out}.pencil-case-note #betaBuyNode{background:#ecedce;clip-path:polygon(1% 3%,98% 0,100% 95%,2% 100%);color:#365431}
+@keyframes case-unfold{from{opacity:.2;transform:translateY(-8px) rotate(-2deg)}to{opacity:1;transform:none}}
+@media(max-width:600px){.beta-node-note.pencil-case-note{padding:25px 19px 16px}.case-collection{gap:7px;padding:12px 8px}.case-tool{padding:3px 3px 6px}.case-tool figcaption{font-size:15px}.case-tool small{font-size:12px}.pencil-case-note #betaNodeDescription{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.pencil-case-note .case-collection{animation:none}}

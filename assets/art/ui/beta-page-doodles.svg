@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2400 2600">
+<defs>
+ <radialGradient id="smudge"><stop stop-color="#655c50" stop-opacity=".17"/><stop offset="1" stop-color="#655c50" stop-opacity="0"/></radialGradient>
+ <pattern id="finger" width="12" height="12" patternUnits="userSpaceOnUse"><path d="M-2 12 12-2M4 16 16 4" stroke="#736b5f" stroke-width="1" opacity=".08"/></pattern>
+</defs>
+<!-- Thumbprints and rubbed pencil edges, well away from purchase labels. -->
+<g fill="url(#smudge)"><ellipse cx="90" cy="810" rx="88" ry="210"/><ellipse cx="2310" cy="1170" rx="110" ry="210"/><ellipse cx="1170" cy="2500" rx="160" ry="60"/><ellipse cx="1620" cy="90" rx="185" ry="45"/><ellipse cx="700" cy="1410" rx="105" ry="50"/></g>
+<path d="m28 2340 112-86 23 142-135-56Z" fill="#dfd5bc" opacity=".6"/><path d="m28 2340 112-86-10 100Z" fill="#f6efd9" stroke="#bbae93" stroke-width="2" opacity=".6"/>
+<path d="m2170 53 132 130-110-13Z" fill="#dccdb0" opacity=".25"/>
+<g fill="none" stroke="#726555" stroke-width="3" opacity=".42" stroke-linecap="round" stroke-linejoin="round">
+ <!-- A rejected monster that has too many elbows. -->
+ <g transform="translate(195 1740) rotate(-13)"><path d="M24 45Q7 15 55 10q34-7 46 35l-14 58-72-5Z"/><circle cx="43" cy="39" r="12"/><circle cx="73" cy="37" r="8"/><path d="m20 55-24 15 24 16-23 18m97-47 22 19-23 19 25 13M35 101l-5 24-22 2m64-22 20 26 19-3M31 75l41 2"/><path d="m-10 4 136 129m-9-139L-6 141" stroke="#a76658" stroke-width="4"/></g>
+ <!-- A paper ball experiment with a ridiculous trajectory. -->
+ <g transform="translate(620 1220) rotate(9)"><path d="m0 0 17-12 22 2 7 17-11 18-28-3Z"/><path d="m0 0 23 5-6-17m6 17 14 18-1-18M8 17l15-12"/><path d="M51 8q50-39 63 9t65 5q20-45 36-3" stroke-dasharray="7 9"/><path d="m204 2 10 18-18-2"/></g>
+ <!-- Half-finished graph-paper homework; the answer became a creature. -->
+ <g transform="translate(1260 2360) rotate(12)"><path d="m13-18 137 10M0 25l145-6M25-38l-8 111M66-30l-8 108M103-25l-8 100" stroke="#7b97ad" opacity=".4"/><path d="m44 23 11-18 17 22-15 13ZM78 5l12 18 10-20m-49 54q23 24 43-2M19 66l-14 19m118-26 15 17"/></g>
+ <!-- Folded-frog daydream, a spilled ink star, crooked tally marks. -->
+ <g transform="translate(1780 690) rotate(12)"><path d="m0 0 41-23 43 17-11 35-61 5ZM0 0l40 11L41-23m-29 57 28-23 33 18M18-6l9-3m26-1 9 3"/><path d="m10 39-10 14m74-18 20 10"/></g>
+ <path d="m2000 1700 7 34 29-16-18 28 33 13-34 4 6 34-22-27-21 23 7-31-31-6 31-13-16-22 23 12Z" stroke="#687e9f"/>
+ <path d="m130 1150 6 40m15-46 2 43m18-45-3 44m22-48-8 47m-53-8 83-23"/>
+ <path d="M2290 700q-46-3-38 45m-5-45 43-16m-7 55 26-23M28 1780l42 5m-40 8 30 8m2110 570 104 26m-96-9 78 23" opacity=".6"/>
+</g>
+<g fill="#977b5a" opacity=".2"><circle cx="1510" cy="2320" r="8"/><circle cx="1530" cy="2338" r="4"/><circle cx="1500" cy="2346" r="5"/><ellipse cx="50" cy="1210" rx="17" ry="8"/></g>
+</svg>

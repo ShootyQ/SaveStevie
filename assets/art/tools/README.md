@@ -20,3 +20,7 @@ Each paid rank grants +8 base wall HP; effect slots remain two through rank 5,
 three at ranks 6–9, and four at rank 10. Legacy Fresh Pencil purchases are refunded
 once through Notebook save-version migration. Previous `tool-tiers.png`, SVG
 icons and `slot-pencil.png` remain available for historical references.
+
+Alpha 0.1.75 redraws the same atlas with scratchy graphite outlines and uneven
+crayon fill to match Stevie's sketch. The BETA tree anchors each rank at the
+same hand grip and displays the collection inside an illustrated pencil case.

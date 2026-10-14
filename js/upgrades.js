@@ -55,6 +55,7 @@ function toolArt(rank){
   rank=game.api.clamp(Math.floor(rank)||0,0,10);const row=Math.floor(rank/3);
   return {rank,col:rank%3,row,y:[62.5,52.3,46.1,37.5][row],sockets:rank>=10?[32,47,62,77]:rank>=6?[42,56,70]:[48,65]};
 }
+function toolGrip(rank){return {x:.74,y:toolArt(rank).y/100};}
 function toolIllustration(rank,sockets=null){
   const version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'',art=toolArt(rank);
   if(sockets===null)sockets=art.sockets.map(x=>`<span class="tool-socket" style="--socket-x:${x}%;--socket-y:${art.y}%"><span class="socket-plus">+</span></span>`).join('');
@@ -435,7 +436,7 @@ function chooseSpecialization(spec){
   game.api.setMsg('Specialization: '+({defense:'Fortress',ink:'Ink Alchemist',chaos:'Chaos'}[spec]))
 }
 for(const u of [...game.catalog.upgrades,...game.catalog.synergyDefs])u.desc=game.api.paperLabel(u.desc);
-const api = { inspectReward, takeInspectedReward, clearRewardPreview, upgradeArtworkInfo, upgradeArtworkMarkup, applyUpgrade, isOneTimeUpgrade:name=>oneTimeUpgrades.has(name), toolIllustration, renderDevReward, upgradeLevels, upgradePreview, equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
+const api = { inspectReward, takeInspectedReward, clearRewardPreview, upgradeArtworkInfo, upgradeArtworkMarkup, applyUpgrade, isOneTimeUpgrade:name=>oneTimeUpgrades.has(name), toolIllustration, toolGrip, renderDevReward, upgradeLevels, upgradePreview, equippedEffects, resetRewardPlan, renderTool, selectReward, upgradeArtwork, luckExplanation, upgradeAvailable, checkSynergies, openUpgrade, rarityRoll, upgradeWeight, weightedPick, getUpgrade, rollCards, chooseUpgrade, reroll, chooseSpecialization };
 Object.assign(game.api, api);
 game.dom.$('takeUpgradeBtn').onclick=takeInspectedReward;game.dom.$('closeUpgradeDetails').onclick=()=>clearRewardPreview(true);
 game.dom.$('upgradeDetails').onkeydown=e=>{if(e.key==='Escape'){e.preventDefault();clearRewardPreview(true)}};
