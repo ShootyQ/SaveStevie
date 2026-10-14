@@ -42,7 +42,7 @@ function updateHardhat(e,dt){
  }
  if(c.phase==='tear'||c.phase==='bomb'){
   c.left-=dt;if(c.left>0)return true;
-  if(c.phase==='tear'){const hole=makeCrewHole(c.aim);if(hole){c.entryId=hole.id;crewText(hole.x,hole.y-25,'RIP!');game.api.playSound('bossEnter');}const aim=fireBombPoint(e);if(aim&&(game.state.paper.crewHoles||0)<6){c.phase='bomb';c.left=1.2;c.aim=aim;return true;}}
+  if(c.phase==='tear'){const hole=makeCrewHole(c.aim);if(hole){c.entryId=hole.id;crewText(hole.x,hole.y-25,'RIP!');}const aim=fireBombPoint(e);if(aim&&(game.state.paper.crewHoles||0)<6){c.phase='bomb';c.left=1.2;c.aim=aim;return true;}}
   else if(bombs.length<3)bombs.push({from:{x:e.x,y:e.y},to:{...c.aim},entryId:c.entryId,age:0,life:.9});
   cancelCrewJob(e);e.crew.cooldown=6;return true;
  }

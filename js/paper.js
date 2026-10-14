@@ -13,7 +13,7 @@ function addPaperHole(p){
  const paper=game.state.paper,near=paper.holes.find(h=>Math.hypot(h.x-p.x,h.y-p.y)<tuning.holeSpacing);
  if(near)return near;
  if(!safePaperPoint(p)||paper.holes.length>=tuning.maxHoles)return null;
- const hole={x:p.x,y:p.y,r:tuning.holeRadius,id:paper.holes.length+1};paper.holes.push(hole);return hole;
+ const hole={x:p.x,y:p.y,r:tuning.holeRadius,id:paper.holes.length+1};paper.holes.push(hole);game.api.playSound('paperTear');return hole;
 }
 function queuePaperRub(a,b,r=20){
  if(!paperActive()||![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||Math.hypot(b.x-a.x,b.y-a.y)<.05)return;
@@ -70,13 +70,13 @@ function updatePaperEnemy(e,dt){
   const startDistance=Math.hypot(entry.x-player.x,entry.y-player.y),exit=holes.filter(h=>h!==entry&&safePaperPoint(h,e.r+22)&&Math.hypot(h.x-player.x,h.y-player.y)<startDistance-45).sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y))[0];
   if(!exit)return false;
   const directed=e.specialistJob?.kind==='tunnel'&&e.specialistJob.entryId===entry.id&&holes.some(h=>h.id===e.specialistJob.exitId);e.paperEncounter=entry.id;if(!directed&&Math.random()>=tuning.entryChance)return false;delete e.specialistJob;
-  t=e.paperTunnel={phase:'enter',entry:{x:e.x,y:e.y},hole:{x:entry.x,y:entry.y},entryTimer:tuning.entryDuration,exit:{x:exit.x,y:exit.y},rub:0,rubbedAt:-Infinity,age:0};clearSurfaceEffects(e);if(e.type==='basil')game.api.finishFeast(e);game.api.floatText(e.x,e.y-24,'ZIP!','#855c3e');if(!game.state.paper.tunnelHint){game.state.paper.tunnelHint=true;game.api.setMsg('Follow the moving bump! Rub near it for 2 seconds to force the monster up. Rocks still hit underground.');}
+  game.api.playSound('paperDive');t=e.paperTunnel={phase:'enter',entry:{x:e.x,y:e.y},hole:{x:entry.x,y:entry.y},entryTimer:tuning.entryDuration,exit:{x:exit.x,y:exit.y},rub:0,rubbedAt:-Infinity,age:0};clearSurfaceEffects(e);if(e.type==='basil')game.api.finishFeast(e);game.api.floatText(e.x,e.y-24,'ZIP!','#855c3e');if(!game.state.paper.tunnelHint){game.state.paper.tunnelHint=true;game.api.setMsg('Follow the moving bump! Rub near it for 2 seconds to force the monster up. Rocks still hit underground.');}
  }
  clearSurfaceEffects(e);t.age+=dt;
  if(t.phase==='enter'){t.entryTimer=Math.max(0,t.entryTimer-dt);if(t.hole){const progress=1-t.entryTimer/tuning.entryDuration;e.x=t.entry.x+(t.hole.x-t.entry.x)*progress;e.y=t.entry.y+(t.hole.y-t.entry.y)*progress;}if(!t.entryTimer)t.phase='travel';return true;}
  if(t.phase==='emerge'){
   t.warning-=dt;
-  if(t.warning<=0){delete e.paperTunnel;e.paperCooldown=6;e.stun=tuning.recovery;e.attackCd=Math.max(e.attackCd||0,tuning.recovery);if(e.chonks){e.chonks.phase='recover';e.chonks.recovery=e.chonks.recoveryTotal=tuning.recovery;e.chonks.momentum=0;e.chonks.target=null;}if(e.type==='bouncer'){e.bounceTime=0;e.bounceKick=0;}game.api.burst(e.x,e.y,'#c8b99a',8);}
+  if(t.warning<=0){game.api.playSound('paperPop');delete e.paperTunnel;e.paperCooldown=6;e.stun=tuning.recovery;e.attackCd=Math.max(e.attackCd||0,tuning.recovery);if(e.chonks){e.chonks.phase='recover';e.chonks.recovery=e.chonks.recoveryTotal=tuning.recovery;e.chonks.momentum=0;e.chonks.target=null;}if(e.type==='bouncer'){e.bounceTime=0;e.bounceKick=0;}game.api.burst(e.x,e.y,'#c8b99a',8);}
   return true;
  }
  const recentlyRubbed=game.state.paper.clock-t.rubbedAt<.12;

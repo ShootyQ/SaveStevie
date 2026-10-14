@@ -1,6 +1,13 @@
 /* Gesture-unlocked effects; bounded mixing never consumes gameplay randomness. */
 DoodleDefender.systems.soundEffects=function(game){
 const groups={
+ draw:{files:['pen-writing'],gain:.18,gap:0,cap:1,priority:0,loop:true,idle:.14},
+ erase:{files:['eraser-rub'],gain:.23,gap:0,cap:1,priority:0,loop:true,idle:.14},
+ pencilLift:{files:['pencil-lift'],gain:.32,gap:.08,cap:1,priority:1},
+ paperTear:{files:['paper-tear-1','paper-tear-2','paper-tear-3'],gain:.42,gap:.12,cap:1,priority:3},
+ paperDive:{files:['paper-dive'],gain:.3,gap:.2,cap:1,priority:2,duration:.8},
+ paperCrawl:{files:['paper-crawl'],gain:.18,gap:0,cap:1,priority:0,loop:true},
+ paperPop:{files:['paper-pop-1','paper-pop-2'],gain:.4,gap:.12,cap:1,priority:3},
  thermalHeat:{files:['thermal-pressure'],gain:.3,gap:.18,cap:2,priority:2},
  thermalPop:{files:['thermal-pop'],gain:.4,gap:.12,cap:2,priority:3},
  scribble:{files:['scribble-1','scribble-2','scribble-3','scribble-4','scribble-5'],gain:.22,gap:.22,cap:1,priority:0},
@@ -54,11 +61,15 @@ function playSound(kind,menu=false,seek=0){
  const name=available[(variants[kind]||0)%available.length];variants[kind]=(variants[kind]||0)+1;
  try{const source=context.createBufferSource(),gain=context.createGain();source.buffer=buffers.get(name);if(source.playbackRate)source.playbackRate.value=g.rate||(kind==='rock'?((variants[kind]%2)?.97:1.03):1);source.loop=!!g.loop;const offset=Math.min(seek||g.offsets?.[g.files.indexOf(name)]||0,Math.max(0,source.buffer.duration-.1)),duration=Math.min(kind==='scribble'?.28:g.duration??Infinity,source.buffer.duration-offset);
   const level=g.gain*(menu?.55:1);gain.gain.setValueAtTime(level,now);if(!g.loop){const seconds=duration/(g.rate||1);gain.gain.setValueAtTime(level,now+Math.max(0,seconds-.025));gain.gain.linearRampToValueAtTime(0,now+seconds);}source.connect(gain);gain.connect(master);
-  const voice={source,gain,kind,name,stopped:false};voices.push(voice);source.onended=()=>{voice.stopped=true;source.disconnect?.();gain.disconnect?.();voices=voices.filter(v=>v!==voice)};if(g.loop)source.start(0,offset);else source.start(0,offset,duration);last[kind]=now;played++;return true;
+  const voice={source,gain,kind,name,stopped:false,lastMotion:now};voices.push(voice);source.onended=()=>{voice.stopped=true;source.disconnect?.();gain.disconnect?.();voices=voices.filter(v=>v!==voice)};if(g.loop)source.start(0,offset);else source.start(0,offset,duration);last[kind]=now;played++;return true;
  }catch{stopSoundEffects(kind);return false}
 }
-function sustainSound(kind){if(!groups[kind]?.loop)return false;return voices.some(v=>v.kind===kind)||playSound(kind)}
-function syncSoundEffects(){if(!combatActive()){for(const v of [...voices])if(v.kind!=='scribble'||!menuActive())stopVoice(v)}}
+function sustainSound(kind){if(!groups[kind]?.loop||!combatActive())return false;const voice=voices.find(v=>v.kind===kind);if(voice){voice.lastMotion=context.currentTime;return true}return playSound(kind)}
+function syncSoundEffects(){
+ if(!combatActive()){for(const v of [...voices])if(v.kind!=='scribble'||!menuActive())stopVoice(v);return}
+ for(const v of [...voices])if(groups[v.kind].idle&&context.currentTime-v.lastMotion>groups[v.kind].idle)stopVoice(v);
+ if(game.state.enemies.some(e=>e.hp>0&&e.paperTunnel?.phase==='travel'))sustainSound('paperCrawl');else stopSoundEffects('paperCrawl');
+}
 function resetSoundEffects(){stopSoundEffects();last={}}
 function soundEffectsSnapshot(){return {supported:!!(window.AudioContext||window.webkitAudioContext),unlocked:context?.state==='running',ready,failed,played,dropped,maxVoices,voices:voices.map(v=>({kind:v.kind,name:v.name})),volume:game.api.audioSettings().effectsVolume}}
 document.addEventListener?.('pointerdown',unlockSoundEffects,{capture:true});document.addEventListener?.('keydown',unlockSoundEffects,{capture:true});
