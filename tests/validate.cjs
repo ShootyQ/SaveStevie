@@ -777,7 +777,7 @@ for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['tan
 }
 for(const wave of [5,10,15]){
  const e=load(true),g=e.sandbox.testGame;g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,100,100);boss.freeze=999;
- g.state.timeLeft=.01;g.api.update(.02);assert.equal(g.state.timeLeft,.01,'boss countdown never advances');assert.equal(e.node('waveCountdown').style.display,'none');assert.equal(g.state.finalOvertime,false);assert.equal(g.state.betweenWaves,false);assert.equal(e.node('bossOvertime').style.display,'block');assert.match(e.node('bossOvertime').textContent,new RegExp(g.api.monsterName(boss.type)));
+ g.state.timeLeft=.01;g.api.update(.02);assert.equal(g.state.timeLeft,.01,'boss countdown never advances');assert.equal(e.node('waveCountdown').style.display,'none');assert.equal(g.state.finalOvertime,false);assert.equal(g.state.betweenWaves,false);assert.equal(e.node('bossOvertime').style.display,wave===10?'none':'block','Wobble uses his own progress meter; other bosses keep their label');assert.match(e.node('bossOvertime').textContent,new RegExp(g.api.monsterName(boss.type)));
  const count=g.state.enemies.length;g.api.update(.2);assert.equal(g.state.enemies.length,count,'boss fight has no normal arrivals');g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,0,'cannot bypass living boss');
  g.api.killEnemy(boss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);assert.equal(e.node('bossOvertime').style.display,'none');assert.equal(g.api.notebookSnapshot().scraps,1+g.catalog.balance.chapterScraps[wave/5-1]);g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,1+g.catalog.balance.chapterScraps[wave/5-1],'milestone pays once');
 }
@@ -2058,134 +2058,8 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  console.log('PASS: reinforcing existing cover with a paid new stroke earns the jam without cancelling the next charge.');
 }
 
-// Wobblechomp phase one uses released paid strokes and actual cover, not preview effects.
-{
- const env=load(true),g=env.sandbox.testGame,rig=env.sandbox.DoodleDefender.WobblechompRig;
- assert(fs.statSync(path.join(root,'assets/audio/wobblechomp-fight.mp3')).size>1000000);
- function setup(){g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.enemies=[];g.state.player.hp=g.state.player.maxHp=10000;g.state.stats.ink=g.state.stats.maxInk=1000;return g.api.spawnEnemy(true,100,200)}
- function prepare(e,kind){const s=g.api.bossBrain(e).wobble;s.model=rig.create();s.model.time=1;s.cutCelebrate=0;s.blockStun=0;s.trapped=0;s.attack=null;s.gap=0;s.turn={punch:0,spikes:1,teeth:2,beam:3,roll:5}[kind];g.api.updateWobbleBoss(e,.001);return s}
- function stroke(e,part){const j=g.api.wobbleSnapshot(e).parts[part].joint,a=j.a,b=j.b,x=(a.x+b.x)/2,y=(a.y+b.y)/2,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy);return [{x:x-dy/l*24,y:y+dx/l*24},{x:x+dy/l*24,y:y-dx/l*24}]}
- function ringStroke(e,part,offset=10,length=40){const {a,b}=g.api.wobbleSnapshot(e).parts[part].joint,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy),x=(a.x+b.x)/2-dy/l*offset,y=(a.y+b.y)/2+dx/l*offset;return [{x:x-dx/l*length/2,y:y-dy/l*length/2},{x:x+dx/l*length/2,y:y+dy/l*length/2}]}
- function beamCross(e){const q=g.api.wobbleSnapshot(e),a=q.beamOrigin,b=q.beamTip,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy)||1,x=(a.x+b.x)/2,y=(a.y+b.y)/2;return [{x:x-dy/l*24,y:y+dx/l*24},{x:x+dy/l*24,y:y-dx/l*24}]}
- function openCounter(e,kind,restart=false){
-  const s=g.api.bossBrain(e).wobble;
-  if(restart){s.cutCelebrate=0;s.model.punchAge=s.model.spikeAge=s.model.beamAge=null;s.model.spikes=[];s.attack=null;s.gap=0;s.turn={punch:0,spikes:1,beam:3}[kind];g.api.updateWobbleBoss(e,.001)}
-  if(kind==='beam'){if(s.model.beamAge/1.9<.2)g.api.updateWobbleBoss(e,.23);g.api.createWall(beamCross(e));}
-  else if(kind==='spikes'){g.api.updateWobbleBoss(e,1);const q=g.state.enemyShots.find(q=>q.wobbleOwner===e&&q.cutCounter===s.attackSerial);assert(q,'foot volley launched');const len=Math.hypot(q.vx,q.vy),x=q.x+q.vx/len*50,y=q.y+q.vy/len*50;g.api.createWall([{x:x-q.vy/len*50,y:y+q.vx/len*50},{x:x+q.vy/len*50,y:y-q.vx/len*50}]);g.api.updateEnemyShots(.5);}
-  else{const p=g.state.player,dx=p.x-e.x,dy=p.y-e.y,l=Math.hypot(dx,dy),x=(p.x+e.x)/2,y=(p.y+e.y)/2;g.api.createWall([{x:x-dy/l*60,y:y+dx/l*60},{x:x+dy/l*60,y:y-dx/l*60}]);g.api.updateWobbleBoss(e,.9);}
-  assert(s.blockStun>0&&s.cutWindow,'actual attack counter earns cut');
- }
-
- // Frequent elemental paper hits must not reset the attack clock or lock the six-cut puzzle.
- for(const [kind,part] of [['punch','arm'],['spikes','leg'],['beam','stalk']]){
-  const target=setup(),brain=prepare(target,kind);target.hp=target.maxHp=10000;g.state.spawnTimer=9999;
-  g.api.hitPaper({damage:4,doodlePayload:{fire:1,frost:1}},target);target.stun=2;
-  const burningHp=target.hp;g.api.update(.02);
-  assert.equal(target.freeze,0);assert.equal(target.stun,0);assert(target.burn>0&&target.hp<burningHp,'fire damage remains active');
-  assert.equal(brain.attack,kind,'elemental hits cannot cancel a windup');
-  for(let cut=1;cut<=2;cut++){
-   openCounter(target,kind,cut===2);target.freeze=.5;target.stun=.5;
-   assert(g.api.cutWobbleStroke(ringStroke(target,part)),'status arriving between ticks cannot block an earned cut');
-   assert.equal(brain.model[part+'Cuts'],cut);assert.equal(g.api.cutWobbleStroke(ringStroke(target,part)),false,'one cut per counter');
-  }
- }
- let e=setup();let tuning=prepare(e,'punch');
- assert.equal(g.api.wobbleSnapshot(e).bodyWidth,64,'readable puppet body width');assert.equal(e.r,22,'smaller body collider');assert.equal(g.api.wobbleSnapshot(e).pace,1.45);
- const warnedHP=g.state.player.hp;g.api.updateWobbleBoss(e,.7);assert.equal(g.state.player.hp,warnedHP,'punch retains a readable warning');prepare(e,'punch');const cut=stroke(e,'arm'),ink=g.state.stats.ink;
- g.state.paused=true;g.api.createWall(cut);assert.equal(g.api.wobbleSnapshot(e).model.armCuts,0,'paused strokes cannot cut');g.state.paused=false;g.state.stats.ink=0;g.api.createWall(cut);assert.equal(g.api.wobbleSnapshot(e).model.armCuts,0,'unpaid strokes cannot cut');
- g.state.stats.ink=ink;openCounter(e,'punch');g.state.stats.doubleLine=true;const paid=stroke(e,'arm');g.api.createWall([...paid,...paid]);assert.equal(g.api.wobbleSnapshot(e).model.armCuts,1,'scribbles and copies cut once');assert(g.state.stats.ink<ink);g.api.updateWobbleBoss(e,.02);assert.equal(g.api.wobbleSnapshot(e).model.armCuts,1,'old walls never recut');assert.equal(g.api.wobbleSnapshot(e).cutSeconds,0);g.api.createWall(stroke(e,'arm'));assert.equal(g.api.wobbleSnapshot(e).model.armCuts,1,'second immediate arm stroke rejected');openCounter(e,'punch',true);g.api.createWall(stroke(e,'arm'));assert.equal(g.api.wobbleSnapshot(e).model.armCuts,2);
- for(const [part,kind] of [['leg','spikes'],['stalk','beam']])for(let n=0;n<2;n++){openCounter(e,kind,true);g.api.createWall(stroke(e,part));assert.equal(g.api.wobbleSnapshot(e).model[part+'Cuts'],n+1);g.api.createWall(stroke(e,part));assert.equal(g.api.wobbleSnapshot(e).model[part+'Cuts'],n+1,'every stun allows one cut');}
- assert(g.state.enemies.includes(e),'six cuts hand off to phase two');assert.equal(g.api.wobblePhase(e),2);assert.equal(g.state.enemyShots.length,0);assert.equal(g.api.bossFightResolved(),false);assert(g.api.wobbleInfiniteInk());
- const phase=g.api.bossBrain(e).wobble;assert.equal(phase.debris.length,3);for(const d of phase.debris){assert.equal(d.enlarge,1.8);assert(Math.hypot(d.landX-d.startX,d.floor-d.startY)>90,'dramatic flight travels across page');if(!d.settled)assert(Math.abs(d.spin)>Math.PI)}for(let i=0;i<3;i++)for(let j=i+1;j<3;j++)assert(Math.hypot(phase.debris[i].landX-phase.debris[j].landX,phase.debris[i].floor-phase.debris[j].floor)>60,'parts scatter separately');g.api.updateWobbleBoss(e,2.3);assert(phase.model.phaseTwoRoll);assert.equal(phase.inkPot.fill,1);assert.equal(phase.debris.find(d=>d.part==='leg').inkLevel,0);
- g.state.W=800;g.state.H=700;g.state.player.x=400;g.state.player.y=350;g.state.stats.doubleLine=false;g.state.walls=[];
- const foot=phase.debris.find(d=>d.part==='leg');Object.assign(foot,{x:200,y:300,floor:300,settled:true});Object.assign(e,{x:170,y:300});phase.rollVX=175;phase.rollVY=0;phase.armedFor=0;phase.windup=0;
- g.api.updateWobbleBoss(e,.02);assert.equal(phase.phaseHits,0,'natural foot collision cannot score');
- const remaining=e.hp;g.api.dealDamage(e,100000,'physical');assert.equal(e.hp,remaining,'ordinary attacks cannot skip ricochet puzzle');
- const bank=g.state.stats.freehandBank,charge=g.state.stats.freehandCharge;g.state.stats.ink=0;assert(g.api.canStartStroke());g.api.createWall([{x:40,y:240},{x:40,y:360}]);assert.equal(g.state.walls[0].pts[1].y,360,'empty ink does not clip phase-two lines');assert.equal(g.state.stats.ink,g.state.stats.maxInk);assert.equal(g.state.stats.freehandBank,bank);assert.equal(g.state.stats.freehandCharge,charge);
- for(let i=0;i<45;i++)g.api.createWall([{x:40,y:240},{x:40,y:360}]);assert.equal(g.state.walls.length,40,'unlimited ink still bounds active bumpers');assert(g.state.walls.every(w=>w.life<=10));g.state.walls=[];
- const renderBefore=JSON.stringify(g.api.wobbleSnapshot(e));g.api.draw();assert.equal(JSON.stringify(g.api.wobbleSnapshot(e)),renderBefore,'phase-two drawing is pure');g.state.paused=true;g.api.update(1);assert.equal(JSON.stringify(g.api.wobbleSnapshot(e)),renderBefore,'phase two pauses with combat');g.state.paused=false;e.freeze=1;const frozen={x:e.x,y:e.y,angle:phase.model.ballAngle};g.api.updateWobbleBoss(e,.5);assert.deepEqual({x:e.x,y:e.y,angle:phase.model.ballAngle},frozen,'freeze holds rolling body');e.freeze=0;
- // A resize from a wide page must preserve the tuck and recover off-page targets.
- g.state.W=360;g.state.H=640;g.state.player.x=180;g.state.player.y=320;e.x=-50;foot.x=900;foot.y=foot.floor=800;g.api.keepWobbleDistance(e);assert(phase.model.phaseTwoRoll&&phase.model.rollAge!==null);assert(foot.x<=328&&foot.y<=605);g.state.W=800;g.state.H=700;g.state.player.x=400;g.state.player.y=350;Object.assign(foot,{x:200,y:300,floor:300});
- // Rail direction comes from remaining arc length, independent of ink order or approach velocity.
- Object.assign(foot,{x:600,y:600,floor:600});
- for(const reverse of [false,true]){g.state.walls=[];phase.rail=null;Object.assign(e,{x:180,y:280});phase.rollVX=30;phase.rollVY=175;const pts=[{x:70,y:340},{x:220,y:340}];g.api.createWall(reverse?pts.reverse():pts);g.api.updateWobbleBoss(e,.5);assert(phase.rail&&phase.rollVX<0,'rolls away from short right end despite rightward approach');}
- g.state.walls=[];phase.rail=null;Object.assign(e,{x:115,y:280});phase.rollVX=-5;phase.rollVY=175;g.api.createWall([{x:100,y:340},{x:120,y:340},{x:120,y:500},{x:125,y:340}]);g.api.updateWobbleBoss(e,.36);assert(phase.rail&&phase.rollVX>0,'bent rail uses full path length, not endpoint distance');g.state.walls=[];phase.rail=null;
- // A perpendicular collision follows stroke order; a bend keeps guiding him.
- Object.assign(foot,{x:270,y:340,floor:340});Object.assign(e,{x:100,y:280});phase.rollVX=0;phase.rollVY=175;phase.hitCooldown=0;phase.rail=null;
- g.api.createWall([{x:70,y:340},{x:160,y:340},{x:220,y:320}]);const curved=g.state.walls.at(-1);for(let i=0;i<45;i++)g.api.updateWobbleBoss(e,.01);assert(phase.rail,'collision attaches to a rail');assert(g.state.walls.includes(curved),'rail remains while ridden');assert(phase.rollVX>170&&Math.abs(phase.rollVY)<1,'moves along the horizontal line');const ridingX=e.x;
- const railBefore=JSON.stringify(g.api.wobbleSnapshot(e));g.api.draw();assert.equal(JSON.stringify(g.api.wobbleSnapshot(e)),railBefore,'rail rendering stays pure');const endpoint={...phase.rail.points.at(-1)};g.api.moveWobbleFields(12,8);assert.equal(phase.rail.points.at(-1).x,endpoint.x+12);assert.equal(phase.rail.points.at(-1).y,endpoint.y+8);g.api.moveWobbleFields(-12,-8);
- g.state.paused=true;g.api.update(.5);assert.equal(e.x,ridingX);g.state.paused=false;e.freeze=1;g.api.updateWobbleBoss(e,.2);assert.equal(e.x,ridingX);e.freeze=0;
- for(let i=0;i<55;i++)g.api.updateWobbleBoss(e,.01);assert(phase.rollVX>0&&phase.rollVY<0,'follows the bend toward the line end');
- g.state.walls=[];g.api.updateWobbleBoss(e,.01);assert.equal(phase.rail,null,'erased rails release the boss');
- // Approach from the other direction: follow the tangent, not drawing order.
- Object.assign(e,{x:180,y:280});phase.rollVX=-100;phase.rollVY=145;g.api.createWall([{x:70,y:340},{x:220,y:340}]);for(let i=0;i<55;i++)g.api.updateWobbleBoss(e,.01);assert(phase.rollVX<0&&Math.abs(phase.rollVY)<1,'leftward approach rides left');g.state.walls=[];phase.rail=null;
- for(let hit=1;hit<=3;hit++){for(const d of phase.debris)Object.assign(d,{x:600,y:600,floor:600,settled:true});Object.assign(phase.debris[hit-1],{x:270,y:340,floor:340,used:false});Object.assign(e,{x:100,y:280});phase.windup=phase.hitPause=0;phase.rollVX=0;phase.rollVY=175;phase.hitCooldown=0;phase.rail=null;g.state.stats.ink=0;g.api.createWall([{x:70,y:340},{x:225,y:340}]);const wall=g.state.walls.at(-1);for(let i=0;i<300&&phase.phaseHits<hit;i++)g.api.update(.01);assert.equal(phase.phaseHits,hit,'each drawn rail rolls into the foot');assert(!g.state.walls.includes(wall),'rail consumed after ride')}
- assert(!g.state.enemies.includes(e));assert.equal(g.api.wobbleInfiniteInk(),false);assert.equal(g.api.bossFightResolved(),true);assert(g.api.wobbleRepairActive(),'earned win opens friendly repair scene');assert.equal(g.api.waveFinaleActive(),false,'boss is not popped during repair');const earned={score:g.state.score,kills:g.state.kills,hp:g.state.player.hp,ink:g.state.stats.ink,walls:g.state.walls.length};g.api.update(.5);g.api.waveComplete();assert.equal(g.state.betweenWaves,false,'repair holds the wave celebration');assert.deepEqual({score:g.state.score,kills:g.state.kills,hp:g.state.player.hp,ink:g.state.stats.ink,walls:g.state.walls.length},earned,'repair does not run combat or award another kill');
- env.node('wobbleRepairHelp').onclick();for(let i=0;i<3;i++){assert.equal(g.api.wobbleRepairSnapshot().index,i);env.node('wobbleRepairPreset').onclick();assert(g.api.wobbleRepairSnapshot().strokes.length);env.node('wobbleRepairAttach').onclick();assert.equal(g.api.wobbleRepairSnapshot().attached,i+1);for(let t=0;t<9;t++)g.api.update(.1)}assert.equal(g.api.wobbleRepairSnapshot().stage,'walk');const pausedRepair=JSON.stringify(g.api.wobbleRepairSnapshot());g.state.paused=true;g.api.update(1);assert.equal(JSON.stringify(g.api.wobbleRepairSnapshot()),pausedRepair);g.state.paused=false;for(let i=0;i<31;i++)g.api.update(.1);assert(!g.api.wobbleRepairActive());assert.equal(g.state.betweenWaves,true,'normal boss reward follows happy departure');assert.equal(g.state.kills,earned.kills,'the boss win is awarded once');
- g.api.beginWobbleRepair(e);env.node('wobbleRepairContinue').onclick();assert(!g.api.wobbleRepairActive(),'optional celebration can be skipped');g.api.beginWobbleRepair(e);g.api.returnToMenu();assert(!g.api.wobbleRepairActive(),'menu clears drawings');g.api.resetRun();g.api.beginWobbleRepair(e);g.api.resetRun();assert(!g.api.wobbleRepairActive(),'restart clears drawings');
- e=setup();let s=prepare(e,'punch');const p=g.state.player,mid={x:(e.x+p.x)/2,y:(e.y+p.y)/2},dx=p.x-e.x,dy=p.y-e.y,len=Math.hypot(dx,dy);
- g.api.createWall([{x:mid.x-dy/len*65,y:mid.y+dx/len*65},{x:mid.x+dy/len*65,y:mid.y-dx/len*65}]);const hp=p.hp,w=g.state.walls[0],whp=w.hp;g.api.updateWobbleBoss(e,1.3);assert.equal(p.hp,hp,'wall absorbs warned punch');assert.equal(w.hp,whp-22,'blocked punch chips cover once');const end=g.api.wobbleSnapshot(e).punchEnd;assert(end&&Math.hypot(end.x-p.x,end.y-p.y)>30,'fist stops at cover before Stevie');g.state.walls=[];prepare(e,'punch');g.api.updateWobbleBoss(e,1.3);assert(p.hp<hp,'unanswered punch lands');
- e=setup();prepare(e,'spikes');g.api.updateWobbleBoss(e,1);assert.equal(g.state.enemyShots.length,5,'one actual five-spike fan');g.api.updateWobbleBoss(e,.05);assert.equal(g.state.enemyShots.length,5,'fan not multiplied per preview spike');
- g.state.walls=[];const shot=g.state.enemyShots[0];Object.assign(shot,{x:p.x-100,y:p.y,vx:245,vy:0});g.state.enemyShots=[shot];g.api.createWall([{x:p.x-40,y:p.y-30},{x:p.x-40,y:p.y+30}]);const covered=p.hp;g.api.updateEnemyShots(.5);assert.equal(p.hp,covered);assert.equal(g.state.enemyShots.length,0,'swept spike intercepted');
- e=setup();for(let i=0;i<3;i++)g.api.createWall([{x:50+i*70,y:350},{x:70+i*70,y:350}]);prepare(e,'beam');const beamInk=g.state.stats.ink,beamHP=p.hp;g.api.updateWobbleBoss(e,1.8);assert.equal(g.state.walls.length,0,'uninterrupted beam erases all selected drawings');assert.equal(g.state.stats.ink,beamInk,'beam does not steal ink');assert.equal(p.hp,beamHP,'beam never hurts Stevie');
- e=setup();prepare(e,'teeth');g.api.updateWobbleBoss(e,1.45);let teeth=g.state.enemies.filter(n=>n.bossOwner===e);assert.equal(teeth.length,8);assert(teeth.every(n=>n.wobbleLanding),'teeth launch from mouth before moving');const tooth=teeth[0];g.api.updateWobbleTooth(tooth,2);assert(!tooth.wobbleLanding);tooth.x=p.x;tooth.y=p.y;const biteHP=p.hp;g.api.updateWobbleTooth(tooth,1.19);assert.equal(p.hp,biteHP,'bite visibly warned');tooth.freeze=1;g.api.updateWobbleTooth(tooth,1);assert.equal(tooth.toothWarning,0);assert.equal(p.hp,biteHP);tooth.freeze=0;g.api.updateWobbleTooth(tooth,1.21);assert.equal(p.hp,biteHP-7);assert(!g.state.enemies.includes(tooth));
- e=setup();prepare(e,'roll');g.api.updateWobbleBoss(e,1.8);assert(g.state.enemyShots.length>0);assert(g.state.enemies.some(n=>n.bossOwner===e));assert.equal(g.api.cutWobbleStroke(stroke(e,'arm')),false,'hidden rolling joints cannot be cut');e.x=p.x;e.y=p.y;const contactHP=p.hp;g.api.contactStevie(e);assert.equal(p.hp,contactHP,'boss body itself has no unavoidable damage');g.api.killEnemy(e);assert.equal(g.state.enemies.length,0,'boss cleanup removes tooth pack');assert.equal(g.state.enemyShots.length,0);
- for(const [W,H] of [[1280,900],[393,851],[360,640],[851,393]]){e=setup();g.state.W=W;g.state.H=H;p.x=W/2;p.y=H/2;g.api.initWobbleBoss(e);const seen=new Set();for(let i=0;i<3000;i++){if(i%10===0){g.api.hitPaper({damage:0,doodlePayload:{fire:1,frost:1}},e);e.stun=.55;}g.api.updateWobbleBoss(e,.01);assert.equal(e.freeze,0);assert.equal(e.stun,0);const q=g.api.wobbleSnapshot(e);if(q.attack)seen.add(q.attack);assert(Number.isFinite(e.x)&&Number.isFinite(e.y));assert(e.y>=q.topMargin-1e-7,'boss stays below header boundary');assert(q.clearance>=q.keepout-1e-7,'keeps body and idle parts away from fort');assert(g.state.enemyShots.length<=32);assert(q.helpers<=10)}assert.equal(seen.size,5,'all five moves within thirty seconds');const before=JSON.stringify(g.api.wobbleSnapshot(e));g.api.draw();assert.equal(JSON.stringify(g.api.wobbleSnapshot(e)),before,'render stays pure')}
-
- for(const [W,H] of [[1280,900],[393,851],[360,640],[851,393]]){
-  e=setup();g.state.W=W;g.state.H=H;p.x=W/2;p.y=H/2;g.api.initWobbleBoss(e);p.hp=p.maxHp=75;g.state.stats.rockDamage=0;
-  const pts=[{x:p.x-90,y:p.y-85},{x:p.x+90,y:p.y-85},{x:p.x+90,y:p.y+85},{x:p.x-90,y:p.y+85},{x:p.x-90,y:p.y-85}];g.api.createWall(pts);const cover=g.state.walls[0],health=cover.hp;
-  for(let i=0;i<500;i++){g.api.update(.01);assert(g.api.wobbleSnapshot(e).clearance>=g.api.wobbleSnapshot(e).keepout-1e-7);assert.equal(p.hp,75,'real loop: normal-health Stevie protected by perimeter cover '+W+'x'+H)}
-  assert(g.state.walls.includes(cover)&&cover.hp>0,'cover survives the blocked punch and counter opening');assert(cover.hp<health,'real boss attacks actually hit the perimeter');
-  assert.equal(g.api.moveEnemySafely(e,p.x-e.x,p.y-e.y),false,'pulls cannot place the boss on Stevie');
- }
- e=setup();const idle=g.api.bossBrain(e).wobble;idle.gap=999;const next=g.api.wobbleEntrancePoint(),vx=next.x-e.x,vy=next.y-e.y,d=Math.hypot(vx,vy),cx=e.x+vx/d*30,cy=e.y+vy/d*30;
- g.api.createWall([{x:cx-vy/d*35,y:cy+vx/d*35},{x:cx+vy/d*35,y:cy-vx/d*35}]);const obstacle=g.state.walls[0],durability=obstacle.hp;
- for(let i=0;i<300;i++)g.api.updateWobbleBoss(e,.01);assert(obstacle.hp<=durability,'local obstacles may be broken to escape');
-
- e=setup();s=prepare(e,'punch');const blockMid={x:(e.x+p.x)/2,y:(e.y+p.y)/2},bdx=p.x-e.x,bdy=p.y-e.y,bl=Math.hypot(bdx,bdy);
- g.api.createWall([{x:blockMid.x-bdy/bl*60,y:blockMid.y+bdx/bl*60},{x:blockMid.x+bdy/bl*60,y:blockMid.y-bdx/bl*60}]);g.api.updateWobbleBoss(e,.9);
- assert(g.api.wobbleSnapshot(e).blockStun>2.8,'blocked fist earns three-second stun');const stuck={x:e.x,y:e.y};g.api.updateWobbleBoss(e,2);assert.deepEqual({x:e.x,y:e.y},stuck,'counter stun holds the boss still');assert.equal(s.attack,null);g.api.createWall(stroke(e,'arm'));assert.equal(s.model.armCuts,1,'counter stun permits paid arm cuts');assert.equal(s.blockStun,0,'cut ends counter stun immediately');assert(!g.api.wobbleSnapshot(e).available.includes('arm'),'arm stays closed until next punch');g.api.createWall(stroke(e,'arm'));assert.equal(s.model.armCuts,1,'blocked-punch cut cannot be doubled');
- for(const [W,H] of [[1280,900],[393,851],[360,640],[851,393]]){
-  const trajectories=[];for(const covered of [false,true]){g.state.W=W;g.state.H=H;p.x=W/2;p.y=H/2;e=setup();g.api.initWobbleBoss(e);prepare(e,'roll');const brain=g.api.bossBrain(e).wobble;
-   if(covered)for(let x=20;x<W;x+=35)g.state.walls.push({pts:[{x,y:90},{x,y:H-40}],hp:1000,maxHp:1000,thick:8,life:100,maxLife:100});const walls=[...g.state.walls],path=[];
-   for(let i=0;i<200;i++){g.api.updateWobbleBoss(e,.01);path.push([e.x,e.y]);assert(g.api.wobbleSnapshot(e).clearance>=g.api.wobbleSnapshot(e).keepout-1e-7)}
-   if(covered)assert(walls.some(w=>!g.state.walls.includes(w)),'body roll shreds touched walls');assert.equal(brain.trapped,0);trajectories.push(path)
-  }assert.deepEqual(trajectories[0],trajectories[1],'phase-one roll ignores dense walls on '+W)
- }
- const beamLoss=[];
- for(const reaction of [.2,.7,2]){e=setup();for(let n=0;n<6;n++)g.api.createWall([{x:40+n*60,y:100},{x:65+n*60,y:100}]);prepare(e,'beam');g.api.updateWobbleBoss(e,reaction);if(reaction<2)g.api.createWall(beamCross(e));const remaining=g.state.walls.filter(w=>w.pts[0].y===100).length;beamLoss.push(6-remaining);g.api.updateWobbleBoss(e,.5);assert.equal(g.state.walls.filter(w=>w.pts[0].y===100).length,remaining,'cut stops remaining beam erasures')}
- assert.deepEqual(beamLoss,[0,2,6],'faster eye cuts save more walls');
- e=setup();prepare(e,'punch');openCounter(e,'punch');g.api.createWall(stroke(e,'arm'));openCounter(e,'punch',true);g.api.createWall(stroke(e,'arm'));g.state.walls=[];
- g.api.updateWobbleBoss(e,3);const detached=g.api.wobbleSnapshot(e).debris[0];assert(detached.settled,'arm lands on page');const anchor={x:detached.x,y:detached.y};
- e.x+=80;const detachedBrain=g.api.bossBrain(e).wobble;detachedBrain.facing*=-1;detachedBrain.gap=999;g.api.updateWobbleBoss(e,1);
- assert.deepEqual({x:g.api.wobbleSnapshot(e).debris[0].x,y:g.api.wobbleSnapshot(e).debris[0].y},anchor,'fallen arm independent of boss movement and facing');
- g.api.moveWobbleFields(12,9);assert.equal(g.api.wobbleSnapshot(e).debris[0].x,anchor.x+12);assert.equal(g.api.wobbleSnapshot(e).debris[0].floor,detached.floor+9);
- e=setup();for(let n=0;n<6;n++)g.api.createWall([{x:40+n*60,y:100},{x:65+n*60,y:100}]);prepare(e,'beam');g.api.updateWobbleBoss(e,.3);const tip=g.api.wobbleSnapshot(e).beamTip;g.api.updateWobbleBoss(e,.05);const sweep=g.api.wobbleSnapshot(e);assert(Math.hypot(tip.x-sweep.beamTip.x,tip.y-sweep.beamTip.y)>1,'single laser sweeps continuously');assert(sweep.scorches.length>0&&sweep.scorches.length<=180);const scorchHP=p.hp;
- g.api.createWall(beamCross(e));g.api.bossBrain(e).wobble.gap=999;g.api.updateWobbleBoss(e,3.1);assert.equal(g.api.wobbleSnapshot(e).scorches.length,0,'scorch marks fade after interruption');assert.equal(p.hp,scorchHP,'scorches are cosmetic');
- e=setup();g.state.W=1280;g.state.H=900;p.x=640;p.y=450;e.x=180;e.y=700;const walking=g.api.bossBrain(e).wobble;walking.gap=999;walking.angle=.5;g.api.createWall([{x:280,y:600},{x:280,y:800}]);const detourWall=g.state.walls[0],detourHP=detourWall.hp;
- for(let k=0;k<400;k++)g.api.updateWobbleBoss(e,.01);assert(e.x>320,'routes past an open-ended obstacle');assert(!g.state.walls.includes(detourWall)&&detourWall.hp===0,'walking shreds touched drawings');
-
- for(const [part,kind] of [['arm','punch'],['leg','spikes'],['stalk','beam']]){
-  e=setup();prepare(e,kind);assert.equal(g.api.cutWobbleStroke(ringStroke(e,part)),false,'uncountered appendage is closed');openCounter(e,kind);
-  const held={x:e.x,y:e.y};g.api.updateWobbleBoss(e,.4);assert.deepEqual({x:e.x,y:e.y},held,'counter holds still');
-  g.api.createWall(ringStroke(e,part,32));assert.equal(g.api.wobbleSnapshot(e).model[part+'Cuts'],0,'outside ring misses');g.api.createWall(ringStroke(e,part,0,8));assert.equal(g.api.wobbleSnapshot(e).model[part+'Cuts'],0,'tiny wiggle cannot cut');g.api.createWall(ringStroke(e,part));assert.equal(g.api.wobbleSnapshot(e).model[part+'Cuts'],1);
-  g.api.createWall(ringStroke(e,part));assert.equal(g.api.wobbleSnapshot(e).model[part+'Cuts'],1,'no double drawing for any appendage');openCounter(e,kind,true);g.api.createWall(ringStroke(e,part));assert.equal(g.api.wobbleSnapshot(e).model[part+'Cuts'],2,'second distinct counter detaches '+part);
- }
- e=setup();prepare(e,'beam');g.api.updateWobbleBoss(e,1.65);assert.deepEqual(g.api.wobbleSnapshot(e).available,[],'finished laser does not expose free cut');assert.equal(g.api.cutWobbleStroke(ringStroke(e,'stalk')),false);openCounter(e,'beam',true);g.api.updateWobbleBoss(e,3.1);assert.equal(g.api.cutWobbleStroke(ringStroke(e,'stalk')),false,'expired stun does not allow cuts');
- e=setup();prepare(e,'spikes');g.api.updateWobbleBoss(e,1.65);assert.deepEqual(g.api.wobbleSnapshot(e).available,[],'uncountered foot never opens');
- e=setup();g.state.stats.rockDamage=0;const helper=g.api.spawnEnemy(false,p.x-64,p.y,'wobble-tooth');helper.bossOwner=e;assert(helper.maxHp<12,'wave-ten teeth are fragile');g.api.createWall([{x:p.x-56,y:p.y-70},{x:p.x-56,y:p.y+70}]);const toothCover=g.state.walls[0],coverHp=toothCover.hp,helperHp=helper.hp,protectedHP=p.hp;g.api.bossBrain(e).wobble.gap=999;g.api.update(.01);assert(helper.hp<helperHp,'tooth at fort takes wall ink damage');assert.equal(toothCover.hp,coverHp-3,'blocked tooth chews cover gently');assert.equal(p.hp,protectedHP);helper.freeze=1;const frozenHP=helper.hp;g.api.update(.1);assert(helper.hp<frozenHP,'frozen teeth still take ink damage');assert.equal(toothCover.hp,coverHp-3,'frozen tooth cannot chew');helper.freeze=0;
- for(let k=0;k<200;k++)g.api.update(.01);assert(!g.state.enemies.includes(helper),'plain wall defeats fragile tooth quickly');assert(g.state.walls.includes(toothCover));assert.equal(p.hp,protectedHP,'cover prevents tooth bite');
- for(const W of [320,353,360,393]){e=setup();g.state.W=W;g.state.H=800;p.x=W/2;p.y=400;g.api.initWobbleBoss(e);const mobileBrain=g.api.bossBrain(e).wobble;mobileBrain.gap=999;mobileBrain.angle=-Math.PI/2;let above=false,below=false;for(let k=0;k<4000;k++){g.api.updateWobbleBoss(e,.01);above||=e.y<p.y-150;below||=e.y>p.y+150;const snap=g.api.wobbleSnapshot(e);assert(snap.clearance>=snap.keepout-1e-7)}assert(above&&below,'portrait movement reaches both ends around the fort at '+W)}
- for(const [W,H] of [[1280,900],[393,851],[360,640],[851,393]]){e=setup();g.state.W=W;g.state.H=H;p.x=W/2;p.y=H/2;g.api.initWobbleBoss(e);prepare(e,'teeth');g.api.updateWobbleBoss(e,1);
-  const landings=g.state.enemies.filter(n=>n.bossOwner===e).map(n=>n.wobbleLanding);assert(landings.length>=6);for(const l of landings){const q=g.api.refugePoint(l.x,l.y);assert(Math.hypot(l.x-q.x,l.y-q.y)>=95);assert(l.x>=30&&l.x<=W-30&&l.y>=90&&l.y<=H-40)}assert(landings.some(l=>l.x<p.x)&&landings.some(l=>l.x>p.x),'teeth scatter across both sides of page');if(H>=640)assert(landings.some(l=>l.y<p.y)&&landings.some(l=>l.y>p.y),'portrait teeth land above and below fort');
-  g.state.enemies=g.state.enemies.filter(n=>n===e);g.state.walls=[];const cage=[{x:e.x-32,y:e.y-32},{x:e.x+32,y:e.y-32},{x:e.x+32,y:e.y+32},{x:e.x-32,y:e.y+32},{x:e.x-32,y:e.y-32}];g.api.createWall(cage);const trap=g.state.walls[0];const brain=g.api.bossBrain(e).wobble;brain.model=rig.create();brain.model.time=1;brain.attack=null;brain.gap=999;brain.cutWindow=null;brain.blockStun=0;
-  for(let k=0;k<400;k++)g.api.updateWobbleBoss(e,.01);assert(!g.state.walls.includes(trap),'boss breaks out of enclosing wall trap');assert(g.api.wobbleSnapshot(e).clearance>=g.api.wobbleSnapshot(e).keepout);
-  e=setup();g.state.W=W;g.state.H=H;p.x=W/2;p.y=H/2;g.api.initWobbleBoss(e);g.api.createWall([{x:e.x-30,y:90},{x:e.x-30,y:H-60}]);g.api.createWall([{x:e.x+30,y:90},{x:e.x+30,y:H-60}]);const pair=[...g.state.walls],pairBrain=g.api.bossBrain(e).wobble;pairBrain.gap=999;
-  for(let k=0;k<800;k++)g.api.updateWobbleBoss(e,.01);assert(pair.some(w=>!g.state.walls.includes(w)),'two separate walls cannot permanently pin the boss');assert(g.api.wobbleSnapshot(e).clearance>=g.api.wobbleSnapshot(e).keepout);
- }
- console.log('PASS: Wobblechomp six-cut phase-two handoff, finite unlimited ink, bounded bumpers, straight/bent rails, both travel directions, erased-line release, three distinct rail-guided bonks, freeze/resize/pause/pure rendering and victory progression; paid cuts, copies, old walls, cover, single spike fan, beam-only erasure, fragile tooth wall chewing/ink/freeze, single arm cut per punch, foot-spike and live-beam counters, one cut per stun, top-bottom portrait routes, roll cleanup, contact shredding, fixed fallen parts, desktop HUD headroom, full-ring slash detection, no free post-beam exposure, sweeping beam/scorch lifetime, readable pacing and bounded finite phone combat.');
-}
+// The retired six-cut/rail puzzle is replaced by the damage-and-ricochet encounter.
+require('./wobblechomp-overhaul.cjs')(load);
 
 // Each wave has a real introduction; normal newcomers cannot be missed by RNG.
 {
@@ -2612,7 +2486,7 @@ require('./black-ice.cjs')(load);
 require('./thermal-shock.cjs')(load);
 require('./rail-ink.cjs')(load);
 require('./smarter-convoys.cjs')(load);
-require('./wobblechomp-rework.cjs')(load);
+
 // Portable progress rejects bad files before writes, and restores as a transaction.
 {
  const key='saveStevieNotebookV1',saved=new Map([[key,JSON.stringify({version:2,scraps:12,lifetimeScraps:40,scrapTutorialDone:true,levels:{starterEraser:1,tool:2}})],['doodleDefenderBestV4','6']]);let writes=0,failAt=0;

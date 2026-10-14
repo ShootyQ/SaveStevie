@@ -42,7 +42,7 @@ function update(dt){
   }
 
   game.api.updateCircleShapes(dt);
-  if(!game.api.wobbleInfiniteInk()){game.api.updateStevie(dt);game.api.updateProjectiles(dt)}game.api.updateEnemyShots(dt);
+  game.api.updateStevie(dt);game.api.updateProjectiles(dt);game.api.updateEnemyShots(dt);
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
 
   game.api.spawnWaveEnemies(dt);game.api.updateSneakyOrders(dt);

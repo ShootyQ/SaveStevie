@@ -4,7 +4,7 @@ let brains=new WeakMap(),marks=[],clock=0;
 const minFriendGain=70;
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
-function abilityImmune(e){return game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||(game.api.isWobbleBoss(e)&&(game.api.wobblePhase(e)===2||game.api.wobbleCounterOpen(e)));}
+function abilityImmune(e){return game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||game.api.isWobbleBoss(e);}
 function isFirstBoss(e){return e.waveBoss&&e.type==='boss'&&game.state.wave===5}
 function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/(1.1*1.2),helperCap:7,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:1.8,minThrowGain:minFriendGain}}
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
@@ -14,7 +14,7 @@ function resetBossEncounters(){game.api.resetCrayonBoss?.();brains=new WeakMap()
 function inside(e,w){let yes=false;const pts=w.pts;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a.y>e.y)!==(b.y>e.y)&&e.x<(b.x-a.x)*(e.y-a.y)/(b.y-a.y)+a.x)yes=!yes}return yes}
 function nearestBossWall(e,range=150){let best=null;for(const w of game.state.walls){const p=game.api.nearestPointOnWall(e,w);if(!p)continue;const d=Math.hypot(p.x-e.x,p.y-e.y);if(d<range){range=d;best={wall:w,...p}}}return best}
 function updateBossDamageBudgets(dt){for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e),rate=Math.max(30,e.maxHp*.045);b.damageBudget=Math.min(rate*.5,b.damageBudget+rate*dt)}}
-function limitBossDamage(e,amount,kind){if(game.api.isCrayonBoss?.(e)){if(kind==='reflected')return amount;amount*=game.api.crayonGuard(e);}if(game.api.isWobbleBoss(e)&&game.api.wobblePhase(e)===2)return 0;if(game.api.isWobbleBoss(e))amount=Math.min(amount,Math.max(0,e.hp-e.maxHp*.04));if(!e.waveBoss||(kind==='reflected'&&isFirstBoss(e)))return amount;const b=bossBrain(e),guard=isFirstBoss(e)&&!b.enclosed&&b.recovery<=0?.25:1,actual=Math.min(amount,b.damageBudget*guard);b.damageBudget-=actual/guard;return actual}
+function limitBossDamage(e,amount,kind){if(game.api.isCrayonBoss?.(e)){if(kind==='reflected')return amount;amount*=game.api.crayonGuard(e);}if(game.api.isWobbleBoss(e)&&game.api.wobblePhase(e)===2)return 0;if(game.api.isWobbleBoss(e))amount=Math.min(amount,Math.max(0,e.hp-e.maxHp*.45));if(!e.waveBoss||(kind==='reflected'&&isFirstBoss(e)))return amount;const b=bossBrain(e),guard=isFirstBoss(e)&&!b.enclosed&&b.recovery<=0?.25:1,actual=Math.min(amount,b.damageBudget*guard);b.damageBudget-=actual/guard;return actual}
 function pushThroughBossStrokes(e,dt){
  for(const w of [...game.state.walls]){if(w.hp<=0)continue;const p=game.api.nearestPointOnWall(e,w);
   if(p&&Math.hypot(p.x-e.x,p.y-e.y)<e.r*.8+w.thick/2){
@@ -24,7 +24,7 @@ function pushThroughBossStrokes(e,dt){
   }
  }
 }
-function bossDamageMultiplier(e){if(game.api.isCrayonBoss?.(e))return 1;if(!e.waveBoss)return 1;if(game.api.isWobbleBoss(e))return .35;if(game.api.isStapleBoss(e))return game.api.stapleDamageMultiplier(e);const b=bossBrain(e);return b.enclosed||b.recovery>0?1.35:isFirstBoss(e)?.25:1}
+function bossDamageMultiplier(e){if(game.api.isCrayonBoss?.(e))return 1;if(!e.waveBoss)return 1;if(game.api.isWobbleBoss(e))return game.api.wobbleCounterOpen(e)?1.25:1;if(game.api.isStapleBoss(e))return game.api.stapleDamageMultiplier(e);const b=bossBrain(e);return b.enclosed||b.recovery>0?1.35:isFirstBoss(e)?.25:1}
 function bossWallHit(e){if(!e.waveBoss)return null;const hit=nearestBossWall(e,e.r+20);return hit&&Math.hypot(hit.x-e.x,hit.y-e.y)<=e.r+hit.wall.thick/2+3?{wall:hit.wall,seg:1}:null}
 function bossContact(e){
  if(game.api.isWobbleBoss(e))return true;

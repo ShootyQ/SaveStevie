@@ -1,7 +1,7 @@
 /* A won fight becomes a drawing celebration; rewards are granted by killEnemy once. */
 DoodleDefender.systems.wobbleRepair=function(game){
  const $=game.dom.$,rig=DoodleDefender.WobblechompRig,overlay=$('wobbleRepairOverlay'),pad=$('wobbleRepairPad'),scene=$('wobbleRepairScene');
- const parts=[{name:'arm',rig:'arm',words:'Could you draw me a new punchy arm? I promise to wave with it.',hint:'Start at 1, draw LEFT around your arm, then return to 2. We’ll color inside!'},{name:'leg',rig:'leg',words:'A leg next? Something good for happy little stomps.',hint:'Start at 1, draw DOWN around your leg and foot, then return to 2.'},{name:'eye',rig:'stalk',words:'And an eye stalk! I want to see my new friends.',hint:'Start at 1, draw UP around your stalk, then return to 2. We’ll add an eye!'}];
+ const parts=[{name:'arm',rig:'arm',words:'Could you draw me a silly waving arm? Just one. I promise to behave.',hint:'Draw any silly arm beside my shoulder. We’ll attach and color it for you!'}];
  const view={x:240,y:170,scale:.6};
  function rootPoint(index){const q=rig.pose(repair.model,game.api.enemyMotionReduced()).parts[parts[index].rig].root;return {x:view.x+(q.x-570)*view.scale,y:view.y+(q.y-410)*view.scale};}
  function drawingAnchor(){return repair.anchor??rootPoint(repair.index);}
@@ -15,7 +15,7 @@ DoodleDefender.systems.wobbleRepair=function(game){
   $('wobbleRepairHint').textContent=drawing?part.hint:'Your boss win is already earned. This is a little victory doodle.';
   scene.hidden=drawing;$('wobbleRepairDrawing').hidden=!drawing;$('wobbleRepairHelp').hidden=repair.stage!=='plea';$('wobbleRepairContinue').hidden=repair.stage!=='plea';$('wobbleRepairAttach').disabled=!connected()||pointer!==null;
  }
- function begin(e){if(repair)return;const model=rig.create();model.time=1;model.armCuts=model.legCuts=model.stalkCuts=2;backgroundPaused=false;repair={stage:'plea',index:0,age:0,model,anchor:null,origins:[],strokes:[],drawings:[]};game.state.drawing=false;game.state.currentWall=null;game.api.stopSoundEffects();overlay.style.display='grid';
+ function begin(e){if(repair)return;const model=rig.create();model.time=1;model.armCuts=2;model.legCuts=model.stalkCuts=0;backgroundPaused=false;repair={stage:'plea',index:0,age:0,model,anchor:null,origins:[],strokes:[],drawings:[]};game.state.drawing=false;game.state.currentWall=null;game.api.stopSoundEffects();overlay.style.display='grid';
   if(typeof Image!=='undefined'&&!art){const img=new Image();img.onload=()=>{art=img;render()};img.src='assets/art/wobblechomp-parts.png'+(document.documentElement?.dataset?.build?'?v='+document.documentElement.dataset.build:'')}
   sync();render();$('wobbleRepairHelp').focus?.();
  }
@@ -30,7 +30,7 @@ DoodleDefender.systems.wobbleRepair=function(game){
 
  function pos(e){const r=pad.getBoundingClientRect();return {x:game.api.clamp((e.clientX-r.left)*480/r.width,0,480),y:game.api.clamp((e.clientY-r.top)*320/r.height,0,320)}}
  pad.addEventListener('pointerdown',e=>{if(!repair||repair.stage!=='draw'||pointer!==null||document.hidden||backgroundPaused||game.state.paused||repair.strokes.length>=16)return;e.preventDefault?.();const p=pos(e),a=sockets()[0];
-  if(!repair.strokes.length&&Math.hypot(p.x-a.x,p.y-a.y)>30){$('wobbleRepairHint').textContent='Start at dot 1, draw around your new part, and finish at dot 2.';return}
+
   if(repair.strokes.length&&!connected()){
    const last=repair.strokes[0].at(-1);if(Math.hypot(p.x-last.x,p.y-last.y)>30){$('wobbleRepairHint').textContent='Continue from your unfinished line and bring it back to dot 2, or tap Try again.';return;}
    stroke=repair.strokes.shift();stroke.push(p);
@@ -38,7 +38,7 @@ DoodleDefender.systems.wobbleRepair=function(game){
   pointer=e.pointerId;pad.setPointerCapture?.(pointer);sync();render();
  });
  pad.addEventListener('pointermove',e=>{if(e.pointerId!==pointer||!stroke||document.hidden||backgroundPaused||game.state.paused)return;const p=pos(e),last=stroke.at(-1);if(stroke.length<400&&Math.hypot(p.x-last.x,p.y-last.y)>2)stroke.push(p);render()});
- pad.addEventListener('pointerup',e=>{if(e.pointerId!==pointer||!stroke)return;let length=0;for(let i=1;i<stroke.length;i++)length+=Math.hypot(stroke[i].x-stroke[i-1].x,stroke[i].y-stroke[i-1].y);if(length>=20){if(!repair.strokes.length){const end=sockets()[1];if(stroke.length>=3&&Math.hypot(stroke.at(-1).x-end.x,stroke.at(-1).y-end.y)<=30)stroke.push({...end});}repair.strokes.push(stroke);}clearPointer();sync();if(repair.strokes.length&&!connected())$('wobbleRepairHint').textContent='Bring your outline back to dot 2. You can continue from its loose end.';render()});
+ pad.addEventListener('pointerup',e=>{if(e.pointerId!==pointer||!stroke)return;let length=0;for(let i=1;i<stroke.length;i++)length+=Math.hypot(stroke[i].x-stroke[i-1].x,stroke[i].y-stroke[i-1].y);if(length>=20){if(!repair.strokes.length){const end=sockets()[1];if(stroke.length>=3)stroke.push({...end});}repair.strokes.push(stroke);}clearPointer();sync();if(repair.strokes.length&&!connected())$('wobbleRepairHint').textContent='Bring your outline back to dot 2. You can continue from its loose end.';render()});
  for(const name of ['pointercancel','lostpointercapture'])pad.addEventListener(name,()=>{if(pointer!==null){clearPointer();sync();render()}});
  function paint(ctx,strokes,eye=false){
   ctx.lineJoin=ctx.lineCap='round';
@@ -87,7 +87,7 @@ DoodleDefender.systems.wobbleRepair=function(game){
   }
 
  }
- function update(dt){if(!repair||game.state.paused||document.hidden||backgroundPaused||game.api.infoOpen())return;repair.age+=Math.min(dt,.1);if(repair.stage!=='draw')rig.update(repair.model,Math.min(dt,.1));if(repair.stage==='attach'&&repair.age>=.85){repair.index++;repair.stage=repair.index===3?'walk':'draw';repair.age=0;sync();if(repair.stage==='draw'){repair.anchor=rootPoint(repair.index);$('wobbleRepairPreset').focus?.()}}if(repair.stage==='walk'){rig.stepWalk(repair.model,100*Math.min(dt,.1),Math.min(dt,.1));if(repair.age>=3){finish();return}}render()}
+ function update(dt){if(!repair||game.state.paused||document.hidden||backgroundPaused||game.api.infoOpen())return;repair.age+=Math.min(dt,.1);if(repair.stage!=='draw')rig.update(repair.model,Math.min(dt,.1));if(repair.stage==='attach'&&repair.age>=.85){repair.index++;repair.stage=repair.index===parts.length?'walk':'draw';repair.age=0;sync();if(repair.stage==='draw'){repair.anchor=rootPoint(repair.index);$('wobbleRepairPreset').focus?.()}}if(repair.stage==='walk'){rig.stepWalk(repair.model,100*Math.min(dt,.1),Math.min(dt,.1));if(repair.age>=3){finish();return}}render()}
  window.addEventListener('savestevie:background',()=>{if(repair){backgroundPaused=true;clearPointer();sync();render()}});window.addEventListener('focus',()=>{backgroundPaused=false});window.addEventListener('savestevie:foreground',()=>{backgroundPaused=false});document.addEventListener?.('visibilitychange',()=>{backgroundPaused=!!document.hidden;if(backgroundPaused)clearPointer();sync();render()});
  $('wobbleRepairHelp').onclick=startDrawing;$('wobbleRepairContinue').onclick=finish;$('wobbleRepairAttach').onclick=attach;$('wobbleRepairPreset').onclick=preset;$('wobbleRepairClear').onclick=()=>{if(repair?.stage==='draw'){clearPointer();repair.strokes=[];sync();render()}};
  const api={beginWobbleRepair:begin,wobbleRepairActive:()=>!!repair,updateWobbleRepair:update,resetWobbleRepair:reset,wobbleRepairSnapshot:snapshot};Object.assign(game.api,api);return api;

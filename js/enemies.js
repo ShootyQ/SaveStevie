@@ -312,7 +312,7 @@ function hitPaper(p,e){
    if(game.state.synergies.has('Thunderstones')&&!(p.doodlePayload?.electric||p.doodlePayload?.cling||p.paperElement==='electric'))game.api.chainLightning(e,Math.max(1,game.state.inks.electric));
    if(game.state.synergies.has('Stevie the Unreasonable'))game.api.healStevie(p.damage*.08);
    game.api.burst(e.x,e.y,'#5f5a53',5);
-  }else game.api.burst(e.x,e.y,'#b6a387',4);
+  }else{if(game.api.isWobbleBoss(e)&&game.api.wobblePhase(e)===1){const n=p.doodlePayload||{},levels=(n.fire||0)+(n.electric||0)+(n.poison||0)+(n.frost||0);if(levels)game.api.dealDamage(e,Math.min(24,levels*2),'electric',{rock:true});}game.api.burst(e.x,e.y,'#b6a387',4);}
 }
 function updateProjectiles(dt){
  for(const p of [...game.state.projectiles]){
@@ -475,8 +475,9 @@ function bossEntranceActive(){return firstBossIntroActive()||!!arrival?.wobbleIn
 function stapleIntroPose(){if(!arrival?.stapleIntro)return null;const a=arrival,t=game.api.clamp((a.age-.6)/1.3,0,1);return {x:a.x,y:a.y,age:a.age,scale:.25+.75*t,zoom:game.api.enemyMotionReduced()?1:1+.3*Math.sin(a.age/3.3*Math.PI),angle:game.api.enemyMotionReduced()?0:Math.sin(a.age*9)*(1-t)*.2,stage:a.age<.6?'punch':a.age<1.9?'crawl':'snap'}}
 function updateBossEntrance(dt){if(arrival?.wobbleIntro){updateWobbleIntro(dt);return}if(firstBossIntroActive()){updateFirstBossIntro(dt);return}if(!arrival?.stapleIntro||document.hidden)return;const a=arrival,before=a.age;a.age=Math.min(3.3,a.age+dt);a.left=3.3-a.age;for(const at of [1.9,2.55])if(before<at&&a.age>=at)game.api.playSound('rock');if(a.age>=3.3){const x=a.x,y=a.y;game.api.spawnEnemy(true,x,y);game.api.suspendMusic(false);game.api.setMsg('Staple Snack · Block charges, jam nests, watch for bent staples!')}}
 function wobbleIntroPose(){
- if(!arrival?.wobbleIntro)return null;const a=arrival,t=game.api.clamp(a.age/3.375,0,1),reduced=game.api.enemyMotionReduced();
- return {x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.age<3.375?'stomp':'roar',zoom:reduced?1:1+.55*t*Math.min(1,Math.max(0,(6.132-a.age)/.5))};
+ if(!arrival?.wobbleIntro)return null;const a=arrival,t=game.api.clamp(a.age/2.1,0,1),reduced=game.api.enemyMotionReduced(),stage=a.age<.45?'peek':a.age<2.1?'roll':a.age<2.65?'splat':a.age<3.375?'unfold':'roar';
+ const bounce=reduced?0:stage==='roll'?-Math.abs(Math.sin(a.age*12))*14:0,splat=stage==='splat'?Math.sin((a.age-2.1)/.55*Math.PI):0;
+ return {x:a.startX+(a.targetX-a.startX)*(t*t*(3-2*t)),y:a.y+bounce,age:a.age,stage,angle:reduced?0:stage==='roll'?a.age*8:0,sx:reduced?1:1+splat*.5,sy:reduced?1:1-splat*.4,zoom:reduced?1:1+.3*t*Math.min(1,Math.max(0,(6.132-a.age)/.5))};
 }
 function clearWobbleEntranceWalls(){
  game.api.endDraw();
@@ -492,9 +493,9 @@ function beginWobbleIntro(){game.api.resetCircleShapes();
 }
 function updateWobbleIntro(dt){
  if(!arrival?.wobbleIntro||document.hidden)return;const a=arrival,before=a.age;a.age=Math.min(6.132,a.age+dt);a.left=6.132-a.age;
- if(before<3.375&&a.age>=3.375){game.api.stopSoundEffects('bossStomp');game.api.playSound('bossRoar');clearWobbleEntranceWalls();game.api.setMsg('Wobblechomp ROARS your old walls off the page! Get ready to draw fresh cover.')}
- if(a.age<6.132){const kind=a.age<3.375?'bossStomp':'bossRoar';if(!game.api.soundEffectsSnapshot().voices.some(v=>v.kind===kind))game.api.playSound(kind,false,a.age-(kind==='bossRoar'?3.375:0))}
- if(a.age>=6.132){game.api.stopSoundEffects('bossRoar');game.api.spawnEnemy(true,a.targetX,a.y);game.api.suspendMusic(false);game.api.setMsg('Cut green threads twice per part! Block punches and spikes; rebuild after eye beams.')}
+ if(a.age>=.45&&a.age<2.1){game.api.stopSoundEffects('bossStomp');game.api.sustainSound('wobbleRoll');}if(before<2.1&&a.age>=2.1){game.api.stopSoundEffects('wobbleRoll');game.api.playSound('wobblePunch');game.api.burst(a.targetX,a.y,'#dfbd29',12);}if(before<3.375&&a.age>=3.375){game.api.stopSoundEffects('bossStomp');game.api.playSound('bossRoar');clearWobbleEntranceWalls();game.api.setMsg('Wobblechomp ROARS your old walls off the page! Get ready to draw fresh cover.')}
+ if(a.age<.45||a.age>=3.375&&a.age<6.132){const kind=a.age<.45?'bossStomp':'bossRoar';if(!game.api.soundEffectsSnapshot().voices.some(v=>v.kind===kind))game.api.playSound(kind,false,a.age-(kind==='bossRoar'?3.375:0))}
+ if(a.age>=6.132){game.api.stopSoundEffects('bossRoar');game.api.spawnEnemy(true,a.targetX,a.y);game.api.suspendMusic(false);game.api.setMsg('Hurt Wobblechomp! Counter his attacks to cut off troublesome limbs. Watch his hungry gulp!')}
 }
 function firstBossIntroActive(){return !!arrival?.intro}
 function firstBossIntroPose(){

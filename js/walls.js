@@ -364,7 +364,7 @@ function wallHpForLength(length,closed=false,intersections=0){return game.state.
 function createWall(points,options={}){
   if(points.length<2)return;
   const crayonDraft=game.api.crayonStrokeSource(points[0]);if(crayonDraft){game.api.extendCrayonStroke(crayonDraft,points);return {crayonDraft,strokePts:points.map(p=>({...p})),paid:0};}
-  const start=!game.api.sneakyRouteEndpoint(points[0])&&game.state.stats.doodleStitch&&!game.api.wobbleInfiniteInk?.()?stitchEndpoint(points[0]):null;
+  const start=!game.api.sneakyRouteEndpoint(points[0])&&game.state.stats.doodleStitch&&!game.api.wobbleRicochetActive?.()?stitchEndpoint(points[0]):null;
   if(start)points=points.map((p,i)=>i===0?{...start.point}:{...p});
   let length=0;
   for(let i=1;i<points.length;i++)length+=game.api.dist(points[i-1].x,points[i-1].y,points[i].x,points[i].y);
@@ -406,7 +406,7 @@ function createWall(points,options={}){
   // long strokes cost more ink but can take much more punishment.
   const hp=game.api.wallHpForLength(length,closed,intersections);
   const life=infinite?Math.min(10,game.state.stats.wallLife):game.state.stats.wallLife;
-  const base={eraseInk:actualPaid,...(inkScale<1?{sneakyDraft:true}:{}),...(infinite?{wobbleBumper:true,wobbleDraft:!!options.live}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
+  const base={eraseInk:actualPaid,...(inkScale<1?{sneakyDraft:true}:{}),...(game.api.wobbleRicochetActive?.()?{wobbleBumper:true,wobbleDraft:!!options.live}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
   game.state.walls.push(base);
 
   const copies=[];

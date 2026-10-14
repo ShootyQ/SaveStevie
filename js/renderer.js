@@ -972,7 +972,7 @@ function draw(){
     ctx.restore();
   }
   const wobbleIntro=game.api.wobbleIntroPose();
-  if(wobbleIntro){const ctx=game.dom.ctx,m=DoodleDefender.WobblechompRig.create();m.time=wobbleIntro.age+1;m.reaction=wobbleIntro.stage==='roar'?1:0;ctx.save();ctx.translate(wobbleIntro.x,wobbleIntro.y);game.api.drawWobbleEnemy({x:wobbleIntro.x,y:wobbleIntro.y},m);if(wobbleIntro.stage==='roar'){ctx.fillStyle='#966425';ctx.font='bold 22px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillText('WOBBLECHOMP!',0,-85)}ctx.restore();}
+  if(wobbleIntro){const ctx=game.dom.ctx,m=DoodleDefender.WobblechompRig.create();m.time=wobbleIntro.age+1;m.reaction=wobbleIntro.stage==='roar'?1:0;if(['peek','roll','splat'].includes(wobbleIntro.stage)){m.rollAge=1.2;m.phaseTwoRoll=true;m.ballAngle=0;}else if(wobbleIntro.stage==='unfold')m.rollAge=3.85+(wobbleIntro.age-2.65)/.725*.6;ctx.save();ctx.translate(wobbleIntro.x,wobbleIntro.y);ctx.rotate(wobbleIntro.angle);ctx.scale(wobbleIntro.sx,wobbleIntro.sy);game.api.drawWobbleEnemy({x:wobbleIntro.x,y:wobbleIntro.y},m);if(wobbleIntro.stage==='roar'){ctx.fillStyle='#966425';ctx.font='bold 22px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillText('WOBBLECHOMP!',0,-85)}ctx.restore();}
   const stapleIntro=game.api.stapleIntroPose();
   if(stapleIntro){
     const ctx=game.dom.ctx;ctx.save();ctx.translate(stapleIntro.x,stapleIntro.y);ctx.strokeStyle='#7d5834';ctx.fillStyle='#453c32';ctx.lineWidth=3;
