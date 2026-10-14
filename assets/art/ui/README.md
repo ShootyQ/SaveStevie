@@ -20,3 +20,10 @@ transparent generated artwork, retained unedited: a yellow wooden pencil with
 two empty metal sockets. Effect icons and numeric levels are separate HTML
 layers so they follow the actual equipped build. The splash pencil is an inline
 SVG with its graphite point at the animation origin for precise ink alignment.
+
+BETA Scrap Tree, Alpha 0.1.75: `chocolate-milk-stain.png` is original
+transparent OpenAI-generated dried cocoa-milk artwork, shown without a label.
+`beta-page-doodles.svg` and `pencil-case.svg` are original vector drawings:
+rubbed pencil marks, rejected monsters and homework, plus a stitched school
+pouch. The extra monster studies reuse the game's own character art. These
+static decorations sit behind the interactive scraps and ignore all input.
