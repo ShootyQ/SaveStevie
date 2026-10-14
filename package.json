@@ -1,15 +1,21 @@
 {
   "name": "save-stevie",
-  "version": "0.1.83",
+  "version": "0.1.84",
   "private": true,
-  "description": "Android development tools for the dependency-free Save Stevie web game",
+  "description": "Android and desktop tools for the dependency-free Save Stevie web game",
   "scripts": {
     "test": "node tests/validate.cjs",
     "build:web": "node scripts/build-site.cjs",
     "android:sync": "node scripts/build-android.cjs && cap sync android",
     "android:open": "cap open android",
     "android:debug": "npm run android:sync && node scripts/android-gradle.cjs assembleDebug",
-    "android:bundle": "npm run android:sync && node scripts/android-gradle.cjs bundleRelease"
+    "android:bundle": "npm run android:sync && node scripts/android-gradle.cjs bundleRelease",
+    "desktop:prepare": "node scripts/build-desktop.cjs prepare",
+    "desktop:start": "npm run desktop:prepare && electron _desktop/app",
+    "desktop:windows": "node scripts/build-desktop.cjs win32 x64",
+    "desktop:linux": "node scripts/build-desktop.cjs linux x64",
+    "desktop:mac": "node scripts/build-desktop.cjs darwin arm64",
+    "test:desktop": "node tests/desktop.cjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.2",
@@ -18,6 +24,9 @@
   },
   "devDependencies": {
     "@capacitor/cli": "8.5.2",
-    "esbuild": "0.28.2"
+    "@electron/packager": "20.3.0",
+    "electron": "44.7.2",
+    "esbuild": "0.28.2",
+    "yazl": "3.3.1"
   }
 }
