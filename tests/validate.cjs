@@ -1007,7 +1007,8 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
    g.api.chooseUpgrade(offer);
    for(let i=0;i<expected;i++)reference.api.chooseUpgrade(reference.catalog.upgrades.find(u=>u.name===base.name));
    assert.equal(g.state.stacks[base.name],expected,rarity+' '+base.name+' levels');
-   assert.deepEqual(JSON.parse(JSON.stringify(g.state.stats)),JSON.parse(JSON.stringify(reference.state.stats)),rarity+' '+base.name+' matches common-level effects');
+   if(rarity==='legendary'&&base.name==='Fire Ink'){assert.equal(g.state.stats.backdraft,true,'legendary fire adds its special behavior');reference.state.stats.backdraft=true;}
+   assert.deepEqual(JSON.parse(JSON.stringify(g.state.stats)),JSON.parse(JSON.stringify(reference.state.stats)),rarity+' '+base.name+' matches common-level stats');
    assert.deepEqual(JSON.parse(JSON.stringify(g.state.inks)),JSON.parse(JSON.stringify(reference.state.inks)));
    if(base.cat==='ink')assert.equal(preview.after,'Level '+levels);
    assert.equal(g.state.wave,2,'one reward advances exactly one wave');
@@ -2492,6 +2493,7 @@ require('./paper-ball-notes.cjs')(load);
 require('./enemy-tactics.cjs')(load);
 require('./enemy-crowds.cjs')(load);
 require('./black-ice.cjs')(load);
+require('./backdraft.cjs')(load);
 require('./thermal-shock.cjs')(load);
 require('./rail-ink.cjs')(load);
 require('./smarter-convoys.cjs')(load);

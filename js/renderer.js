@@ -533,7 +533,7 @@ function resize(){
     for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.rockCharge&&!movedCharges.has(wall.rockCharge)){movedCharges.add(wall.rockCharge);wall.rockCharge.x+=dx;wall.rockCharge.y+=dy;}if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
-    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.moveBlackIce(dx,dy);game.api.moveThermalShock(dx,dy);game.api.movePaper(dx,dy);game.api.moveCircleShapes(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveCatapults(dx,dy);game.api.moveDoodleScraps(dx,dy);
+    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.moveBlackIce(dx,dy);game.api.moveThermalShock(dx,dy);game.api.moveBackdraft(dx,dy);game.api.movePaper(dx,dy);game.api.moveCircleShapes(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveCatapults(dx,dy);game.api.moveDoodleScraps(dx,dy);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
@@ -771,6 +771,7 @@ function draw(){
     drawWallTextures(game.state.currentWall,game.state.stats.lineWidth,.72)
   }
 
+  game.api.drawBackdraftWalls();
   // Ranged threats are readable before and after firing.
   game.api.drawCircleShapes();game.api.drawSparkGaps();game.api.drawHardhatCrew();game.api.drawCatapults();game.api.drawSneakyRoutes();
   game.api.drawWallExplosions();
@@ -948,7 +949,7 @@ function draw(){
   }
   game.api.drawSupportInks();
   game.api.drawInkStatusEffects();game.api.drawThermalShockPops();game.api.drawRailInk();
-  game.api.drawInkBursts();
+  game.api.drawInkBursts();game.api.drawBackdraftWaves();
   game.api.drawChainLightning();
   for(const f of game.state.floaters){
     if(f.hitMarker){
