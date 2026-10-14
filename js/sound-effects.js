@@ -1,12 +1,18 @@
 /* Gesture-unlocked effects; bounded mixing never consumes gameplay randomness. */
 DoodleDefender.systems.soundEffects=function(game){
 const groups={
+ chonksStep:{files:['chonks-step-1','chonks-step-2'],gain:.22,gap:.25,cap:1,priority:0,duration:.25},
+ dashRun:{files:['dash-run'],gain:.13,gap:0,cap:1,priority:0,loop:true,idle:.14},
+ dashJump:{files:['dash-jump'],gain:.33,gap:.12,cap:1,priority:2},
+ boingBounce:{files:['boing-bounce-1','boing-bounce-2'],gain:.38,gap:.12,cap:2,priority:2,duration:.6},
+ gribbleWall:{files:['gribble-wall-1','gribble-wall-2'],gain:.3,gap:.22,cap:1,priority:1},
+ monsterWall:{files:['monster-wall-1','monster-wall-2','monster-wall-3'],gain:.26,gap:.2,cap:2,priority:1},
  paperHit:{files:['paper-hit-1','paper-hit-2'],gain:.4,gap:.06,cap:2,priority:2},
  paperCrumple:{files:['paper-crumple'],gain:.18,gap:.3,cap:1,priority:0,duration:.55},
  wallBreak:{files:['graphite-break-1','graphite-break-2'],gain:.38,gap:.12,cap:1,priority:3},
  woodImpact:{files:['wood-impact-1','wood-impact-2'],gain:.35,gap:.16,cap:1,priority:3},
  catapultBuild:{files:['catapult-build'],gain:.23,gap:0,cap:1,priority:1,loop:true},
- turretFire:{files:['turret-fire'],gain:.24,gap:.08,cap:2,priority:1},
+ turretFire:{files:['turret-fire','turret-fire-2','turret-fire-3','turret-fire-4'],gain:.24,gap:.08,cap:2,priority:1},
  doodleAppear:{files:['doodle-note-appear'],gain:.42,gap:.3,cap:1,priority:3},
  draw:{files:['pen-writing'],gain:.18,gap:0,cap:1,priority:0,loop:true,idle:.14},
  erase:{files:['eraser-rub'],gain:.23,gap:0,cap:1,priority:0,loop:true,idle:.14},
@@ -38,7 +44,7 @@ const groups={
  bossRoar:{files:['first-boss-roar'],gain:.6,gap:0,cap:1,priority:4}
 };
 let context=null,master=null,compressor=null,loading=null,voices=[],last={},variants={},ready=0,failed=0,played=0,dropped=0;
-const buffers=new Map(),maxVoices=6;
+const buffers=new Map(),maxVoices=6;let stepDistances=new WeakMap();
 function combatActive(){const s=game.state;return s.running&&!s.paused&&!s.inUpgrade&&!s.betweenWaves&&!s.awaitingSpec&&s.player.hp>0&&!document.hidden}
 function stopVoice(v){if(v.stopped)return;v.stopped=true;try{v.source.stop()}catch{}v.source.disconnect?.();v.gain.disconnect?.();voices=voices.filter(x=>x!==v)}
 function stopSoundEffects(kind){for(const v of [...voices])if(!kind||v.kind===kind)stopVoice(v)}
@@ -78,9 +84,15 @@ function syncSoundEffects(){
  if(game.state.enemies.some(e=>e.hp>0&&e.paperTunnel?.phase==='travel'))sustainSound('paperCrawl');else stopSoundEffects('paperCrawl');
  if(game.state.enemies.some(e=>e.hp>0&&e.type==='catapulter'&&e.catapult?.phase==='build'&&!(e.stun>0||e.freeze>0)&&!e.paperTunnel))sustainSound('catapultBuild');else stopSoundEffects('catapultBuild');
 }
-function resetSoundEffects(){stopSoundEffects();last={}}
+function playChonksStep(e,distance){
+ if(!combatActive()||!Number.isFinite(distance)||distance<=0)return false;
+ const total=(stepDistances.get(e)||0)+distance;stepDistances.set(e,total%18);
+ if(total>=18)return playSound('chonksStep');return false;
+}
+function playMonsterWall(e){if(e.waveBoss||game.catalog.enemyDefs[e.type]?.boss||e.type==='eraser')return false;return playSound(e.type==='grunt'?'gribbleWall':'monsterWall')}
+function resetSoundEffects(){stopSoundEffects();last={};stepDistances=new WeakMap()}
 function soundEffectsSnapshot(){return {supported:!!(window.AudioContext||window.webkitAudioContext),unlocked:context?.state==='running',ready,failed,played,dropped,maxVoices,voices:voices.map(v=>({kind:v.kind,name:v.name})),volume:game.api.audioSettings().effectsVolume}}
 document.addEventListener?.('pointerdown',unlockSoundEffects,{capture:true});document.addEventListener?.('keydown',unlockSoundEffects,{capture:true});
 document.addEventListener?.('visibilitychange',()=>{if(document.hidden){stopSoundEffects();context?.suspend?.()?.catch?.(()=>{})}else if(context)unlockSoundEffects()});
-const api={unlockSoundEffects,playMenuScribble,playSound,sustainSound,stopSoundEffects,applyEffectsVolume,syncSoundEffects,resetSoundEffects,soundEffectsSnapshot};Object.assign(game.api,api);return api;
+const api={unlockSoundEffects,playMenuScribble,playSound,playChonksStep,playMonsterWall,sustainSound,stopSoundEffects,applyEffectsVolume,syncSoundEffects,resetSoundEffects,soundEffectsSnapshot};Object.assign(game.api,api);return api;
 };

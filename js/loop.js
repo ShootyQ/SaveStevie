@@ -191,7 +191,7 @@ function update(dt){
         e.bounceGoal={x:end.x+nx*pad+tx*tangentDir*pad,y:end.y+ny*pad+ty*tangentDir*pad};
         e.bounceTime=Math.min(3.2,.35+Math.hypot(e.bounceGoal.x-e.x,e.bounceGoal.y-e.y)/(e.speed*1.45));
         e.bounceKick=.2;
-        e.bounces--;
+        e.bounces--;game.api.playSound('boingBounce');
         e.attackCd=.35;
         game.api.animateEnemyAction(e,'bounce');
         game.api.floatText(e.x,e.y,'BOING','#2e7f77');
@@ -212,7 +212,7 @@ function update(dt){
         }
       }
       if(e.attackCd<=0){
-        game.api.damageWall(hit.wall,e.type==='wobble-tooth'?3:e.dmg*(e.type==='sapper'?2:1),e.x,e.y);
+        game.api.playMonsterWall(e);game.api.damageWall(hit.wall,e.type==='wobble-tooth'?3:e.dmg*(e.type==='sapper'?2:1),e.x,e.y);
         if(e.type==='sapper')game.api.animateEnemyAction(e,'strike');
         else if(e.type==='gnawer'||e.type==='grunt'||e.type==='basil'||e.type==='wobble-tooth')game.api.animateEnemyAction(e,'bite',game.api.nearestPointOnWall(e,hit.wall));
         e.attackCd=e.type==='gnawer'?.24:e.type==='wobble-tooth'?.65:.42

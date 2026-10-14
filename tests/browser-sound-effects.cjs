@@ -16,7 +16,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    });
    await page.goto('http://127.0.0.1:8001/');await page.click('#startBtn');
    await page.evaluate(async()=>{testGame.api.setDevMode(true);testGame.api.resetRun();testGame.state.spawnTimer=9999;await testGame.api.unlockSoundEffects()});
-   assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().ready),49);assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().failed),0);
+   assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().ready),63);assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().failed),0);
    const box=await page.locator('#game').boundingBox();await page.mouse.move(box.x+35,box.y+100);await page.mouse.down();await page.mouse.move(box.x+100,box.y+110,{steps:5});await page.mouse.up();
    const drawn=await page.evaluate(()=>({s:testGame.api.soundEffectsSnapshot(),walls:testGame.state.walls.length}));assert.ok(drawn.walls>0);assert.ok(drawn.s.played>=2,'writing and pencil-lift sounds play');
    await page.evaluate(()=>{
@@ -50,7 +50,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    await page.evaluate(()=>{testGame.state.paused=true;testGame.api.syncSoundEffects()});assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().voices.length),0);
    await page.evaluate(()=>{testGame.state.paused=false;testGame.api.openOptions()});await page.locator('#effectsVolume').evaluate(el=>{el.value='0';el.dispatchEvent(new Event('input',{bubbles:true}))});assert.equal(await page.evaluate(()=>testGame.api.audioSettings().effectsVolume),0);
    await page.screenshot({path:'/tmp/sound-options-'+viewport.width+'.png'});
-   assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' forty-nine real decoded effects, pointer writing, pencil/wall/rock/zap/defeat events, seven Wobblechomp event sounds, looping/interruption/resume, bounded overlap, pause and live volume');await page.close();
+   assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' sixty-three real decoded effects, pointer writing, pencil/wall/rock/zap/defeat events, seven Wobblechomp event sounds, looping/interruption/resume, bounded overlap, pause and live volume');await page.close();
   }
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
