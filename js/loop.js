@@ -16,7 +16,7 @@ function update(dt){
   if((game.state.wave===5||game.state.wave===10)&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
   game.api.updateRefuge(dt);game.api.updatePaper(dt);game.api.updateHardhatBombs(dt);game.api.updateScrubberHint(dt);if(game.api.updateDoodleScraps(dt))return;
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
-  game.api.updateScoring(dt);game.api.updateBackdraft(dt);game.api.updateIceberg(dt);
+  game.api.updateScoring(dt);game.api.updateBackdraft(dt);game.api.updateIceberg(dt);game.api.updateTesla(dt);
   game.state.waveElapsed+=dt;
   if(game.state.wave%5!==0||game.api.bossWavePhase()==='timed'){
     const previous=game.state.timeLeft;
