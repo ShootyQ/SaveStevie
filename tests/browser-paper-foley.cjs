@@ -1,0 +1,20 @@
+const {chromium}=require('playwright'),assert=require('assert'),fs=require('fs'),path=require('path');
+const root=path.resolve(__dirname,'..');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+ for(const viewport of [{width:1280,height:900},{width:393,height:851}]){
+  const page=await browser.newPage({viewport}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieLessonsV1',JSON.stringify({draw:true,erase:true}));localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');});
+  await page.route('http://stevie.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}if(name==='game.js')body=body.toString().replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');return route.fulfill({body,contentType:({'.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.wav':'audio/wav','.mp3':'audio/mpeg','.ttf':'font/ttf'})[path.extname(name)]||'text/html'});});
+  await page.goto('http://stevie.test/',{waitUntil:'domcontentloaded',timeout:60000});await page.evaluate(()=>{testGame.api.setFirstLessonsEnabled(false);testGame.api.setMonsterIntrosEnabled(false)});await page.click('#startBtn');
+  await page.evaluate(async()=>{testGame.api.resetRun();testGame.state.spawnTimer=9999;await testGame.api.unlockSoundEffects()});assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().ready),39);assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().failed),0);
+  const kind=type=>page.evaluate(type=>testGame.api.soundEffectsSnapshot().voices.some(v=>v.kind===type),type),box=await page.locator('#game').boundingBox();
+  await page.mouse.move(box.x+40,box.y+180);await page.mouse.down();await page.mouse.move(box.x+130,box.y+190,{steps:3});assert(await kind('draw'));await page.mouse.up();assert(!await kind('draw'));assert(await kind('pencilLift'));
+  await page.mouse.move(box.x+40,box.y+200);await page.mouse.down({button:'right'});await page.mouse.move(box.x+70,box.y+205,{steps:2});assert(await kind('erase'));await page.waitForTimeout(180);await page.evaluate(()=>testGame.api.syncSoundEffects());assert(!await kind('erase'),'still eraser is quiet');await page.mouse.move(box.x+45,box.y+205);assert(await kind('erase'));await page.mouse.up({button:'right'});assert(!await kind('erase'));
+  const events=await page.evaluate(()=>{
+   const g=testGame,a=g.api,kinds=()=>a.soundEffectsSnapshot().voices.map(v=>v.kind);a.resetSoundEffects();a.resetPaper();g.state.enemies=[];
+   const entry=a.addPaperHole({x:65,y:160}),exit=a.addPaperHole({x:120,y:g.state.player.y-140});if(!entry||!exit)throw Error('test holes must be safely outside the fort');const tear=kinds();a.resetSoundEffects();
+   const e=a.spawnEnemy(false,entry.x,entry.y,'grunt');e.specialistJob={kind:'tunnel',entryId:entry.id,exitId:exit.id};a.updatePaperEnemy(e,.01);const dive=kinds();a.updatePaperEnemy(e,.5);a.syncSoundEffects();const crawl=kinds();
+   e.x=e.paperTunnel.exit.x;e.y=e.paperTunnel.exit.y;a.updatePaperEnemy(e,.01);a.syncSoundEffects();const ends=kinds();a.updatePaperEnemy(e,.71);const pop=kinds();g.state.paused=true;a.syncSoundEffects();return {tear,dive,crawl,ends,pop,paused:kinds()};
+  });assert(events.tear.includes('paperTear'));assert(events.dive.includes('paperDive'));assert(events.crawl.includes('paperCrawl'));assert(!events.ends.includes('paperCrawl'));assert(events.pop.includes('paperPop'));assert.deepEqual(events.paused,[]);assert.deepEqual(errors,[]);await page.close();console.log('PASS: '+viewport.width+'px real decoding, moving/released/stationary pencil/eraser and actual hole/dive/crawl/pop/pause events');
+ }
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

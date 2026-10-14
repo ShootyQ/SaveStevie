@@ -1292,7 +1292,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
   createBufferSource(){const s={connect(){},disconnect(){},start(...args){this.args=args},stop(){this.onended?.()}};sources.push(s);return s}
  };
  env.sandbox.fetch=async()=>({ok:true,arrayBuffer:async()=>new ArrayBuffer(4)});
- g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,29);
+ g.api.resetRun();await g.api.unlockSoundEffects();assert.equal(g.api.soundEffectsSnapshot().ready,39);
  const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('sound must not use combat RNG')};
  assert.equal(g.api.playSound('scribble'),true);assert.equal(sources[0].args[2],.28);assert.equal(g.api.playSound('scribble'),false);
  sources[0].onended();ctx.currentTime=.3;assert.equal(g.api.playSound('scribble'),true);assert.equal(g.api.soundEffectsSnapshot().voices[0].name,'scribble-2');
@@ -1305,7 +1305,14 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  assert.equal(sources.at(-1).args[1],2.9,'bubble grain starts at an audible burst');
  assert.deepEqual(bubbles,['poison-bubble-1','poison-bubble-2','poison-bubble-3','poison-bubble-4','poison-bubble-1']);g.api.stopSoundEffects();
  for(const kind of ['fire','frost','bossEnter']){ctx.currentTime+=3;assert.equal(g.api.playSound(kind),true);g.api.stopSoundEffects()}
- env.sandbox.Math.random=random;console.log('PASS: twenty-nine decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
+ g.api.resetSoundEffects();const beforeMotion=g.api.soundEffectsSnapshot().played;
+ assert(g.api.sustainSound('draw'));ctx.currentTime+=.05;assert(g.api.sustainSound('draw'));assert.equal(g.api.soundEffectsSnapshot().played,beforeMotion+1,'movement sustains a single writing voice');
+ ctx.currentTime+=.1;g.api.syncSoundEffects();assert(g.api.soundEffectsSnapshot().voices.some(v=>v.kind==='draw'));ctx.currentTime+=.05;g.api.syncSoundEffects();assert(!g.api.soundEffectsSnapshot().voices.some(v=>v.kind==='draw'),'stationary pencil stops');
+ assert(g.api.sustainSound('erase'));g.api.cancelDrawingInput();assert(!g.api.soundEffectsSnapshot().voices.some(v=>v.kind==='erase'),'cancel/release stops rubbing');
+ const tears=[],pops=[];for(let i=0;i<4;i++){ctx.currentTime+=1;g.api.stopSoundEffects();assert(g.api.playSound('paperTear'));tears.push(g.api.soundEffectsSnapshot().voices[0].name);ctx.currentTime+=1;g.api.stopSoundEffects();assert(g.api.playSound('paperPop'));pops.push(g.api.soundEffectsSnapshot().voices[0].name)}
+ assert.deepEqual(tears,['paper-tear-1','paper-tear-2','paper-tear-3','paper-tear-1']);assert.deepEqual(pops,['paper-pop-1','paper-pop-2','paper-pop-1','paper-pop-2']);
+ g.api.resetSoundEffects();const tunnel={hp:20,paperTunnel:{phase:'travel'}};g.state.enemies=[tunnel];g.api.syncSoundEffects();assert(g.api.soundEffectsSnapshot().voices.some(v=>v.kind==='paperCrawl'));tunnel.paperTunnel.phase='emerge';g.api.syncSoundEffects();assert(!g.api.soundEffectsSnapshot().voices.some(v=>v.kind==='paperCrawl'),'crawling ends when last monster surfaces');
+ env.sandbox.Math.random=random;console.log('PASS: thirty-nine decoded effects, scribble grains/variation, alternating rocks, cooldowns, six-voice priorities, pause/mute/live volume/reset and no combat RNG.');
 })().catch(error=>{console.error(error);process.exitCode=1});
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();

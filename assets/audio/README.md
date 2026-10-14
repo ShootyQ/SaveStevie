@@ -65,3 +65,27 @@ zooming and hopping. Returning to the menu or restarting cancels the entrance.
 ## Wobblechomp fight
 
 `wobblechomp-fight.mp3` is the user-supplied **Wobblechomp Fight V5.mp3**, copied unchanged with its embedded artwork (179.040 seconds; 4,439,484 bytes). It loops during Wobblechomp’s wave-10 fight, including Scratch Page boss tests. The normal entrance keeps music suspended for the stomp and roar; the song starts when combat begins. Boss defeat switches to Stevie Victory, then the chapter music resumes. Saved mute, music volume, visibility handling and build-versioned asset paths apply as usual.
+
+## Drawing, erasing and paper shortcuts (Alpha 0.1.76)
+
+Ten user-supplied ElevenLabs/foley WAVs are packaged as mono 24 kHz PCM to
+keep these short effects compact. Source uploads remain in the attachments.
+
+| Runtime file | Supplied file | Trigger |
+| --- | --- | --- |
+| `pen-writing.wav` | PAPRFric-The_sound_of_a_pen_w-Elevenlabs | Moving pencil while drawing |
+| `pencil-lift.wav` | FOLYMisc-Lifting_a_pencil_fro-Elevenlabs | Finish a drawn stroke |
+| `eraser-rub.wav` | FOLYProp-eraser_on_paper-Elevenlabs | Moving eraser |
+| `paper-tear-1.wav` | PAPRRip-paper_ripping-Elevenlabs | Newly opened hole |
+| `paper-tear-2.wav` | PAPRRip-paper_ripping-Elevenlabs (1) | Alternate tear |
+| `paper-tear-3.wav` | PAPRRip-paper_ripping-Elevenlabs (2) | Alternate tear |
+| `paper-dive.wav` | monstersgoingunderpaper | Monster entering a hole |
+| `paper-crawl.wav` | crawlingunderpaper | At least one monster traveling underneath |
+| `paper-pop-1.wav` | popping out of hole 1 | Monster surfaces, including forced emergence |
+| `paper-pop-2.wav` | popping out of hole 2 | Alternate emergence |
+
+Writing and rubbing use one quiet looping voice each, stopped on release,
+mode switches, cancellation, pause, or 0.14 seconds without movement. Crawling
+uses one shared quiet voice rather than one per hidden monster. Tears and pops
+rotate without consuming gameplay randomness. Existing six-voice limits,
+priority mixing, effects volume, visibility and run-reset handling apply.
