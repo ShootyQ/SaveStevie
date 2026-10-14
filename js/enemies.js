@@ -378,7 +378,17 @@ function updateEnemyShots(dt){
       if(owner.hp<=0||!game.state.enemies.includes(owner))continue;
       if(shot.reflected){
         const distance=Math.hypot(owner.x-shot.x,owner.y-shot.y),travel=245*Math.min(dt,Math.max(0,shot.life));
-        if(distance<=travel+owner.r+shot.r){
+        const reachesOwner=distance<=travel+owner.r+shot.r;
+        const step=Math.min(travel,Math.max(0,distance-owner.r-shot.r)),endX=shot.x+(owner.x-shot.x)/(distance||1)*step,endY=shot.y+(owner.y-shot.y)/(distance||1)*step;
+        // Sweep only the path actually travelled, stopping at the owner's body.
+        // Normal defeat handling preserves rewards, splits and shield/tunnel rules.
+        for(const enemy of [...game.state.enemies]){
+          if(enemy===owner||enemy.hp<=0||enemy.waveBoss||defs[enemy.type]?.boss||enemy.type==='boss'||enemy.type==='eraser')continue;
+          if(game.api.pointSegDist(enemy.x,enemy.y,shot.x,shot.y,endX,endY)>enemy.r+shot.r)continue;
+          game.api.dealDamage(enemy,enemy.hp,'reflected');
+          if(enemy.hp<=0){game.api.floatText(enemy.x,enemy.y-25,'RETURN!','#287a78');game.api.killEnemy(enemy);}
+        }
+        if(reachesOwner){
           if(game.api.underPaper(owner)){game.api.burst(shot.x,shot.y,'#cbbba4',3);continue;}
           owner.returnHits=(owner.returnHits||0)+1;
           game.api.dealDamage(owner,owner.maxHp/owner.returnHitsNeeded,'reflected');

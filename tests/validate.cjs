@@ -2716,3 +2716,5 @@ require('./late-wave-roster.cjs')(load);
 require('./turret-upgrades.cjs')(load);
 
 require('./specialist-pressure.cjs')(load);
+
+require('./reflected-pencil-piercing.cjs')(load);
