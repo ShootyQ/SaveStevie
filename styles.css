@@ -1370,3 +1370,12 @@ html.native-app #bossOvertime{top:8px}
 @keyframes case-unfold{from{opacity:.2;transform:translateY(-8px) rotate(-2deg)}to{opacity:1;transform:none}}
 @media(max-width:600px){.beta-node-note.pencil-case-note{padding:25px 19px 16px}.case-collection{gap:7px;padding:12px 8px}.case-tool{padding:3px 3px 6px}.case-tool figcaption{font-size:15px}.case-tool small{font-size:12px}.pencil-case-note #betaNodeDescription{font-size:17px}}
 @media(prefers-reduced-motion:reduce){.pencil-case-note .case-collection{animation:none}}
+
+#desktopDisplaySection[hidden]{display:none!important}
+.desktop-display-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:14px 0}
+.desktop-display-fields label{display:flex;flex-direction:column;gap:6px;color:#354348;font-size:18px}
+.desktop-display-fields select{width:100%;background:#fffaf0;color:#263d47;border:1px solid #a69a80;border-radius:4px;padding:6px}
+@media(max-width:480px){.desktop-display-fields{grid-template-columns:1fr}}
+#optionsOverlay .options-book{min-width:0}
+.desktop-display-fields label,.desktop-display-fields select{min-width:0}
+@media(max-width:640px){.desktop-display-fields{grid-template-columns:1fr}}

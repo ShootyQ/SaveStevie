@@ -1,6 +1,6 @@
 {
   "name": "save-stevie",
-  "version": "0.1.84",
+  "version": "0.1.85",
   "private": true,
   "description": "Android and desktop tools for the dependency-free Save Stevie web game",
   "scripts": {
@@ -15,7 +15,7 @@
     "desktop:windows": "node scripts/build-desktop.cjs win32 x64",
     "desktop:linux": "node scripts/build-desktop.cjs linux x64",
     "desktop:mac": "node scripts/build-desktop.cjs darwin arm64",
-    "test:desktop": "node tests/desktop.cjs"
+    "test:desktop": "node tests/desktop.cjs && node tests/desktop-performance.cjs"
   },
   "dependencies": {
     "@capacitor/android": "8.5.2",

@@ -81,7 +81,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.84</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.85</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -286,6 +286,16 @@
   <div class="cardbox build-box options-book">
     <div class="build-heading"><div><span class="section-kicker">MAKE IT YOUR NOTEBOOK</span><h2 id="optionsTitle">Settings</h2></div><button id="closeOptionsBtn">Close</button></div>
     <p class="dialog-intro settings-whisper"><img src="assets/art/stevie.png" alt="" draggable="false">Stevie: Let’s make this page yours. Your run pauses while you’re here.</p>
+    <section class="option-section" id="desktopDisplaySection" hidden><h3>Desktop display</h3>
+      <div class="desktop-display-fields">
+        <label>Window mode<select id="desktopWindowMode"><option value="windowed">Windowed</option><option value="fullscreen">Fullscreen</option></select></label>
+        <label>Window resolution<select id="desktopResolution"><option value="800x600">800 × 600</option><option value="1024x768">1024 × 768</option><option value="1280x720">1280 × 720</option><option value="1280x900">1280 × 900</option><option value="1600x900">1600 × 900</option><option value="1920x1080">1920 × 1080</option><option value="2560x1440">2560 × 1440</option></select></label>
+        <label>UI scale<select id="desktopUiScale"><option value="0.85">85% · compact</option><option value="1">100%</option><option value="1.15">115%</option><option value="1.3">130% · larger text</option></select></label>
+        <label>Render quality<select id="desktopRenderScale"><option value="1">Full detail · 100%</option><option value="0.75">Balanced · 75%</option><option value="0.5">Performance · 50%</option></select></label>
+        <label>Frame rate<select id="desktopFrameLimit"><option value="30">30 FPS</option><option value="60">60 FPS</option><option value="120">120 FPS</option><option value="0">Display refresh rate</option></select></label>
+      </div><p class="option-help">F11 toggles fullscreen. Window sizes fit your screen; fullscreen uses your monitor’s resolution. Lower render quality or frame rate can help on a slower PC. Gameplay speed stays the same.</p>
+      <div class="cardactions"><button id="desktopApplyDisplay">Apply display settings</button><button id="desktopResetDisplay" class="secondary">Reset display defaults</button></div><p id="desktopDisplayStatus" class="option-help" role="status"></p>
+    </section>
     <section class="option-section"><span class="settings-margin-note" aria-hidden="true"><span class="scribble-word"><span class="scribble-letter">s</span><span class="scribble-letter">h</span><span class="scribble-letter">h</span><span class="scribble-letter">h</span><span class="scribble-letter">.</span><span class="scribble-letter">.</span><span class="scribble-letter">.</span></span> <span class="scribble-word"><span class="scribble-letter">w</span><span class="scribble-letter">e</span><span class="scribble-letter">’</span><span class="scribble-letter">r</span><span class="scribble-letter">e</span></span> <span class="scribble-word"><span class="scribble-letter">i</span><span class="scribble-letter">n</span></span> <span class="scribble-word"><span class="scribble-letter">c</span><span class="scribble-letter">l</span><span class="scribble-letter">a</span><span class="scribble-letter">s</span><span class="scribble-letter">s</span><span class="scribble-letter">.</span></span></span><h3>Sound &amp; music</h3>
       <button class="secondary" id="splashMusicBtn">Mute music</button>
       <label class="volume-label" for="musicVolume"><span>Music volume</span><output id="musicVolumeValue" for="musicVolume">35%</output></label>
@@ -413,6 +423,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.85 · Desktop display options</h3><p>The desktop client now saves fullscreen mode, window resolution, UI scale, render quality and frame-rate preferences. Window sizes fit the available screen; fullscreen uses its native resolution. Performance options reduce drawing work while keeping gameplay speed unchanged. Reset display defaults is available in Settings.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.84 · Desktop test clients</h3><p>Save Stevie can now be bundled as an offline desktop app, with downloadable test ZIPs from GitHub Actions. Desktop progress is saved locally between launches; use Settings backup and restore to bring over browser or phone progress. Window controls include fullscreen and zoom.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.83 · Legendary Electric: Tesla</h3><p>Legendary Electric Ink turns walls into charging Tesla coils. Every two seconds, a coordinated volley zaps up to eight nearby monsters for four times normal Electric hit damage. Longer lines spread coils for coverage. Custom copper coils, charging halos and branching bolts make the volley visible. Shields, underground safety and boss immunities still apply. Legendary Electric has its own Tesla tile and description.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.82 · Legendary Frost: Iceberg</h3><p>Legendary Frost Ink transforms existing and new walls into chunky ice shelves with four times the HP. Custom icy facets, growing crystals and damage cracks show their strength. Erasers still slice through them, and their lifetime stays unchanged. Legendary Frost has its own Iceberg reward art and description.</p></article>
@@ -712,6 +723,7 @@
 <script src="js/scoring.js"></script>
 <script src="js/balance.js"></script>
 <script src="js/settings.js"></script>
+<script src="js/desktop-display.js"></script>
 <script src="js/sound-effects.js"></script>
 <script src="js/music.js"></script>
 <script src="js/chapters.js"></script>

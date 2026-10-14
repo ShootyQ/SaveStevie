@@ -1,0 +1,17 @@
+const {_electron}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const profile=fs.mkdtempSync(path.join(os.tmpdir(),'stevie-display-test-')),exe=path.resolve('_desktop/clients/Save Stevie-linux-x64/Save Stevie');
+(async()=>{let app;try{
+ const launch=()=>_electron.launch({executablePath:exe,args:['--no-sandbox','--ozone-platform=headless','--user-data-dir='+profile],timeout:30000});
+ app=await launch();let page=await app.firstWindow(),errors=[];page.on('pageerror',e=>errors.push(e.message));await page.waitForSelector('#splashOptionsBtn');assert.equal(await page.evaluate(()=>typeof require),'undefined');
+ await page.click('#splashOptionsBtn');await page.waitForSelector('#desktopDisplaySection',{state:'visible'});await page.locator('#desktopDisplaySection').scrollIntoViewIfNeeded();
+ await page.selectOption('#desktopResolution','800x600');await page.selectOption('#desktopUiScale','1.15');await page.selectOption('#desktopRenderScale','0.5');await page.selectOption('#desktopFrameLimit','30');await page.click('#desktopApplyDisplay');
+ await page.waitForFunction(()=>document.querySelector('#desktopApplyDisplay').disabled===false&&document.querySelector('#desktopDisplayStatus').textContent.includes('Window'));
+ let settings=await page.evaluate(()=>stevieDesktop.getDisplay());assert.equal(settings.preferences.renderScale,.5);assert.equal(settings.preferences.frameLimit,30);assert.equal(settings.preferences.uiScale,1.15);assert(settings.windowSize.width<=settings.screenSize.width);assert(settings.windowSize.height<=settings.screenSize.height);
+ const ratio=await page.evaluate(()=>{const c=document.querySelector('#game');return {actual:c.width/c.getBoundingClientRect().width,wanted:Math.min(2,devicePixelRatio)*.5};});assert(Math.abs(ratio.actual-ratio.wanted)<.02,'real canvas pixel count changes');
+ await page.screenshot({path:'/tmp/stevie-display-settings.png'});
+ await page.evaluate(()=>stevieDesktop.applyDisplay({mode:'fullscreen'}));await page.waitForFunction(async()=> (await stevieDesktop.getDisplay()).fullscreen);await page.evaluate(()=>stevieDesktop.applyDisplay({mode:'windowed'}));await page.waitForFunction(async()=>!(await stevieDesktop.getDisplay()).fullscreen);
+ await page.evaluate(()=>localStorage.setItem('displaySaveSentinel','kept'));assert.deepEqual(errors,[]);await app.close();app=null;
+ app=await launch();page=await app.firstWindow();await page.waitForFunction(()=>!!window.stevieDesktop);settings=await page.evaluate(()=>stevieDesktop.getDisplay());assert.equal(settings.preferences.frameLimit,30);assert.equal(settings.preferences.renderScale,.5);assert.equal(settings.preferences.uiScale,1.15);assert.equal(await page.evaluate(()=>localStorage.getItem('displaySaveSentinel')),'kept');
+ await page.click('#splashOptionsBtn');await page.locator('#desktopResetDisplay').scrollIntoViewIfNeeded();await page.click('#desktopResetDisplay');await page.waitForFunction(async()=> (await stevieDesktop.getDisplay()).preferences.renderScale===1);settings=await page.evaluate(()=>stevieDesktop.getDisplay());assert.equal(settings.preferences.frameLimit,60);assert.equal(settings.preferences.uiScale,1);
+ console.log('PASS: native settings UI/apply, resolution fit, real zoom/canvas quality, fullscreen/windowed, relaunch preferences without save loss, defaults and Node isolation.');
+ }finally{await app?.close();fs.rmSync(profile,{recursive:true,force:true});}})().catch(e=>{console.error(e);process.exitCode=1});
