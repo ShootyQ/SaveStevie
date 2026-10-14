@@ -771,7 +771,7 @@ function draw(){
     drawWallTextures(game.state.currentWall,game.state.stats.lineWidth,.72)
   }
 
-  game.api.drawBackdraftWalls();
+  game.api.drawIcebergWalls();game.api.drawBackdraftWalls();
   // Ranged threats are readable before and after firing.
   game.api.drawCircleShapes();game.api.drawSparkGaps();game.api.drawHardhatCrew();game.api.drawCatapults();game.api.drawSneakyRoutes();
   game.api.drawWallExplosions();

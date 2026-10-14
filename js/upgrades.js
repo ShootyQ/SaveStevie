@@ -50,6 +50,7 @@ function removeEffect(u){
   if(key==='death')game.state.stats.wallDamage-=5*n;
   else game.state.inks[key]=0;
   if(u.name==='Fire Ink'){game.state.stats.backdraft=false;game.api.resetBackdraft();}
+  if(u.name==='Frost Ink')game.api.setIceberg(false);
   delete game.state.stacks[u.name];
 }
 function toolArt(rank){
@@ -90,7 +91,8 @@ function upgradePreview(u){
   const s=game.state.stats,p=game.state.player,n=game.state.stacks[u.name]||0,levels=upgradeLevels(u),f=v=>Number(v.toFixed(3));
   const pair=(label,before,after,unit='')=>({label,before:String(f(before))+unit,after:String(f(after))+unit});
   if(effectKeys[u.name]){const result={label:'Effect level',before:n?'Level '+n:'Not equipped',after:'Level '+(n+levels),beforeDetail:n?game.api.upgradeEffect(u.name,n):'No '+u.name+' effect yet.',afterDetail:game.api.upgradeEffect(u.name,n+levels)};
-   if(u.name==='Fire Ink'&&u.rarity==='legendary')result.afterDetail+=' Backdraft: walls swell with heat. Erase a swollen section for an outward 6–15× fire-damage burst; more heat means more width and distance.';return result;
+   if(u.name==='Fire Ink'&&u.rarity==='legendary')result.afterDetail+=' Backdraft: walls swell with heat. Erase a swollen section for an outward 6–15× fire-damage burst; more heat means more width and distance.';
+   if(u.name==='Frost Ink'&&u.rarity==='legendary')result.afterDetail+=' Iceberg: existing and new walls gain 4× HP and become thick ice shelves. Erasers still cut through them; wall lifetime stays the same. Does not multiply again on repeat picks.';return result;
   }
   const regen=(name)=>{let value=name==='Living Fountain Pen'?1:0;for(let i=0;i<levels;i++){const step=game.api.regenPick(name,n+i);if(name==='Living Fountain Pen')value*=step;else value+=step;}return value;};
   function loopPreview(durability){
@@ -281,6 +283,7 @@ const upgradeArtGroups=[
  ['Pocket Rocks','Better Rocks','Emergency Medicine','Really Good Rocks','Stevie Has Had Enough','Loaded Deck','Reroll Coupon','Collector','Greedy Goblin']
 ];
 function upgradeArtworkInfo(u){
+ if(u.name==='Frost Ink'&&u.rarity==='legendary')return {file:'assets/art/upgrades/iceberg.svg',grid:1,x:0,y:0};
  if(u.name==='Fire Ink'&&u.rarity==='legendary')return {file:'assets/art/upgrades/backdraft.svg',grid:1,x:0,y:0};
  if(u.name==='Doodle Stitch')return {file:'assets/art/upgrades/doodle-stitch.svg',grid:1,x:0,y:0};
  if(u.name==='Electric Rocks')return upgradeArtworkInfo({name:'Electric Ink'});
@@ -385,7 +388,7 @@ function renderUpgradeCards(picks,count=picks.length){
  game.dom.cardsEl.innerHTML='';game.dom.cardsEl.className='cards '+(count===4?'four':count===1?'dev-preview':'');
  picks.forEach(u=>{
   const c=document.createElement('div');c.className='ucard '+u.rarity;const stack=game.state.stacks[u.name]||0,preview=game.api.upgradePreview(u);
-  c.innerHTML=`${upgradeArtworkMarkup(u,72)}<div class="rarity">${u.rarity} · ${oneTimeUpgrades.has(u.name)?'UNLOCK':'+'+upgradeLevels(u)+' LEVEL'+(upgradeLevels(u)>1?'S':'')}</div><h3>${u.name==='Fire Ink'&&u.rarity==='legendary'?'Fire Ink · Backdraft':game.api.paperLabel(u.name)}</h3><span class="card-level">${oneTimeUpgrades.has(u.name)?'One-time':effectKeys[u.name]?preview.before+' → '+preview.after:(stack?'Owned ×'+stack:'Utility')}</span>`;
+  c.innerHTML=`${upgradeArtworkMarkup(u,72)}<div class="rarity">${u.rarity} · ${oneTimeUpgrades.has(u.name)?'UNLOCK':'+'+upgradeLevels(u)+' LEVEL'+(upgradeLevels(u)>1?'S':'')}</div><h3>${u.name==='Fire Ink'&&u.rarity==='legendary'?'Fire Ink · Backdraft':u.name==='Frost Ink'&&u.rarity==='legendary'?'Frost Ink · Iceberg':game.api.paperLabel(u.name)}</h3><span class="card-level">${oneTimeUpgrades.has(u.name)?'One-time':effectKeys[u.name]?preview.before+' → '+preview.after:(stack?'Owned ×'+stack:'Utility')}</span>`;
   bindArtworkFallback(c);c.setAttribute?.('role','button');c.setAttribute?.('tabindex','0');c.setAttribute?.('aria-controls','upgradeDetails');c.setAttribute?.('aria-expanded','false');c.setAttribute?.('aria-label',game.api.paperLabel(u.name)+', '+u.rarity+'. Inspect upgrade.');
   c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inspectReward(u,c,true,true)}else if(e.key==='Escape'){e.preventDefault();clearRewardPreview(true)}};
   c.onclick=()=>inspectReward(u,c,true);
@@ -420,6 +423,7 @@ function applyUpgrade(u,replaceName){
   const levels=upgradeLevels(u);
   for(let i=0;i<levels;i++){game.state.stacks[u.name]=(game.state.stacks[u.name]||0)+1;base.apply();}
   if(u.name==='Fire Ink'&&u.rarity==='legendary')game.state.stats.backdraft=true;
+  if(u.name==='Frost Ink'&&u.rarity==='legendary')game.api.setIceberg(true);
   game.api.checkSynergies();
   return true;
 }

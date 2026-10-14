@@ -362,7 +362,7 @@ function closeCreatedWall(t){
 }
 
 let liveStroke=null;
-function wallHpForLength(length,closed=false,intersections=0){return game.state.stats.wallHp*(length/180)*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);}
+function wallHpForLength(length,closed=false,intersections=0){return game.api.icebergMultiplier()*game.state.stats.wallHp*(length/180)*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);}
 function createWall(points,options={}){
   if(points.length<2)return;
   const crayonDraft=game.api.crayonStrokeSource(points[0]);if(crayonDraft){game.api.extendCrayonStroke(crayonDraft,points);return {crayonDraft,strokePts:points.map(p=>({...p})),paid:0};}

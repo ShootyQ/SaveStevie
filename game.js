@@ -4,7 +4,7 @@
 const game = DoodleDefender.createGame();
 DoodleDefender.systems.dom(game);
 DoodleDefender.systems.state(game);
-for (const name of ["geometry","refuge","scoring","balance","settings","soundEffects","music","chapters","ui","notebook","monsters","waves","enemies","walls","effects","abilityEffects","plaguefire","supportInks","bossEncounters","stapleBoss","wobbleBoss","wobbleRepair","upgrades","testLab","waveFinale","renderer","wobblePreview","firstLessons","paper","hardhatCrew","catapulter","doodleScraps","doodleTricks","paperTricks","enemyTactics","blackIce","thermalShock","railInk","backdraft","chonksShield","crayonBoss","circleShapes","loop","saveBackup","betaScraps","input"]) game[name] = DoodleDefender.systems[name](game);
+for (const name of ["geometry","refuge","scoring","balance","settings","soundEffects","music","chapters","ui","notebook","monsters","waves","enemies","walls","effects","abilityEffects","plaguefire","supportInks","bossEncounters","stapleBoss","wobbleBoss","wobbleRepair","upgrades","testLab","waveFinale","renderer","wobblePreview","firstLessons","paper","hardhatCrew","catapulter","doodleScraps","doodleTricks","paperTricks","enemyTactics","blackIce","thermalShock","railInk","backdraft","iceberg","chonksShield","crayonBoss","circleShapes","loop","saveBackup","betaScraps","input"]) game[name] = DoodleDefender.systems[name](game);
 game.input.bind();
 game.dom.bestEl.textContent=game.state.best;
 game.api.resize();
