@@ -10,6 +10,10 @@ Browse the [complete upgrade and ability list](docs/UPGRADE_REFERENCE.md), or do
 
 See the [long-term replayability ideas](docs/replayability/README.md) for shape techniques, post-victory challenges, encounters and progression possibilities. These are design notes, not shipped features.
 
+## Desktop Alpha clients
+
+Download offline Windows, macOS and Linux test builds through GitHub Actions. See the [desktop testing guide](docs/desktop-testing.md) for downloads, launching, save transfer and local builds.
+
 ## Android internal testing
 
 The optional Capacitor wrapper bundles the game for offline Android play. Start
