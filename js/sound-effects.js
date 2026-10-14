@@ -89,7 +89,7 @@ function playChonksStep(e,distance){
  const total=(stepDistances.get(e)||0)+distance;stepDistances.set(e,total%18);
  if(total>=18)return playSound('chonksStep');return false;
 }
-function playMonsterWall(e){if(e.waveBoss||game.catalog.enemyDefs[e.type]?.boss||e.type==='eraser')return false;return playSound(e.type==='grunt'?'gribbleWall':'monsterWall')}
+function playMonsterWall(e){if(e.waveBoss||game.catalog.enemyDefs[e.type]?.boss||e.type==='eraser'||e.type==='grunt')return false;return playSound('monsterWall')}
 function resetSoundEffects(){stopSoundEffects();last={};stepDistances=new WeakMap()}
 function soundEffectsSnapshot(){return {supported:!!(window.AudioContext||window.webkitAudioContext),unlocked:context?.state==='running',ready,failed,played,dropped,maxVoices,voices:voices.map(v=>({kind:v.kind,name:v.name})),volume:game.api.audioSettings().effectsVolume}}
 document.addEventListener?.('pointerdown',unlockSoundEffects,{capture:true});document.addEventListener?.('keydown',unlockSoundEffects,{capture:true});

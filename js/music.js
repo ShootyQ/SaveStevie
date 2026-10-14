@@ -36,12 +36,12 @@ function playMusic(){
     request?.then(()=>{if(attempt===playAttempt){blocked=false;updateMusicButton()}}).catch(()=>{if(attempt===playAttempt){blocked=true;updateMusicButton()}});
   }catch{if(attempt===playAttempt){blocked=true;updateMusicButton()}}
 }
-function selectMusicTrack(id){
-  // Alternate the two chapter songs by wave, without using gameplay randomness.
-  if(id==='pop-quiz-panic'&&game.state.wave>=6&&game.state.wave<=10&&game.state.wave%2===1)id='pop-quiz-panic-alt';
+function selectMusicTrack(id,advance=false){
+  // Wave changes keep the current song; only its ending advances the playlist.
+  if(!advance&&id==='pop-quiz-panic'&&['pop-quiz-panic','pop-quiz-panic-alt'].includes(track))return false;
   if(!tracks[id]||id===track)return false;
   track=id;playAttempt++;blocked=false;audio.pause?.();
-  audio.loop=id!=='victory';
+  audio.loop=!['victory','pop-quiz-panic','pop-quiz-panic-alt'].includes(id);
   const version=document.documentElement?.dataset?.build;
   audio.src='assets/audio/'+tracks[id].file+(version?'?v='+encodeURIComponent(version):'');
   try{audio.currentTime=0}catch{}
@@ -61,7 +61,10 @@ function suspendMusic(value){suspended=!!value;if(suspended){playAttempt++;audio
 button.onclick=toggleMusic;introButton.onclick=toggleMusic;
 document.addEventListener?.('visibilitychange',()=>{if(document.hidden){playAttempt++;audio.pause?.()}else playMusic()});
 audio.addEventListener?.('error',()=>{blocked=true;updateMusicButton()});
-audio.addEventListener?.('ended',()=>{if(track==='victory')selectMusicTrack(game.api.chapterForWave().id)});
+audio.addEventListener?.('ended',()=>{
+ if(track==='victory')selectMusicTrack(game.api.chapterForWave().id);
+ else if(['pop-quiz-panic','pop-quiz-panic-alt'].includes(track)&&game.state.running&&game.state.wave>=6&&game.state.wave<=10&&!game.api.bossEntranceActive())selectMusicTrack(track==='pop-quiz-panic'?'pop-quiz-panic-alt':'pop-quiz-panic',true);
+});
 // Respect saved mute; retry denied autoplay inside the next real gesture.
 function retryMusicOnGesture(event){
   if(event?.target?.closest?.('#musicBtn, #splashMusicBtn, #startBtn'))return;

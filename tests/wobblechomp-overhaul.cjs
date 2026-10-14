@@ -3,7 +3,7 @@ module.exports=function(load){
  const wall=(pts)=>({pts,hp:200,maxHp:200,thick:8,life:100,maxLife:100});
  function setup(W=800,H=700){const env=load(true),g=env.sandbox.testGame;g.api.resetRun({skipIntro:true,skipNotebook:true});g.state.wave=10;g.api.startWave();g.state.W=W;g.state.H=H;Object.assign(g.state.player,{x:W/2,y:H/2,hp:75,maxHp:75});g.state.enemies=[];g.state.walls=[];g.state.stats.ink=g.state.stats.maxInk=160;g.state.stats.rockDamage=0;const e=g.api.spawnEnemy(true,80,220),s=g.api.bossBrain(e).wobble;s.gap=999;return {g,e,s,env,rig:env.sandbox.DoodleDefender.WobblechompRig};}
  function enterTwo(r){const {g,e,s}=r;e.hp=e.maxHp*.45;g.api.updateWobbleBoss(e,.01);assert.equal(s.phase,2);g.api.updateWobbleBoss(e,1.8);return r;}
- function counter(r,kind){const {g,e,s,rig}=r;s.model=rig.create();s.model.time=1;s.lastAttack=s.attack=kind;s.attackSerial++;s.counteredSerial=-1;s.gap=999;s.target={...g.state.player};s.punchHit=false;s.model[{punch:'punchAge',spikes:'spikeAge',beam:'beamAge'}[kind]]=0;
+ function counter(r,kind){const {g,e,s,rig}=r;const cuts={armCuts:s.model.armCuts,legCuts:s.model.legCuts,stalkCuts:s.model.stalkCuts};s.model=Object.assign(rig.create(),cuts);s.cutCelebrate=0;s.blockStun=0;s.cutWindow=null;s.model.time=1;s.lastAttack=s.attack=kind;s.attackSerial++;s.counteredSerial=-1;s.gap=999;s.target={...g.state.player};s.punchHit=false;s.model[{punch:'punchAge',spikes:'spikeAge',beam:'beamAge'}[kind]]=0;
   if(kind==='punch'){g.state.walls=[wall([{x:(e.x+g.state.player.x)/2,y:e.y-150},{x:(e.x+g.state.player.x)/2,y:g.state.player.y+150}])];g.api.updateWobbleBoss(e,1.1);}
   else if(kind==='spikes'){assert(g.api.counterWobbleSpike({wobbleOwner:e,cutCounter:s.attackSerial}));}
   else{s.beamStart={x:g.state.player.x,y:g.state.player.y};s.beamTip={...s.beamStart};s.beamWalls=[];s.model.beamAge=.7;const a=g.api.wobbleSnapshot(e).beamOrigin,b=s.beamTip,dx=b.x-a.x,dy=b.y-a.y,l=Math.hypot(dx,dy),p={x:(a.x+b.x)/2,y:(a.y+b.y)/2};assert(g.api.cutWobbleStroke([{x:p.x-dy/l*30,y:p.y+dx/l*30},{x:p.x+dy/l*30,y:p.y-dx/l*30}]));}
@@ -19,7 +19,12 @@ module.exports=function(load){
  }
  for(const [kind,part] of [['punch','arm'],['spikes','leg'],['beam','stalk']]){
   const r=setup(),{g,e,s}=r;counter(r,kind);const j=g.api.wobbleSnapshot(e).parts[part].joint,c={x:(j.a.x+j.b.x)/2,y:(j.a.y+j.b.y)/2},points=[{x:c.x-30,y:c.y-10},{x:c.x+30,y:c.y+10}];
-  g.state.stats.ink=0;g.api.createWall(points);assert.equal(s.model[part+'Cuts'],0,'unpaid gesture cannot detach');g.state.stats.ink=160;g.api.createWall(points);assert.equal(s.model[part+'Cuts'],2,'one paid counter slash detaches');assert.equal(s.debris.length,1);assert(!g.api.cutWobbleStroke(points));assert.equal(s.phase,1,'detachment is optional help, not a phase checklist');
+  g.state.stats.ink=0;g.api.createWall(points);assert.equal(s.model[part+'Cuts'],0,'unpaid gesture cannot detach');g.state.stats.ink=160;g.api.createWall(points);assert.equal(s.model[part+'Cuts'],1,'first paid slash loosens');assert.equal(s.debris.length,0);assert(!g.api.cutWobbleStroke(points),'one cut per counter');counter(r,kind);const j2=g.api.wobbleSnapshot(e).parts[part].joint,c2={x:(j2.a.x+j2.b.x)/2,y:(j2.a.y+j2.b.y)/2};g.api.createWall([{x:c2.x-30,y:c2.y-10},{x:c2.x+30,y:c2.y+10}]);assert.equal(s.model[part+'Cuts'],2,'second separately earned slash detaches');assert.equal(s.debris.length,1);assert(!g.api.cutWobbleStroke(points));assert.equal(s.phase,1,'detachment is optional help, not a phase checklist');
+ }
+ {
+  const r=setup(),{g,e,s}=r;for(const [kind,part] of [['punch','arm'],['punch','arm'],['spikes','leg'],['spikes','leg'],['beam','stalk']]){
+   if(s.phase===2)break;counter(r,kind);if(s.phase===2)break;const j=g.api.wobbleSnapshot(e).parts[part].joint,c={x:(j.a.x+j.b.x)/2,y:(j.a.y+j.b.y)/2};g.api.createWall([{x:c.x-30,y:c.y-10},{x:c.x+30,y:c.y+10}]);
+  }assert.equal(g.state.stats.rockDamage,0);assert.equal(s.phase,2,'drawing counters reach phase two with zero paper-ball DPS');
  }
  {
   const r=setup(),{g,e,s,env}=r;const kinds=new Set();for(let i=0;i<25;i++){s.attack=null;s.model.punchAge=s.model.spikeAge=s.model.beamAge=s.model.teethAge=s.model.rollAge=null;s.gap=0;g.api.updateWobbleBoss(e,.01);if(s.attack)kinds.add(s.attack);}assert(kinds.size>=3,'varied attack selection');
@@ -48,6 +53,6 @@ module.exports=function(load){
  for(const [W,H] of [[800,700],[393,800],[360,640],[851,320]]){
   const r=enterTwo(setup(W,H)),{g,e,s}=r;assert(s.windup>=2.5);if(W<500)assert(Math.abs(e.y-g.state.player.y)>100,'phone charge starts at an end');e.freeze=e.stun=e.gravitySlow=99;g.api.updateWobbleBoss(e,.1);assert.equal(e.freeze+e.stun+e.gravitySlow,0);const hp=e.hp;g.api.dealDamage(e,99999,'physical');assert.equal(e.hp,hp,'phase two requires spike damage');const snap=JSON.stringify(g.api.wobbleSnapshot(e));g.api.draw();assert.equal(JSON.stringify(g.api.wobbleSnapshot(e)),snap,'rendering is pure');g.state.paused=true;g.api.update(.5);assert.equal(JSON.stringify(g.api.wobbleSnapshot(e)),snap);g.state.paused=false;const x=s.targets.spikes.x;g.api.moveWobbleFields(8,5);assert.equal(s.targets.spikes.x,x+8);g.api.moveWobbleFields(-8,-5);g.api.returnToMenu();assert(!g.api.wobbleInfiniteInk());
  }
- console.log('PASS: damage-based handoff, optional single-slash limbs, randomized missing-part attacks, real wall-angle ricochets, spent/unlocked ink, laser collision and shutdown, dangerous missed charges, four dramatic spike hits, one optional connected arm, pause/render/resize and single victory.');
+ console.log('PASS: damage-based handoff, two separately earned cuts and zero-paper-DPS counter progression, randomized missing-part attacks, real wall-angle ricochets, spent/unlocked ink, laser collision and shutdown, dangerous missed charges, four dramatic spike hits, one optional connected arm, pause/render/resize and single victory.');
 };
 if(require.main===module){const fs=require('fs'),source=fs.readFileSync(require('path').join(__dirname,'validate.cjs'),'utf8'),harness=source.slice(0,source.indexOf('// Retain explicit regression'));module.exports(new Function('require','__dirname',harness+'\nreturn load;')(require,__dirname));}

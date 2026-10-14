@@ -596,7 +596,7 @@ console.log('PASS: active/expired/immune statuses, successful void/healing trigg
 const stored=new Map([['doodleDefenderBestV4','15']]),events={},storage={getItem:k=>stored.get(k)??null,setItem:(k,v)=>stored.set(k,String(v))};let plays=0,pauses=0;
 const audio={currentTime:12,play(){plays++;return {then(fn){fn();return {catch(){}}}}},pause(){pauses++}};
 const env=load(true,{audio,storage,documentEvents:events}),g=env.sandbox.testGame;
-assert.equal(plays,1,'intro attempts autoplay');assert.equal(env.node('gameMusic').loop,true);assert.equal(env.node('gameMusic').volume,.35);
+assert.equal(plays,1,'intro attempts autoplay');assert.equal(env.node('gameMusic').loop,!['pop-quiz-panic','pop-quiz-panic-alt'].includes(g.api.musicStatus().track));assert.equal(env.node('gameMusic').volume,.35);
 env.node('startBtn').onclick();assert.equal(plays,2);assert.equal(g.api.musicStatus().started,true);g.api.startWave();assert.equal(plays,2,'wave changes do not restart music');assert.equal(env.node('gameMusic').currentTime,0);
 env.node('musicBtn').onclick();assert.equal(pauses,2);assert.equal(stored.get('saveStevieMusicMuted'),'yes');env.node('musicBtn').onclick();assert.equal(plays,3);assert.equal(stored.get('saveStevieMusicMuted'),'no');
 env.sandbox.document.hidden=true;events.visibilitychange();assert.equal(pauses,3);env.sandbox.document.hidden=false;events.visibilitychange();assert.equal(plays,4,'returning from background resumes');
@@ -806,7 +806,9 @@ let plays=0;const env=load(true,{audio:{play(){plays++;return Promise.resolve()}
 assert.equal(g.api.musicStatus().track,'splash');assert.equal(plays,1,'splash attempts autoplay');env.node('splashMusicBtn').onclick();assert.equal(g.api.musicStatus().muted,true);env.node('splashMusicBtn').onclick();assert.equal(plays,2);assert.equal(g.api.musicStatus().muted,false);
 env.node('startBtn').onclick();assert.equal(g.api.musicStatus().track,'margin-mischief');assert.equal(plays,3);env.node('gameMusic').currentTime=12;g.state.wave=5;g.api.startWave();assert.equal(env.node('gameMusic').currentTime,12);assert.equal(plays,3);
 for(const [wave,id] of [[6,'pop-quiz-panic'],[11,'crayon-catastrophe'],[16,'final-draft']]){g.state.wave=wave;g.api.startWave();assert.equal(g.api.musicStatus().track,id);assert.equal(env.node('gameMusic').currentTime,0);assert.ok(env.node('gameMusic').src.includes(g.catalog.musicTracks[id].file));assert.ok(fs.statSync(path.join(root,'assets/audio',g.catalog.musicTracks[id].file)).size>1000000)}
-for(const wave of [6,7,8,9,10]){g.state.wave=wave;g.api.startWave();const id=wave%2?'pop-quiz-panic-alt':'pop-quiz-panic';assert.equal(g.api.musicStatus().track,id);assert.ok(env.node('gameMusic').src.includes(g.catalog.musicTracks[id].file));assert.ok(fs.statSync(path.join(root,'assets/audio',g.catalog.musicTracks[id].file)).size>1000000);assert.equal(env.node('gameMusic').loop,true);}
+g.state.wave=6;g.api.startWave();env.node('gameMusic').currentTime=37;
+for(const wave of [6,7,8,9,10]){g.state.wave=wave;g.api.startWave();assert.equal(g.api.musicStatus().track,'pop-quiz-panic');assert.equal(env.node('gameMusic').currentTime,37,'middle-wave changes preserve song position');assert.equal(env.node('gameMusic').loop,false);}
+env.node('gameMusic').listeners.ended();assert.equal(g.api.musicStatus().track,'pop-quiz-panic-alt');env.node('gameMusic').currentTime=52;g.state.wave=9;g.api.startWave();assert.equal(g.api.musicStatus().track,'pop-quiz-panic-alt');assert.equal(env.node('gameMusic').currentTime,52);env.node('gameMusic').listeners.ended();assert.equal(g.api.musicStatus().track,'pop-quiz-panic');
 g.api.selectMusicTrack('wobblechomp');assert.equal(g.api.musicStatus().track,'wobblechomp');g.api.selectMusicTrack('victory');env.node('gameMusic').listeners.ended();assert.equal(g.api.musicStatus().track,'pop-quiz-panic','victory returns to the right middle-wave song');assert.equal(fs.existsSync(path.join(root,'assets/audio/pop-quiz-panic.mp3')),false,'retired chapter track is not packaged');g.state.wave=16;g.api.startWave();
 const count=plays;g.state.wave=21;g.api.startWave();assert.equal(plays,count,'endless keeps final loop');g.api.toggleMusic();g.state.wave=6;g.api.startWave();assert.equal(plays,count,'muted transitions stay muted');assert.equal(g.api.musicStatus().track,'pop-quiz-panic');g.api.toggleMusic();assert.equal(plays,count+1);
 env.sandbox.confirm=()=>true;g.api.resetNotebookProgress();assert.equal(g.api.musicStatus().track,'splash');assert.equal(g.state.running,false);
@@ -1778,10 +1780,10 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
   g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,20,20);if(wave===10){assert.equal(g.api.musicStatus().track,'wobblechomp');assert(env.node('gameMusic').src.includes('wobblechomp-fight.mp3'));assert.equal(env.node('gameMusic').loop,true)}g.api.killEnemy(boss);
   assert.equal(g.api.musicStatus().track,'victory');assert.equal(env.node('gameMusic').loop,false);const count=plays;
   g.api.killEnemy(boss);assert.equal(plays,count,'duplicate kill cannot replay victory');
-  env.node('gameMusic').listeners.ended();assert.equal(g.api.musicStatus().track,g.api.chapterForWave().id);assert.equal(env.node('gameMusic').loop,true);
+  env.node('gameMusic').listeners.ended();assert.equal(g.api.musicStatus().track,g.api.chapterForWave().id);assert.equal(env.node('gameMusic').loop,!['pop-quiz-panic','pop-quiz-panic-alt'].includes(g.api.musicStatus().track));
  }
  g.api.toggleMusic();g.state.wave=5;g.api.startWave();const count=plays;g.api.killEnemy(g.api.spawnEnemy(true,20,20));assert.equal(plays,count,'boss victory respects music mute');
- g.api.toggleMusic();g.state.wave=6;g.api.startWave();assert.equal(g.api.musicStatus().track,'pop-quiz-panic');assert.equal(env.node('gameMusic').loop,true);
+ g.api.toggleMusic();g.state.wave=6;g.api.startWave();assert.equal(g.api.musicStatus().track,'pop-quiz-panic');assert.equal(env.node('gameMusic').loop,!['pop-quiz-panic','pop-quiz-panic-alt'].includes(g.api.musicStatus().track));
  console.log('PASS: every campaign/endless boss plays a one-shot victory, resumes its chapter, respects mute and transitions cleanly to the next wave.');
 }
 

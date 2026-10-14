@@ -118,7 +118,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
   const s=state(e),kind={arm:'punch',leg:'spikes',stalk:'beam'}[part];
   if(s.phase!==1||e.hp<=0||e.freeze>0||e.stun>0||serial!==s.attackSerial||s.counteredSerial===serial||(s.lastAttack!==kind&&s.lastAttack!=='gulp')||s.model[part+'Cuts']>=2)return false;
   stopWobbleAttackSounds();s.counteredSerial=serial;s.attack=null;s.blockStun=3;s.cutWindow={part,left:3};s.model.cutFocus=part;s.model.focusAge=0;s.model.focusSideways=portraitPhone()||game.state.H<600;s.beamWalls=[];s.model.punchAge=s.model.spikeAge=s.model.beamAge=null;s.model.spikes=[];if(s.lastAttack==='gulp'){s.model.teethAge=null;s.model.teethPlan=[];s.model.teeth=[];}s.model.walkBlend=0;s.trapped=0;s.trapProbe=null;
-  game.api.dealDamage(e,e.maxHp*.025,'reflected');game.api.playSound('rock');return true;
+  game.api.dealDamage(e,e.maxHp*.05,'reflected');game.api.playSound('rock');return true;
  }
  function counterWobbleSpike(shot){return shot.cutCounter!=null&&isWobbleBoss(shot.wobbleOwner)&&counter(shot.wobbleOwner,'leg',shot.cutCounter)}
  function fire(e,origin,count=5){
@@ -202,8 +202,8 @@ DoodleDefender.systems.wobbleBoss=function(game){
     for(let i=1;i<points.length;i++)if(game.api.segmentIntersection(points[i-1],points[i],eye,s.beamTip)){if(counter(e,'stalk')){game.api.burst(eye.x,eye.y,'#61aca0',12);return true}}
    }
    const a=frame(e),local=points.map(q=>({x:a.x+(q.x-e.x)/(a.s*a.f),y:a.y+(q.y-e.y)/a.s})),allowed=length>=12?availableParts(s):[];
-   const fallen=s.model.fallenParts.length;for(const name of allowed)s.model[name+'Cuts']=1;
-   if(!rig.cutStroke(s.model,local,game.api.enemyMotionReduced(),allowed,{arm:cutRadius/a.s,leg:cutRadius/a.s,stalk:cutRadius/a.s})){for(const name of allowed)s.model[name+'Cuts']=0;continue;}
+   const fallen=s.model.fallenParts.length;
+   if(!rig.cutStroke(s.model,local,game.api.enemyMotionReduced(),allowed,{arm:cutRadius/a.s,leg:cutRadius/a.s,stalk:cutRadius/a.s})){continue;}
    for(const d of s.model.fallenParts.slice(fallen)){
     const q=world(e,d);let landing=null,score=-Infinity;
     for(let i=0;i<32;i++){const x=35+((i*.618+d.part.length*.17)%1)*Math.max(1,game.state.W-70),y=topMargin()+30+((i*.414+d.part.length*.29)%1)*Math.max(1,game.state.H-topMargin()-90);if(clearance(x,y)<70)continue;const separation=Math.min(250,...s.debris.map(n=>Math.hypot(x-n.landX,y-n.floor))),distance=Math.hypot(x-q.x,y-q.y),value=separation+Math.min(180,distance);if(value>score){score=value;landing={x,y}}}
@@ -212,8 +212,8 @@ DoodleDefender.systems.wobbleBoss=function(game){
    }
    const name=s.model.lastCut;
    s.model.cutFocus=null;s.attack=null;s.gap=.9;s.cutCelebrate=.55;s.beamWalls=[];s.blockStun=0;s.cutWindow=null;s.punchEnd=null;s.trapped=0;s.trapProbe=null;
-   e.hp=Math.max(e.maxHp*.45,e.hp-e.maxHp*.07);
-   game.api.damageNumber(e,e.maxHp*.07,'physical',false);game.api.playSound('wobbleTear');game.api.floatText(e.x,e.y-e.r-18,'DETACHED!','#28796d');
+   game.api.dealDamage(e,e.maxHp*.08,'reflected');
+   game.api.playSound('wobbleTear');game.api.floatText(e.x,e.y-e.r-18,s.model[name+'Cuts']===2?'DETACHED!':'LOOSENED! 1/2','#28796d');
    if(name==='leg'&&s.model.legCuts===2)phaseTwo.siphon(e);
    if(e.hp<=e.maxHp*.45+.01)phaseTwo.begin(e);return true;
   }return false;
@@ -252,7 +252,7 @@ DoodleDefender.systems.wobbleBoss=function(game){
    phaseTwo.drawWell(s);
    const hintY=s.phase===1&&portraitPhone()&&e.y<hintTop()+100?game.state.H-110:hintTop();
    if(s.phase===2){phaseTwo.draw(e,s,hintY);continue}
-   ctx.save();ctx.lineWidth=2;ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillStyle='#385c4a';ctx.fillText('DAMAGE HIM · CUT TO DISARM',game.state.W/2,hintY);ctx.font='bold 11px sans-serif';ctx.fillText('Damage to roll '+Math.min(100,Math.round((1-e.hp/e.maxHp)/.55*100))+'% · Limbs optional',game.state.W/2,hintY+16);
+   ctx.save();ctx.lineWidth=2;ctx.font='bold 12px sans-serif';ctx.textAlign='center';ctx.fillStyle='#385c4a';ctx.fillText('COUNTER → CUT → DAMAGE',game.state.W/2,hintY);ctx.font='bold 11px sans-serif';ctx.fillText('Arm '+s.model.armCuts+'/2 · Foot '+s.model.legCuts+'/2 · Eye '+s.model.stalkCuts+'/2 · Damage '+Math.min(100,Math.round((1-e.hp/e.maxHp)/.55*100))+'%',game.state.W/2,hintY+16);
    ctx.fillStyle='#966425';ctx.fillText(s.cutWindow?'STUNNED · CUT THE '+({arm:'ARM',leg:'FOOT',stalk:'EYE'}[s.cutWindow.part])+' ONCE!':({punch:'BLOCK PUNCH → STUN → CUT ARM',spikes:'BLOCK A FOOT SPIKE → STUN → CUT FOOT',beam:'CROSS LIVE LASER → STUN → CUT EYE',teeth:'TEETH · BLOCK THE WARNED BITES',roll:'ROLL · BLOCK THE SPIKES',gulp:'GULP · ERASE HIS SNACK OR FEED HIM INK'}[s.attack]||'COUNTER AN ATTACK TO OPEN A CUT'),game.state.W/2,hintY+32);
    const progress=game.api.clamp((1-e.hp/e.maxHp)/.55,0,1);ctx.fillStyle='#d6cbb2';ctx.fillRect(game.state.W/2-70,hintY+39,140,6);ctx.fillStyle='#b86538';ctx.fillRect(game.state.W/2-70,hintY+39,140*progress,6);
    if(s.blockStun>0){ctx.strokeStyle='#966425';ctx.lineWidth=2;for(let i=0;i<3;i++){const a=i*Math.PI*2/3+(game.api.enemyMotionReduced()?0:s.model.time*2),x=e.x+Math.cos(a)*23,y=e.y-e.r-14+Math.sin(a)*6;ctx.beginPath();ctx.moveTo(x-4,y);ctx.lineTo(x+4,y);ctx.moveTo(x,y-4);ctx.lineTo(x,y+4);ctx.stroke()}}
