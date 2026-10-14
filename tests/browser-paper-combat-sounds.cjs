@@ -1,0 +1,25 @@
+const {chromium}=require('playwright'),assert=require('assert'),fs=require('fs'),path=require('path');
+const root=path.resolve(__dirname,'..');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+ for(const viewport of [{width:1280,height:900},{width:393,height:851}]){
+  const page=await browser.newPage({viewport}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieLessonsV1',JSON.stringify({draw:true,erase:true}));localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');localStorage.setItem('saveStevieNotebookV1',JSON.stringify({version:2,scraps:100,lifetimeScraps:100,scrapTutorialDone:true,levels:{doodleScraps:1,starterEraser:1}}));});
+  await page.route('http://stevie.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}if(name==='game.js')body=body.toString().replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');return route.fulfill({body,contentType:({'.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.wav':'audio/wav','.mp3':'audio/mpeg','.ttf':'font/ttf'})[path.extname(name)]||'text/html'});});
+  await page.goto('http://stevie.test/',{waitUntil:'domcontentloaded',timeout:60000});await page.waitForFunction(()=>testGame.api.artworkStatus().ready,null,{polling:100,timeout:90000});await page.evaluate(()=>{testGame.api.setFirstLessonsEnabled(false);testGame.api.setMonsterIntrosEnabled(false)});await page.click('#startBtn');
+  await page.evaluate(async()=>{testGame.api.resetRun();testGame.state.spawnTimer=9999;await testGame.api.unlockSoundEffects()});assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().ready),49);assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().failed),0);
+  const events=await page.evaluate(()=>{
+   const g=testGame,a=g.api,kinds=()=>a.soundEffectsSnapshot().voices.map(v=>v.kind);a.resetSoundEffects();g.state.enemies=[];g.state.walls=[];
+   const target=a.spawnEnemy(false,80,180,'grunt');target.hp=target.maxHp=1000;a.throwPaper(target,{x:target.x-1,y:target.y});const crumple=kinds();a.updateProjectiles(.01);const hit=kinds();a.resetSoundEffects();
+   a.createWall([{x:50,y:250},{x:160,y:250}]);const wall=g.state.walls.at(-1);a.resetSoundEffects();a.damageWall(wall,wall.hp+1,80,250);const broken=kinds();a.resetSoundEffects();a.damageStevie(1,'test fort impact',target);const wood=kinds();a.resetSoundEffects();
+   a.throwPaper(target,{x:target.x-30,y:target.y},null,true,{turret:true,turretRange:210});const turret=kinds();a.resetSoundEffects();g.state.projectiles=[];
+   const mainBefore=a.soundEffectsSnapshot().played;a.throwPaper(target,null,null,true);const secondaryQuiet=a.soundEffectsSnapshot().played===mainBefore;
+   g.state.wave=11;const crew=a.spawnEnemy(false,72,160,'catapulter');a.updateCatapulter(crew,.01);crew.catapult.goal={x:crew.x,y:crew.y};a.updateCatapulter(crew,.01);a.syncSoundEffects();const build=kinds();crew.freeze=1;a.syncSoundEffects();const frozen=kinds();crew.freeze=0;a.syncSoundEffects();const resumed=kinds();
+   for(let i=0;i<3;i++){a.resetCatapultEraseStroke();a.eraseCatapults({x:crew.catapult.x,y:crew.catapult.y},{x:crew.catapult.x+1,y:crew.catapult.y},20);}a.syncSoundEffects();const erased=kinds();a.resetSoundEffects();
+   const passenger=a.spawnEnemy(false,crew.x,crew.y,'grunt');Object.assign(crew.catapult,{phase:'aim',passenger,target:{x:g.state.player.x,y:g.state.player.y},left:0});a.updateCatapulter(crew,.01);const launch=kinds();a.resetSoundEffects();
+   g.state.wave=1;a.resetDoodleScraps();const random=Math.random;Math.random=()=>.2;try{a.startDoodleWave();for(let i=0;i<3;i++)a.dropDoodleScrap(target);}finally{Math.random=random;}const note=kinds(),dropped=!!a.doodleScrapsSnapshot().drop;
+   g.state.paused=true;a.syncSoundEffects();return {crumple,hit,broken,wood,turret,secondaryQuiet,build,frozen,resumed,erased,launch,note,dropped,paused:kinds()};
+  });
+  for(const [event,kind] of Object.entries({crumple:'paperCrumple',hit:'paperHit',broken:'wallBreak',wood:'woodImpact',turret:'turretFire',build:'catapultBuild',resumed:'catapultBuild',launch:'woodImpact',note:'doodleAppear'}))assert(events[event].includes(kind),event+' plays supplied clip: '+JSON.stringify(events));
+  assert(events.secondaryQuiet);assert(!events.frozen.includes('catapultBuild'));assert(!events.erased.includes('catapultBuild'));assert(events.dropped);assert.deepEqual(events.paused,[]);assert.deepEqual(errors,[]);await page.close();console.log('PASS: '+viewport.width+'px 49 decoded effects and real crumple/hit/wall-break/fort/turret/catapult/drop events, secondary silence and interrupted assembly');
+ }
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

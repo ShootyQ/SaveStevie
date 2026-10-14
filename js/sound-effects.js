@@ -1,6 +1,13 @@
 /* Gesture-unlocked effects; bounded mixing never consumes gameplay randomness. */
 DoodleDefender.systems.soundEffects=function(game){
 const groups={
+ paperHit:{files:['paper-hit-1','paper-hit-2'],gain:.4,gap:.06,cap:2,priority:2},
+ paperCrumple:{files:['paper-crumple'],gain:.18,gap:.3,cap:1,priority:0,duration:.55},
+ wallBreak:{files:['graphite-break-1','graphite-break-2'],gain:.38,gap:.12,cap:1,priority:3},
+ woodImpact:{files:['wood-impact-1','wood-impact-2'],gain:.35,gap:.16,cap:1,priority:3},
+ catapultBuild:{files:['catapult-build'],gain:.23,gap:0,cap:1,priority:1,loop:true},
+ turretFire:{files:['turret-fire'],gain:.24,gap:.08,cap:2,priority:1},
+ doodleAppear:{files:['doodle-note-appear'],gain:.42,gap:.3,cap:1,priority:3},
  draw:{files:['pen-writing'],gain:.18,gap:0,cap:1,priority:0,loop:true,idle:.14},
  erase:{files:['eraser-rub'],gain:.23,gap:0,cap:1,priority:0,loop:true,idle:.14},
  pencilLift:{files:['pencil-lift'],gain:.32,gap:.08,cap:1,priority:1},
@@ -69,6 +76,7 @@ function syncSoundEffects(){
  if(!combatActive()){for(const v of [...voices])if(v.kind!=='scribble'||!menuActive())stopVoice(v);return}
  for(const v of [...voices])if(groups[v.kind].idle&&context.currentTime-v.lastMotion>groups[v.kind].idle)stopVoice(v);
  if(game.state.enemies.some(e=>e.hp>0&&e.paperTunnel?.phase==='travel'))sustainSound('paperCrawl');else stopSoundEffects('paperCrawl');
+ if(game.state.enemies.some(e=>e.hp>0&&e.type==='catapulter'&&e.catapult?.phase==='build'&&!(e.stun>0||e.freeze>0)&&!e.paperTunnel))sustainSound('catapultBuild');else stopSoundEffects('catapultBuild');
 }
 function resetSoundEffects(){stopSoundEffects();last={}}
 function soundEffectsSnapshot(){return {supported:!!(window.AudioContext||window.webkitAudioContext),unlocked:context?.state==='running',ready,failed,played,dropped,maxVoices,voices:voices.map(v=>({kind:v.kind,name:v.name})),volume:game.api.audioSettings().effectsVolume}}

@@ -293,6 +293,7 @@ function throwPaper(target,origin=null,aim=null,secondary=false,options={}){
  const payload=game.api.paperPayload();if(options.turret){delete payload.range;delete payload.quick;p.turretShot=true;p.damage=Math.max(2,p.damage)*1.5;p.turretRange=options.turretRange||210;p.life=p.turretRange/p.speed+.3;}if(Object.keys(payload).length){p.doodlePayload=payload;p.life=Math.max(1.2,(p.turretShot?p.turretRange:game.api.paperRange(payload))/290+.3);}
  if(aim){p.manual=true;p.target=null;p.vx=aim.x*p.speed;p.vy=aim.y*p.speed;p.life=game.api.paperRange()/p.speed;}
  game.api.initPaperTricks(p);game.state.projectiles.push(p);
+ if(options.turret)game.api.playSound('turretFire');else if(!secondary)game.api.playSound('paperCrumple');
  if(!secondary){game.api.startStevieThrow(target||{x:player.x+aim.x*100,y:player.y+aim.y*100});game.api.secondDraft(target);}
  return p;
 }
@@ -303,7 +304,7 @@ function updateStevie(dt){
  if(game.state.player.rockCd<=0){const aim=game.api.throwAim(),e=game.api.nearestEnemy(game.state.player.x,game.state.player.y,game.api.paperRange());if((aim||e)&&throwPaper(e,null,aim))game.state.player.rockCd=game.api.paperThrowInterval();}
 }
 function hitPaper(p,e){
-  game.api.playSound('rock');game.api.dealDamage(e,p.damage,'physical',{rock:true});
+  game.api.playSound('paperHit');game.api.dealDamage(e,p.damage,'physical',{rock:true});
   game.api.widenRailSurge(e,p);
   if(!game.api.underPaper(e)&&!game.api.abilityImmune(e)){
    if(game.state.synergies.has('Hot Rocks')){e.burn=Math.max(e.burn,2);e.burnDps=Math.max(e.burnDps,8+game.state.inks.fire*3);}
@@ -822,7 +823,7 @@ function moveEnemySafely(e,dx,dy){
 function damageStevie(damage,source,impact=game.state.player){
   if(game.state.player.hp<=0)return;
   game.state.player.hp=Math.max(0,game.state.player.hp-damage);
-  if(damage>0){game.api.breakScoreStreak();game.api.reactStevieHit();game.api.refugeImpact(impact)}
+  if(damage>0){game.api.playSound('woodImpact');game.api.breakScoreStreak();game.api.reactStevieHit();game.api.refugeImpact(impact)}
   game.state.floaters.push({hitMarker:true,x:impact.x,y:impact.y,r:impact.r||5,type:impact.type||'arrow',t:.9,source,amount:damage});
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }

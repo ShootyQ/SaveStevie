@@ -89,3 +89,26 @@ mode switches, cancellation, pause, or 0.14 seconds without movement. Crawling
 uses one shared quiet voice rather than one per hidden monster. Tears and pops
 rotate without consuming gameplay randomness. Existing six-voice limits,
 priority mixing, effects volume, visibility and run-reset handling apply.
+
+## Paper combat and construction (Alpha 0.1.77)
+
+Another ten supplied WAVs use descriptive names and mono 24 kHz PCM:
+
+| Runtime file | Supplied file | Trigger |
+| --- | --- | --- |
+| `paper-hit-1.wav` | paperhittingcreature1 | Paper ball hits a monster |
+| `paper-hit-2.wav` | paperhittingcreate2 | Alternate paper-ball hit |
+| `paper-crumple.wav` | crumplingpaperstevie | Stevie's main throw (quiet 0.55-second grain) |
+| `graphite-break-1.wav` | graphite_breaking_in_#3 | Drawn wall destroyed by damage or ricochet charge |
+| `graphite-break-2.wav` | graphite_breaking_in_#1 | Alternate wall break |
+| `wood-impact-1.wav` | wooden_knocking_nois_#2 | Fort hit or catapult launch |
+| `wood-impact-2.wav` | wooden_tapping_#4 | Alternate wooden impact |
+| `catapult-build.wav` | catapultbeingassumbled | Active catapult construction |
+| `turret-fire.wav` | paper_turret_firing__#1 | Successful turret shot |
+| `doodle-note-appear.wav` | doodlescrap appears | Doodle Note actually drops |
+
+Hit/break/wood variants rotate without gameplay randomness. Extra split/copy
+throws skip crumpling; turret shots use their own sound. Assembly is a single
+shared voice while any living, unstunned catapulter is building, stopping when
+construction ends, is erased, or is interrupted. Pause, visibility, volume,
+reset, priorities and six-voice limits continue to apply.
