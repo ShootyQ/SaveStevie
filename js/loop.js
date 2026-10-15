@@ -1,6 +1,7 @@
 /* loop: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.loop = function createLoopSystem(game) {
 function update(dt){
+  if(game.api.windowFocusBlocked?.()){game.api.stopSoundEffects();return;}
   game.api.updateStevieGuides();
   game.api.syncSoundEffects();game.api.updateMenuPencil(dt);
   if(game.api.wobbleRepairActive()){game.api.updateWobbleRepair(dt);return;}

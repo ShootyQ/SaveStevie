@@ -37,7 +37,7 @@ function renderDevMode(){
   game.dom.$('devRunBanner').hidden=!testRun;
 }
 function renderOptions(){
-  renderDevMode();
+  renderDevMode();game.api.renderControlBindings?.();
   game.dom.$('eraserSize').value=controls.eraserSize;game.dom.$('eraserToggle').checked=controls.eraserToggle;game.dom.$('eraserLeft').checked=controls.eraserLeft;
   for(const [name,id] of [['musicVolume','musicVolume'],['effectsVolume','effectsVolume']]){
     game.dom.$(id).value=Math.round(preferences[name]*100);game.dom.$(id+'Value').textContent=Math.round(preferences[name]*100)+'%';

@@ -60,12 +60,22 @@ function renderMonsterCards(entries){
       <div class="monster-card-heading">${m.type==='wobblechomp'?`<span class="wobble-portrait"><img src="assets/art/wobblechomp-parts.png${query}" alt="Wobblechomp" width="288" height="192" loading="lazy"></span>`:`<img src="assets/art/${m.type}.png${query}" alt="${m.role}" width="96" height="96" loading="lazy">`}<div><span class="monster-wave">${m.type==='mini'?'Children from wave': 'First wave'} ${m.wave}</span><h3>${m.name}</h3><span class="monster-role">${m.role}</span></div></div>
       <p class="monster-flavor">“${m.flavor}”</p>
       <dl class="monster-stats"><div><dt>Base HP</dt><dd>${hp}</dd></div><div><dt>Base speed</dt><dd>${d.speed} px/s</dd></div><div><dt>${m.type==='wobblechomp'?'Warned punch':m.type==='wobble-tooth'?'Warned bite':'Contact hit'}</dt><dd>${d.dmg}</dd></div></dl>
-      <p><b>Watch out:</b> ${m.ability}</p><p class="monster-tip"><b>Notebook tip:</b> ${m.tip}</p>
+      <p><b>Watch out:</b> ${m.ability}</p><p class="monster-tip"><b>Notebook tip:</b> ${game.api.desktopUiEnabled?.()?m.tip.replace('right-drag',game.api.controlLabel('erase')+' drag'):m.tip}</p>
     </article>`;
   }).join('');
 }
+let selectedMonster=null;
+function focusMonsterSelection(){const button=game.dom.$('monsterBrowserList').querySelector?.('[aria-pressed="true"]');button?.focus?.({preventScroll:true});button?.scrollIntoView?.({block:'nearest'});}
+function renderMonsterBrowser(){
+ const query=String(game.dom.$('monsterBrowserSearch').value||'').toLocaleLowerCase(),entries=monsters.filter(m=>knownMonsters.has(m.type)&&(m.name+' '+m.role).toLocaleLowerCase().includes(query)).sort((a,b)=>a.wave-b.wave);
+ if(!entries.some(m=>m.type===selectedMonster))selectedMonster=entries[0]?.type||null;
+ const list=game.dom.$('monsterBrowserList');list.innerHTML='';
+ for(const m of entries){const button=document.createElement('button');button.type='button';button.textContent=m.name+' · '+m.wave;button.setAttribute?.('aria-pressed',String(m.type===selectedMonster));button.onclick=()=>{selectedMonster=m.type;renderMonsterBrowser();focusMonsterSelection();};button.onkeydown=e=>{const i=entries.indexOf(m),step={ArrowDown:1,ArrowUp:-1}[e.key];if(step||e.key==='Home'||e.key==='End'){e.preventDefault();selectedMonster=entries[e.key==='Home'?0:e.key==='End'?entries.length-1:(i+step+entries.length)%entries.length].type;renderMonsterBrowser();focusMonsterSelection();}};list.appendChild(button);}
+ game.dom.$('monsterBrowserDetail').innerHTML=selectedMonster?renderMonsterCards(entries.filter(m=>m.type===selectedMonster)):'<p class="option-help">'+(knownMonsters.size?'No matching monsters. Try another name.':'Meet monsters in a normal run to fill this page.')+'</p>';game.dom.$('monsterBrowserDetail').scrollTop=0;
+}
 function renderCompendium(){
   game.dom.$('monsterIntrosEnabled').checked=enabled;
+  const desktop=!!game.api.desktopUiEnabled?.();game.dom.$('desktopMonsterBrowser').hidden=!desktop;game.dom.$('monsterCards').hidden=desktop;if(desktop)renderMonsterBrowser();
   game.dom.$('monsterCards').innerHTML=renderMonsterCards(monsters.filter(m=>knownMonsters.has(m.type)).sort((a,b)=>a.wave-b.wave));
   game.dom.$('monsterDiscoveryNote').textContent=knownMonsters.size?'Discovered '+knownMonsters.size+' / '+monsters.length+' · Keep exploring the notebook.':'Meet monsters during a run to add their notes here.';
 }
@@ -84,6 +94,7 @@ function continueMonsterIntro(){
   if(game.dom.$('hideMonsterIntros').checked)setMonsterIntrosEnabled(false);
   game.api.closeInfo();
 }
-const api={adoptDiscoveryBackup:types=>{knownMonsters.clear();for(const type of types)knownMonsters.add(type)},discoverMonster,discoveredMonsterTypes,monsterName,monsterIntrosEnabled,setMonsterIntrosEnabled,renderMonsterCards,renderCompendium,introduceWave,continueMonsterIntro};
+game.dom.$('monsterBrowserSearch').oninput=renderMonsterBrowser;
+const api={renderMonsterBrowser,adoptDiscoveryBackup:types=>{knownMonsters.clear();for(const type of types)knownMonsters.add(type)},discoverMonster,discoveredMonsterTypes,monsterName,monsterIntrosEnabled,setMonsterIntrosEnabled,renderMonsterCards,renderCompendium,introduceWave,continueMonsterIntro};
 Object.assign(game.api,api);return api;
 };
