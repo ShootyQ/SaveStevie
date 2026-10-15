@@ -213,6 +213,7 @@ const profileDirections={catapulter:1,wallpuller:1,papertearer:1,scrubber:1,fast
 function enemyFacing(e){
   if(e.type==='catapulter'&&e.catapult&&['build','ready','aim'].includes(e.catapult.phase))return e.catapult.x>=e.x?1:-1;
   const m=enemyMotion.get(e);
+  if(e.type==='wallpuller'&&e.crew?.anchor&&['hook','pull','windup'].includes(e.crew.phase))return e.crew.anchor.x>=e.x?1:-1;
   if(e.type==='sniper'&&(m?.action==='fire'&&m.actionAge<.3||e.shootCd<=.6&&game.api.sniperCanAim(e)))return game.state.player.x<e.x?-1:1;
   if(m?.actionAge<.3&&['bite','slam'].includes(m.action))return m.actionFacing;
   return m?.facing??(game.state.player.x<e.x?-1:1);
@@ -226,6 +227,7 @@ function updateEnemyAnimations(dt){
     m.x=e.x;m.y=e.y;m.hitAge+=dt;m.birthAge+=dt;m.actionAge+=dt;
     if(motionReduced)continue;
     const moving=distance>.001&&e.freeze<=0&&e.stun<=0;
+    if(e.type==='wallpuller'&&moving)m.walkAge+=dt;
     if(e.type==='grunt'&&e.freeze<=0&&e.stun<=0){
       if(moving)m.walkAge+=dt;
       m.gruntFrame=m.action==='bite'&&m.actionAge<.42?8+Math.min(7,Math.floor(m.actionAge/.42*8)):moving?Math.floor(m.walkAge*12)%8:0;
@@ -267,7 +269,7 @@ function updateEnemyAnimations(dt){
       }else if(e.type==='medic'&&m.action==='heal'&&m.actionAge<.1)m.sprite=motionTime% .6<.3?'medic-ready':'medic-heal';
     }
     m.cue=null;m.cueProgress=0;
-    if(e.crew&&!motionReduced&&e.freeze<=0&&e.stun<=0){const c=e.crew;if(c.phase==='hook'||c.phase==='pull'){p.angle-=m.facing*(c.phase==='pull'?.2:.1);p.sx+=.08;p.sy-=.08;}else if(c.phase==='tear'){p.y+=4;p.sy-=.14;p.sx+=.12;}else if(c.phase==='bomb')p.angle-=m.facing*.18;}
+    if(e.type!=='wallpuller'&&e.crew&&!motionReduced&&e.freeze<=0&&e.stun<=0){const c=e.crew;if(c.phase==='hook'||c.phase==='pull'){p.angle-=m.facing*(c.phase==='pull'?.2:.1);p.sx+=.08;p.sy-=.08;}else if(c.phase==='tear'){p.y+=4;p.sy-=.14;p.sx+=.12;}else if(c.phase==='bomb')p.angle-=m.facing*.18;}
     if(e.eraseStumble>0&&e.freeze<=0&&!motionReduced){const skid=game.api.clamp(e.eraseStumble/1.4,0,1);p.angle+=m.facing*.7*skid;p.y+=4*skid;p.sx+=.15*skid;p.sy-=.15*skid;}
     const crayon=game.api.crayonBossPose(e);if(crayon){Object.assign(p,crayon);m.cue='summon';continue;}
     const thermal=game.api.thermalShockPose(e);if(thermal){Object.assign(p,thermal);m.cue=null;continue;}
@@ -417,6 +419,7 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
+  if(e.type==='wallpuller'){const p=game.api.yankPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
   if(e.type==='catapulter'){const p=game.api.catapulterPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
   // Squash around the feet so hit reactions remain small and planted.
   // Seat the passenger's feet in the spoon; blend back to normal flight art.

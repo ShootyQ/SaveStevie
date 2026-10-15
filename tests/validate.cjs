@@ -2498,6 +2498,7 @@ require('./black-ice.cjs')(load);
 require('./backdraft.cjs')(load);
 require('./iceberg.cjs')(load);
 require('./tesla.cjs')(load);
+require('./yank-doodle.cjs')(load);
 require('./thermal-shock.cjs')(load);
 require('./rail-ink.cjs')(load);
 require('./smarter-convoys.cjs')(load);
