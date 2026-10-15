@@ -1,0 +1,16 @@
+const assert=require('assert');
+module.exports=load=>{
+ const env=load(true),g=env.sandbox.testGame;g.api.resetRun({skipIntro:true});g.state.enemies=[];g.state.spawnTimer=9999;g.state.timeLeft=300;g.state.W=800;g.state.H=700;g.state.player.x=400;g.state.player.y=350;
+ const rub=(a,b,time=1)=>{for(let i=0;i<Math.round(time/.05);i++){g.api.queuePaperRub(a,b,20);g.api.updatePaper(.05);}};
+ rub({x:100,y:180},{x:110,y:180});rub({x:210,y:180},{x:220,y:180});assert.equal(g.state.paper.holes.length,2);assert(!g.api.surfaceHoleAt(160,180),'bridge initially intact');
+ rub({x:115,y:180},{x:205,y:180},1.2);assert(g.api.surfaceHoleAt(160,180),'actual rubbed bridge opens');assert.equal(g.state.paper.holes.length,1,'connected openings merge');assert.equal(g.api.paperSurfaceSnapshot().contours,1,'joining removes every interior seam');const h=g.state.paper.holes[0];assert(g.api.paperHoleContains(h,{x:100,y:180}));assert(g.api.paperHoleContains(h,{x:210,y:180}));
+ const e=g.api.spawnEnemy(false,100,180,'grunt');const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>0;assert.equal(g.api.updatePaperEnemy(e,.01),false,'one joined tear cannot be two tunnel portals');env.sandbox.Math.random=random;
+ const edges=g.api.paperSurfaceSnapshot().edges;rub({x:160,y:190},{x:160,y:250},1);assert(g.api.surfaceHoleAt(160,235));assert(!g.api.surfaceHoleAt(205,235),'L-shaped footprint leaves untouched paper');assert.equal(g.state.paper.holes.length,1);assert(g.api.paperSurfaceSnapshot().edges>edges);
+ const snapshot=JSON.stringify(g.state),surface=JSON.stringify(g.api.paperSurfaceSnapshot());env.sandbox.Math.random=()=>{throw Error('surface render cannot consume gameplay RNG')};g.api.drawPaper();g.api.drawPaper();env.sandbox.Math.random=random;assert.equal(JSON.stringify(g.state),snapshot);assert.equal(JSON.stringify(g.api.paperSurfaceSnapshot()),surface);
+ const revision=g.api.paperSurfaceSnapshot().revision;g.state.paused=true;rub({x:100,y:180},{x:300,y:180},2);assert.equal(g.api.paperSurfaceSnapshot().revision,revision);g.state.paused=false;
+ g.api.movePaper(20,10);assert(g.api.surfaceHoleAt(180,190));assert(!g.api.surfaceHoleAt(100,170));const counts=g.api.paperSurfaceSnapshot().open;g.api.updatePaper(10);assert.equal(g.api.paperSurfaceSnapshot().open,counts,'tears never spread without rubbing');
+ g.api.resetRun({skipIntro:true});assert.equal(g.api.paperSurfaceSnapshot().cells,0);assert.equal(g.state.paper.holes.length,0);
+ rub({x:80,y:160},{x:240,y:160},2.1);rub({x:240,y:160},{x:240,y:300},2);rub({x:240,y:300},{x:80,y:300},2.1);rub({x:80,y:300},{x:80,y:160},2);assert.equal(g.state.paper.holes.length,1);assert.equal(g.api.paperSurfaceSnapshot().contours,2,'ring preserves its inner paper island');assert(!g.api.surfaceHoleAt(160,230));g.api.resetRun({skipIntro:true});
+ const first=g.api.addPaperHole({x:100,y:180}),second=g.api.addPaperHole({x:135,y:180});assert(first&&second);assert.equal(g.state.paper.holes.length,1,'hardhat tears share the same union geometry');assert(g.api.surfaceHoleAt(120,180));
+ console.log('PASS: continuous wear, bridge removal/region merge, irregular footprint, same-region shortcut exclusion, pure RNG-free cached rendering, pause/resize/no spread/reset and shared hardhat geometry.');
+};
