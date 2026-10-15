@@ -187,11 +187,11 @@ function openInfo(kind){
   if(kind==='statistics')game.api.renderStatistics();
   game.dom.$(kind+'Overlay').style.display='grid';game.api.updateScoreHUD();
   if(kind==='betaScraps')game.api.openBetaTreeView();
-  game.api.syncScrapTutorial();
   game.dom.$(infoButtons[kind]).focus?.({preventScroll:true});
   const cards=game.dom.$(kind+'Overlay').querySelector?.('.build-box');
   if(cards)cards.scrollTop=0;
   if(kind==='monsterIntro')game.dom.$('monsterIntroCards').scrollTop=0;
+  game.api.prepareDesktopPages?.(kind);game.api.syncScrapTutorial();
   game.api.updateStevieGuides?.();
 }
 function closeInfo(back=true){

@@ -1379,3 +1379,23 @@ html.native-app #bossOvertime{top:8px}
 #optionsOverlay .options-book{min-width:0}
 .desktop-display-fields label,.desktop-display-fields select{min-width:0}
 @media(max-width:640px){.desktop-display-fields{grid-template-columns:1fr}}
+/* Mouse/keyboard desktops get the whole paper, not a phone control strip. */
+html.desktop-ui body{padding:6px}
+html.desktop-ui #app{width:100%;max-width:none;height:calc(100dvh - 12px);max-height:none;gap:5px}
+html.desktop-ui .bottom{display:none!important}
+html.desktop-ui .desktop-book{height:calc(100dvh - 24px);max-height:calc(100dvh - 24px);overflow:hidden!important;display:flex;flex-direction:column;min-height:0}
+.desktop-page-root{display:flex;flex-direction:column;flex:1;min-height:0}
+.desktop-page-stage{flex:1;min-height:0;overflow:hidden}
+.desktop-page-content{display:flow-root}
+[data-desktop-page-hidden]{display:none!important}
+.desktop-page-nav{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-shrink:0;padding:8px 0 0;color:#355568}
+.desktop-page-nav[hidden]{display:none!important}
+.desktop-page-nav button{min-height:40px;margin:0;font-family:'Stevie Pencil',cursive;font-size:20px}
+html.desktop-ui .desktop-book .build-heading{flex-shrink:0;position:relative}
+html.desktop-ui .desktop-book .notebook-sheet,html.desktop-ui .desktop-book .recess-page{min-height:0}
+/* The scrap spotlight is visual; it must never swallow the real purchase click. */
+#scrapCoach .coach-shade{pointer-events:none}
+html.desktop-ui .desktop-book #monsterIntroCards,html.desktop-ui .desktop-book #doodleCurrent{overflow:visible;max-height:none}
+.desktop-control-hint{display:none}
+html.desktop-ui .desktop-control-hint{display:block;position:absolute;right:12px;bottom:8px;z-index:2;font:13px 'Stevie Pencil',cursive;color:#536266;background:#fff8e4d9;padding:3px 7px;pointer-events:none}
+.menu-view .desktop-control-hint{display:none!important}
