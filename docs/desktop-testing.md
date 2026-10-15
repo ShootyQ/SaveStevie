@@ -46,3 +46,11 @@ Install Node 24 and run `npm ci` in the repository. Electron downloads its runti
 Downloads are written to `_desktop/clients/`. Only the generated static site and small desktop shell are packaged; repository sources, Android files, tests, developer dependencies and Git history are excluded. Electron's own runtime licenses remain bundled. Packaging produces SHA-256 files next to each ZIP.
 
 For packaging-only CI, `ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci` avoids downloading the development Electron binary; the packager fetches the pinned runtime it needs separately. Native Windows/macOS behavior still needs a test on those systems. In a proxy-based cloud workspace using Node 24, set `NODE_USE_ENV_PROXY=1` for runtime downloads; keep checksum verification enabled.
+
+## Reward picks, HUD and run results (Alpha 0.1.94)
+
+Desktop rewards show every offered card alongside a fixed detail panel. Click or press 1–4 to inspect; Enter confirms. Reroll clears the old selection, held keys cannot buy repeatedly, and full effect slots still require a separate replacement choice. Tab stays inside the reward screen. Phone rewards retain tap-to-inspect and confirm.
+
+The desktop playfield hides upgrade badges and ink tags; Build in the HUD, or B during play, opens the complete paused reference, including a dedicated Doodle Scraps collection. Ink, HP, wave/time, score and the Freehand meter remain available.
+
+Death and victory show the existing score ledger, final hit where known, build highlights, synergies and new-record/practice status. Legendary walls and equipped effects take priority in highlights. Results never award points or progress. Main-menu/restart actions stay outside the scrollable summary; victory retains Endless continuation, and test runs retain same-build restart.

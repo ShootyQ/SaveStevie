@@ -22,6 +22,7 @@
         <div class="barlabel">W<span id="liveWave">1</span><span id="waveCountdown"> · <span id="timeText">60</span>s</span></div>
         <div id="timeBar" class="bar"></div>
       </div>
+      <button id="quickBuildBtn" class="desktop-run-build" hidden title="Inspect your pencil, upgrades, synergies and Doodle Scraps (B)">Build <kbd>B</kbd></button>
     </div>
   <div class="panel">
     <div id="chapterPaper" aria-hidden="true"></div>
@@ -82,7 +83,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.93</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.94</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -155,38 +156,33 @@
       </div>
     </div>
 
-    <div class="overlay" id="victoryOverlay" style="display:none">
-      <div class="cardbox startbox wave-clear-book">
-        <h2>STEVIE SURVIVED THE NOTEBOOK</h2>
-        <p>You defeated The Eraser. This is, somehow, Stevie's greatest accomplishment.</p>
-        <div class="bigscore"><span id="victoryScore">0</span></div><details class="score-details"><summary>Where your points came from</summary><div id="victoryScorecard"></div></details>
-        <p class="scrap-summary">Earned <b id="victoryRunScraps">0</b> scraps this run · Bank: <b id="victoryBankScraps">0</b></p>
+    <div class="overlay" id="victoryOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="victoryResultTitle">
+      <div class="cardbox startbox run-results">
+        <header class="result-heading"><div><span class="section-kicker">NOTEBOOK RESCUED</span><h2 id="victoryResultTitle">Stevie made it!</h2><p>The notebook is safe. Somehow.</p></div><div class="bigscore"><small>FINAL SCORE</small><span id="victoryScore">0</span><strong id="victoryRecordBadge" class="result-record" hidden></strong></div></header>
+        <p id="victoryRunNote" class="result-cause">You defeated The Eraser. Keep going, or take your victory lap.</p>
+        <div class="result-body"><section class="result-score"><h3>Scorecard</h3><div id="victoryScorecard"></div><div class="result-facts" id="victoryRunFacts"></div><p class="scrap-summary">Kept <b id="victoryRunScraps">0</b> scraps this run · Bank: <b id="victoryBankScraps">0</b></p></section>
+        <section class="result-build"><div class="result-build-heading"><h3>Your build highlights</h3><button class="secondary" id="victoryInspectBuild">Inspect build</button></div><div class="result-highlights" id="victoryHighlights"></div><p class="result-synergies" id="victorySynergies"></p>
         <aside class="stevie-note" aria-label="A note from Stevie">
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
           <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="victoryNoteHeading"></h3><p id="victoryNoteMessage"></p><small id="victoryNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
         </aside>
-      <button class="secondary paper-slip" id="victoryRestartTestBtn" hidden>Restart test · same build ↻</button>
-        <button class="secondary" id="victoryMenuBtn">Return to main menu</button>
-        <div class="cardactions">
-          <button id="endlessBtn">Continue Endless Mode</button>
-          <button class="secondary" id="newRunBtn">New Run</button>
-        </div>
+        </section></div>
+        <footer class="result-actions"><button class="secondary paper-slip" id="victoryRestartTestBtn" hidden>Restart test · same build ↻</button><button class="secondary" id="victoryMenuBtn">Main menu</button><button class="secondary" id="newRunBtn">Start a new run</button><button id="endlessBtn">Continue Endless Mode</button></footer>
       </div>
     </div>
 
-    <div class="overlay" id="gameOverOverlay" style="display:none">
-      <div class="cardbox startbox">
-        <h2>They Got Stevie.</h2>
-        <p>You reached wave <b id="finalWave">1</b> with <b id="finalKills">0</b> kills.</p>
-        <p id="lastHitText"></p>
-        <div class="bigscore"><span id="finalScore">0</span></div><details class="score-details"><summary>Where your points came from</summary><div id="deathScorecard"></div></details>
-        <p class="scrap-summary">Kept <b id="deathRunScraps">0</b> scraps from this run · Bank: <b id="deathBankScraps">0</b></p>
+    <div class="overlay" id="gameOverOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="deathResultTitle">
+      <div class="cardbox startbox run-results">
+        <header class="result-heading"><div><span class="section-kicker">THE END OF THIS ATTEMPT</span><h2 id="deathResultTitle">They got Stevie.</h2><p>Wave <b id="finalWave">1</b> · <b id="finalKills">0</b> monsters defeated</p></div><div class="bigscore"><small>FINAL SCORE</small><span id="finalScore">0</span><strong id="deathRecordBadge" class="result-record" hidden></strong></div></header>
+        <p id="lastHitText" class="result-cause"></p>
+        <div class="result-body"><section class="result-score"><h3>Scorecard</h3><div id="deathScorecard"></div><div class="result-facts" id="deathRunFacts"></div><p class="scrap-summary">Kept <b id="deathRunScraps">0</b> scraps this run · Bank: <b id="deathBankScraps">0</b></p></section>
+        <section class="result-build"><div class="result-build-heading"><h3>Your build highlights</h3><button class="secondary" id="deathInspectBuild">Inspect build</button></div><div class="result-highlights" id="deathHighlights"></div><p class="result-synergies" id="deathSynergies"></p>
         <aside class="stevie-note" aria-label="A note from Stevie">
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
           <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="deathNoteHeading"></h3><p id="deathNoteMessage"></p><small id="deathNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
         </aside>
-      <button class="secondary paper-slip" id="deathRestartTestBtn" hidden>Restart test · same build ↻</button>
-        <div class="cardactions"><button id="againBtn">Return to main menu</button><button class="secondary" id="deathNewRunBtn">Start a new run</button></div>
+        </section></div>
+        <footer class="result-actions"><button class="secondary paper-slip" id="deathRestartTestBtn" hidden>Restart test · same build ↻</button><button class="secondary" id="againBtn">Main menu</button><button id="deathNewRunBtn">Start a new run</button></footer>
       </div>
     </div>
 <div id="doodleOverlay" class="overlay build-overlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="doodleTitle"><div class="cardbox build-box doodle-choice-box"><div class="lesson-heading"><img src="assets/art/stevie-cheer-a.png" alt="Stevie" width="64" height="68"><div><span class="section-kicker">Doodle Scraps · game paused</span><h2 id="doodleTitle" tabindex="-1">Ooh! What’s on this paper?</h2></div></div><p id="doodleCurrent"></p><div class="doodle-choice-grid"><article><button id="doodleChoice0"></button><p id="doodleDescription0"></p></article><article><button id="doodleChoice1"></button><p id="doodleDescription1"></p></article></div><button id="doodleKeep" class="secondary">Skip this scrap</button></div></div>
@@ -224,6 +220,7 @@
     <h3>Luck &amp; rewards</h3><p id="buildLuck" class="build-luck"></p>
     <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
     <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
+    <h3>Doodle Scraps</h3><div id="buildDoodleScraps" class="build-upgrades"></div>
     <h3>Monster notes</h3><p>Open Monster notes from Pause or My notebook for the full illustrated compendium.</p>
   </div>
 </div>
@@ -424,6 +421,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.94 · Pick, play, see how it went</h3><p>PC rewards keep every choice visible beside a fixed details panel: 1–4 inspect, Enter confirms. A compact Build button and B shortcut replace playfield upgrade badges. New run-results screens show the score breakdown, final hit, build highlights and record status, with restart/menu actions always within reach. Phone rewards retain touch selection, and phone results keep their actions pinned.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.93 · Menus with room to breathe</h3><p>PC My Notebook is a single roomy menu. Settings uses direct Sound, Controls, Display, Notebook, Saves and Test categories instead of Next/Previous pages. Desktop controls have a keyboard/mouse reference, test setup separates the encounter and starting build, and long notebook lists fit multiple items per page. Phone menus retain their touch controls and layout.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.92 · A very suspicious little ghost</h3><p>Ash Impostor now has custom singed paper-ghost artwork, smoky horns and glowing ember eyes. It pops out of the ash, floats and flutters, then fades back into embers. Reduced motion keeps the ghost steady.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.91 · Let the cannon stand alone</h3><p>Once a circle becomes a paper turret, its drawn outline and circular timer disappear, leaving just the paper cannon.</p></article>
@@ -738,6 +736,7 @@
 <script src="js/music.js"></script>
 <script src="js/chapters.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/run-results.js"></script>
 <script src="js/notebook.js"></script>
 <script src="js/monsters.js"></script>
 <script src="js/waves.js"></script>

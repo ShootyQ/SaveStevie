@@ -81,6 +81,8 @@ window.visualViewport?.addEventListener('resize',game.api.resize);
 document.addEventListener?.('fullscreenchange',()=>{game.api.resize();updateScreenButton()});
 game.dom.$('fullscreenBtn').onclick=toggleScreen;updateScreenButton();
 game.dom.$('inspectToolBtn').onclick=game.api.openBuild;
+for(const id of ['quickBuildBtn','deathInspectBuild','victoryInspectBuild'])game.dom.$(id).onclick=game.api.openBuild;
+window.addEventListener('keydown',e=>{if(game.api.desktopUiEnabled?.()&&e.key?.toLowerCase()==='b'&&!e.repeat&&!e.ctrlKey&&!e.altKey&&!e.metaKey&&!e.target?.isContentEditable&&!['INPUT','TEXTAREA','SELECT'].includes(e.target?.tagName)&&game.state.running&&!game.state.paused&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec&&!game.api.infoOpen()){e.preventDefault();game.api.openBuild();}});
 for(const id of ['splashOptionsBtn'])game.dom.$(id).onclick=game.api.openOptions;
 game.dom.$('closeOptionsBtn').onclick=game.api.closeOptions;
 for(const id of ['optionsStatsBtn'])game.dom.$(id).onclick=game.api.openStatistics;
@@ -144,7 +146,7 @@ syncDrawingControls();
 game.dom.$('startBtn').onclick=startRun;
 game.dom.$('againBtn').onclick=game.api.returnToMenu;
 game.dom.$('deathNewRunBtn').onclick=()=>startRun({fromEnd:true});
-game.dom.$('newRunBtn').onclick=startRun;
+game.dom.$('newRunBtn').onclick=()=>startRun({fromEnd:true});
 game.dom.$('continueBtn').onclick=game.api.proceedAfterWave;
 game.dom.$('rerollBtn').onclick=game.api.reroll;
 game.dom.$('endlessBtn').onclick=()=>{

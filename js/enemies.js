@@ -825,7 +825,7 @@ function moveEnemySafely(e,dx,dy){
 function damageStevie(damage,source,impact=game.state.player){
   if(game.state.player.hp<=0)return;
   game.state.player.hp=Math.max(0,game.state.player.hp-damage);
-  if(damage>0){game.api.playSound('woodImpact');game.api.breakScoreStreak();game.api.reactStevieHit();game.api.refugeImpact(impact)}
+  if(damage>0){game.state.lastDamage={source,amount:damage,fatal:game.state.player.hp<=0};game.api.playSound('woodImpact');game.api.breakScoreStreak();game.api.reactStevieHit();game.api.refugeImpact(impact)}
   game.state.floaters.push({hitMarker:true,x:impact.x,y:impact.y,r:impact.r||5,type:impact.type||'arrow',t:.9,source,amount:damage});
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }
