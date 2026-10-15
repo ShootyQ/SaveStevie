@@ -1,12 +1,13 @@
 /* Plaguefire ground hazards. Combat advances in update; drawing is read-only. */
 DoodleDefender.systems.plaguefire = function createPlaguefire(game) {
-const settings=game.catalog.plaguefireSettings={life:10,startRadius:9,maxRadius:38,maxPatches:12,maxScars:24};
+const settings=game.catalog.plaguefireSettings={life:10,startRadius:9,maxRadius:38,maxPatches:12,maxScars:512};
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let reduced=!!preference?.matches,patches=[],scars=[],serial=0,scarRevision=0,deskLayer=null,deskKey=null;
 const outlines=new WeakMap();
 preference?.addEventListener?.('change',event=>{reduced=event.matches});
 function radius(p,age=p.age){return settings.startRadius+(settings.maxRadius-settings.startRadius)*Math.min(1,age/p.life)}
-function resetPlaguefire(){patches=[];scars=[];serial=0;scarRevision++;deskLayer=null;deskKey=null}
+function retainScar(p,r){if(scars.length>=settings.maxScars)scars.shift();scars.push({x:p.x,y:p.y,r,seed:p.seed});scarRevision++;}
+function resetPlaguefire(options={}){if(options.preserveScars){for(const p of patches)retainScar(p,radius(p));patches=[];return;}patches=[];scars=[];serial=0;scarRevision++;deskLayer=null;deskKey=null}
 function dropPlaguefire(enemy){
   if(!game.state.synergies.has('Plaguefire')||enemy.burn<=0||enemy.poison<=0||enemy.immunity==='fire'||enemy.immunity==='poison'||patches.length>=settings.maxPatches)return;
   if(game.api.underPaper(enemy)||!Number.isFinite(enemy.x)||!Number.isFinite(enemy.y))return;
@@ -42,8 +43,7 @@ function updatePlaguefire(dt){
   for(const p of patches){
     p.age+=dt;
     if(p.age>=p.life){
-      if(scars.length>=settings.maxScars)scars.shift();
-      scars.push({x:p.x,y:p.y,r:settings.maxRadius,seed:p.seed});scarRevision++;
+      retainScar(p,settings.maxRadius);
     }
   }
   patches=patches.filter(p=>p.age<p.life);

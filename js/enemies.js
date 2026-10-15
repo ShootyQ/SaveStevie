@@ -487,7 +487,7 @@ function clearWobbleEntranceWalls(){
  // Arrival sweeps ink away; destroying upgraded walls here would trigger
  // explosions, healing, or other combat rewards before the fight starts.
  game.state.walls=[];game.state.projectiles=[];game.state.enemyShots=[];
- game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetBackdraft();game.api.resetTesla();game.api.resetSupportInks();game.api.resetLaunchEffects();game.api.resetPlaguefire();
+ game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetBackdraft();game.api.resetTesla();game.api.resetSupportInks();game.api.resetLaunchEffects();game.api.resetPlaguefire({preserveScars:true});
 }
 function beginWobbleIntro(){game.api.resetCircleShapes();
  game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);game.api.loadWobbleArtwork();
@@ -518,7 +518,7 @@ function updateFirstBossIntro(dt){
   if(a.stage==='stomp'){game.api.stopSoundEffects('bossStomp');a.stage='roar';game.api.setMsg('King Doodle-Doom: CLASS IS IN SESSION!')}
   if(!game.api.soundEffectsSnapshot().voices.some(v=>v.kind==='bossRoar'))game.api.playSound('bossRoar',false,a.age-3.375);
  }else{
-  if(a.stage!=='smash'){a.stage='smash';game.api.stopSoundEffects('bossRoar');game.state.walls=[];game.state.projectiles=[];game.state.enemyShots=[];game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetBackdraft();game.api.resetTesla();game.api.resetSupportInks();game.api.resetPlaguefire();game.api.setMsg('His royal stomp tears every wall off the page!')}
+  if(a.stage!=='smash'){a.stage='smash';game.api.stopSoundEffects('bossRoar');game.state.walls=[];game.state.projectiles=[];game.state.enemyShots=[];game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetBackdraft();game.api.resetTesla();game.api.resetSupportInks();game.api.resetPlaguefire({preserveScars:true});game.api.setMsg('His royal stomp tears every wall off the page!')}
   if(a.age>=6.582){game.api.spawnEnemy(true,a.targetX,a.y);game.api.suspendMusic(false);game.api.setMsg('Draw fresh walls to return his shots!')}
  }
 }

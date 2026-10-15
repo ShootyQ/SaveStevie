@@ -11,3 +11,9 @@ Rip-Raff and forced emergence open the same wear field, so their openings can jo
 Wear/connected-region/contour work happens on mutation. A cached canvas, capped at 2048 pixels on its longest axis, is rebuilt only when visible wear or geometry changes and then drawn as a single layer. Connected outlines are not recomputed every render. Exit-point searches use a bounded 64-entry cache, invalidated by new openings or resize, so a large tear is not rescanned for each entering monster. Drawing consumes no combat RNG or simulation state. The cell budget bounds storage and geometry work.
 
 Validation preview: tests/browser-continuous-paper.cjs captures separated, joined and irregular openings at desktop and phone sizes and verifies actual erase input, collision geometry and pause. tests/continuous-paper.cjs checks bridge merging, footprint accuracy, no same-region shortcut, shared hardhat openings, reset/resize and pure cached rendering.
+
+## Alpha 0.1.90: chapter sheets
+
+A sheet lasts waves 1–5, 6–10 and each following five-wave block, including endless play. Partial wear, connected openings, hints and Plaguefire burn scars persist through the boss. Chapter changes and new runs reset the sheet. Wave transitions cancel rub input and clear temporary electrical arcs, and reset Rip-Raff’s six-hole allowance without healing the paper. Existing ink refills, walls and enemy cleanup stay per wave.
+
+Live Plaguefire pools settle into scars of their current radius between waves and during boss entrance cleanup; they cannot carry active damage into the next encounter. Burn scars use the cached union desk layer, with a 512-scar safety budget for the longer page lifetime. Save data is unchanged: this is run-local paper state.
