@@ -1612,3 +1612,40 @@ html.desktop-ui .desktop-rewards .cardactions{flex-shrink:0;align-items:center;j
  html.desktop-ui .desktop-rewards #cards .ucard h3{font-size:12px}.desktop-reward-keys{font-size:11px!important}
 }
 html.desktop-ui .desktop-book #buildUpgrades,html.desktop-ui .desktop-book #buildSynergies,html.desktop-ui .desktop-book #buildDoodleScraps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+
+/* Stevie's discovered-ability field guide: fixed tools and page controls. */
+.discovery-book{display:flex!important;flex-direction:column;gap:8px;width:min(1040px,96vw);max-height:94dvh;overflow:hidden!important;background-color:#f6f0dd;color:#303c35}
+.discovery-book .build-heading{flex-shrink:0;margin:0}
+.discovery-book .build-heading h2{margin:0}
+.discovery-whisper{font-family:var(--font-hand,"Patrick Hand",cursive);color:#64584a;transform:rotate(-.5deg);margin:0;font-size:18px}
+#discoveryProgress{margin:0;font-size:14px;color:#43574a}
+.discovery-filters{display:grid;grid-template-columns:1fr 200px;gap:14px;flex-shrink:0}
+.discovery-filters label{display:flex;flex-direction:column;font-size:14px;gap:3px;color:#344a3d}
+.discovery-filters input,.discovery-filters select{width:100%;min-width:0;box-sizing:border-box;min-height:42px;font-size:16px;background:#fffdf3;color:#26393e;border:1px solid #968b72;border-radius:8px;padding:7px}
+.discovery-entries{display:grid;grid-template-columns:1fr 1fr;gap:14px;overflow-y:auto;min-height:0;align-content:start;padding:8px 4px 12px;flex:1}
+.discovery-entry{display:flex;gap:12px;padding:17px 14px;background:#fffdf1;box-shadow:1px 3px 3px #4c412324;border:1px solid #d5cbb3;border-radius:3px 8px 5px 3px;position:relative;min-width:0;align-items:flex-start}
+.discovery-entry:before{content:"";position:absolute;top:-6px;left:32%;width:55px;height:12px;background:#e9d685a6;transform:rotate(-5deg);pointer-events:none}
+.discovery-entry:nth-child(even):before{transform:rotate(6deg)}
+.discovery-entry h3{font-size:23px;color:#315d7c;margin:3px 0 7px;line-height:1.1}
+.discovery-entry p{font-size:15px;line-height:1.45;margin:0;color:#303c35}
+.discovery-entry small{font-size:12px;color:#6e5541}
+.discovery-art{width:60px;height:60px;flex-shrink:0;display:grid;place-items:center}
+.discovery-note-art{display:block;width:60px;height:60px;background-repeat:no-repeat}
+.discovery-project-art{object-fit:contain}
+.discovery-synergy-mark{font-size:48px;color:#97629b;text-shadow:2px 2px #ecd78b}
+.discovery-navigation{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;border-top:1px dashed #b4a88a;padding-top:8px}
+.discovery-navigation button{font-size:17px;min-height:42px;padding:8px 16px}
+.discovery-navigation span{font-size:13px;text-align:center}
+.discovery-book #discoverySaveNote{font-size:12px;margin:0;line-height:1.35;flex-shrink:0}
+.discovery-empty{grid-column:1/-1;text-align:center;padding:24px;color:#665b45}
+.discovery-empty>span{font-size:44px;color:#956944}
+@media(max-width:899px){.discovery-entries{grid-template-columns:1fr}.discovery-filters{grid-template-columns:1fr 145px;gap:8px}.discovery-book{padding:16px!important}.discovery-book .build-heading h2{font-size:30px}.discovery-book .build-heading button{font-size:15px;padding:8px}.discovery-whisper{font-size:15px}.discovery-entry{padding:14px 10px;gap:9px}.discovery-entry h3{font-size:22px}.discovery-entry p{font-size:14px}.discovery-art{width:48px;height:48px}.discovery-note-art,.discovery-project-art{width:48px;height:48px}.discovery-navigation button{padding:7px 9px;font-size:15px}}
+.discovery-book{background:url('assets/art/ui/recess-sheet.svg') center/100% 100% no-repeat;border:0;border-radius:0;filter:drop-shadow(3px 7px 5px #0005)}
+.discovery-book .build-heading h2{font:38px/1.05 'Stevie Pencil',cursive;color:#3562be}
+.discovery-book .discovery-whisper{font-family:'Stevie Pencil',cursive;font-size:20px}
+.discovery-entry{isolation:isolate;background:none;border:0;box-shadow:none;filter:drop-shadow(1px 3px 2px #4c41232b)}
+.discovery-entry:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(#fffdf2c7,#fffdf2c7),url('assets/art/ui/recess-sheet.svg') center/100% 100% no-repeat;clip-path:polygon(1% 1%,14% 0,29% 1%,45% 0,64% 1%,81% 0,99% 1%,100% 21%,99% 48%,100% 72%,99% 99%,80% 100%,61% 99%,39% 100%,20% 99%,0 100%,1% 75%,0 48%,1% 24%);pointer-events:none}
+.discovery-entry h3{font:27px/1.05 'Stevie Pencil',cursive;transform:rotate(-.4deg)}
+.discovery-book .discovery-entry p{text-align:left}
+.discovery-book button{font-family:'Stevie Pencil',cursive;font-weight:400;font-size:21px;background:#fff7df;color:#315d8c;border:1px solid #928167;border-radius:3px 7px 4px 5px}
+@media(max-width:899px){.discovery-book .build-heading h2{font-size:32px}.discovery-book .discovery-whisper{font-size:17px}.discovery-entry h3{font-size:24px}}
