@@ -244,7 +244,7 @@ function update(dt){
 }
 
 function loop(t){
-  const dt=Math.min(.033,(t-game.state.last)/1000||0);game.state.last=t;game.api.update(dt);game.api.draw();requestAnimationFrame(game.api.loop)
+  const dt=Math.min(.033,(t-game.state.last)/1000||0);game.state.last=t;game.api.update(dt);if(game.api.shouldDrawDesktopFrame?.(t)??true)game.api.draw();requestAnimationFrame(game.api.loop)
 }
 const api = { update, loop };
 Object.assign(game.api, api);

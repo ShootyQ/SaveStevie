@@ -8,7 +8,7 @@ if(!['x64','arm64'].includes(arch))throw Error('Architecture must be x64 or arm6
 async function build(){
  fs.rmSync(stage,{recursive:true,force:true});fs.mkdirSync(stage,{recursive:true});
  execFileSync(process.execPath,[path.join(root,'scripts/build-site.cjs'),path.join(stage,'site')],{stdio:'inherit'});
- for(const name of ['main.cjs','local-assets.cjs'])fs.copyFileSync(path.join(root,'desktop',name),path.join(stage,name));
+ for(const name of ['main.cjs','local-assets.cjs','preload.cjs','display-settings.cjs'])fs.copyFileSync(path.join(root,'desktop',name),path.join(stage,name));
  fs.writeFileSync(path.join(stage,'package.json'),JSON.stringify({name:'save-stevie-desktop',productName:'Save Stevie',version:meta.version,private:true,main:'main.cjs',author:'ShootyQ',description:'Save Stevie offline Alpha desktop client'},null,2)+'\n');
  if(prepare){console.log('Desktop app prepared at '+stage);return;}
  const {packager}=require('@electron/packager');

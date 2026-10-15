@@ -14,6 +14,12 @@ These are unsigned Alpha test builds, not installers or auto-updating releases. 
 
 Artifact downloads expire after 30 days. Each new build generates its own versioned ZIP. No automatic installation or release publishing occurs.
 
+## Display options
+
+In the desktop app, open Settings → Desktop display. Choose windowed/fullscreen mode, window resolution (800×600 through 2560×1440), UI scale (85–130%), render quality (50/75/100%) and frame limit (30/60/120 or display refresh rate). Click Apply display settings. Preferences persist between launches. F11 also changes and saves fullscreen mode.
+
+Fullscreen uses the display’s native resolution. Window resolution presets fit the available screen instead of creating a window off its edges. Lower quality reduces canvas pixel count without changing wall/enemy coordinates; a frame limit reduces drawing frequency without changing simulation speed. The browser and Android do not show these native controls. Reset display defaults returns to windowed 1280×720, 100% UI/detail and 60 FPS. Resizing manually remains available.
+
 ## Progress and backup
 
 Desktop saves are separate from web/Android saves. In the original game, use **Settings → Backup & restore** to export a backup; import it in the desktop client's same screen. The app's secure local origin and `SaveStevie` user-data folder remain stable between Alpha versions, so replacing the client folder retains desktop progress.

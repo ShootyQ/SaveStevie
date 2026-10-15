@@ -12,3 +12,9 @@ if(fs.existsSync(path.resolve(__dirname,'../_desktop/app'))){
  for(const file of ['site/index.html','site/game.js','site/assets/art/stevie.png','site/assets/art/paper-fort.png','main.cjs','local-assets.cjs'])assert(fs.existsSync(path.join(dir,file)),file);
 }
 console.log('PASS: desktop local assets, encoded traversal/invalid URL rejection, HTTPS-only external links, pinned runtime/version and staged offline art.');
+
+const {defaults,normalizeDisplay}=require('../desktop/display-settings.cjs');
+assert.deepEqual(normalizeDisplay({mode:'bad',resolution:'100000x100000',uiScale:-10,frameLimit:'0',renderScale:NaN}),defaults);
+assert.deepEqual(normalizeDisplay({mode:'fullscreen',resolution:'1920x1080',uiScale:1.3,frameLimit:30,renderScale:.5}),{mode:'fullscreen',resolution:'1920x1080',uiScale:1.3,frameLimit:30,renderScale:.5});
+assert.deepEqual(normalizeDisplay(null),defaults);
+console.log('PASS: desktop display defaults and validated mode/resolution/scale/quality/frame limits.');

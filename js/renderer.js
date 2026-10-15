@@ -523,7 +523,7 @@ function drawEnemyFill(e,x,y,width,height){
 function resize(){
   game.api.cancelLessonGesture?.();game.api.cancelDrawingInput?.();
   const r=game.dom.canvas.getBoundingClientRect();
-  game.state.dpr=Math.min(2,window.devicePixelRatio||1);
+  game.state.dpr=Math.min(2,window.devicePixelRatio||1)*(game.api.desktopRenderScale?.()??1);
   game.dom.canvas.width=Math.floor(r.width*game.state.dpr);game.dom.canvas.height=Math.floor(r.height*game.state.dpr);
   const dx=(r.width-game.state.W)/2,dy=(r.height-game.state.H)/2;
   if(dx||dy){
