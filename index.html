@@ -26,6 +26,7 @@
   <div class="panel">
     <div id="chapterPaper" aria-hidden="true"></div>
     <canvas id="game"></canvas>
+    <small class="desktop-control-hint">Right-drag to erase · Esc to pause · F11 fullscreen</small>
     <div id="circlePrompt" class="circle-prompt" hidden role="group" aria-label="Choose circle turret"><span id="circlePromptText">Turret?</span><button id="circleConfirm" aria-label="Build paper turret">✓</button><button id="circleCancel" aria-label="Keep ordinary circle wall">✕</button></div>
     <aside id="scrubberHint" class="scrubber-hint" hidden role="status"><strong>Rubble Ruff: erase him in three rubs!</strong><span id="scrubberHintControl"></span></aside>
 
@@ -81,7 +82,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.85</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.87</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -423,6 +424,8 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.87 · Yank Doodle means business</h3><p>Yank Doodle runs much faster, hooks player walls, hauls them backward and dramatically flings them off-screen. Erase his rope or interrupt him before release to save the wall. New scampering, bracing, overhead wind-up and throwing animations make his job readable. Sneaky routes and turrets are ignored; stolen walls do not refund ink or trigger destruction effects.</p></article>
+      <article class="build-entry"><h3>Alpha 0.1.86 · A bigger desktop notebook</h3><p>Desktop gameplay fills the window with touch controls hidden: right-drag erases, Esc pauses and F11 handles fullscreen in the client. Long desktop notebook panels use Previous/Next pages. Stevie’s scrap tutorial now reveals the purchase button after opening the shop, keeping it reachable instead of resetting it off-screen.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.85 · Desktop display options</h3><p>The desktop client now saves fullscreen mode, window resolution, UI scale, render quality and frame-rate preferences. Window sizes fit the available screen; fullscreen uses its native resolution. Performance options reduce drawing work while keeping gameplay speed unchanged. Reset display defaults is available in Settings.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.84 · Desktop test clients</h3><p>Save Stevie can now be bundled as an offline desktop app, with downloadable test ZIPs from GitHub Actions. Desktop progress is saved locally between launches; use Settings backup and restore to bring over browser or phone progress. Window controls include fullscreen and zoom.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.83 · Legendary Electric: Tesla</h3><p>Legendary Electric Ink turns walls into charging Tesla coils. Every two seconds, a coordinated volley zaps up to eight nearby monsters for four times normal Electric hit damage. Longer lines spread coils for coverage. Custom copper coils, charging halos and branching bolts make the volley visible. Shields, underground safety and boss immunities still apply. Legendary Electric has its own Tesla tile and description.</p></article>
@@ -724,6 +727,7 @@
 <script src="js/balance.js"></script>
 <script src="js/settings.js"></script>
 <script src="js/desktop-display.js"></script>
+<script src="js/desktop-ui.js"></script>
 <script src="js/sound-effects.js"></script>
 <script src="js/music.js"></script>
 <script src="js/chapters.js"></script>

@@ -14,6 +14,12 @@ These are unsigned Alpha test builds, not installers or auto-updating releases. 
 
 Artifact downloads expire after 30 days. Each new build generates its own versioned ZIP. No automatic installation or release publishing occurs.
 
+## Desktop controls and notebook pages
+
+Mouse/keyboard play fills the available window. The touch Erase, Screen and Pause strip is hidden: left-drag draws, right-drag erases, Esc opens/closes Pause, and the desktop client uses F11 for fullscreen. WASD aiming remains available. Phone touch controls remain unchanged.
+
+Long desktop notebook panels use Previous/Next pages instead of vertical scrolling. Live buttons keep their normal behavior. Stevie’s scrap tutorial automatically reveals the page containing the free Starter Eraser purchase; the visual spotlight lets clicks reach that real button.
+
 ## Display options
 
 In the desktop app, open Settings → Desktop display. Choose windowed/fullscreen mode, window resolution (800×600 through 2560×1440), UI scale (85–130%), render quality (50/75/100%) and frame limit (30/60/120 or display refresh rate). Click Apply display settings. Preferences persist between launches. F11 also changes and saves fullscreen mode.

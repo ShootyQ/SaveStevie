@@ -138,6 +138,7 @@ function renderNotebook(){
     button.textContent=perk.requires&&!l[perk.requires]?'First buy '+perks.find(p=>p.id===perk.requires).name:perk.id==='circles'&&!shapeStudiesAvailable()?'Beat wave 10 to unlock Shapes':perk.id==='starterEraser'&&progress.lifetimeScraps===0?'Unlocks after your first adventure':maxed?'Fully upgraded':locked?'Available after this run':'Buy rank '+(rank+1)+' · '+price+' scraps';
     button.onclick=()=>buyNotebookPerk(perk.id);card.appendChild(button);list.appendChild(card);
   }
+  game.api.prepareDesktopPages?.('notebook');
 }
 function scrapLessonPending(){return progress.lifetimeScraps>0&&!progress.levels.starterEraser&&!game.api.devModeEnabled();}
 // Wait until a later menu visit; never interrupt earning scraps or a live run.

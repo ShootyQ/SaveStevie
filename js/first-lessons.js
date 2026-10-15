@@ -32,6 +32,7 @@ DoodleDefender.systems.firstLessons=function(game){
  }
  function guideTarget(){
   if(step===1)return canvasRect(practiceZone());
+  if(kind==='erase'&&!touchDevice())return canvasRect(practiceZone());
   const selector=kind==='draw'?{2:'.inkbox',3:'.hpbox',4:'.timer'}[step]:step<=2?'#eraserBtn':null;
   const node=selector?document.querySelector?.(selector):null;
   if(node)return node.getBoundingClientRect();
@@ -69,7 +70,7 @@ DoodleDefender.systems.firstLessons=function(game){
  function updateStevieGuides(){
   if(firstLessonActive()){
    const extra=[];
-   if(lessonCanPaint('erase'))extra.push($('eraserBtn').getBoundingClientRect());
+   if(lessonCanPaint('erase')&&touchDevice())extra.push($('eraserBtn').getBoundingClientRect());
    if(step===1&&(window.innerHeight||game.state.H)>=500){const ink=document.querySelector?.('.inkbox');if(ink)extra.push(ink.getBoundingClientRect());}
    placeGuide('lessonOverlay',guideTarget(),extra);
   }
@@ -80,6 +81,7 @@ DoodleDefender.systems.firstLessons=function(game){
   if(!stage){$('scrapCoach').style.display='none';lastScrapTarget=null;return;}
   const data={cover:['splashHubBtn','Our scraps are safe!','Tap Notebook right here. I saved you a free first upgrade!'],hub:['hubNotebookBtn','This page is for permanent upgrades.','Tap Spend scraps. These upgrades stay with us between adventures.'],shop:['notebookBuy-starterEraser','Your first purchase!','Tap this highlighted Buy button to claim the Starter Eraser. It costs 0 scraps and helps every future run recover more ink.']};
   const [target,title,text]=data[stage];$('scrapCoachTitle').textContent=title;$('scrapCoachText').textContent=text;$('scrapCoachProgress').textContent='Stevie’s scrap trail · '+({cover:1,hub:2,shop:3}[stage])+' of 3';$('scrapCoach').style.display='grid';
+  game.api.revealDesktopTarget?.($(target));
   if(lastScrapTarget!==target){lastScrapTarget=target;$(target).scrollIntoView?.({block:'center',behavior:'instant'});$(target).focus?.({preventScroll:true});}
   updateStevieGuides();
  }
@@ -196,7 +198,7 @@ DoodleDefender.systems.firstLessons=function(game){
   if(scrapStage){if(e.key==='Tab'){e.preventDefault?.();$(lastScrapTarget).focus?.();return true;}if(e.key==='Escape'){e.preventDefault?.();return true;}}
   if(firstLessonActive()&&e.key==='Tab'){
    const controls=Array.from($('lessonOverlay').querySelectorAll?.('button:not([disabled]):not([hidden])')||[]);
-   if(lessonCanPaint('erase'))controls.push($('eraserBtn'));
+   if(lessonCanPaint('erase')&&touchDevice())controls.push($('eraserBtn'));
    const i=controls.indexOf(document.activeElement);e.preventDefault?.();controls[(i+(e.shiftKey?-1:1)+controls.length)%controls.length]?.focus?.();return true;
   }
   return false;

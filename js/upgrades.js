@@ -332,7 +332,7 @@ function inspectReward(u,card,pin=false,keyboard=false){
  const related=game.catalog.synergyDefs.filter(def=>!game.state.discoveredSynergies.has(def.name)&&((u.name==='Fire Ink'&&def.name==='Plaguefire'&&game.state.inks.poison)||(u.name==='Poison Ink'&&def.name==='Plaguefire'&&game.state.inks.fire)||(u.name==='Frost Ink'&&def.name==='Cryoshock'&&game.state.inks.electric)||(u.name==='Electric Ink'&&def.name==='Cryoshock'&&game.state.inks.frost)));
  game.dom.$('upgradeDetailsTitle').textContent=game.api.paperLabel(u.name);
  game.dom.$('upgradeDetailsBody').innerHTML=`<div class="upgrade-detail-intro">${upgradeArtworkMarkup(u,72)}<div><span class="rarity">${u.rarity} · ${oneTimeUpgrades.has(u.name)?'One-time unlock':'+'+upgradeLevels(u)+' level'+(upgradeLevels(u)>1?'s':'')}</span><p>${u.desc}</p></div></div><div class="reward-change"><span class="change-label">${preview.label}</span><div class="change-values"><div><small>NOW</small><strong>${preview.before}</strong></div><span aria-hidden="true">→</span><div><small>AFTER</small><strong>${preview.after}</strong></div></div></div><div class="effect-comparison"><p><b>Now:</b> ${preview.beforeDetail}</p><p><b>After:</b> ${preview.afterDetail}</p></div><p class="slot-hint">${slot}</p>${related.map(def=>'<p class="reward-synergy">Pairs into '+def.name+' · '+def.desc+'</p>').join('')}`;
- bindArtworkFallback(game.dom.$('upgradeDetailsBody'));game.dom.$('upgradeDetails').hidden=false;
+ bindArtworkFallback(game.dom.$('upgradeDetailsBody'));game.dom.$('upgradeDetails').hidden=false;if(pin||keyboard){game.api.prepareDesktopPages?.('upgrade');game.api.revealDesktopTarget?.(game.dom.$('upgradeDetails'));}
  game.dom.$('takeUpgradeBtn').textContent=effectKeys[u.name]&&!stack&&equippedEffects().length>=game.state.tool.slots?'Choose replacement':'Take '+game.api.paperLabel(u.name);
  game.dom.$('takeUpgradeBtn').disabled=false;
  if(pin)game.dom.$('upgradeDetails').scrollIntoView?.({block:'nearest',behavior:'auto'});
@@ -355,7 +355,7 @@ function rollCards(forceRare=false){
   const dev=game.api.devModeEnabled();
   game.dom.$('devRewardPicker').hidden=!dev;game.dom.$('rerollBtn').hidden=dev;game.dom.$('rewardLuck').hidden=dev;game.dom.$('rewardLuckGuide').hidden=dev;
   if(dev){renderDevReward();return;}
-  game.dom.rewardText.textContent=forceRare?'Boss reward · Rare or better. Tap a card to inspect.':'Hover or tap a card, then choose your upgrade.';
+  game.dom.rewardText.textContent=forceRare?'Boss reward · Rare or better. Tap a card to inspect.':game.api.desktopUiEnabled?.()?'Click a card to inspect, then choose your upgrade.':'Hover or tap a card, then choose your upgrade.';
   game.dom.$('rewardLuck').textContent='Luck '+game.state.stats.luck+' · Higher Luck makes rarer upgrades more likely.';
   game.dom.$('rewardLuckDetails').textContent=game.api.luckExplanation();
   game.api.renderTool('rewardTool');game.dom.$('effectReplacement').hidden=true;
@@ -395,8 +395,8 @@ function renderUpgradeCards(picks,count=picks.length){
   bindArtworkFallback(c);c.setAttribute?.('role','button');c.setAttribute?.('tabindex','0');c.setAttribute?.('aria-controls','upgradeDetails');c.setAttribute?.('aria-expanded','false');c.setAttribute?.('aria-label',game.api.paperLabel(u.name)+', '+u.rarity+'. Inspect upgrade.');
   c.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inspectReward(u,c,true,true)}else if(e.key==='Escape'){e.preventDefault();clearRewardPreview(true)}};
   c.onclick=()=>inspectReward(u,c,true);
-  c.onpointerenter=e=>{if(!hoverPreviewSuppressed&&e.pointerType==='mouse'&&typeof matchMedia==='function'&&matchMedia('(hover: hover)').matches)inspectReward(u,c)};
-  c.onpointermove=e=>{if(hoverPreviewSuppressed&&e.pointerType==='mouse'&&typeof matchMedia==='function'&&matchMedia('(hover: hover)').matches){hoverPreviewSuppressed=false;inspectReward(u,c)}};
+  c.onpointerenter=e=>{if(!game.api.desktopUiEnabled?.()&&!hoverPreviewSuppressed&&e.pointerType==='mouse'&&typeof matchMedia==='function'&&matchMedia('(hover: hover)').matches)inspectReward(u,c)};
+  c.onpointermove=e=>{if(!game.api.desktopUiEnabled?.()&&hoverPreviewSuppressed&&e.pointerType==='mouse'&&typeof matchMedia==='function'&&matchMedia('(hover: hover)').matches){hoverPreviewSuppressed=false;inspectReward(u,c)}};
   rewardOfferCards.push({u,card:c});game.dom.cardsEl.appendChild(c);
  });
 }

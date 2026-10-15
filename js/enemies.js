@@ -3,7 +3,7 @@ DoodleDefender.systems.enemies = function createEnemiesSystem(game) {
 const defs=game.catalog.enemyDefs={
     catapulter:{r:17,hp:60,speed:44,dmg:0,color:'#b941a4'},
     grunt:{r:11,hp:20,speed:30,dmg:6,color:'#cf5b51'},
-    wallpuller:{r:15,hp:52,speed:34,dmg:6,color:'#3bbcb8'},
+    wallpuller:{r:15,hp:52,speed:86,dmg:6,color:'#3bbcb8'},
     papertearer:{r:15,hp:60,speed:30,dmg:6,color:'#9d66cb'},
     scrubber:{r:11,hp:18,speed:70,dmg:0,color:'#89ad3f'},
     fast:{r:8,hp:18,speed:60,dmg:7,color:'#d8893c'},
