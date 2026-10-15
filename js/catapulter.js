@@ -2,7 +2,7 @@
 DoodleDefender.systems.catapulter=function(game){
  let appearances=0;
  const basics=new Set(['grunt','fast','bouncer']);
- const tuning={cap:3,setup:2.5,warning:1.25,cooldown:4,flight:1.05};
+ const tuning={cap:4,setup:2.5,warning:1.25,cooldown:4,flight:1.05};
  function canSpawnCatapulter(){return game.state.wave>=11&&game.state.wave%5!==0&&appearances<tuning.cap&&!game.state.enemies.some(e=>e.type==='catapulter'&&e.hp>0);}
  function registerCatapulter(){return ++appearances;}
  function resetCatapulterRun(){appearances=0;}

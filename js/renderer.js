@@ -783,7 +783,7 @@ function draw(){
     if(game.api.underPaper(e)||e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0)continue;
     const erase=e.sniperErase,regular=!erase&&e.shootCd<=.6&&(e.sniperFollowUp>0||game.api.sniperCanAim(e));if(!erase&&!regular)continue;
     const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle=erase?'#a54e78':'#3562be';ctx.lineWidth=2;ctx.globalAlpha=.65;
-    ctx.setLineDash(erase?[3,8]:[5,7]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();ctx.setLineDash([]);
+    ctx.setLineDash(erase?[3,8]:[5,7]);ctx.beginPath();ctx.moveTo(e.x,e.y);ctx.lineTo((e.sniperAim||game.state.player).x,(e.sniperAim||game.state.player).y);ctx.stroke();ctx.setLineDash([]);
     ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();
     if(erase){ctx.fillStyle='#a54e78';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('ERASER FIRST',e.x,e.y-e.r-12);}ctx.restore();
   }

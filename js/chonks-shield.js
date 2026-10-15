@@ -54,7 +54,7 @@ DoodleDefender.systems.chonksShield=function(game){
   if(e.type==='sniper')game.api.updateSniper(e,dt,{host,convoy:true});
   const hit=game.api.nearestWallHit(e);
   if(hit){game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');game.api.damageWall(hit.wall,e.dmg*dt,e.x,e.y);}
-  else if(d>.001&&travel>0)game.api.moveEnemySafely(e,dx/d*travel,dy/d*travel);
+  else if(!e.sniperAim&&d>.001&&travel>0)game.api.moveEnemySafely(e,dx/d*travel,dy/d*travel);
   game.api.contactStevie(e);return true;
  }
  function chonksConvoySnapshot(){return game.state.enemies.filter(e=>escorts.has(e)).map(e=>({x:e.x,y:e.y,slot:escorts.get(e).slot}));}

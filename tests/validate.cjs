@@ -535,7 +535,7 @@ assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
 assert.equal(g.catalog.monsters.length,29);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,29);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],2:['scrubber','fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['catapulter','wallpuller','bulwark'],12:['gnawer'],13:['basil','medic'],14:['papertearer','brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],2:['scrubber','fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['catapulter','wallpuller','bulwark'],12:['papertearer','gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -769,7 +769,7 @@ console.log('PASS: chapter boundaries, asset coverage, new-run reset, stable bac
 const env=load(true),g=env.sandbox.testGame;
 for(const [wave,scale] of [[1,1],[5,1.2],[10,1.9],[15,2.8],[20,4],[25,4.9]])assert.ok(Math.abs(g.api.enemyHpScale(wave)-scale)<1e-10);
 g.api.resetRun();assert.equal(g.state.spawnTimer,1.5);assert.equal(g.api.spawnGap(),2.7);
-for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['tank','sniper','fast']],[13,['tank','sniper']],[16,['tank','sniper']]]){
+for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['tank','sniper','fast']],[13,['catapulter','sniper']],[16,['catapulter','sniper']]]){
  g.state.wave=wave;g.api.startWave();g.state.spawnTimer=999;g.state.timeLeft=40;g.api.spawnChapterGroup();
  assert.deepEqual(Array.from(g.state.enemies,e=>e.type),members);
  g.state.timeLeft=20;g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,members.length*2);
@@ -2603,6 +2603,7 @@ require('./catapulter-animation.cjs')(load);
 require('./circle-shapes.cjs')(load);
 
 require('./late-wave-roster.cjs')(load);
+require('./specialist-wave-room.cjs')(load);
 
 require('./turret-upgrades.cjs')(load);
 

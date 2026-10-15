@@ -9,3 +9,5 @@ Releasing removes the whole wall from combat without damage/explosion callbacks,
 Erase the rope at any stage before release to cancel and stun him for 1s (3s job cooldown). Freeze/stun, death, flight/underground state, losing the wall or losing reach also cancel the job. Normal wall effects and paper balls still hurt him. Turrets stay separate from stealable walls.
 
 Custom canvas poses cover scamper, hook reach, planted backward haul, overhead wind-up and exaggerated throwing follow-through, with a growing slack hook rope, tense hauling rope and attached hand. Movement clocks advance only when actually moving; freeze/stun/reduced motion hold poses. Cosmetic drawing uses no combat RNG or simulation mutations. Flight effects pause, translate on resize and reset with the wave/run.
+
+Alpha 0.1.89: choose the longest eligible wall with a nearest point within 260 pixels. If none is nearby, approach the nearest wall until a local candidate is available. Length uses the whole polyline, including curves; tiny nearby walls no longer automatically win.
