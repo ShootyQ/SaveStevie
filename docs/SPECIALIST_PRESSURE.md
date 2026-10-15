@@ -13,3 +13,9 @@ Hijacked Sneaky followers pause confused for two seconds at their route's endpoi
 Turrets are available during the timed portion of boss waves and while clearing ordinary survivors. The boss warning/entrance immediately clears cannons and pending offers; direct boss spawning clears them too. No turrets can be constructed during the entrance or fight. Enclose and its existing boss immunities remain.
 
 This is a first balance pass for player feedback. Required validation, focused reinforcement/route/turret checks, desktop/phone catapult erasing and circle-tree browser checks, and the web build passed.
+
+## Alpha 0.1.89: room for the specialists
+
+Waves 1–11 keep their existing random weights. From wave 12, Gribble has one pool ticket rather than two; Pew Pew, Sneaky, Yank, available catapults and Rip-Raff each have three. Boingus, Nugget and Wardling retain one ticket each. Basic scheduled candidates skip every fourth arrival rather than every tenth; specialist recruits retain their shared ten-per-wave budget. Existing spawn-gap timing is unchanged.
+
+Rip-Raff's unlock/introduction is wave 12. From wave 12, a timed chapter group uses an available catapult plus Pew Pew before falling back to the existing group. Builders remain one alive, four total per run, and absent during boss waves. This makes their appearance less dependent on a random roll without adding another simultaneous builder.

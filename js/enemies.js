@@ -40,10 +40,10 @@ game.catalog.enemyGuide=game.catalog.monsters.filter(m=>['wardling','sprinter','
 const lateRoster=new Set([...game.catalog.monsters.filter(m=>m.wave<=9&&!['splitter','mini','boss'].includes(m.type)).map(m=>m.type),'wallpuller','catapulter','papertearer']);
 function scheduledTypeAvailable(type){return game.state.wave<11||lateRoster.has(type);}
 function enemyType(){
-  const pool=['grunt','grunt'];
+  const pool=game.state.wave>=12?['grunt']:['grunt','grunt'];
   for(const m of game.catalog.monsters){
     if(m.type==='catapulter'&&!game.api.canSpawnCatapulter())continue;
-    if(m.wave<=game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser'].includes(m.type))pool.push(m.type);
+    if(m.wave<=game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser'].includes(m.type)){pool.push(m.type);if(game.state.wave>=12&&['sniper','flanker','wallpuller','catapulter','papertearer'].includes(m.type))pool.push(m.type,m.type);}
   }
   return game.api.pick(pool.filter(type=>!['wallpuller','papertearer'].includes(type)||!game.state.enemies.some(e=>e.type===type&&e.hp>0)).filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
 }
@@ -361,7 +361,8 @@ function shotBlocked(x,y,nx,ny,r=3,ignored=null){
   return false;
 }
 function fireSniper(e,eraser=false,host=null){
-  const dx=game.state.player.x-e.x,dy=game.state.player.y-e.y,d=Math.hypot(dx,dy)||1;
+  const aim=!eraser&&e.sniperAim||game.state.player,dx=aim.x-e.x,dy=aim.y-e.y,d=Math.hypot(dx,dy)||1;
+  if(!eraser)delete e.sniperAim;
   if(eraser){const tankRadius=game.catalog.enemyDefs.tank.r,side=host?Math.abs((e.x-host.x)*dy/d-(e.y-host.y)*dx/d):0,radius=Math.max(tankRadius,host?.r||0)+8+Math.min(22,side);
    game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*240,vy:dy/d*240,life:Math.min(6,(d+100)/240),r:5,damage:0,eraser:true,eraseRadius:radius,sniperOwner:e,reflected:false});game.api.playSound('pencil');
   }else game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:Math.max(2,Math.min(6,(d+30)/150)),r:3,damage:7,sniperOwner:e,reflected:false});
@@ -551,12 +552,12 @@ function spawnScheduledEnemy(x=null,y=null,type=null,protectedIntro=false){
  const chosen=type||game.api.enemyType();
  if(!scheduledTypeAvailable(chosen))return null;
  if(protectedIntro)return game.api.spawnEnemy(false,x,y,chosen);
- if(commonSpawnTypes.has(chosen)&&++commonArrivals%10===0)return null;
+ if(commonSpawnTypes.has(chosen)&&++commonArrivals%(game.state.wave>=12?4:10)===0)return null;
  return game.api.spawnEnemy(false,x,y,chosen);
 }
 function spawnChapterGroup(){
   const wave=game.state.wave;if(wave<6)return;
-  const types=wave>=13?(groupsSpawned%2===0?['tank','sniper']:['wallpuller','grunt']):wave<=10?(wave>=9?['sniper','fast']:wave>=7?['flanker','fast']:['tank','fast']):groupsSpawned%2===0?['tank','sniper','fast']:['wallpuller','bouncer','grunt'];
+  const types=wave>=12&&game.api.canSpawnCatapulter()?['catapulter','sniper']:wave>=13?(groupsSpawned%2===0?['tank','sniper']:['wallpuller','grunt']):wave<=10?(wave>=9?['sniper','fast']:wave>=7?['flanker','fast']:['tank','fast']):groupsSpawned%2===0?['tank','sniper','fast']:['wallpuller','bouncer','grunt'];
   const fromLeft=groupsSpawned%2===0;
   for(let i=0;i<types.length;i++)spawnScheduledEnemy(fromLeft?-26:game.state.W+26,game.state.H*(.35+.12*i),types[i]);
 }
@@ -684,7 +685,7 @@ function updateEnemyBehavior(e,dt){
 }
 // Cached, deterministic firing-position search. Closed defenses remain solid.
 let sniperRoutes=new WeakMap();
-function sniperCanAim(e){const p=game.state.player,d=Math.hypot(e.x-p.x,e.y-p.y);return d>=90&&d<=260&&!game.api.shotBlocked(e.x,e.y,p.x,p.y,3)}
+function sniperCanAim(e){if(e.sniperAim)return true;const p=game.state.player,d=Math.hypot(e.x-p.x,e.y-p.y);return d>=90&&d<=260&&!game.api.shotBlocked(e.x,e.y,p.x,p.y,3)}
 function sniperPathClear(e,x,y){const p=game.state.player;return game.api.pointSegDist(p.x,p.y,e.x,e.y,x,y)>p.r+e.r+40&&bouncePathClear(e,x,y,0)}
 function sniperRoute(e){
  const p=game.state.player,candidates=[],margin=e.r+20;
@@ -712,19 +713,20 @@ function sniperRoute(e){
 }
 function updateSniper(e,dt,options=null){
  if(e.hp<=0)return true;
- if(e.freeze>0||e.stun>0){e.shootCd=Math.max(.65,e.shootCd);if(e.sniperFollowUp>0)e.sniperFollowUp=Math.max(.65,e.sniperFollowUp);delete e.sniperErase;return true;}
+ if(e.freeze>0||e.stun>0){e.shootCd=Math.max(.65,e.shootCd);if(e.sniperFollowUp>0)e.sniperFollowUp=Math.max(.65,e.sniperFollowUp);delete e.sniperErase;delete e.sniperAim;return true;}
  const convoy=options?.convoy===true,attackDt=dt*(convoy?1.2:1);
- if(e.sniperFollowUp>0){e.sniperFollowUp=Math.max(0,e.sniperFollowUp-attackDt);e.shootCd=e.sniperFollowUp;
+ if(e.sniperFollowUp>0){e.sniperFollowUp=Math.max(0,e.sniperFollowUp-attackDt);e.shootCd=e.sniperFollowUp;if(e.shootCd<=.6&&!e.sniperAim)e.sniperAim={x:game.state.player.x,y:game.state.player.y};
   if(e.sniperFollowUp===0){fireSniper(e);e.shootCd=1.7;}return true;
  }
+ if(e.sniperAim){e.shootCd-=attackDt;if(e.shootCd<=0){fireSniper(e);e.shootCd=1.7;}return true;}
  if(e.sniperErase)return game.api.eraseSniperLane(e,attackDt,options?.host);
  if(convoy&&game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y,3)){sniperRoutes.delete(e);return game.api.eraseSniperLane(e,attackDt,options.host);}
  if(convoy||sniperCanAim(e)){
-  sniperRoutes.delete(e);delete e.sniperErase;e.shootCd-=attackDt;
+  sniperRoutes.delete(e);delete e.sniperErase;e.shootCd-=attackDt;if(e.shootCd<=.6)e.sniperAim={x:game.state.player.x,y:game.state.player.y};
   if(e.shootCd<=0){fireSniper(e);e.shootCd=1.7}
   return true;
  }
- // Losing sight interrupts the aim. Opening a lane never produces a surprise shot.
+ // Before the visible wind-up, find a clear lane. Once aiming, finish the promised shot.
  e.shootCd=Math.max(.65,e.shootCd);
  let route=sniperRoutes.get(e);
  if(route)route.left-=dt;

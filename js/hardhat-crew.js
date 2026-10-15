@@ -73,8 +73,12 @@ function updateHardhat(e,dt){
  }
  c.cooldown=Math.max(0,c.cooldown-dt);
  if(e.type==='wallpuller'){
-  let target=null,distance=Infinity;
-  for(const wall of game.state.walls){if(wall===game.api.liveWallObject()||wall.wobbleBumper||wall.sneakyDraft||wall.shapeTurret||wall.hp<=0||wall.life<=0)continue;const q=game.api.nearestPointOnWall(e,wall),d=q?Math.hypot(q.x-e.x,q.y-e.y):Infinity;if(d<distance){distance=d;target={wall,q};}}
+  let target=null,distance=Infinity,largest=-1;
+  const nearby=[],all=[];
+  for(const wall of game.state.walls){if(wall===game.api.liveWallObject()||wall.wobbleBumper||wall.sneakyDraft||wall.shapeTurret||wall.hp<=0||wall.life<=0)continue;
+   const q=game.api.nearestPointOnWall(e,wall);if(!q)continue;const d=Math.hypot(q.x-e.x,q.y-e.y),length=wall.pts.reduce((sum,p,i)=>sum+(i?Math.hypot(p.x-wall.pts[i-1].x,p.y-wall.pts[i-1].y):0),0),candidate={wall,q,d,length};all.push(candidate);if(d<=260)nearby.push(candidate);
+  }
+  for(const candidate of nearby.length?nearby:all){if(nearby.length?(candidate.length>largest||candidate.length===largest&&candidate.d<distance):candidate.d<distance){target=candidate;distance=candidate.d;largest=candidate.length;}}
   if(target){if(distance<=110&&c.cooldown===0){e.crew={phase:'hook',left:yankTuning.hook,wall:target.wall,anchor:{...target.q}};yankText(e,'ERASE THE ROPE!');return true;}if(distance>65)moveCrew(e,target.q,dt);return true;}
  }
  const goal=crewPoint(e);moveCrew(e,goal,dt);
