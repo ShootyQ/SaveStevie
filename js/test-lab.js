@@ -29,7 +29,7 @@ function openTestLab(){
  $('testLabPanel').hidden=false;$('testLabBtn').setAttribute?.('aria-expanded','true');
  if(!$('testUpgrade').children.length)for(const base of game.catalog.upgrades){const option=document.createElement('option');option.value=base.name;option.textContent=game.api.paperLabel(base.name);$('testUpgrade').appendChild(option)}
  if(!$('testUpgrade').value)$('testUpgrade').value=game.catalog.upgrades[0].name;
- syncTestRarity();renderLoadout();$('testWave').focus?.();$('testLabPanel').scrollIntoView?.({block:'start',behavior:'auto'});
+ syncTestRarity();renderLoadout();if(game.api.desktopUiEnabled?.()){$('testWave').focus?.({preventScroll:true});}else{$('testWave').focus?.();$('testLabPanel').scrollIntoView?.({block:'start',behavior:'auto'});}
 }
 function addTestUpgrade(){
  const base=game.catalog.upgrades.find(u=>u.name===$('testUpgrade').value),copies=Number($('testCopies').value),rarity=base?.exclusiveRarity||$('testRarity').value;

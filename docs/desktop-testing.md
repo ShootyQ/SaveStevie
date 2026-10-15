@@ -18,11 +18,11 @@ Artifact downloads expire after 30 days. Each new build generates its own versio
 
 Mouse/keyboard play fills the available window. The touch Erase, Screen and Pause strip is hidden: left-drag draws, right-drag erases, Esc opens/closes Pause, and the desktop client uses F11 for fullscreen. WASD aiming remains available. Phone touch controls remain unchanged.
 
-Long desktop notebook panels use Previous/Next pages instead of vertical scrolling. Live buttons keep their normal behavior. Stevie’s scrap tutorial automatically reveals the page containing the free Starter Eraser purchase; the visual spotlight lets clicks reach that real button.
+My Notebook uses one full-width grid with every destination visible. Settings has direct keyboard-accessible categories: Sound & music, Controls, native Display, Notebook, Saves & support and Test a fight. Test setup separates Encounter and Starting build, keeping Start available. Phone layouts retain their existing touch preferences. Long desktop lists pack multiple entries and complete grid rows onto each Previous/Next page; headings stay with their content. Live buttons keep their normal behavior. Stevie’s scrap tutorial automatically reveals the page containing the free Starter Eraser purchase; the visual spotlight lets clicks reach that real button.
 
 ## Display options
 
-In the desktop app, open Settings → Desktop display. Choose windowed/fullscreen mode, window resolution (800×600 through 2560×1440), UI scale (85–130%), render quality (50/75/100%) and frame limit (30/60/120 or display refresh rate). Click Apply display settings. Preferences persist between launches. F11 also changes and saves fullscreen mode.
+In the desktop app, open Settings → Display. Choose windowed/fullscreen mode, window resolution (800×600 through 2560×1440), UI scale (85–130%), render quality (50/75/100%) and frame limit (30/60/120 or display refresh rate). Click Apply display settings. Preferences persist between launches. F11 also changes and saves fullscreen mode.
 
 Fullscreen uses the display’s native resolution. Window resolution presets fit the available screen instead of creating a window off its edges. Lower quality reduces canvas pixel count without changing wall/enemy coordinates; a frame limit reduces drawing frequency without changing simulation speed. The browser and Android do not show these native controls. Reset display defaults returns to windowed 1280×720, 100% UI/detail and 60 FPS. Resizing manually remains available.
 
