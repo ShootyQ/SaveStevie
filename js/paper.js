@@ -4,17 +4,12 @@ DoodleDefender.systems.paper=function(game){
 const tuning={wearSeconds:1,escapeSeconds:2,entryChance:.3,entryDuration:.5,patchRadius:30,holeRadius:22,holeSpacing:70,maxHoles:24,maxPatches:256,exitWarning:.7,recovery:1.2};
 let pending=[],recentPaths=[],rubGrace=0;
 function paperActive(){const s=game.state;return s.running&&!s.paused&&!s.inUpgrade&&!s.betweenWaves&&!s.awaitingSpec&&!game.api.synergyRevealActive()&&!game.api.waveFinaleActive()&&!game.api.wobbleRepairActive()&&!game.api.bossEntranceActive();}
-function resetPaper(){game.state.paper={patches:[],holes:[],arcs:[],clock:0};pending=[];recentPaths=[];rubGrace=0;}
+function resetPaper(){game.state.paper={patches:[],holes:[],arcs:[],clock:0,surface:{origin:{x:0,y:0},cells:[],revision:0,serial:0}};pending=[];recentPaths=[];rubGrace=0;}
 function cancelPaperRub(){pending=[];recentPaths=[];rubGrace=0;}
 function underPaper(e){return !!e.paperTunnel;}
 function clearSurfaceEffects(e){for(const key of ['burn','burnDps','poison','poisonDps','freeze','stun','charged','gravitySlow','feastRush'])e[key]=0;e.feastHost=null;}
 function safePaperPoint(p,r=tuning.holeRadius){const b=game.api.refugeBounds(),near=game.api.refugePoint(p.x,p.y);return p.x>=r+8&&p.x<=game.state.W-r-8&&p.y>=r+76&&p.y<=game.state.H-r-20&&Math.hypot(p.x-near.x,p.y-near.y)> (r===tuning.holeRadius?12:r+8);}
-function addPaperHole(p){
- const paper=game.state.paper,near=paper.holes.find(h=>Math.hypot(h.x-p.x,h.y-p.y)<tuning.holeSpacing);
- if(near)return near;
- if(!safePaperPoint(p)||paper.holes.length>=tuning.maxHoles)return null;
- const hole={x:p.x,y:p.y,r:tuning.holeRadius,id:paper.holes.length+1};paper.holes.push(hole);game.api.playSound('paperTear');return hole;
-}
+function addPaperHole(p){return game.api.stampPaperHole(p,tuning.holeRadius);}
 function queuePaperRub(a,b,r=20){
  if(!paperActive()||![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||Math.hypot(b.x-a.x,b.y-a.y)<.05)return;
  // Adjacent pointer samples share one frame's time budget. Bound work even
@@ -30,23 +25,7 @@ function updatePaper(dt){
  if(pending.length){recentPaths=pending;rubGrace=.1;}pending=[];
  const rubTime=Math.min(dt,.1,rubGrace),paths=recentPaths;rubGrace=Math.max(0,rubGrace-dt);
  if(!paths.length||rubTime<=0)return;
- const touched=new Set(),samples=[];
- for(const path of paths){
-  const length=Math.hypot(path.b.x-path.a.x,path.b.y-path.a.y),steps=Math.min(100,Math.max(1,Math.ceil(length/12)));
-  for(let i=0;i<=steps;i++){
-   const p={x:path.a.x+(path.b.x-path.a.x)*i/steps,y:path.a.y+(path.b.y-path.a.y)*i/steps};
-   samples.push({...p,r:path.r});
-   if(game.api.crayonWaxCovers(p)||!safePaperPoint(p)||paper.holes.some(h=>Math.hypot(h.x-p.x,h.y-p.y)<tuning.holeSpacing))continue;
-   let patch=paper.patches.find(q=>Math.hypot(q.x-p.x,q.y-p.y)<tuning.patchRadius);
-   if(!patch){if(paper.patches.length>=tuning.maxPatches)continue;patch={...p,wear:0};paper.patches.push(patch);}
-   touched.add(patch);
-  }
- }
- // Nearby patches share coverage rather than dividing the time for a
- // single small back-and-forth rub between arbitrary sample anchors.
- for(const patch of touched){const count=samples.filter(p=>Math.hypot(p.x-patch.x,p.y-patch.y)<=tuning.patchRadius+p.r).length;
- const before=patch.wear;patch.wear=Math.min(tuning.wearSeconds,patch.wear+rubTime*Math.min(1,2*count/samples.length));if(before<tuning.wearSeconds*.5&&patch.wear>=tuning.wearSeconds*.5)game.api.setMsg('Careful! Keep rubbing this thin patch and you will tear a shortcut.');if(patch.wear>=tuning.wearSeconds-1e-8){const hole=addPaperHole(patch);if(hole)game.api.setMsg(paper.holes.length===1?'A hole! Make a SECOND hole farther from Stevie so monsters can enter there and shortcut to this one.':'Shortcut ready! Some monsters use the farther hole to reach the nearer one. Rub a moving bump for 2 seconds to bring it up.');}}
- paper.patches=paper.patches.filter(p=>!paper.holes.some(h=>Math.hypot(h.x-p.x,h.y-p.y)<tuning.holeSpacing));
+ if(game.api.rubPaperSurface(paths,rubTime)&&!paper.tearHint){paper.tearHint=true;game.api.setMsg('Paper torn! Rub its edge to widen it, or erase the bridge between openings to join them. Separate holes can make monster shortcuts.');}
  for(const e of game.state.enemies){
   const t=e.paperTunnel;if(!t||t.phase!=='travel'||e.hp<=0)continue;
   const d=Math.hypot(t.exit.x-e.x,t.exit.y-e.y)||1,front={x:e.x+(t.exit.x-e.x)/d*12,y:e.y+(t.exit.y-e.y)/d*12};
@@ -64,13 +43,13 @@ function updatePaperEnemy(e,dt){
  let t=e.paperTunnel;
  if(!t){
   if(e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.hurdle||e.thermalShock?.phase==='pressure'||['catapulter','wallpuller','papertearer','wobble-tooth'].includes(e.type)||e.catapultHeld||e.specialistJob?.kind==='catapult'||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
-  const holes=game.state.paper.holes,player=game.state.player,entry=holes.find(h=>Math.hypot(h.x-e.x,h.y-e.y)<=h.r+e.r*.35);
-  if(e.paperEncounter&&!holes.some(h=>h.id===e.paperEncounter&&Math.hypot(h.x-e.x,h.y-e.y)<=h.r+e.r*.35+18))delete e.paperEncounter;
+  const holes=game.state.paper.holes,player=game.state.player,entry=holes.find(h=>game.api.paperHoleContains(h,e,e.r*.35));
+  if(e.paperEncounter&&!holes.some(h=>h.id===e.paperEncounter&&game.api.paperHoleContains(h,e,e.r*.35+18)))delete e.paperEncounter;
   if(!entry||e.paperEncounter===entry.id)return false;
-  const startDistance=Math.hypot(entry.x-player.x,entry.y-player.y),exit=holes.filter(h=>h!==entry&&safePaperPoint(h,e.r+22)&&Math.hypot(h.x-player.x,h.y-player.y)<startDistance-45).sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y))[0];
+  const startDistance=Math.hypot(e.x-player.x,e.y-player.y),exit=holes.filter(h=>h!==entry).map(h=>game.api.paperHoleExit(h,player,e.r+22)).filter(h=>h&&Math.hypot(h.x-player.x,h.y-player.y)<startDistance-45).sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y))[0];
   if(!exit)return false;
   const directed=e.specialistJob?.kind==='tunnel'&&e.specialistJob.entryId===entry.id&&holes.some(h=>h.id===e.specialistJob.exitId);e.paperEncounter=entry.id;if(!directed&&Math.random()>=tuning.entryChance)return false;delete e.specialistJob;
-  game.api.playSound('paperDive');t=e.paperTunnel={phase:'enter',entry:{x:e.x,y:e.y},hole:{x:entry.x,y:entry.y},entryTimer:tuning.entryDuration,exit:{x:exit.x,y:exit.y},rub:0,rubbedAt:-Infinity,age:0};clearSurfaceEffects(e);if(e.type==='basil')game.api.finishFeast(e);game.api.floatText(e.x,e.y-24,'ZIP!','#855c3e');if(!game.state.paper.tunnelHint){game.state.paper.tunnelHint=true;game.api.setMsg('Follow the moving bump! Rub near it for 2 seconds to force the monster up. Rocks still hit underground.');}
+  game.api.playSound('paperDive');t=e.paperTunnel={phase:'enter',entry:{x:e.x,y:e.y},hole:{x:entry.x,y:entry.y},entryTimer:tuning.entryDuration,entryId:entry.id,exit:{x:exit.x,y:exit.y},rub:0,rubbedAt:-Infinity,age:0};clearSurfaceEffects(e);if(e.type==='basil')game.api.finishFeast(e);game.api.floatText(e.x,e.y-24,'ZIP!','#855c3e');if(!game.state.paper.tunnelHint){game.state.paper.tunnelHint=true;game.api.setMsg('Follow the moving bump! Rub near it for 2 seconds to force the monster up. Rocks still hit underground.');}
  }
  clearSurfaceEffects(e);t.age+=dt;
  if(t.phase==='enter'){t.entryTimer=Math.max(0,t.entryTimer-dt);if(t.hole){const progress=1-t.entryTimer/tuning.entryDuration;e.x=t.entry.x+(t.hole.x-t.entry.x)*progress;e.y=t.entry.y+(t.hole.y-t.entry.y)*progress;}if(!t.entryTimer)t.phase='travel';return true;}
@@ -83,7 +62,8 @@ function updatePaperEnemy(e,dt){
  if(!recentlyRubbed)t.rub=Math.max(0,t.rub-dt*.5);
  const dx=t.exit.x-e.x,dy=t.exit.y-e.y,d=Math.hypot(dx,dy),speed=Math.max(35,Math.min(90,e.speed*1.2))*(recentlyRubbed?.2:1),step=Math.min(d,speed*dt);
  if(d>0){e.x+=dx/d*step;e.y+=dy/d*step;}
- if(d<=step+.01)beginEmergence(e,t.exit);
+ const crossed=game.state.paper.holes.find(h=>h.id!==t.entryId&&game.api.paperHoleContains(h,e));
+ if(crossed&&!(t.rub>0))beginEmergence(e,{x:e.x,y:e.y});else if(d<=step+.01)beginEmergence(e,t.exit);
  return true;
 }
 function eraseProjectiles(a,b,r){
@@ -155,13 +135,8 @@ function eraseWallReaction(wall,pieces,a,b,r,removedInk){
   game.api.floatText(e.x,e.y-25,rushing?'TRIPPED!':'WHOOPS!','#a56930');game.api.animateEnemyAction(e,'bounce');
  }
 }
-function movePaper(dx,dy){const p=game.state.paper;for(const q of [...p.holes,...p.patches]){q.x+=dx;q.y+=dy;}for(const arc of p.arcs)for(const q of [arc.a,arc.b]){q.x+=dx;q.y+=dy;}for(const e of game.state.enemies)if(e.paperTunnel){e.paperTunnel.exit.x+=dx;e.paperTunnel.exit.y+=dy;if(e.paperTunnel.entry){e.paperTunnel.entry.x+=dx;e.paperTunnel.entry.y+=dy;}if(e.paperTunnel.hole){e.paperTunnel.hole.x+=dx;e.paperTunnel.hole.y+=dy;}}pending=[];recentPaths=[];rubGrace=0;}
-function drawPaper(){
- const ctx=game.dom.ctx,p=game.state.paper;ctx.save();
- for(const patch of p.patches){const amount=patch.wear/tuning.wearSeconds;ctx.fillStyle='rgba(155,130,98,'+(amount*.18)+')';ctx.strokeStyle='rgba(120,93,63,'+(amount*.5)+')';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(patch.x,patch.y,26,20,-.15,0,Math.PI*2);ctx.fill();for(let i=0;i<5;i++){ctx.beginPath();ctx.moveTo(patch.x-18,patch.y-9+i*4);ctx.lineTo(patch.x+18,patch.y-12+i*4);ctx.stroke();}if(amount>.6){ctx.beginPath();ctx.moveTo(patch.x-12,patch.y);ctx.lineTo(patch.x-3,patch.y-5);ctx.lineTo(patch.x+3,patch.y+4);ctx.lineTo(patch.x+12,patch.y-2);ctx.stroke();}}
- for(const h of p.holes){ctx.fillStyle='#ba8550';ctx.strokeStyle='#a28d69';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<16;i++){const angle=i*Math.PI/8,r=h.r*(i%2?.88:1.1),x=h.x+Math.cos(angle)*r,y=h.y+Math.sin(angle)*r*.8;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.fill();ctx.save();ctx.clip();ctx.translate(h.x,h.y);game.api.drawDeskGrain(ctx,{...h,seed:h.id});ctx.restore();ctx.strokeStyle='#a28d69';ctx.lineWidth=3;ctx.beginPath();for(let i=0;i<16;i++){const angle=i*Math.PI/8,r=h.r*(i%2?.88:1.1),x=h.x+Math.cos(angle)*r,y=h.y+Math.sin(angle)*r*.8;i?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.closePath();ctx.stroke();ctx.strokeStyle='#fff8e8';ctx.lineWidth=2;ctx.beginPath();ctx.arc(h.x,h.y,h.r*.94,Math.PI,Math.PI*1.7);ctx.stroke();}
- ctx.restore();
-}
+function movePaper(dx,dy){game.api.movePaperSurface(dx,dy);const p=game.state.paper;for(const q of [...p.holes,...p.patches]){q.x+=dx;q.y+=dy;}for(const arc of p.arcs)for(const q of [arc.a,arc.b]){q.x+=dx;q.y+=dy;}for(const e of game.state.enemies)if(e.paperTunnel){e.paperTunnel.exit.x+=dx;e.paperTunnel.exit.y+=dy;if(e.paperTunnel.entry){e.paperTunnel.entry.x+=dx;e.paperTunnel.entry.y+=dy;}if(e.paperTunnel.hole){e.paperTunnel.hole.x+=dx;e.paperTunnel.hole.y+=dy;}}pending=[];recentPaths=[];rubGrace=0;}
+function drawPaper(){game.api.drawPaperSurface();}
 function paperTransitionPose(e){
  const t=e.paperTunnel;if(!t||t.phase==='travel')return null;
  const entering=t.phase==='enter',progress=entering?1-t.entryTimer/tuning.entryDuration:game.api.clamp(1-t.warning/tuning.exitWarning,0,1);
