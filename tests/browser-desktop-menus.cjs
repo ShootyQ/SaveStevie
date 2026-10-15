@@ -1,0 +1,27 @@
+const {chromium}=require('playwright'),assert=require('assert'),fs=require('fs'),path=require('path');
+const root=path.resolve(__dirname,'..');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+ for(const viewport of [{width:1280,height:900},{width:1280,height:720},{width:800,height:600},{width:615,height:461},{width:393,height:851}]){
+  const page=await browser.newPage({viewport,hasTouch:viewport.width<600}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(()=>{localStorage.setItem('saveStevieLessonsV1',JSON.stringify({draw:true,erase:true}));localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');localStorage.setItem('saveStevieNotebookV1',JSON.stringify({version:2,scraps:10,lifetimeScraps:10,scrapTutorialDone:true,levels:{starterEraser:1}}));if(innerWidth>=600)window.stevieDesktop={applyDisplay:async preferences=>({preferences,saved:true}),getDisplay:async()=>({preferences:{mode:'windowed',resolution:'1280x720',uiScale:1,renderScale:1,frameLimit:60}}),onDisplayChanged(){}};});
+  await page.route('http://stevie.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}if(name==='game.js')body=body.toString().replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');return route.fulfill({body,contentType:({'.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.wav':'audio/wav','.mp3':'audio/mpeg','.ttf':'font/ttf'})[path.extname(name)]||'text/html'});});
+  await page.goto('http://stevie.test/',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>testGame.api.artworkStatus().ready);
+  const desktop=viewport.width>=600;
+  await page.click('#splashHubBtn');assert.equal(await page.locator('#hubOverlay .desktop-page-nav').count(),0);
+  for(const id of ['hubMonstersBtn','hubToolBtn','hubNotebookBtn','hubBetaScrapsBtn','hubSettingsBtn','hubStatsBtn','hubChangelogBtn']){assert(await page.locator('#'+id).isVisible());if(desktop){const r=await page.locator('#'+id).boundingBox();assert(r.y>=0&&r.y+r.height<=viewport.height,'hub button fits '+id);}}
+  await page.screenshot({path:'/tmp/menu-hub-'+viewport.width+'x'+viewport.height+'.png'});await page.click('#hubSettingsBtn');
+  if(desktop){
+   assert.equal(await page.locator('#optionsOverlay .desktop-page-nav').count(),0);assert.equal(await page.locator('.desktop-settings-nav [role=tab]:visible').count(),6);
+   for(const id of ['desktopSoundPanel','desktopControlsPanel','desktopDisplayPanel','desktopNotebookPanel','desktopSavePanel','desktopTestPanel']){
+    await page.click('#'+id+'Tab');assert(await page.locator('#'+id).isVisible());
+    if(id==='desktopTestPanel'){await page.click('#desktopTestBuildTab');await page.selectOption('#testUpgrade','Fire Ink');await page.click('#addTestUpgrade');assert(await page.locator('#testLoadout').innerText().then(t=>t.includes('Fire Ink')));const buildFits=await page.locator('#addTestUpgrade').evaluate(n=>n.getBoundingClientRect().bottom<=document.querySelector('.desktop-settings-body').getBoundingClientRect().bottom);assert(buildFits,'add-upgrade button fits');await page.click('#desktopTestEncounterTab');}
+    const clipped=await page.evaluate(id=>{const p=document.getElementById(id),b=p.getBoundingClientRect();return [...p.querySelectorAll('button,input,select')].filter(n=>n.getClientRects().length).filter(n=>{const r=n.getBoundingClientRect();return r.bottom>b.bottom+2||r.right>b.right+2||r.left<b.left-2||r.top<b.top-2;}).map(n=>n.id||n.textContent);},id);if(clipped.length){await page.screenshot({path:'/tmp/menu-clipped.png'});console.log('CLIPPED',id,JSON.stringify(clipped));}assert.deepEqual(clipped,[],'controls fit '+id+' at '+viewport.width+'x'+viewport.height);
+    await page.screenshot({path:'/tmp/menu-'+id+'-'+viewport.width+'x'+viewport.height+'.png'});
+   }
+   await page.click('#desktopSoundPanelTab');await page.focus('#desktopSoundPanelTab');await page.keyboard.press('ArrowDown');assert(await page.locator('#desktopControlsPanelTab').getAttribute('aria-selected')==='true');
+   await page.click('#desktopDisplayPanelTab');await page.selectOption('#desktopFrameLimit','30');await page.click('#desktopApplyDisplay');assert.equal(await page.inputValue('#desktopFrameLimit'),'30');
+   await page.click('#desktopSavePanelTab');await page.click('#openBackupBtn');assert(await page.locator('#backupOverlay').isVisible());await page.keyboard.press('Escape');assert(await page.locator('#hubOverlay').isVisible());
+  }else{assert.equal(await page.locator('.desktop-settings-nav').count(),0);assert(await page.locator('#eraserSize').count());assert(await page.locator('#desktopDisplaySection').isHidden());assert(await page.locator('#musicVolume').isVisible());await page.locator('#eraserSize').scrollIntoViewIfNeeded();await page.selectOption('#eraserSize','extra-large');assert.equal(await page.inputValue('#eraserSize'),'extra-large');await page.screenshot({path:'/tmp/menu-mobile-controls.png'});}
+  assert.deepEqual(errors,[]);console.log('PASS: notebook hub, settings categories/fit/keyboard/display/backup and phone controls at '+viewport.width+'x'+viewport.height);await page.close();
+ }
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});
