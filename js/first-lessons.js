@@ -20,7 +20,7 @@ DoodleDefender.systems.firstLessons=function(game){
  function lessonCanPaint(tool=kind){return firstLessonActive()&&step===1&&tool===kind&&!document.hidden;}
  function lessonSnapshot(){return {seen:{...seen},kind,step,practiced,eraserCursor:cursor?{...cursor}:null,active:firstLessonActive(),practice:practiceZone(),scrapStage};}
  function touchDevice(){return document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches;}
- function instruction(){return !touchDevice()?'Right-drag to erase; left-drag draws.':game.api.drawingControls().eraserToggle?'Tap Erase, then rub the wall. Tap again to draw.':'Hold Erase with one thumb and rub the wall with your other finger.';}
+ function instruction(){return !touchDevice()?game.api.controlLabel('erase')+' drag erases; '+game.api.controlLabel('draw')+' drag draws.':game.api.drawingControls().eraserToggle?'Tap Erase, then rub the wall. Tap again to draw.':'Hold Erase with one thumb and rub the wall with your other finger.';}
  function practiceZone(){
   const {W,H,player}=game.state,short=(window.innerHeight||H)<500,width=Math.min(short?Math.min(180,W*.25):240,W-60),y=game.api.clamp(player.y-110,96,Math.max(96,H-90));
   return {x:(W-width)/2,y,width,height:64};
@@ -139,12 +139,12 @@ DoodleDefender.systems.firstLessons=function(game){
   if(game.api.eraseWallPath(a,b,20,{lesson:true}))practicedEnough('A real gap! Watch ink return to the INK bar.');readout();game.api.draw?.();
  }
  function lessonPointerDown(e){
-  if(!lessonCanPaint()||pointer!==null||e.button!==0&&e.button!==2)return;
-  if(kind==='draw'&&e.button!==0)return;
-  if(kind==='erase'&&e.button!==2&&!held&&!toggled)return;
+  if(!lessonCanPaint()||pointer!==null||!game.api.mouseControl(e))return;
+  if(kind==='draw'&&game.api.mouseControl(e)!=='draw')return;
+  if(kind==='erase'&&game.api.mouseControl(e)!=='erase'&&!held&&!toggled)return;
   const p=pos(e),z=practiceZone();if(p.x<z.x||p.x>z.x+z.width||p.y<z.y||p.y>z.y+z.height)return;
   if(kind==='draw'&&!game.api.canStartStroke()){$('lessonFeedback').textContent='Out of ink? Tap Try again for a fresh practice.';return;}
-  e.preventDefault?.();pointer=e.pointerId;rightErase=e.button===2;last=p;points=[p];game.dom.canvas.setPointerCapture?.(pointer);syncTool();
+  e.preventDefault?.();pointer=e.pointerId;rightErase=game.api.mouseControl(e)==='erase';last=p;points=[p];game.dom.canvas.setPointerCapture?.(pointer);syncTool();
   if(kind==='draw'){game.state.drawing=true;game.state.currentWall=points;}else erase(p,p);
  }
  function lessonPointerMove(e){

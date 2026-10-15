@@ -8,6 +8,7 @@ function text(node,value){
 function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
+  game.api.syncDesktopCursor?.();
   game.api.updateScoreHUD();
   game.dom.$('quickBuildBtn').hidden=!game.state.running;
   game.api.syncScrapTutorial();
@@ -211,6 +212,7 @@ function closeInfo(back=true){
 }
 function handleInfoKey(e){
   if(game.api.handleStevieGuideKey?.(e))return;
+  if(e.repeat&&game.api.controlKey('pause',e))return;
   if(game.api.firstLessonActive?.()){if(e.key==='Escape'){e.preventDefault?.();game.api.finishFirstLesson();return;}}
   if(game.api.wobbleRepairActive?.()){if(e.key==='Tab'){const panel=game.dom.$('wobbleRepairOverlay'),buttons=Array.from(panel.querySelectorAll?.('button')||[]).filter(b=>!b.hidden&&!b.disabled&&!b.closest('[hidden]'));const i=buttons.indexOf(document.activeElement);e.preventDefault?.();buttons[(i+(e.shiftKey?-1:1)+buttons.length)%buttons.length]?.focus?.()}return;}
   if(synergyRevealActive()){
@@ -219,11 +221,11 @@ function handleInfoKey(e){
     return;
   }
   if(!activeInfo){
-    if(e.key==='Escape'&&game.state.running&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec){e.preventDefault();openInfo('pause')}
+    if(game.api.controlKey('pause',e)&&!e.repeat&&!e.target?.isContentEditable&&!['INPUT','TEXTAREA','SELECT'].includes(e.target?.tagName)&&game.state.running&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec){e.preventDefault();openInfo('pause')}
     return;
   }
   if(activeInfo==='betaScraps'&&game.api.handleBetaTreeKey(e))return;
-  if(e.key==='Escape'){
+  if(e.key==='Escape'||activeInfo==='pause'&&game.api.controlKey('pause',e)&&!e.repeat){
     e.preventDefault();
     if(activeInfo==='pause'&&!game.dom.$('quitConfirmation').hidden){game.dom.$('cancelQuitBtn').onclick();return}
     if(activeInfo==='monsterIntro')game.api.continueMonsterIntro();else closeInfo();

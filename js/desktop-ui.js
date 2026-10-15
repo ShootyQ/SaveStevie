@@ -21,8 +21,7 @@ DoodleDefender.systems.desktopUi=function(game){
   // Keep the touch preferences in the phone layout; desktop gets its actual controls.
   for(const id of ['eraserToggle','eraserLeft','eraserSize'])game.dom.$(id).closest('label').classList.add('desktop-touch-option');
   const controls=items[1].nodes[0],map=document.createElement('dl');map.className='desktop-control-map';
-  for(const [action,key] of [['Draw walls','Left mouse drag'],['Erase','Right mouse drag'],['Aim paper balls','W A S D · release for auto-aim'],['Pause / back','Esc'],['Fullscreen','F11']]){const term=document.createElement('dt'),value=document.createElement('dd');term.textContent=action;value.textContent=key;map.append(term,value);}controls.insertBefore(map,controls.querySelector('.option-help'));
-  controls.querySelector('.option-help:not(.eraser-size-setting)').textContent='Erasing costs no ink and refunds part of the paid ink in healthy walls. Pause whenever you need to inspect your build.';
+  for(const [action,key] of [['Inspect build','B'],['Rewards','1–4 inspect · Enter confirm'],['Menus','Esc back · Tab focus'],['Fullscreen','F11']]){const term=document.createElement('dt'),value=document.createElement('dd');term.textContent=action;value.textContent=key;map.append(term,value);}controls.insertBefore(map,controls.querySelector('.desktop-bindings'));
   // Separate encounter setup from the starting build, with shared Start controls.
   const test=game.dom.$('testLabPanel'),testNav=document.createElement('nav');testNav.className='desktop-test-tabs';testNav.setAttribute('aria-label','Test setup');
   const setup=document.createElement('div'),build=document.createElement('div'),extras=document.createElement('div');setup.id='desktopTestEncounter';build.id='desktopTestBuild';extras.id='desktopTestExtras';let inBuild=false;
@@ -50,7 +49,7 @@ DoodleDefender.systems.desktopUi=function(game){
   const overlay=kind?game.dom.$(kind+'Overlay'):null;
   for(const card of (overlay||document).querySelectorAll('.cardbox')){
    if(!card.getClientRects().length||card.closest('#betaScrapsOverlay,#wobbleRepairOverlay,#startOverlay'))continue;
-   if(card.closest('#discoveriesOverlay'))continue;
+   if(card.closest('#discoveriesOverlay,#compendiumOverlay'))continue;
    if(card.closest('#hubOverlay')){card.classList.add('desktop-hub');continue;}
    if(card.closest('#optionsOverlay')){prepareSettings(card);continue;}
    if(card.closest('#upgradeOverlay')){prepareDesktopRewards(card);continue;}

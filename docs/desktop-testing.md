@@ -58,3 +58,15 @@ Death and victory show the existing score ledger, final hit where known, build h
 Alpha 0.1.95 adds Settings → Notebook → Discoveries (the Discoveries button is in the Scrap projects section on phones). Confirm a normal-run reward reveals its reference, while inspecting, rejecting, skipping and dev/test builds do not. Acquired Doodle Scraps, activated synergies and the three legendary wall transformations have separate entries; purchased Notebook projects are included from saved ranks. Check category/search filtering, page controls, and returning through Settings/Pause without resuming combat early. The collection persists between runs/reloads and is included in backup/recovery transactions; importing an older backup without a collection preserves existing discoveries. Historical run choices cannot be reconstructed.
 
 Targeted checks: `node tests/browser-discoveries.cjs`; discovery persistence and backup checks also run in `node tests/validate.cjs`.
+
+## PC interaction polish (Alpha 0.1.96)
+
+Monster Notes uses a searchable list on the left and one full illustrated reference on the right. Clicking or using Up/Down/Home/End changes the selection. Unknown monsters remain hidden; phone notes retain the card layout.
+
+Settings → Controls remaps Draw and Erase to left/middle/right mouse buttons, aiming to letters/arrows/Space, and Pause to a letter/arrows/Space/Esc. Mouse conflicts swap Draw and Erase; duplicate or reserved keys are rejected. B, reward digits, Enter, Tab and F11 retain their menu actions. Escape always backs out of menus. Controls save locally; Reset controls restores left/right, WASD and Esc. Touch drawing/erasing is independent of PC remaps. Tutorial mouse gestures and current control prompts follow saved bindings.
+
+The playfield uses a pencil cursor with its point at the draw location and an eraser cursor with the existing actual-radius ring. Insufficient ink changes the idle cursor; trying to draw displays a brief nearby note and highlights the ink bar. Free/discounted route starts use the actual stroke eligibility check. Menus use the ordinary pointer with visible hover, press and keyboard-focus states.
+
+Desktop blur or a hidden tab freezes gameplay behind a click-to-resume note. Focus returning and key presses cannot resume it. Click Resume restores the prior pause/menu state; a partial stroke is cancelled and input is cleared. Browser/OS modifier shortcuts remain available. Phone background behavior is unchanged.
+
+Checks: `node tests/validate.cjs` and `node tests/browser-desktop-polish.cjs`.

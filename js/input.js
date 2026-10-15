@@ -10,8 +10,8 @@ function canPaint(){return game.state.running&&!game.state.paused&&!game.state.i
 function eraserActive(){return rightDrag||held||toggled;}
 function syncDrawingControls(){
  if(document.documentElement)document.documentElement.dataset.eraserSize=game.api.drawingControls().eraserSize;
- const button=game.dom.$('eraserBtn'),active=eraserActive();button.textContent=active?'Erasing':'Erase';button.setAttribute?.('aria-pressed',String(active));button.classList?.toggle('eraser-left',game.api.drawingControls().eraserLeft);button.classList?.toggle('is-erasing',active);button.title=game.api.drawingControls().eraserToggle?'Tap to switch between drawing and erasing':'Hold while your other finger erases. PC: right-drag to erase.';
- game.dom.canvas.style.cursor=active?'none':'crosshair';
+ const button=game.dom.$('eraserBtn'),active=eraserActive();button.textContent=active?'Erasing':'Erase';button.setAttribute?.('aria-pressed',String(active));button.classList?.toggle('eraser-left',game.api.drawingControls().eraserLeft);button.classList?.toggle('is-erasing',active);button.title=game.api.drawingControls().eraserToggle?'Tap to switch between drawing and erasing':'Hold while your other finger erases. PC: '+game.api.controlLabel('erase')+' drag to erase.';
+ game.dom.canvas.style.cursor=active?'none':'crosshair';game.api.syncDesktopCursor?.();
 }
 function finishStroke(commit=true){
  const lift=commit&&game.state.drawing&&!eraserActive()&&game.state.currentWall?.length>1;
@@ -45,7 +45,7 @@ function drawEraserCursor(){
 }
 function throwAim(){
  if(!canPaint()||document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches)return null;
- const x=Number(aimKeys.has('KeyD'))-Number(aimKeys.has('KeyA')),y=Number(aimKeys.has('KeyS'))-Number(aimKeys.has('KeyW')),length=Math.hypot(x,y);return length?{x:x/length,y:y/length}:null;
+ const x=Number(aimKeys.has('right'))-Number(aimKeys.has('left')),y=Number(aimKeys.has('down'))-Number(aimKeys.has('up')),length=Math.hypot(x,y);return length?{x:x/length,y:y/length}:null;
 }
 function drawThrowAim(){const a=throwAim();if(!a||!game.state.stats.rockRate)return;const ctx=game.dom.ctx,p=game.state.player;ctx.save();ctx.translate(p.x,p.y-8);ctx.rotate(Math.atan2(a.y,a.x));ctx.strokeStyle='#385f87';ctx.lineWidth=2;ctx.setLineDash([3,4]);ctx.beginPath();ctx.moveTo(24,0);ctx.lineTo(54,0);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(47,-6);ctx.lineTo(54,0);ctx.lineTo(47,6);ctx.stroke();ctx.restore();}
 function screenSupported(){return typeof document.documentElement?.requestFullscreen==='function'}
@@ -101,7 +101,7 @@ game.dom.$('victoryMenuBtn').onclick=game.api.returnToMenu;
 game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
 game.dom.$('resetNotebookBtn').onclick=game.api.resetNotebookProgress;
 window.addEventListener('keydown',game.api.handleInfoKey);
-const aimCode=e=>/^Key[WASD]$/.test(e.code||'')?e.code:({w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD'}[e.key?.toLowerCase()]);
+const aimCode=e=>['up','left','down','right'].find(action=>game.api.controlKey(action,e));
 window.addEventListener('keydown',e=>{const code=aimCode(e);if(!code||!canPaint()||e.ctrlKey||e.altKey||e.metaKey||e.target?.isContentEditable||['INPUT','TEXTAREA','SELECT'].includes(e.target?.tagName)||document.documentElement?.classList?.contains('native-app')||window.matchMedia?.('(pointer: coarse)').matches)return;aimKeys.add(code);e.preventDefault?.();});
 window.addEventListener('keyup',e=>{const code=aimCode(e);if(code)aimKeys.delete(code);});
 window.addEventListener('savestevie:background',()=>{
@@ -110,7 +110,7 @@ window.addEventListener('savestevie:background',()=>{
   if(game.state.running&&!game.api.infoOpen()&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec)game.api.openInfo('pause');
   game.api.stopSoundEffects();
 });
-game.dom.canvas.addEventListener('contextmenu',e=>e.preventDefault());
+game.dom.canvas.addEventListener('contextmenu',e=>e.preventDefault());game.dom.canvas.addEventListener('auxclick',e=>e.preventDefault());
 const eraserButton=game.dom.$('eraserBtn');
 eraserButton.addEventListener('pointerdown',e=>{
  if(game.api.firstLessonActive()){game.api.lessonEraserDown(e);return;}
@@ -122,10 +122,10 @@ for(const event of ['pointerup','pointercancel','lostpointercapture'])eraserButt
 eraserButton.onclick=e=>{if(game.api.firstLessonActive()){game.api.lessonEraserClick(e);return;}if(canPaint()&&(game.api.drawingControls().eraserToggle||e.detail===0))changeEraserMode(()=>{toggled=!toggled;});};
 game.dom.canvas.addEventListener('pointerdown',e=>{
  if(game.api.firstLessonActive()){game.api.lessonPointerDown(e);return;}
- if(!canPaint()||strokePointer!==null||e.button!==0&&e.button!==2)return;
- const erase=e.button===2||eraserActive();
- if(!erase&&!game.api.canStartStroke(game.api.pointerPos(e))){game.api.setMsg('Let your ink refill to 6 before drawing.');return;}
- e.preventDefault?.();strokePointer=e.pointerId;rightDrag=e.button===2;lastPoint=game.api.pointerPos(e);game.state.drawing=true;game.state.currentWall=erase?null:[lastPoint];game.dom.canvas.setPointerCapture(e.pointerId);
+ if(!canPaint()||strokePointer!==null||!game.api.mouseControl(e))return;
+ const erase=game.api.mouseControl(e)==='erase'||eraserActive();
+ if(!erase&&!game.api.canStartStroke(game.api.pointerPos(e))){game.api.setMsg('Not enough ink to start this stroke. Let it refill, or start from a free/discounted route.');game.api.showDesktopInkFeedback?.(e);return;}
+ e.preventDefault?.();strokePointer=e.pointerId;rightDrag=game.api.mouseControl(e)==='erase';lastPoint=game.api.pointerPos(e);game.state.drawing=true;game.state.currentWall=erase?null:[lastPoint];game.dom.canvas.setPointerCapture(e.pointerId);
  if(erase){cursor={...lastPoint,r:20};game.api.eraseWallPath(lastPoint,lastPoint,20);}syncDrawingControls();
 });
 game.dom.canvas.addEventListener('pointermove',e=>{
@@ -174,7 +174,7 @@ game.dom.$('returnMenuBtn').onclick=()=>{game.dom.$('pauseActions').hidden=true;
 game.dom.$('cancelQuitBtn').onclick=()=>{game.dom.$('quitConfirmation').hidden=true;game.dom.$('pauseActions').hidden=false;game.dom.$('returnMenuBtn').focus?.()};
 game.dom.$('confirmQuitBtn').onclick=game.api.returnToMenu;
 }
-const api = { throwAim,drawThrowAim,pointerPos, endDraw, cancelDrawingInput, eraserActive, syncDrawingControls, drawEraserCursor, bind };
+const api = { drawingAvailable:canPaint,throwAim,drawThrowAim,pointerPos, endDraw, cancelDrawingInput, eraserActive, syncDrawingControls, drawEraserCursor, bind };
 Object.assign(game.api, api);
 return api;
 };

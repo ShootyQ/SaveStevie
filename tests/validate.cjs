@@ -2614,3 +2614,4 @@ require('./reflected-pencil-piercing.cjs')(load);
 
 require('./pc-play-presentation.cjs')(load);
 require('./discoveries.cjs')(load);
+require('./desktop-controls.cjs')(load);
