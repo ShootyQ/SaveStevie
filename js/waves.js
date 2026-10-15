@@ -87,7 +87,7 @@ function waveDuration(){
 
 let paperChapter=null;
 function resetRun(options={}){
-  paperChapter=null;
+  paperChapter=null;delete game.state.lastDamage;
   game.api.resetCircleShapes();game.api.resetScoring();game.api.resetCatapulterRun();
   game.api.resetPaper();game.api.resetDoodleScraps();game.api.resetScrubberHint();
   game.api.cancelDrawingInput?.();
@@ -177,8 +177,8 @@ function waveComplete(){
 
   if(game.state.wave===20&&!game.state.endless){
     game.api.finishScrapRun(true);renderStevieNote(true);
-    game.api.finishScoreRun();game.api.renderScorecard('victoryScorecard');
-    game.state.running=false;game.dom.$('victoryScore').textContent=game.state.score;game.dom.victoryOverlay.style.display='grid';
+    const previousBest=game.api.bestRunScore();game.api.finishScoreRun();game.api.renderScorecard('victoryScorecard');game.api.renderRunResults(true,previousBest);
+    game.state.running=false;game.dom.$('victoryScore').textContent=game.state.score;game.dom.victoryOverlay.style.display='grid';game.api.prepareDesktopPages?.();
     if(!game.api.devRunActive()&&game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
     game.api.updateUI();return;
   }
@@ -215,10 +215,10 @@ function gameOver(){
   game.api.resetWaveFinale();
   game.api.stopSoundEffects();
   game.api.finishScrapRun();renderStevieNote();
-  game.api.finishScoreRun();game.api.renderScorecard('deathScorecard');
+  const previousBest=game.api.bestRunScore();game.api.finishScoreRun();game.api.renderScorecard('deathScorecard');game.api.renderRunResults(false,previousBest);
   game.state.running=false;
   game.dom.$('finalWave').textContent=game.state.wave;game.dom.$('finalKills').textContent=game.state.kills;game.dom.$('finalScore').textContent=game.state.score;
-  game.dom.gameOverOverlay.style.display='grid';game.api.updateScoreHUD();
+  game.dom.gameOverOverlay.style.display='grid';game.api.prepareDesktopPages?.();game.api.updateScoreHUD();
   if(!game.api.devRunActive()&&game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
 }
 const api = { stevieNote, renderStevieNote, waveDuration, returnToMenu, resetRun, startWave, waveComplete, proceedAfterWave, gameOver };

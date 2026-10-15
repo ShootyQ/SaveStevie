@@ -35,6 +35,16 @@ DoodleDefender.systems.desktopUi=function(game){
   game.dom.$('startTestBtn').textContent='Start test';game.dom.$('repeatTestBtn').textContent='Repeat last';
   return menu;
  }
+ function prepareDesktopRewards(card){
+  if(card.classList.contains('desktop-rewards')){syncDesktopRewardPanel();return;}
+  card.classList.add('desktop-rewards');
+  const layout=document.createElement('div');layout.className='desktop-reward-layout';const choices=document.createElement('div');choices.className='desktop-reward-choices';const preview=document.createElement('aside');preview.className='desktop-reward-preview';preview.setAttribute('aria-label','Selected upgrade');
+  const empty=document.createElement('div');empty.id='rewardPreviewEmpty';empty.className='reward-preview-empty';const heading=document.createElement('h3'),note=document.createElement('p');heading.textContent='What will you try?';note.textContent='Click a card or press 1–4 to inspect it. Enter confirms your choice.';empty.append(heading,note);preview.appendChild(empty);
+  for(const selector of ['.reward-build','.reward-rules','#devRewardPicker','#cards','#synergyNote']){const node=card.querySelector(selector);if(node)choices.appendChild(node);}
+  preview.append(game.dom.$('upgradeDetails'),game.dom.$('effectReplacement'));layout.append(choices,preview);card.insertBefore(layout,card.querySelector('.cardactions'));
+  const hint=document.createElement('p');hint.className='desktop-reward-keys';hint.textContent='1–4 inspect · Enter confirm · Esc clear selection';card.querySelector('.cardactions').appendChild(hint);syncDesktopRewardPanel();
+ }
+ function syncDesktopRewardPanel(){const empty=document.getElementById('rewardPreviewEmpty');if(!empty)return;const details=game.dom.$('upgradeDetails'),replacement=game.dom.$('effectReplacement');setHidden(empty,!details.hidden||!replacement.hidden);}
  function prepareDesktopPages(kind){
   if(!enabled||!document.querySelectorAll)return;
   const overlay=kind?game.dom.$(kind+'Overlay'):null;
@@ -42,6 +52,8 @@ DoodleDefender.systems.desktopUi=function(game){
    if(!card.getClientRects().length||card.closest('#betaScrapsOverlay,#wobbleRepairOverlay,#startOverlay'))continue;
    if(card.closest('#hubOverlay')){card.classList.add('desktop-hub');continue;}
    if(card.closest('#optionsOverlay')){prepareSettings(card);continue;}
+   if(card.closest('#upgradeOverlay')){prepareDesktopRewards(card);continue;}
+   if(card.closest('#gameOverOverlay,#victoryOverlay')){card.classList.add('desktop-results');continue;}
    let book=books.get(card);
    if(!book){
     const root=card.querySelector(':scope > .recess-page,:scope > .notebook-sheet')||card;
@@ -60,7 +72,7 @@ DoodleDefender.systems.desktopUi=function(game){
   const units=[],lists=[];
   for(const n of [...b.content.children]){
    if(n.hidden||getComputedStyle(n).display==='none')continue;
-   const list=n.matches('#notebookPerks,#monsterCards,#changelogEntries,#monsterIntroCards')?n:n.querySelector('#notebookPerks,#monsterCards,#changelogEntries,#monsterIntroCards');
+   const list=n.matches('#notebookPerks,#monsterCards,#changelogEntries,#monsterIntroCards,#buildUpgrades,#buildSynergies,#buildDoodleScraps')?n:n.querySelector('#notebookPerks,#monsterCards,#changelogEntries,#monsterIntroCards,#buildUpgrades,#buildSynergies,#buildDoodleScraps');
    if(list&&list.children.length){lists.push(list);for(const child of [...list.children])units.push({node:n,item:child});}
    else units.push({node:n,item:null});
   }
@@ -100,5 +112,5 @@ DoodleDefender.systems.desktopUi=function(game){
   new MutationObserver(changes=>{if(queued||!changes.some(c=>c.target.closest?.('.cardbox')&&!c.target.closest('.desktop-page-nav')))return;queued=true;requestAnimationFrame(()=>{queued=false;prepareDesktopPages();game.api.updateStevieGuides?.();});}).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['hidden']});
   window.addEventListener('resize',()=>prepareDesktopPages());
  }
- const api={desktopUiEnabled:()=>enabled,prepareDesktopPages,revealDesktopTarget};Object.assign(game.api,api);return api;
+ const api={syncDesktopRewardPanel,desktopUiEnabled:()=>enabled,prepareDesktopPages,revealDesktopTarget};Object.assign(game.api,api);return api;
 };

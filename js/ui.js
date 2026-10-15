@@ -9,6 +9,7 @@ function setMsg(t){game.dom.message.textContent=t}
 
 function updateUI(){
   game.api.updateScoreHUD();
+  game.dom.$('quickBuildBtn').hidden=!game.state.running;
   game.api.syncScrapTutorial();
   game.api.updateChapterBackground();
   const app=game.dom.$('app'),menu=!game.state.running&&game.dom.startOverlay.style.display!=='none',wasMenu=app.classList?.contains?.('menu-view');
@@ -151,7 +152,7 @@ function renderBuild(){
     ['Wall damage',f(s.wallDamage)+' /s'],['Base wall HP',s.wallHp],['Wall lifetime',s.wallLife+'s'],['Line width',s.lineWidth+'px'],
     ['Closed-wall multiplier','×'+f(s.closedBonus)],['Intersection bonus',f(s.intersectBonus*100)+'% each'],
     ['Stevie max HP',game.state.player.maxHp],['Damage reduction',f(s.playerArmor*100)+'%'],
-    ['Doodle Scraps',game.api.paperElementName()],['Throw reach',Math.round(game.api.paperRange())+'px'],['Paper-ball damage',s.rockDamage],['Throw interval',s.rockRate?f(game.api.paperThrowInterval())+'s':'Not unlocked'],
+    ['Doodle Scraps',Object.values(game.api.paperPayload()).reduce((sum,n)=>sum+n,0)+' collected'],['Throw reach',Math.round(game.api.paperRange())+'px'],['Paper-ball damage',s.rockDamage],['Throw interval',s.rockRate?f(game.api.paperThrowInterval())+'s':'Not unlocked'],
     ['Walls per stroke',1],['Erase recovery',Math.round(s.eraseRefund*100)+'%'],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
     ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','6 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','12 HP/s shared']];
   game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
@@ -162,6 +163,7 @@ function renderBuild(){
   }).join('')||'<p>No upgrades yet. Earn your first one after a wave.</p>';
   game.dom.$('buildSynergies').innerHTML=game.catalog.synergyDefs.filter(def=>game.state.synergies.has(def.name)).map(def=>
     `<article class="build-entry"><h4>${def.major?'★ ':''}${game.api.paperLabel(def.name)}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
+  game.dom.$('buildDoodleScraps').innerHTML=game.api.doodleCatalogue().filter(n=>game.api.noteLevel(n.id)>0).map(n=>'<article class="build-entry"><h4>'+n.name+' ×'+game.api.noteLevel(n.id)+'</h4><p>'+n.rarity+' · '+n.desc+'</p></article>').join('')||'<p>No Doodle Scraps collected yet. Find them during a run after unlocking their Notebook project.</p>';
 }
 const infoButtons={betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
