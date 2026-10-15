@@ -160,6 +160,7 @@ function checkSynergies(){
     if(def.req()&&!game.state.synergies.has(def.name)){
       game.state.synergies.add(def.name);
       game.state.discoveredSynergies.add(def.name);
+      game.api.recordAbilityDiscovery?.('synergy:'+def.name);
       newly.push(def);
     }
   }
@@ -444,6 +445,9 @@ function applyUpgrade(u,replaceName){
   if(u.name==='Fire Ink'&&u.rarity==='legendary')game.state.stats.backdraft=true;
   if(u.name==='Frost Ink'&&u.rarity==='legendary')game.api.setIceberg(true);
   if(u.name==='Electric Ink'&&u.rarity==='legendary')game.state.stats.tesla=true;
+  game.api.recordAbilityDiscovery?.('upgrade:'+u.name);
+  const legendaryNames={'Fire Ink':'Backdraft','Frost Ink':'Iceberg','Electric Ink':'Tesla'};
+  if(u.rarity==='legendary'&&legendaryNames[u.name])game.api.recordAbilityDiscovery?.('legendary:'+legendaryNames[u.name]);
   game.api.checkSynergies();
   return true;
 }

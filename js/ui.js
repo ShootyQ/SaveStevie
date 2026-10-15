@@ -144,7 +144,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
   };
   return effects[name]?effects[name]():game.catalog.upgrades.find(u=>u.name===name)?.desc||'Active';
 }
-let activeInfo=null,pausedBeforeInfo=false,focusBeforeInfo=null,returnInfo=null;
+let activeInfo=null,pausedBeforeInfo=false,focusBeforeInfo=null,returnInfo=[];
 function renderBuild(){
   game.api.renderTool('buildTool');
   const s=game.state.stats,f=v=>Number(v.toFixed(2));
@@ -165,12 +165,12 @@ function renderBuild(){
     `<article class="build-entry"><h4>${def.major?'★ ':''}${game.api.paperLabel(def.name)}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
   game.dom.$('buildDoodleScraps').innerHTML=game.api.doodleCatalogue().filter(n=>game.api.noteLevel(n.id)>0).map(n=>'<article class="build-entry"><h4>'+n.name+' ×'+game.api.noteLevel(n.id)+'</h4><p>'+n.rarity+' · '+n.desc+'</p></article>').join('')||'<p>No Doodle Scraps collected yet. Find them during a run after unlocking their Notebook project.</p>';
 }
-const infoButtons={betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={discoveries:'closeDiscoveriesBtn',betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(game.api.wobbleRepairActive?.())return;
   if(activeInfo===kind||activeInfo==='monsterIntro')return;
-  if(activeInfo){const back=returnInfo||(['pause','hub'].includes(activeInfo)?activeInfo:null);closeInfo(false);returnInfo=back&&kind!==back?back:null}
+  if(activeInfo){const history=[...returnInfo,...(['pause','hub','options'].includes(activeInfo)?[activeInfo]:[])];closeInfo(false);returnInfo=history.at(-1)===kind?history.slice(0,-1):history;}
   game.api.endDraw();pausedBeforeInfo=game.state.paused;focusBeforeInfo=document.activeElement;
   game.state.paused=true;activeInfo=kind;
   game.dom.$('pauseBtn').textContent='Resume';
@@ -180,6 +180,7 @@ function openInfo(kind){
     game.dom.$('pauseSummary').textContent='Wave '+game.state.wave+' · '+game.state.tool.name+' · '+game.api.notebookSnapshot().runScraps+' scraps earned';
   }
   if(kind==='build')renderBuild();
+  if(kind==='discoveries')game.api.renderDiscoveries(true);
   if(kind==='compendium')game.api.renderCompendium();
   if(kind==='notebook')game.api.renderNotebook();
   if(kind==='betaScraps')game.api.renderBetaTree();
@@ -198,13 +199,13 @@ function openInfo(kind){
 }
 function closeInfo(back=true){
   if(!activeInfo)return;
-  const kind=activeInfo,goBack=back&&returnInfo;
-  if(kind==='betaScraps')game.api.cancelBetaGesture();returnInfo=null;activeInfo=null;game.state.paused=pausedBeforeInfo;
+  const kind=activeInfo,history=returnInfo,goBack=back&&history.at(-1);
+  if(kind==='betaScraps')game.api.cancelBetaGesture();returnInfo=[];activeInfo=null;game.state.paused=pausedBeforeInfo;
   game.dom.$(kind+'Overlay').style.display='none';game.api.updateScoreHUD();
   if(kind==='lesson')game.api.dismissFirstLesson?.();
   if(kind==='doodle')game.api.dismissDoodleChoice?.();
   game.dom.$('pauseBtn').textContent='Pause';
-  if(goBack){openInfo(goBack);return}
+  if(goBack){openInfo(goBack);returnInfo=history.slice(0,-1);return}
   game.api.syncScrapTutorial();
   if(kind==='monsterIntro'||(focusBeforeInfo?.getClientRects&&focusBeforeInfo.getClientRects().length===0))game.dom.$(game.state.running?'pauseBtn':'splashHubBtn').focus?.();else focusBeforeInfo?.focus?.();
 }
