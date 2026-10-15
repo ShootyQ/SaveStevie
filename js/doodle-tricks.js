@@ -48,8 +48,21 @@ DoodleDefender.systems.doodleTricks=function(game){
   if(!p.rail){p.target=game.api.nearestEnemy(p.x,p.y,p.turretShot?(p.turretRange||210):game.api.paperRange(p.doodlePayload)+100+Math.min(100,(p.doodlePayload.underline-1)*30));p.manual=!p.target;p.life=Math.max(p.life,1.3);game.api.burst(p.x,p.y,'#63a38d',5);}return true;
  }
  function moveDoodleTricks(dx,dy){for(const d of decoys){d.x+=dx;d.y+=dy;}for(const s of snaps){s.ax+=dx;s.bx+=dx;s.ay+=dy;s.by+=dy;}for(const e of game.state.enemies)if(e.noteBubbleCenter){e.noteBubbleCenter.x+=dx;e.noteBubbleCenter.y+=dy;}for(const p of game.state.projectiles)if(p.rail)for(const q of p.rail.points){q.x+=dx;q.y+=dy;}}
+ // The decoy's own lifetime drives cosmetics, so pause freezes every wisp.
+ function drawAshImpostor(d,reduced){
+  const ctx=game.dom.ctx,age=d.maxLife-d.life,phase=age*3+d.owner,fade=Math.min(1,d.life/.65),appear=reduced?1:Math.min(1,age/.22),image=game.api.doodleArtwork('ash-impostor');
+  ctx.globalAlpha=fade*.18;ctx.fillStyle='#634c3c';ctx.beginPath();ctx.ellipse(0,17,18+(reduced?0:Math.sin(phase)*2),5,0,0,Math.PI*2);ctx.fill();
+  // Five fixed ember/ash paths: no combat particles, random calls or allocations.
+  for(let i=0;i<5;i++){const t=reduced?.4:(age*.6+i/5)%1,angle=i*2.4+d.owner;ctx.globalAlpha=fade*(1-t)*.6;ctx.fillStyle=i%2?'#d77835':'#6c6258';ctx.beginPath();ctx.arc(Math.sin(angle+t)*23,-5-t*27,1.1+(i%2)*.6,0,Math.PI*2);ctx.fill();}
+  ctx.save();ctx.translate(0,reduced?0:-3+Math.sin(phase)*3);ctx.rotate(reduced?0:Math.sin(phase*.7)*.065);
+  const pop=reduced?1:(.6+.4*appear)*(1+Math.sin(Math.min(1,age/.35)*Math.PI)*.12),breath=reduced?0:Math.sin(phase*1.4)*.025;
+  ctx.scale(pop*(1+breath),pop*(1-breath));ctx.globalAlpha=fade*appear*.94;
+  if(image)ctx.drawImage(image,-32,-35,64,58.5);
+  else{ctx.strokeStyle='#695b51';ctx.fillStyle='#eee4d6';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-16,13);ctx.bezierCurveTo(-26,-30,25,-30,16,13);ctx.lineTo(8,8);ctx.lineTo(0,15);ctx.lineTo(-8,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#5b3e30';ctx.beginPath();ctx.arc(-5,-4,2,0,7);ctx.arc(5,-4,2,0,7);ctx.fill();ctx.beginPath();ctx.arc(0,0,6,0,Math.PI);ctx.stroke();}
+  ctx.restore();ctx.globalAlpha=fade*.8;
+ }
  function drawDoodleTricks(){const ctx=game.dom.ctx,time=game.api.doodleClock(),reduced=game.api.enemyMotionReduced();ctx.save();
-  for(const d of decoys){ctx.save();ctx.translate(d.x,d.y);ctx.globalAlpha=Math.min(.8,d.life);ctx.strokeStyle='#bd693b';ctx.fillStyle='#ffe7b3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-16,13);ctx.bezierCurveTo(-26,-30,25,-30,16,13);ctx.lineTo(8,8);ctx.lineTo(0,15);ctx.lineTo(-8,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#5b3e30';ctx.beginPath();ctx.arc(-5,-4,2,0,7);ctx.arc(5,-4,2,0,7);ctx.fill();ctx.beginPath();ctx.arc(0,0,6,0,Math.PI);ctx.stroke();if(d.influence){const colors=Object.keys(d.payload).filter(k=>['fire','electric','poison','frost','eraser'].includes(k)).map(k=>({fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a'}[k]));colors.forEach((c,i)=>{ctx.strokeStyle=c;ctx.beginPath();ctx.arc(0,0,21+i*3,0,Math.PI*2);ctx.stroke();});}ctx.restore();}
+  for(const d of decoys){ctx.save();ctx.translate(d.x,d.y);drawAshImpostor(d,reduced);if(d.influence){const colors=Object.keys(d.payload).filter(k=>['fire','electric','poison','frost','eraser'].includes(k)).map(k=>({fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a'}[k]));colors.forEach((c,i)=>{ctx.strokeStyle=c;ctx.beginPath();ctx.arc(0,0,21+i*3,0,Math.PI*2);ctx.stroke();});}ctx.restore();}
   for(const l of clings){const {a,b}=l,dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy)||1;ctx.globalAlpha=Math.min(1,l.life);ctx.strokeStyle='#70aacf';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(a.x,a.y);for(let i=1;i<=6;i++){const t=i/6,wave=i===6?0:(i%2?4:-4);ctx.lineTo(a.x+dx*t-dy/len*wave,a.y+dy*t+dx/len*wave);}ctx.stroke();}
   for(const l of links){const {a,b}=l;ctx.globalAlpha=Math.min(1,l.life*2);const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1;for(let i=0;i<8;i++){const t=i/8,u=(i+1)/8,wave=reduced?0:Math.sin(time*8+i*.8)*4,nextWave=reduced?0:Math.sin(time*8+(i+1)*.8)*4;ctx.strokeStyle=palette[i%palette.length];ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(a.x+dx*t-dy/d*wave,a.y+dy*t+dx/d*wave);ctx.lineTo(a.x+dx*u-dy/d*nextWave,a.y+dy*u+dx/d*nextWave);ctx.stroke();}}
   for(const s of snaps){ctx.globalAlpha=s.life/.55;ctx.strokeStyle='#fff4a6';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(s.ax,s.ay);ctx.lineTo(s.bx,s.by);ctx.stroke();}
