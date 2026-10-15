@@ -156,7 +156,7 @@ function update(dt){
     if(e.type==='tank'&&game.api.updateChonks(e,dt))continue;
     if(e.type==='sprinter'&&game.api.updateDash(e,dt))continue;
     if(e.type==='flanker'&&game.api.updateSneaky(e,dt))continue;
-    if(e.type==='sniper'&&immobilized)e.shootCd=Math.max(.65,e.shootCd);
+    if(e.type==='sniper'&&immobilized){e.shootCd=Math.max(.65,e.shootCd);delete e.sniperAim;}
     if(e.type==='sniper'&&!immobilized&&!game.api.feastHost(e)&&game.api.updateSniper(e,dt))continue;
 
     // Bouncers ricochet off a wall a few times and try another angle before

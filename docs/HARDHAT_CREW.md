@@ -1,6 +1,6 @@
 # The hard-hat doodle crew — Alpha 0.1.24
 
-Yank Doodle enters the pool at wave 11; Rip-Raff at wave 14. Each type is capped at one living enemy. Both use ordinary paper-ball and ink damage and pause with the game. They have distinct transparent pencil-style artwork, directional facing, walking motion and job poses. Their jobs replace running straight into Stevie.
+Yank Doodle enters the pool at wave 11; Rip-Raff at wave 12. Each type is capped at one living enemy. Both use ordinary paper-ball and ink damage and pause with the game. They have distinct transparent pencil-style artwork, directional facing, walking motion and job poses. Their jobs replace running straight into Stevie.
 
 ## Yank Doodle
 

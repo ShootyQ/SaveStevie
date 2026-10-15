@@ -535,7 +535,7 @@ assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
 assert.equal(g.catalog.monsters.length,29);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,29);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],2:['scrubber','fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['catapulter','wallpuller','bulwark'],12:['gnawer'],13:['basil','medic'],14:['papertearer','brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],2:['scrubber','fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['catapulter','wallpuller','bulwark'],12:['papertearer','gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -769,7 +769,7 @@ console.log('PASS: chapter boundaries, asset coverage, new-run reset, stable bac
 const env=load(true),g=env.sandbox.testGame;
 for(const [wave,scale] of [[1,1],[5,1.2],[10,1.9],[15,2.8],[20,4],[25,4.9]])assert.ok(Math.abs(g.api.enemyHpScale(wave)-scale)<1e-10);
 g.api.resetRun();assert.equal(g.state.spawnTimer,1.5);assert.equal(g.api.spawnGap(),2.7);
-for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['tank','sniper','fast']],[13,['tank','sniper']],[16,['tank','sniper']]]){
+for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['tank','sniper','fast']],[13,['catapulter','sniper']],[16,['catapulter','sniper']]]){
  g.state.wave=wave;g.api.startWave();g.state.spawnTimer=999;g.state.timeLeft=40;g.api.spawnChapterGroup();
  assert.deepEqual(Array.from(g.state.enemies,e=>e.type),members);
  g.state.timeLeft=20;g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,members.length*2);
@@ -1064,9 +1064,9 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  g.state.enemies=[];g.api.updatePlaguefire(6.9);assert.equal(g.api.plaguefireSnapshot().scars.length,0);g.api.updatePlaguefire(.1);assert.equal(g.api.plaguefireSnapshot().scars.length,1);assert.equal(g.api.plaguefireSnapshot().scars[0].r,38);
  g.api.updatePlaguefire(20);assert.equal(g.api.plaguefireSnapshot().patches.length,0);assert.equal(g.api.plaguefireSnapshot().scars.length,2,'burnout retains paper holes');
  env.calls.length=0;g.api.drawPlaguefire();for(const call of env.calls)for(const n of call.slice(1))if(typeof n==='number')assert.ok(Number.isFinite(n));
- for(let batch=0;batch<4;batch++){for(let i=0;i<30;i++)g.api.dropPlaguefire({...source,x:50+i,y:70});assert.equal(g.api.plaguefireSnapshot().patches.length,12);g.api.updatePlaguefire(10);}
- assert.equal(g.api.plaguefireSnapshot().scars.length,24,'scar memory is bounded');
- g.api.startWave();assert.equal(g.api.plaguefireSnapshot().scars.length,0,'next wave is fresh paper');assert.equal(g.api.plaguefireSnapshot().patches.length,0);
+ for(let batch=0;batch<Math.ceil(g.catalog.plaguefireSettings.maxScars/12)+1;batch++){for(let i=0;i<30;i++)g.api.dropPlaguefire({...source,x:50+i,y:70});assert.equal(g.api.plaguefireSnapshot().patches.length,12);g.api.updatePlaguefire(10);}
+ assert.equal(g.api.plaguefireSnapshot().scars.length,g.catalog.plaguefireSettings.maxScars,'scar memory is bounded');
+ g.state.wave=6;g.api.startWave();assert.equal(g.api.plaguefireSnapshot().scars.length,0,'next chapter is fresh paper');assert.equal(g.api.plaguefireSnapshot().patches.length,0);
  g.api.dropPlaguefire({...source,poison:0});g.api.dropPlaguefire({...source,burn:0});g.api.dropPlaguefire({...source,immunity:'fire'});assert.equal(g.api.plaguefireSnapshot().patches.length,0,'both actual statuses required');
  g.state.synergies.delete('Plaguefire');g.api.dropPlaguefire(source);assert.equal(g.api.plaguefireSnapshot().patches.length,0,'synergy required');
  // Real simulation handles patch kills/rewards once through the existing path.
@@ -2346,7 +2346,7 @@ require('./wobblechomp-overhaul.cjs')(load);
  rub(112,185,2.5);assert.equal(g.state.paper.holes.length,1,'holes cannot stack');rub(g.state.player.x,g.state.player.y,2.5);assert.equal(g.state.paper.holes.length,1,'fort stays intact');
  g.state.paused=true;rub(240,220,8);assert.equal(g.state.paper.holes.length,1);g.state.paused=false;rub(240,220,2.5);assert.equal(g.state.paper.holes.length,2);
  rub(350,180,.5);assert(g.state.paper.patches.length>0);g.state.paper.arcs.push({life:.2});g.api.queuePaperRub({x:100,y:180},{x:110,y:180});
- g.state.wave=2;g.api.startWave({skipIntro:true});assert.equal(g.state.paper.holes.length,0,'fresh page clears holes');assert.equal(g.state.paper.patches.length,0,'fresh page clears smudges');assert.equal(g.state.paper.arcs.length,0);g.api.updatePaper(.1);assert.equal(g.state.paper.patches.length,0,'fresh page cancels queued rubs');
+ const oldWear=JSON.stringify(g.state.paper.surface),oldPatches=g.state.paper.patches.length;g.state.wave=2;g.api.startWave({skipIntro:true});assert.equal(g.state.paper.holes.length,2,'same chapter keeps holes');assert.equal(g.state.paper.patches.length,oldPatches,'same chapter keeps smudges');assert.equal(g.state.paper.arcs.length,0);g.api.updatePaper(.1);assert.equal(JSON.stringify(g.state.paper.surface),oldWear,'wave transition cancels queued rubs');g.state.wave=6;g.api.startWave({skipIntro:true});assert.equal(g.state.paper.holes.length,0,'next chapter is fresh paper');
  rub(100,180,2.5);rub(240,220,2.5);
  const enemy=()=>{const e=g.api.spawnEnemy(false,100,180,'grunt');e.x=100;e.y=180;e.hp=e.maxHp=100;return e;};
  let e=enemy();e.burn=3;e.poison=2;e.charged=2;assert(g.api.updatePaperEnemy(e,.05));assert.equal(e.paperTunnel.exit.x,240);assert.equal(e.burn,0);assert.equal(e.poison,0);g.api.updatePaperEnemy(e,.5);
@@ -2500,6 +2500,7 @@ require('./iceberg.cjs')(load);
 require('./tesla.cjs')(load);
 require('./yank-doodle.cjs')(load);
 require('./continuous-paper.cjs')(load);
+require('./chapter-paper.cjs')(load);
 require('./thermal-shock.cjs')(load);
 require('./rail-ink.cjs')(load);
 require('./smarter-convoys.cjs')(load);
@@ -2603,6 +2604,7 @@ require('./catapulter-animation.cjs')(load);
 require('./circle-shapes.cjs')(load);
 
 require('./late-wave-roster.cjs')(load);
+require('./specialist-wave-room.cjs')(load);
 
 require('./turret-upgrades.cjs')(load);
 
