@@ -215,7 +215,7 @@ console.log('PASS: 60-second arrival counts '+JSON.stringify(pressureCounts));
 pg.state.wave=20;pg.api.startWave();pg.state.timeLeft=51;const surgeGap=pg.api.spawnGap();pg.state.timeLeft=57;
 assert.ok(surgeGap<pg.api.spawnGap(),'short surge increases frequency');
 assert.equal(pg.api.enemySpeedScale(),1.28);
-for(const [wave,type] of [[9,'wardling'],[3,'sprinter'],[10,'brood'],[11,'wallpuller'],[11,'catapulter']]){
+for(const [wave,type] of [[9,'papertearer'],[3,'sprinter'],[10,'brood'],[11,'wallpuller'],[11,'catapulter']]){
   pg.state.enemies=[];pg.api.resetCatapulterRun();const pick=pg.api.pick;let pool;
   pg.api.pick=list=>{pool=list;return list[0]};pg.state.wave=wave-1;pg.api.enemyType();assert.ok(!pool.includes(type));
   pg.state.wave=wave;pg.api.enemyType();assert.ok(pool.includes(type));pg.api.pick=pick;
@@ -535,7 +535,7 @@ assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
 assert.equal(g.catalog.monsters.length,29);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,29);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],2:['scrubber','fast'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['wardling','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['catapulter','wallpuller','bulwark'],12:['papertearer','gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],2:['scrubber'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['papertearer','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['catapulter','wallpuller','bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -769,7 +769,7 @@ console.log('PASS: chapter boundaries, asset coverage, new-run reset, stable bac
 const env=load(true),g=env.sandbox.testGame;
 for(const [wave,scale] of [[1,1],[5,1.2],[10,1.9],[15,2.8],[20,4],[25,4.9]])assert.ok(Math.abs(g.api.enemyHpScale(wave)-scale)<1e-10);
 g.api.resetRun();assert.equal(g.state.spawnTimer,1.5);assert.equal(g.api.spawnGap(),2.7);
-for(const [wave,members] of [[6,['tank','fast']],[9,['sniper','fast']],[11,['tank','sniper','fast']],[13,['catapulter','sniper']],[16,['catapulter','sniper']]]){
+for(const [wave,members] of [[6,['tank','grunt']],[9,['sniper','grunt']],[11,['tank','sniper','grunt']],[13,['catapulter','sniper']],[16,['catapulter','sniper']]]){
  g.state.wave=wave;g.api.startWave();g.state.spawnTimer=999;g.state.timeLeft=40;g.api.spawnChapterGroup();
  assert.deepEqual(Array.from(g.state.enemies,e=>e.type),members);
  g.state.timeLeft=20;g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,members.length*2);
@@ -2078,7 +2078,7 @@ require('./wobblechomp-overhaul.cjs')(load);
  const env=load(true),g=env.sandbox.testGame;
  for(let wave=1;wave<=10;wave++){
   g.api.resetRun();g.state.wave=wave;g.api.startWave();g.api.closeInfo();g.state.paused=false;
-  const entries=g.catalog.monsters.filter(m=>m.wave===wave&&!['mini','stapler','jamling','wobble-tooth'].includes(m.type));
+  const entries=g.catalog.monsters.filter(m=>!m.pausedFromWaves&&m.wave===wave&&!['mini','stapler','jamling','wobble-tooth'].includes(m.type));
   assert.ok(entries.length,'new monster on wave '+wave);
   const normal=entries.filter(m=>!['boss','wobblechomp'].includes(m.type));
   for(const m of normal){g.state.spawnTimer=0;g.api.spawnWaveEnemies(0);assert.ok(g.state.enemies.some(e=>e.type===m.type),'guaranteed '+m.type);}
@@ -2616,3 +2616,4 @@ require('./pc-play-presentation.cjs')(load);
 require('./discoveries.cjs')(load);
 require('./desktop-controls.cjs')(load);
 require('./paper-crawl.cjs')(load);
+require('./parked-wave-enemies.cjs')(load);
