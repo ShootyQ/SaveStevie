@@ -6,7 +6,8 @@ preference?.addEventListener?.('change',e=>{reduced=e.matches});
 function supportInkTuning(n){return {
   gravityRange:Math.min(64,34+4*n),gravityPull:Math.min(95,35+6*n),gravityBonus:0,gravityAttack:1,
   frostSlow:Math.min(.65,.25+.05*(n-1)),frostCharge:Math.max(.45,1.2/(1+.18*(n-1))),frostDuration:Math.min(1.2,.65+.08*(n-1)),
-  vampireDps:5+3*n,vampireHeal:.25
+  // Rank one heals 30% less; subsequent ranks add half the former healing.
+  vampireDps:5+3*n,vampireHeal:(1.4+.375*Math.max(0,n-1))/(5+3*n)
 }}
 function state(e){let data=memory.get(e);if(!data){data={cold:0,cooldown:0,lastCold:-Infinity,held:0,wall:null,seg:0,hit:null,x:0,y:0};memory.set(e,data)}return data}
 function boss(e){return e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss}

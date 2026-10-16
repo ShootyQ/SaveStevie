@@ -1,5 +1,5 @@
 {
-  "version": "0.1.70",
+  "version": "0.1.100",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -497,7 +497,7 @@
       "id": "Vampire Ink",
       "name": "Vampire Ink",
       "category": "Ink effects",
-      "effect": "Deals life-drain damage on contact and heals for 25% of damage dealt, sharing the 6 HP/s healing budget.",
+      "effect": "Deals life-drain damage on contact; heals up to 1.4 HP/s at rank one, plus 0.375 HP/s per additional rank, from actual damage dealt. Shares the 6 HP/s healing budget.",
       "rarities": "Common / Uncommon / Rare / Legendary",
       "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
       "stacking": "Repeatable; caps/diminishing returns may apply",
@@ -1730,7 +1730,7 @@
       "id": "Vampire Ink",
       "name": "Vampire Ink",
       "category": "Ink effects",
-      "effect": "Deals life-drain damage on contact and heals for 25% of damage dealt, sharing the 6 HP/s healing budget.",
+      "effect": "Deals life-drain damage on contact; heals up to 1.4 HP/s at rank one, plus 0.375 HP/s per additional rank, from actual damage dealt. Shares the 6 HP/s healing budget.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",

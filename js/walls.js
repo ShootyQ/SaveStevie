@@ -582,7 +582,7 @@ function applyOneInk(kind,e,dt,chaos=false){
   if(kind==='blast')for(const target of game.state.enemies){if(target.hp>0&&game.api.withinRadius(target.x,target.y,e.x,e.y,65+3*n))game.api.dealDamage(target,10+3*n,'blast')}
   if(kind==='vampire'){
     const hp=e.hp;game.api.dealDamage(e,8+2*n,'vampire');const before=game.state.player.hp;
-    if(game.state.player.hp>0)game.api.healStevie(Math.max(0,Math.min(hp,hp-e.hp))*.25);
+    if(game.state.player.hp>0)game.api.healStevie(Math.max(0,Math.min(hp,hp-e.hp))*game.api.supportInkTuning(n).vampireHeal);
     game.api.animateLeech(e,game.state.player.hp-before);
   }
   if(kind==='gravity'&&!game.api.isFirstBoss(e)){const p=game.api.nearestWallPoint(e.x,e.y,42);if(p){const dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1;game.api.moveEnemySafely(e,dx/d*8,dy/d*8)}}

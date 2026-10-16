@@ -1123,11 +1123,18 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  const cooling=g.api.spawnEnemy(false,600,180,'tank');g.api.applyFrostContact(cooling,.6);g.api.updateSupportInkTime(.5);g.api.updateSupportInkEnemy(cooling,.5);g.api.updateSupportInkTime(.5);g.api.updateSupportInkEnemy(cooling,.5);assert.ok(g.api.supportInkSnapshot().enemies.find(s=>s.x===600).cold<.6,'chill fades off-wall');
  g.api.resetSupportInks();g.state.enemies=[e];e.hp=1000;e.freeze=0;e.attackCd=0;e.x=400;e.y=181;g.state.inks.frost=1;g.state.inks.vampire=0;
  for(let i=0;i<40;i++)g.api.update(.033);assert.ok(e.freeze>0,'real wall contact triggers level-one freeze');const frozenHp=e.hp,wallHp=wall.hp;g.api.update(.1);assert.ok(e.hp<frozenHp,'frozen enemies still receive wall damage');assert.equal(wall.hp,wallHp,'frozen enemies cannot bite walls');
+ // Vampire rank scaling preserves DPS, with a reduced base and half-sized healing gains.
+ for(const rank of [1,2,4,10]){
+  const t=g.api.supportInkTuning(rank);assert.equal(t.vampireDps,5+3*rank);
+  assert.ok(Math.abs(t.vampireDps*t.vampireHeal-(1.4+.375*(rank-1)))<1e-9,'healing gains only 0.375 HP/s per rank');
+  g.state.inks.vampire=rank;e.hp=1000;g.state.player.hp=30;g.api.resetSustain();g.api.applyVampireContact(e,.5);
+  assert.ok(Math.abs(g.state.player.hp-30-(1.4+.375*(rank-1))*.5)<1e-9,'actual contact uses the rank healing curve');
+ }
  // Life drain adds useful damage even at full HP and heals only damage actually dealt.
  g.api.resetSupportInks();g.state.inks.frost=0;g.state.inks.vampire=1;e.hp=100;g.state.player.hp=g.state.player.maxHp;g.api.resetSustain();g.api.applyVampireContact(e,1);assert.equal(e.hp,92);assert.equal(g.state.player.hp,g.state.player.maxHp);assert.equal(g.api.supportInkSnapshot().bites.length,1,'full-health attacks have a fang pulse');
- g.state.player.hp=50;g.api.applyVampireContact(e,1);assert.equal(e.hp,84);assert.equal(g.state.player.hp,52,'25% drain healing');
- g.api.resetSustain();e.hp=1;g.state.player.hp=50;g.api.applyVampireContact(e,1);assert.equal(g.state.player.hp,50.25,'overkill never creates extra healing');
- e.hp=0;g.api.applyVampireContact(e,1);assert.equal(g.state.player.hp,50.25,'dead enemies never heal');
+ g.state.player.hp=50;g.api.applyVampireContact(e,1);assert.equal(e.hp,84);assert.ok(Math.abs(g.state.player.hp-51.4)<1e-9,'rank-one drain heals 30% less');
+ g.api.resetSustain();e.hp=1;g.state.player.hp=50;g.api.applyVampireContact(e,1);assert.ok(Math.abs(g.state.player.hp-50.175)<1e-9,'overkill never creates extra healing');
+ e.hp=0;g.api.applyVampireContact(e,1);assert.ok(Math.abs(g.state.player.hp-50.175)<1e-9,'dead enemies never heal');
  e.hp=1000;g.state.player.hp=0;g.api.applyVampireContact(e,1);assert.equal(g.state.player.hp,0,'drain never revives Stevie');
  g.api.resetSustain();g.state.player.hp=10;g.state.inks.vampire=10;for(let i=0;i<20;i++){e.hp=1000;g.api.applyVampireContact(e,1)}assert.equal(g.state.player.hp,16,'crowds share the existing 6 HP healing reserve');
  const stateBefore=JSON.stringify(g.state),visualBefore=JSON.stringify(g.api.supportInkSnapshot());env.calls.length=0;g.api.drawSupportInks();assert.equal(JSON.stringify(g.state),stateBefore);assert.equal(JSON.stringify(g.api.supportInkSnapshot()),visualBefore);for(const call of env.calls)for(const v of call.slice(1))if(typeof v==='number')assert.ok(Number.isFinite(v));
