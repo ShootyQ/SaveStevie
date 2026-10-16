@@ -151,15 +151,48 @@ function paperTransitionPose(e){
  }
  return {visible,sx,sy,angle,y:reduced?0:y,reduced};
 }
+// A moving paper tent, with limb pressure beneath it. Never exposes the sprite in transit.
+function paperBumpPose(e){
+ const t=e.paperTunnel;if(!t)return null;
+ const reduced=game.api.enemyMotionReduced(),age=reduced?0:t.age||0,step=Math.sin(age*10),r=Math.min(30,Math.max(23,e.r*1.3));
+ const angle=Math.atan2(t.exit.y-e.y,t.exit.x-e.x),rise=t.phase==='emerge'?Math.max(.12,game.api.clamp(t.warning/tuning.exitWarning,0,1)):1;
+ return {r,angle,step,rise,sway:reduced?0:Math.sin(age*5)*1.5,age,reduced};
+}
 function drawPaperBump(e){
- const ctx=game.dom.ctx,t=e.paperTunnel;if(t.phase==='enter'){game.api.drawPaperDoodle(e,paperTransitionPose(e));return;}const r=Math.min(23,Math.max(13,e.r)),wobble=game.api.enemyMotionReduced()?0:Math.sin(t.age*14)*1.5;
- ctx.save();ctx.fillStyle='#b3a48d55';ctx.beginPath();ctx.ellipse(e.x+3,e.y+5,r+5,r*.6,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff8e6';ctx.strokeStyle='#af9c7a';ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(e.x,e.y+wobble,r,r*.7,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle='#a8c0d266';ctx.lineWidth=1;for(let i=-1;i<=1;i++){ctx.beginPath();ctx.moveTo(e.x-r*.65,e.y+i*6);ctx.quadraticCurveTo(e.x,e.y-5+i*6,e.x+r*.65,e.y+i*6);ctx.stroke();}
- ctx.strokeStyle=t.phase==='emerge'?'#b26042':'#4f8361';ctx.lineWidth=3;
- if(t.rub>0||t.phase==='emerge'){const progress=t.phase==='emerge'?1-t.warning/tuning.exitWarning:t.rub/tuning.escapeSeconds;ctx.beginPath();ctx.arc(e.x,e.y,r+7,-Math.PI/2,-Math.PI/2+Math.PI*2*progress);ctx.stroke();}
- if(t.phase==='emerge'){ctx.beginPath();ctx.moveTo(e.x-r*.6,e.y);ctx.lineTo(e.x-3,e.y-5);ctx.lineTo(e.x+3,e.y+4);ctx.lineTo(e.x+r*.6,e.y-2);ctx.stroke();}
+ const ctx=game.dom.ctx,t=e.paperTunnel;if(!t)return;
+ if(t.phase==='enter'){game.api.drawPaperDoodle(e,paperTransitionPose(e));return;}
+ const p=paperBumpPose(e),{r,angle,step,rise}=p;
+ ctx.save();ctx.translate(e.x,e.y);ctx.rotate(angle);ctx.translate(0,p.sway);
+ // Soft contact shadow anchors the displaced sheet; the crown catches the light.
+ let shade=ctx.createRadialGradient(3,7,2,3,7,r*1.65);shade.addColorStop(0,'rgba(88,74,57,'+(.24*rise)+')');shade.addColorStop(.6,'rgba(88,74,57,'+(.12*rise)+')');shade.addColorStop(1,'rgba(88,74,57,0)');ctx.fillStyle=shade;ctx.beginPath();ctx.ellipse(3,7,r*1.65,r*1.18,0,0,Math.PI*2);ctx.fill();
+ ctx.scale(1+step*.035,1-step*.025);
+ // Opposite forefeet take turns pushing out the paper, rather than bouncing a dot.
+ for(const side of [-1,1]){
+  const push=(1+step*side)*.5,x=r*(.22+push*.27),y=side*r*(.67+push*.16),size=r*(.3+push*.08);
+  const paw=ctx.createRadialGradient(x-2,y-3,1,x,y,size);paw.addColorStop(0,'rgba(255,253,239,'+(.86*rise)+')');paw.addColorStop(.6,'rgba(207,194,167,'+(.38*rise)+')');paw.addColorStop(1,'rgba(214,203,180,0)');ctx.fillStyle=paw;ctx.beginPath();ctx.ellipse(x,y,size,size*.76,side*.4,0,Math.PI*2);ctx.fill();
+ }
+ const dome=ctx.createRadialGradient(-r*.25,-r*.28,1,0,0,r*1.3);dome.addColorStop(0,'rgba(255,254,243,'+(.99*rise)+')');dome.addColorStop(.44,'rgba(248,246,237,'+(.97*rise)+')');dome.addColorStop(.77,'rgba(197,191,179,'+(.65*rise)+')');dome.addColorStop(1,'rgba(221,211,188,0)');ctx.fillStyle=dome;ctx.beginPath();ctx.ellipse(0,0,r*1.3,r*.94,0,0,Math.PI*2);ctx.fill();
+ // The head presses forward under the sheet, with a faint obscured body below.
+ const head=ctx.createRadialGradient(r*.69,-3,1,r*.7,0,r*.58);head.addColorStop(0,'rgba(255,254,243,'+(.85*rise)+')');head.addColorStop(.65,'rgba(220,214,201,'+(.34*rise)+')');head.addColorStop(1,'rgba(220,214,201,0)');ctx.fillStyle=head;ctx.beginPath();ctx.ellipse(r*.73,0,r*.6,r*.54,0,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle='rgba(111,100,78,'+(.2*rise)+')';ctx.lineWidth=.9;
+ for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(-r*.6,side*r*.44);ctx.quadraticCurveTo(-r*.94,side*r*.58,-r*(1.55+step*side*.08),side*r*.79);ctx.stroke();ctx.strokeStyle='rgba(255,254,244,'+(.7*rise)+')';ctx.beginPath();ctx.moveTo(-r*.6,side*r*.44-1);ctx.quadraticCurveTo(-r*.94,side*r*.58-1,-r*1.55,side*r*.79-1);ctx.stroke();ctx.strokeStyle='rgba(111,100,78,'+(.2*rise)+')';}
+ // Small, sharp folds run from the body into the otherwise flat sheet.
+ ctx.lineWidth=.7;
+ for(const side of [-1,1])for(let i=0;i<2;i++){
+  const x=(i? .55:-.45)*r,y=side*r*.62,reach=r*(1.35+i*.13);
+  ctx.fillStyle='rgba(224,218,204,'+(.42*rise)+')';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-r*.18,side*reach);ctx.lineTo(x+r*.22,side*r*.77);ctx.closePath();ctx.fill();
+  ctx.strokeStyle='rgba(255,254,245,'+(.8*rise)+')';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x-r*.18,side*reach);ctx.stroke();
+ }
+ ctx.restore();
+ // Lines stay horizontal on the page, but bow over the lifted surface.
+ ctx.save();ctx.translate(e.x,e.y);ctx.strokeStyle='rgba(136,167,182,'+(.46*rise)+')';ctx.lineWidth=.85;
+ for(let y=-r;y<=r;y+=10){const width=Math.sqrt(Math.max(0,1-y*y/(r*r)))*r*1.12;if(width<2)continue;ctx.beginPath();ctx.moveTo(-width,y);ctx.bezierCurveTo(-width*.55,y-r*.25*rise,width*.55,y-r*.25*rise,width,y);ctx.stroke();}
+ // Keep the existing rub/exit warning readable without painting a solid badge.
+ if(t.rub>0||t.phase==='emerge'){const progress=t.phase==='emerge'?1-t.warning/tuning.exitWarning:t.rub/tuning.escapeSeconds;ctx.strokeStyle=t.phase==='emerge'?'#b26042':'#4f8361';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,r+11,-Math.PI/2,-Math.PI/2+Math.PI*2*progress);ctx.stroke();}
+ if(t.phase==='emerge'){ctx.strokeStyle='#79674c';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(-r*.6,0);ctx.lineTo(-3,-5);ctx.lineTo(3,4);ctx.lineTo(r*.6,-2);ctx.stroke();}
  ctx.restore();if(t.phase==='emerge')game.api.drawPaperDoodle(e,paperTransitionPose(e));
 }
 function drawSparkGaps(){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#315fd2';ctx.lineWidth=3;for(const arc of game.state.paper.arcs){const dx=arc.b.x-arc.a.x,dy=arc.b.y-arc.a.y,d=Math.hypot(dx,dy)||1;ctx.globalAlpha=Math.min(1,arc.life/.45);ctx.beginPath();ctx.moveTo(arc.a.x,arc.a.y);for(let i=1;i<6;i++){const offset=(i%2?1:-1)*4;ctx.lineTo(arc.a.x+dx*i/6-dy/d*offset,arc.a.y+dy*i/6+dx/d*offset);}ctx.lineTo(arc.b.x,arc.b.y);ctx.strokeStyle='#b9eaff';ctx.lineWidth=6;ctx.stroke();ctx.strokeStyle='#315fd2';ctx.lineWidth=2;ctx.stroke();}ctx.restore();}
 resetPaper();
-const api={safePaperPoint,addPaperHole,clearFirePatch,firePatchCleared,clipFirePatch,moveFirePatch,updateEraseSlide,paperTuning:()=>({...tuning}),paperTransitionPose,paperActive,resetPaper,beginPaperWave,cancelPaperRub,queuePaperRub,updatePaper,updatePaperEnemy,underPaper,eraseProjectiles,eraseWallReaction,movePaper,drawPaper,drawPaperBump,drawSparkGaps};Object.assign(game.api,api);return api;
+const api={safePaperPoint,addPaperHole,clearFirePatch,firePatchCleared,clipFirePatch,moveFirePatch,updateEraseSlide,paperTuning:()=>({...tuning}),paperBumpPose,paperTransitionPose,paperActive,resetPaper,beginPaperWave,cancelPaperRub,queuePaperRub,updatePaper,updatePaperEnemy,underPaper,eraseProjectiles,eraseWallReaction,movePaper,drawPaper,drawPaperBump,drawSparkGaps};Object.assign(game.api,api);return api;
 };
