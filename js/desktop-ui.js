@@ -25,8 +25,9 @@ DoodleDefender.systems.desktopUi=function(game){
   // Separate encounter setup from the starting build, with shared Start controls.
   const test=game.dom.$('testLabPanel'),testNav=document.createElement('nav');testNav.className='desktop-test-tabs';testNav.setAttribute('aria-label','Test setup');
   const setup=document.createElement('div'),build=document.createElement('div'),extras=document.createElement('div');setup.id='desktopTestEncounter';build.id='desktopTestBuild';extras.id='desktopTestExtras';let inBuild=false;
+  const previewButtons=['openWhiteBrothersBtn','openWobblePreviewBtn'].map(id=>game.dom.$(id));
   for(const child of [...test.children]){if(child.id==='testLabNotice'||child.querySelector?.('#startTestBtn'))continue;if(child.tagName==='H4')inBuild=true;(inBuild?build:setup).appendChild(child);}
-  extras.append(game.dom.$('devModeBtn'),game.dom.$('devModeNote'),game.dom.$('openWobblePreviewBtn'),setup.querySelector('.option-help'));test.prepend(testNav,setup,build,extras);const testItems=[{id:setup.id,label:'Encounter',panel:setup},{id:build.id,label:'Starting build',panel:build},{id:extras.id,label:'Extras',panel:extras}];
+  extras.append(...previewButtons,game.dom.$('devModeBtn'),game.dom.$('devModeNote'),setup.querySelector('.option-help'));test.prepend(testNav,setup,build,extras);const testItems=[{id:setup.id,label:'Encounter',panel:setup},{id:build.id,label:'Starting build',panel:build},{id:extras.id,label:'Extras',panel:extras}];
   menu.selectTest=index=>{for(const [i,item] of testItems.entries()){setHidden(item.panel,i!==index);item.button.setAttribute('aria-selected',String(i===index));item.button.tabIndex=i===index?0:-1;}};
   for(const item of testItems){item.panel.setAttribute('role','tabpanel');item.panel.setAttribute('aria-labelledby',item.id+'Tab');}makeTabs(testNav,testItems,index=>menu.selectTest(index));testNav.setAttribute('aria-orientation','horizontal');menu.selectTest(0);
   game.dom.$('testLabBtn').classList.add('desktop-touch-option');
@@ -49,7 +50,7 @@ DoodleDefender.systems.desktopUi=function(game){
   const overlay=kind?game.dom.$(kind+'Overlay'):null;
   for(const card of (overlay||document).querySelectorAll('.cardbox')){
    if(!card.getClientRects().length||card.closest('#betaScrapsOverlay,#wobbleRepairOverlay,#startOverlay'))continue;
-   if(card.closest('#discoveriesOverlay,#compendiumOverlay'))continue;
+   if(card.closest('#discoveriesOverlay,#compendiumOverlay,#whiteBrothersOverlay'))continue;
    if(card.closest('#hubOverlay')){card.classList.add('desktop-hub');continue;}
    if(card.closest('#optionsOverlay')){prepareSettings(card);continue;}
    if(card.closest('#upgradeOverlay')){prepareDesktopRewards(card);continue;}
