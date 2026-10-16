@@ -18,7 +18,7 @@ const root=path.resolve(__dirname,'..');
    const g=testGame;g.api.resetRun({skipIntro:true});g.state.wave=14;g.state.spawnTimer=999;
    const p=g.state.player,x=Math.max(40,p.x-115),y=p.y-140;
    const tug=g.api.spawnEnemy(false,x,y,'wallpuller');g.api.createWall([{x:x+55,y:y-65},{x:x+55,y:y+65}]);g.api.updateHardhat(tug,1.1);
-   const rip=g.api.spawnEnemy(false,p.x,p.y-195,'papertearer');g.api.updateHardhat(rip,1.1);g.api.updateHardhat(rip,1.4);
+   const rip=g.api.spawnEnemy(false,p.x,p.y-195,'papertearer');Object.assign(rip,g.api.crewWorkPoint(rip));g.api.updateHardhat(rip,1.1);g.api.updateHardhat(rip,1.4);
    g.api.updateEnemyAnimations(.03);g.api.draw();const r=g.dom.canvas.getBoundingClientRect();return {x:r.left+x+27,y:r.top+y,entry:g.state.paper.holes.length};
   });
   assert.equal(scene.entry,1);await page.screenshot({path:'/tmp/hardhat-jobs-'+viewport.width+'.png'});
@@ -34,7 +34,7 @@ const root=path.resolve(__dirname,'..');
   }
   const result=await page.evaluate(()=>{
    const g=testGame,tug=g.state.enemies.find(e=>e.type==='wallpuller'),rip=g.state.enemies.find(e=>e.type==='papertearer');
-   const cancelled=tug.crew.phase==='walk'&&tug.stun>0;g.api.updateHardhat(rip,1.3);g.api.updateHardhatBombs(1);g.api.updateEnemyAnimations(.03);g.api.draw();
+   const cancelled=tug.crew.phase==='walk'&&tug.stun>0;g.api.updateHardhat(rip,1.3);g.api.updateHardhatBombs(2.1);g.api.updateEnemyAnimations(.03);g.api.draw();
    const state=JSON.stringify(g.state),jobs=JSON.stringify(g.api.hardhatSnapshot());g.api.draw();return {cancelled,holes:g.state.paper.holes.length,pure:state===JSON.stringify(g.state)&&jobs===JSON.stringify(g.api.hardhatSnapshot()),art:g.api.doodleArtwork('wallpuller').naturalWidth>0&&g.api.doodleArtwork('papertearer').naturalWidth>0};
   });
   assert(result.cancelled,'real mouse/touch eraser releases rope');assert.equal(result.holes,2);assert(result.pure);assert(result.art);assert.deepEqual(errors,[]);

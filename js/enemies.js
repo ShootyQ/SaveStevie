@@ -364,8 +364,8 @@ function fireSniper(e,eraser=false,host=null){
   const aim=!eraser&&e.sniperAim||game.state.player,dx=aim.x-e.x,dy=aim.y-e.y,d=Math.hypot(dx,dy)||1;
   if(!eraser)delete e.sniperAim;
   if(eraser){const tankRadius=game.catalog.enemyDefs.tank.r,side=host?Math.abs((e.x-host.x)*dy/d-(e.y-host.y)*dx/d):0,radius=Math.max(tankRadius,host?.r||0)+8+Math.min(22,side);
-   game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*240,vy:dy/d*240,life:Math.min(6,(d+100)/240),r:5,damage:0,eraser:true,eraseRadius:radius,sniperOwner:e,reflected:false});game.api.playSound('pencil');
-  }else game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:Math.max(2,Math.min(6,(d+30)/150)),r:3,damage:7,sniperOwner:e,reflected:false});
+   game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*240,vy:dy/d*240,life:Math.min(game.api.desktopUiEnabled?.()?12:6,(d+100)/240),r:5,damage:0,eraser:true,eraseRadius:radius,sniperOwner:e,reflected:false});game.api.playSound('pencil');
+  }else game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:Math.max(2,Math.min(game.api.desktopUiEnabled?.()?12:6,(d+30)/150)),r:3,damage:7,sniperOwner:e,reflected:false});
   game.api.animateEnemyAction(e,'fire');
   game.api.burst(e.x,e.y,'#4b79d8',3);
 }
@@ -686,11 +686,12 @@ function updateEnemyBehavior(e,dt){
 }
 // Cached, deterministic firing-position search. Closed defenses remain solid.
 let sniperRoutes=new WeakMap();
-function sniperCanAim(e){if(e.sniperAim)return true;const p=game.state.player,d=Math.hypot(e.x-p.x,e.y-p.y);return d>=90&&d<=260&&!game.api.shotBlocked(e.x,e.y,p.x,p.y,3)}
+function sniperRange(){return game.api.desktopUiEnabled?.()?Math.min(720,Math.max(420,Math.max(game.state.W,game.state.H)*.65)):260;}
+function sniperCanAim(e){if(e.sniperAim)return true;const p=game.state.player,d=Math.hypot(e.x-p.x,e.y-p.y);return d>=90&&d<=sniperRange()&&!game.api.shotBlocked(e.x,e.y,p.x,p.y,3)}
 function sniperPathClear(e,x,y){const p=game.state.player;return game.api.pointSegDist(p.x,p.y,e.x,e.y,x,y)>p.r+e.r+40&&bouncePathClear(e,x,y,0)}
 function sniperRoute(e){
  const p=game.state.player,candidates=[],margin=e.r+20;
- for(const radius of [145,210])for(let i=0;i<16;i++){
+ for(const radius of game.api.desktopUiEnabled?.()?[sniperRange()*.8,sniperRange()*.55,210]:[145,210])for(let i=0;i<16;i++){
   const a=i*Math.PI/8,x=game.api.clamp(p.x+Math.cos(a)*radius,margin,game.state.W-margin),y=game.api.clamp(p.y+Math.sin(a)*radius,margin,game.state.H-margin);
   if(Math.hypot(x-p.x,y-p.y)<90||game.api.shotBlocked(x,y,p.x,p.y,3))continue;
   candidates.push({x,y});
@@ -855,7 +856,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { specialistReinforcements,specialistTarget,hitPaper,throwPaper,resetScrubberRub,eraseScrubber,resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie,spawnScheduledEnemy, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { specialistReinforcements,specialistTarget,hitPaper,throwPaper,resetScrubberRub,eraseScrubber,resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperRange,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie,spawnScheduledEnemy, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

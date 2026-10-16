@@ -43,6 +43,7 @@ else{
    const saved=save();notify();return {...snapshot(),saved};
   }
   const trusted=event=>window&&event.sender===window.webContents&&event.senderFrame===window.webContents.mainFrame&&event.senderFrame?.url.startsWith('stevie://game/');
+  ipcMain.handle('desktop:quit',event=>{if(!trusted(event))throw Error('Not available');setImmediate(()=>app.quit());return true;});
   ipcMain.handle('desktop:display:get',event=>{if(!trusted(event))throw Error('Not available');return snapshot();});
   ipcMain.handle('desktop:display:apply',(event,input)=>{if(!trusted(event))throw Error('Not available');return applyDisplay(input);});
   function createWindow(){

@@ -71,6 +71,10 @@ function toggleScreen(){
   if(document.fullscreenElement){try{document.exitFullscreen()?.catch(()=>{});}catch{}}else enterScreen();
 }
 function bind() {
+const canQuit=typeof window.stevieDesktop?.quit==='function';
+for(const id of ['splashQuitBtn','pauseQuitBtn','settingsQuitBtn']){game.dom.$(id).hidden=!canQuit;game.dom.$(id).onclick=()=>{if(canQuit)game.api.openInfo('desktopQuit');};}
+game.dom.$('desktopQuitCancel').onclick=()=>game.api.closeInfo();
+game.dom.$('desktopQuitConfirm').onclick=async()=>{if(!canQuit)return;const button=game.dom.$('desktopQuitConfirm');button.disabled=true;try{await window.stevieDesktop.quit();}catch{game.dom.$('desktopQuitStatus').textContent='Could not close the app. Try again or use the window close button.';}finally{button.disabled=false;}};
 window.addEventListener('resize',game.api.resize);
 // A header, font or control-size change can resize the arena without resizing the window.
 if(typeof ResizeObserver!=='undefined')new ResizeObserver(()=>{

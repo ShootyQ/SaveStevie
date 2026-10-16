@@ -166,7 +166,7 @@ function renderBuild(){
     `<article class="build-entry"><h4>${def.major?'★ ':''}${game.api.paperLabel(def.name)}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
   game.dom.$('buildDoodleScraps').innerHTML=game.api.doodleCatalogue().filter(n=>game.api.noteLevel(n.id)>0).map(n=>'<article class="build-entry"><h4>'+n.name+' ×'+game.api.noteLevel(n.id)+'</h4><p>'+n.rarity+' · '+n.desc+'</p></article>').join('')||'<p>No Doodle Scraps collected yet. Find them during a run after unlocking their Notebook project.</p>';
 }
-const infoButtons={whiteBrothers:'closeWhiteBrothersBtn',discoveries:'closeDiscoveriesBtn',betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={desktopQuit:'desktopQuitCancel',whiteBrothers:'closeWhiteBrothersBtn',discoveries:'closeDiscoveriesBtn',betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(game.api.wobbleRepairActive?.())return;
