@@ -62,7 +62,7 @@ function updateFirstBossHelpers(dt){
  if(game.state.enemies.filter(n=>n.bossOwner===e&&n.hp>0).length>=firstBossTuning(e).helperCap)return;
  const {W,H}=game.state,serial=b.helperSerial++,side=serial%4;
  const x=side===1?W+26:side===3?-26:W*(side===0?.25:.75),y=side===0?-26:side===2?H+26:H*(side===1?.3:.7);
- const friend=game.api.spawnEnemy(false,x,y,serial%3===2?'fast':'grunt');if(friend)friend.bossOwner=e;
+ const friend=game.api.spawnEnemy(false,x,y,'grunt');if(friend)friend.bossOwner=e;
 }
 function friendCanBePicked(e,n){
  const p=game.state.player;return n.bossOwner===e&&n.hp>0&&!n.flight&&n.freeze<=0&&n.stun<=0&&game.state.enemies.includes(n)&&n.x>=n.r&&n.x<=game.state.W-n.r&&n.y>=n.r&&n.y<=game.state.H-n.r&&Math.hypot(n.x-p.x,n.y-p.y)>p.r+n.r+75+firstBossTuning(e).minThrowGain+12;

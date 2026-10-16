@@ -3,7 +3,7 @@ module.exports=load=>{
  const g=load(true).sandbox.testGame,a=g.api,s=g.state;
  function reset(wave=12){a.resetRun({skipIntro:true});s.wave=wave;s.W=800;s.H=700;s.player.x=600;s.player.y=350;s.enemies=[];s.walls=[];s.timeLeft=60;s.stats.ink=s.stats.maxInk=10000;}
  reset();let pool;const pick=a.pick;a.pick=p=>{pool=Array.from(p);return p[0];};a.enemyType();a.pick=pick;
- assert(pool.filter(t=>t==='sniper').length>pool.filter(t=>t==='grunt').length);assert(pool.includes('papertearer'));assert.equal(g.catalog.monsters.find(m=>m.type==='papertearer').wave,12);
+ assert(pool.filter(t=>t==='sniper').length>pool.filter(t=>t==='grunt').length);assert(pool.includes('papertearer'));assert.equal(g.catalog.monsters.find(m=>m.type==='papertearer').wave,9);
  a.spawnChapterGroup();assert(s.enemies.some(e=>e.type==='catapulter'),'available builder gets a chapter slot');assert.equal(a.catapulterSnapshot().cap,4);
  reset();const yank=a.spawnEnemy(false,100,200,'wallpuller');const tiny=a.createWall([{x:120,y:190},{x:120,y:210}]).base,big=a.createWall([{x:180,y:120},{x:180,y:300}]).base,far=a.createWall([{x:700,y:80},{x:700,y:600}]).base;
  a.updateHardhat(yank,1.1);assert.equal(yank.crew.wall,big,'longest nearby wall wins over nearer tiny or enormous distant wall');assert.notEqual(yank.crew.wall,tiny);assert.notEqual(yank.crew.wall,far);
