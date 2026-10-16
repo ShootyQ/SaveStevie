@@ -1,0 +1,40 @@
+{
+  "image": "mr-glue-effects.png",
+  "columns": 4,
+  "rows": 3,
+  "frameWidth": 362,
+  "frameHeight": 362,
+  "animations": {
+    "shoot": {
+      "frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fps": 9,
+      "loop": false
+    },
+    "splat": {
+      "frames": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "fps": 10,
+      "loop": false
+    },
+    "puddle": {
+      "frames": [
+        8,
+        9,
+        10,
+        11
+      ],
+      "fps": 5,
+      "loop": true
+    }
+  },
+  "notes": "Transparent glue VFX animation study. Shot travels right; rotate at runtime for other directions. Landing finishes in a persistent puddle loop. No encounter behavior wired."
+}
