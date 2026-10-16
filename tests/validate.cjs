@@ -2617,3 +2617,4 @@ require('./discoveries.cjs')(load);
 require('./desktop-controls.cjs')(load);
 require('./paper-crawl.cjs')(load);
 require('./parked-wave-enemies.cjs')(load);
+require('./white-brothers.cjs')(load);

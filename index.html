@@ -83,7 +83,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.98</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.99</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -293,6 +293,7 @@
 </div>
 <div id="focusResumeOverlay" hidden role="dialog" aria-modal="true" aria-labelledby="focusResumeTitle"><div class="focus-resume-note"><span class="section-kicker">PENCIL DOWN</span><h2 id="focusResumeTitle">Saved your place.</h2><p>The game paused while you were away. Click when you’re ready.</p><button id="focusResumeBtn">Click to resume</button></div></div>
 <div id="desktopInkFeedback" hidden role="status">Not enough ink</div>
+<div class="overlay build-overlay" id="whiteBrothersOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="brothersTitle"><div class="cardbox build-box brothers-studio"><div class="build-heading"><div><span class="section-kicker">STEVIE’S MONSTER WORKSHOP</span><h2 id="brothersTitle">The White Brothers</h2></div><button id="closeWhiteBrothersBtn">Back to settings</button></div><p class="brothers-caption">Wite-Out &amp; Mr. Glue · Character and animation preview. The boss encounter comes later.</p><canvas id="brothersCanvas" width="1000" height="530" aria-label="Animated Wite-Out and Mr. Glue monster models"></canvas><div class="brothers-tools"><label>Animate<select id="brothersCharacter"><option value="both">Both brothers</option><option value="wite">Wite-Out</option><option value="glue">Mr. Glue</option></select></label><label>Speed<select id="brothersSpeed"><option value="0.5">Half speed</option><option value="1" selected>Normal</option><option value="2">Double speed</option></select></label><label><input id="brothersLoop" type="checkbox" checked>Loop</label><label><input id="brothersReduced" type="checkbox">Low motion</label></div><div class="brothers-actions"><button type="button" id="brothers-idle" class="secondary">Idle</button><button type="button" id="brothers-walk" class="secondary">Walk</button><button type="button" id="brothers-intro" class="secondary">Entrance</button><button type="button" id="brothers-attack" class="secondary">Attack</button><button type="button" id="brothers-throw" class="secondary">Throw</button><button type="button" id="brothers-hit" class="secondary">Hit</button><button type="button" id="brothers-dizzy" class="secondary">Dizzy</button><button type="button" id="brothers-tantrum" class="secondary">Tantrum</button><button type="button" id="brothers-defeat" class="secondary">Defeat</button></div><footer class="brothers-footer"><button id="brothersShowcaseBtn">Stop showcase</button><button id="brothersPauseBtn" class="secondary">Pause</button><button id="brothersResetBtn" class="secondary">Reset poses</button></footer><p id="brothersStatus" role="status"></p></div></div>
 <div class="overlay build-overlay" id="optionsOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="optionsTitle">
   <div class="cardbox build-box options-book">
     <div class="build-heading"><div><span class="section-kicker">MAKE IT YOUR NOTEBOOK</span><h2 id="optionsTitle">Settings</h2></div><button id="closeOptionsBtn">Close</button></div>
@@ -322,7 +323,7 @@
     <section class="dev-mode-section"><button class="secondary dev-mode-button" id="devModeBtn" aria-pressed="false">DEV MODE</button><p id="devModeNote" class="option-help"></p><button class="secondary" id="testLabBtn" aria-expanded="false" aria-controls="testLabPanel">Test a wave / boss</button>
       <section id="testLabPanel" class="test-lab" hidden aria-labelledby="testLabTitle">
         <h3 id="testLabTitle">The scratch page</h3>
-        <button type="button" class="secondary" id="openWobblePreviewBtn">Wobblechomp · Animation preview</button><p class="option-help">Jump straight into a fight with your own build. Test runs save no scraps or records. Starting a test replaces your current run; already banked scraps stay saved.</p>
+        <button type="button" class="secondary" id="openWobblePreviewBtn">Wobblechomp · Animation preview</button><button type="button" class="secondary" id="openWhiteBrothersBtn">White Brothers · Animation studio</button><p class="option-help">Jump straight into a fight with your own build. Test runs save no scraps or records. Starting a test replaces your current run; already banked scraps stay saved.</p>
         <div class="test-presets" aria-label="Boss shortcuts"><button type="button" data-test-wave="5">King · 5</button><button type="button" data-test-wave="10">Wobblechomp · 10</button><button type="button" data-test-wave="15">Crayon · 15</button><button type="button" data-test-wave="20">Eraser · 20</button></div>
         <div class="test-fields"><label>Wave<input id="testWave" type="number" min="1" max="200" step="1" value="5"></label><label>Start at<select id="testPhase"><option value="wave">Full wave</option><option value="boss">Boss only</option></select></label><label>Drawing tool<select id="testTool"><option value="0">Pencil · 2 slots</option><option value="3">Mechanical pencil · 2 slots</option><option value="6">Simple pen · 3 slots</option><option value="10">Scented Sharpie · 4 slots</option></select></label></div>
         <label class="monster-setting"><input id="testNotebook" type="checkbox"> Include my permanent Notebook stat bonuses</label>
@@ -435,6 +436,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.99 · Meet the White Brothers</h3><p>Wite-Out and Mr. Glue have custom spiky, sticky monster artwork and articulated faces, claws and props. Try nine animations for each in Settings → Test a fight → Extras → White Brothers: idle, walk, entrance, attack, throw, hit, dizzy, tantrum and defeat. The studio includes individual selection, a showcase, speed, pause and low-motion controls. This is a character preview; the final boss fight is unchanged.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.98 · A new shortcut at wave nine</h3><p>Zoom Nugget and Nope Goblin are taking a break from wave spawns and introductions; their artwork, notes and test options remain. Rip-Raff now arrives at wave nine, tearing shortcuts and calling runners beneath the paper. Scripted groups and King Doodle-Doom use Gribbles in place of Nuggets.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.97 · Something under the homework</h3><p>Underground monsters now lift the paper into a shaded, crawling hump. Alternating paw presses, a forward head bulge, trailing creases and bent notebook lines make the creature feel beneath the sheet. The hump settles as it emerges; reduced motion keeps it steady. Tunnel rules and rubbing time are unchanged.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.96 · Mouse, meet notebook</h3><p>PC Monster Notes now has a creature list beside its illustrated abilities and counters. Remap drawing/erasing mouse buttons, aiming keys and pause in Settings. Drawing and erasing get distinct cursors, low-ink feedback and clearer hover/focus states. Switching away pauses the game until you click Resume; phone touch controls and notes retain their layout.</p></article>
@@ -799,6 +801,8 @@
 <script src="js/beta-scraps.js"></script>
 <script src="js/discoveries.js"></script>
 <script src="js/desktop-polish.js"></script>
+<script src="js/white-brothers-rig.js"></script>
+<script src="js/white-brothers-preview.js"></script>
 <script src="js/input.js"></script>
 <script src="game.js"></script>
 </body>
