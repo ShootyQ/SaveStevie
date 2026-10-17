@@ -1,0 +1,144 @@
+{
+  "image": "mr-glue-airplanes.png",
+  "frames": [
+    {
+      "x": 0,
+      "y": 0,
+      "w": 322,
+      "h": 340
+    },
+    {
+      "x": 322,
+      "y": 0,
+      "w": 322,
+      "h": 340
+    },
+    {
+      "x": 644,
+      "y": 0,
+      "w": 322,
+      "h": 340
+    },
+    {
+      "x": 966,
+      "y": 0,
+      "w": 320,
+      "h": 340
+    },
+    {
+      "x": 0,
+      "y": 340,
+      "w": 322,
+      "h": 315
+    },
+    {
+      "x": 322,
+      "y": 340,
+      "w": 322,
+      "h": 315
+    },
+    {
+      "x": 644,
+      "y": 340,
+      "w": 322,
+      "h": 315
+    },
+    {
+      "x": 966,
+      "y": 340,
+      "w": 320,
+      "h": 315
+    },
+    {
+      "x": 0,
+      "y": 655,
+      "w": 322,
+      "h": 310
+    },
+    {
+      "x": 322,
+      "y": 655,
+      "w": 322,
+      "h": 310
+    },
+    {
+      "x": 644,
+      "y": 655,
+      "w": 322,
+      "h": 310
+    },
+    {
+      "x": 966,
+      "y": 655,
+      "w": 320,
+      "h": 310
+    },
+    {
+      "x": 0,
+      "y": 965,
+      "w": 322,
+      "h": 258
+    },
+    {
+      "x": 322,
+      "y": 965,
+      "w": 322,
+      "h": 258
+    },
+    {
+      "x": 644,
+      "y": 965,
+      "w": 322,
+      "h": 258
+    },
+    {
+      "x": 966,
+      "y": 965,
+      "w": 320,
+      "h": 258
+    }
+  ],
+  "animations": {
+    "tear": {
+      "frames": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "fps": 4,
+      "loop": false
+    },
+    "fold": {
+      "frames": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "fps": 3,
+      "loop": false
+    },
+    "glue": {
+      "frames": [
+        8,
+        9,
+        10,
+        11
+      ],
+      "fps": 4,
+      "loop": false
+    },
+    "fly": {
+      "frames": [
+        12,
+        13,
+        14,
+        15
+      ],
+      "fps": 4,
+      "loop": true
+    }
+  },
+  "notes": "Animation study only; not a live boss attack. Frame rectangles account for unequal generated row heights. Play tear, fold and glue once, then fly in a gentle sinusoidal arc toward target. Respect reduced motion."
+}
