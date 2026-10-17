@@ -1,0 +1,53 @@
+{
+  "images": {
+    "wite": "mr-out-animations.png",
+    "glue": "mr-glue-animations.png"
+  },
+  "columns": 6,
+  "rows": 4,
+  "actions": {
+    "idle": [
+      0,
+      1
+    ],
+    "walk": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "intro": [
+      6,
+      7,
+      8
+    ],
+    "attack": [
+      9,
+      10,
+      11
+    ],
+    "throw": [
+      12,
+      13,
+      14
+    ],
+    "hit": [
+      15,
+      16
+    ],
+    "dizzy": [
+      17,
+      18
+    ],
+    "tantrum": [
+      19,
+      20
+    ],
+    "defeat": [
+      21,
+      22,
+      23
+    ]
+  },
+  "notes": "Full character images; no procedural face, limb, skeleton or deformation rendering. Frame positions use the same cell registration. Existing mr-glue-airplanes atlas supplies the encounter crafting action."
+}

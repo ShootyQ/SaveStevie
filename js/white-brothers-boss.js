@@ -4,7 +4,7 @@ DoodleDefender.systems.whiteBrothersBoss=function(game){
  const tuning={hp:1000,whiteCap:90,glueCap:90,brushSupply:32,whiteDamage:4,brushCap:6,planeCap:4,blobCap:8,trapCap:18,glueHold:2,glueRest:3};
  let fight=null,lastEraseHandled=false;
  const art={};
- for(const name of ['white-brothers-torsos','whiteout-brush-sprites','mr-glue-effects','mr-glue-airplanes'])if(typeof Image!=='undefined'){
+ for(const name of ['mr-out-animations','mr-glue-animations','whiteout-brush-sprites','mr-glue-effects','mr-glue-airplanes'])if(typeof Image!=='undefined'){
   const img=new Image();img.onload=()=>{art[name]=img;};img.src='assets/art/'+name+'.png';
  }
  function isWhiteBrother(e){return !!e&&(e.whiteBrother===true||(e.waveBoss&&e.type==='eraser'&&game.state.wave===20&&!game.state.endless));}
@@ -144,7 +144,7 @@ DoodleDefender.systems.whiteBrothersBoss=function(game){
   if(!isWhiteBrother(e)&&!['eraser','mr-glue'].includes(e.type))return false;const ctx=game.dom.ctx,actor=fight?.actors.find(a=>a.e===e),model=actor?.model||rig.create(e.whiteKind==='glue'||e.type==='mr-glue'?'glue':'wite'),scale=e.r/85;
   ctx.save();ctx.scale(scale,scale);if(actor?.flash>0)ctx.globalAlpha=.65;
   if(actor?.kind==='glue'&&actor.cast>0&&art['mr-glue-airplanes']){const t=1-actor.cast/3.2,index=Math.min(11,Math.floor(t*12));planeSprite(ctx,index,0,0,225,235);}
-  else rig.draw(ctx,art['white-brothers-torsos']||null,model,{reduced:api.enemyMotionReduced()});ctx.restore();
+  else rig.draw(ctx,{wite:art['mr-out-animations'],glue:art['mr-glue-animations']},model,{reduced:api.enemyMotionReduced()});ctx.restore();
   if(actor?.glued>0){ctx.fillStyle='#9d72b7';ctx.font='bold 12px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillText('STUCK!',0,-e.r-13);}
   return true;
  }

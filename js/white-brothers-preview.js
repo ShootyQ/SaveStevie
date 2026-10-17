@@ -1,7 +1,7 @@
 /* Isolated two-monster animation studio. No encounter or save mutations. */
 DoodleDefender.systems.whiteBrothersPreview=function(game){
  const $=game.dom.$,rig=DoodleDefender.WhiteBrothersRig,canvas=$('brothersCanvas'),ctx=canvas.getContext('2d'),media=window.matchMedia?.('(prefers-reduced-motion: reduce)');
- const names={idle:'Scheming idle',walk:'Clawed walk',intro:'Make an entrance',attack:'Brush sweep / glue squeeze',throw:'Fling the mess',hit:'Ouch!',dizzy:'Dizzy brothers',tantrum:'Absolutely furious',defeat:'Deflated defeat'},sequence=['intro','walk','idle','attack','throw','hit','dizzy','tantrum','defeat'];
+ const names={idle:'Scheming idle',walk:'Doodled walk',intro:'Make an entrance',attack:'Brush sweep / glue squeeze',throw:'Fling the mess',hit:'Ouch!',dizzy:'Dizzy brothers',tantrum:'Absolutely furious',defeat:'Deflated defeat'},sequence=['intro','walk','idle','attack','throw','hit','dizzy','tantrum','defeat'];
  let models=[rig.create('wite'),rig.create('glue')],image=null,ready=false,loading=false,opened=false,paused=false,showcase=true,index=0,frame=null,last=null,view=null;
  const reduced=()=>!!media?.matches||!!$('brothersReduced').checked;
  function selected(){return models.filter(m=>$('brothersCharacter').value==='both'||m.kind===$('brothersCharacter').value);}
@@ -18,7 +18,15 @@ DoodleDefender.systems.whiteBrothersPreview=function(game){
   ctx.restore();
  }
  function resize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;const dpr=Math.min(2,window.devicePixelRatio||1),scale=Math.min(r.width/1000,r.height/530);view={width:r.width,height:r.height,dpr,scale,x:(r.width-1000*scale)/2,y:(r.height-530*scale)/2};canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);render();}
- function load(){if(ready||loading)return;loading=true;image=new Image();image.onload=()=>{loading=false;ready=true;sync();render();};image.onerror=()=>{loading=false;$('brothersStatus').textContent='Artwork could not load. Close and reopen to retry.';};const version=document.documentElement?.dataset?.build;image.src='assets/art/white-brothers-torsos.png'+(version?'?v='+encodeURIComponent(version):'');}
+ function load(){
+  if(ready||loading)return;loading=true;image={};let left=2,failed=false;
+  const version=document.documentElement?.dataset?.build;
+  for(const [kind,file] of [['wite','mr-out-animations'],['glue','mr-glue-animations']]){
+   const img=new Image();img.onload=()=>{image[kind]=img;if(--left===0&&!failed){loading=false;ready=true;sync();render();}};
+   img.onerror=()=>{failed=true;loading=false;ready=false;$('brothersStatus').textContent='Animation artwork could not load. Close and reopen to retry.';};
+   img.src='assets/art/'+file+'.png'+(version?'?v='+encodeURIComponent(version):'');
+  }
+ }
  function advance(dt){
   if(!opened||paused||document.hidden||game.api.windowFocusBlocked?.())return;
   dt=Math.min(.05,Math.max(0,dt))*Number($('brothersSpeed').value||1);for(const m of models)rig.update(m,dt);
