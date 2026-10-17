@@ -3,7 +3,7 @@ const root=path.resolve(__dirname,'..');
 function environment(){const nodes=new Map(),calls=[];let seed=123456;const math=Object.create(Math);math.random=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};const ctx=new Proxy({measureText:t=>({width:String(t).length*6})},{get(o,k){if(k in o)return o[k];return (...a)=>{calls.push([k,...a]);if(k==='createLinearGradient'||k==='createRadialGradient')return {addColorStop(){}};};}});function node(id){if(!nodes.has(id))nodes.set(id,{style:{},dataset:{},textContent:'',innerHTML:'',children:[],listeners:{},appendChild(n){this.children.push(n);},addEventListener(k,f){this.listeners[k]=f;},getBoundingClientRect(){return {left:0,top:0,width:800,height:700};},getContext(){return ctx;},setPointerCapture(){}});return nodes.get(id);}const sandbox={console,performance:{now:()=>1234},Math:math,Set,document:{getElementById:node,createElement:()=>node('created'+nodes.size),querySelectorAll:()=>[]},localStorage:{getItem:()=>null,setItem(){}},requestAnimationFrame:f=>{sandbox.frame=f;},setTimeout:()=>1,clearTimeout(){}};sandbox.window=sandbox;sandbox.addEventListener=()=>{};vm.createContext(sandbox);return {sandbox,node,calls};}
 function load(refactored,options={}){const env=environment();if(options.storage)env.sandbox.localStorage=options.storage;if(options.audio)Object.assign(env.node('gameMusic'),options.audio);if(options.documentEvents)env.sandbox.document.addEventListener=(key,fn)=>{const previous=options.documentEvents[key];options.documentEvents[key]=(...args)=>{previous?.(...args);fn(...args)}};const pendingImages=[];if(options.images)env.sandbox.Image=class{constructor(){this.naturalWidth=200;this.naturalHeight=180}set src(value){this.url=value;pendingImages.push(()=>this.onload?.())}get src(){return this.url}};if(options.reduced)env.sandbox.matchMedia=()=>({matches:true,addEventListener(){}});if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}for(const ready of pendingImages)ready();if(!options.finale)env.sandbox.testGame.api.setWaveFinaleEnabled(false);if(!options.synergyReveal)env.sandbox.testGame.api.setSynergyRevealsEnabled(false);if(!options.intros)env.sandbox.testGame.api.setMonsterIntrosEnabled(false);if(!options.lessons)env.sandbox.testGame.api.setFirstLessonsEnabled(false);env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
 // Retain explicit regression fixtures for the retired stapler's combat system.
-function loadLegacyStaple(options={}){const env=load(true,options),g=env.sandbox.testGame,original=g.api.bossTypeForWave;g.api.wallHpForLength=(length,closed=false,intersections=0)=>g.state.stats.wallHp*g.api.clamp(length/180,.35,2.4)*(closed?g.state.stats.closedBonus:1)*(1+intersections*g.state.stats.intersectBonus);g.api.bossTypeForWave=(wave=g.state.wave)=>wave===10?'stapler':original(wave);return env;}
+function loadLegacyStaple(options={}){const env=load(true,options),g=env.sandbox.testGame,original=g.api.bossTypeForWave;g.api.wallHpForLength=(length,closed=false,intersections=0)=>g.state.stats.wallHp*g.api.clamp(length/180,.35,2.4)*(closed?g.state.stats.closedBonus:1)*(1+intersections*g.state.stats.intersectBonus);g.api.bossTypeForWave=(wave=g.state.wave)=>wave===10?'stapler':original(wave);g.api.isWhiteBrother=()=>false;return env;}
 const a=load(false),b=load(true);let checks=0;
 // Keep the old starting kit only in the legacy parity fixture. New-run balance
 // and permanent perks are checked separately below.
@@ -279,7 +279,7 @@ assert.ok(contact.state.enemies.includes(eraser));assert.equal(contact.state.fin
 const bossContactHp=contact.state.player.hp;contact.api.update(.016);assert.equal(contact.state.player.hp,bossContactHp,'boss contact has a cooldown');contact.api.killEnemy(eraser);contact.api.update(.016);assert.equal(contact.state.betweenWaves,true,'defeating the Eraser completes the fight');
 contact.api.resetRun();contact.state.wave=20;contact.api.startWave();contact.state.spawnTimer=100;contact.state.player.hp=1;
 contact.api.spawnEnemy(true,contact.state.player.x,contact.state.player.y);contact.api.update(.016);
-assert.equal(contact.state.player.hp,0);assert.equal(contact.state.running,false,'lethal boss contact is a loss');
+assert.equal(contact.state.player.hp,1);assert.equal(contact.state.running,true,'White Brothers entrance cannot body-kill Stevie');
 contact.api.resetRun();contact.state.spawnTimer=100;
 const moving=contact.api.spawnEnemy(false,contact.state.player.x+contact.state.player.r+11+2.1,contact.state.player.y,'grunt');
 const movingHP=contact.state.player.hp;contact.api.update(.033);
@@ -533,9 +533,9 @@ const storage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>{saved.set
 const env=load(true,{intros:true,storage}),g=env.sandbox.testGame;
 assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
-assert.equal(g.catalog.monsters.length,29);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,29);
+assert.equal(g.catalog.monsters.length,30);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,30);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],2:['scrubber'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['papertearer','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['catapulter','wallpuller','bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['eraser']};
+const expected={1:['grunt'],2:['scrubber'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['papertearer','sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['catapulter','wallpuller','bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['mr-glue','eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -659,7 +659,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 // A mixed-status crowd must reuse its tinted sprites instead of allocating each frame.
 {
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
-const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['catapulter','basil','scrubber','flanker','wallpuller','papertearer','wobblechomp','wobble-tooth'].includes(type));
+const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['catapulter','basil','scrubber','flanker','wallpuller','papertearer','wobblechomp','wobble-tooth','eraser','mr-glue'].includes(type));
 for(let i=0;i<76;i++){
  const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][Math.floor(i/types.length)%4];
  e.burn=mask&1?2:0;e.poison=mask&2?2:0;e.freeze=mask&4?2:0;e.charged=mask&8?2:0;e.gravitySlow=mask&16?.4:0;
@@ -1360,7 +1360,7 @@ console.log('PASS: zero-time cleanup, stopped arrivals, split children, pause, d
 
 {
 const env=load(true),g=env.sandbox.testGame;
-for(const [wave,hp,speed] of [[5,1242,144.612],[10,1299.6,254.4],[15,1512,18.53],[20,3800,25.76]]){
+for(const [wave,hp,speed] of [[5,1242,144.612],[10,1299.6,254.4],[15,1512,18.53],[20,1000,25.76]]){
  g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,250,250);
  assert.ok(Math.abs(boss.maxHp-hp)<1e-8,'boss HP '+wave);assert.ok(Math.abs(boss.speed-speed)<1e-8,'boss speed '+wave);
  const ordinary=g.api.spawnEnemy(false,100,100,'grunt');assert.equal(ordinary.maxHp,20*g.api.enemyHpScale());
@@ -1372,7 +1372,7 @@ for(const [wave,hp,speed] of [[5,1242,144.612],[10,1299.6,254.4],[15,1512,18.53]
  g.api.updateBossEncounter(boss,.01);g.api.updateBossEncounter(boss,1.2);assert.equal(g.state.walls.includes(wall),false,'warned breakout tears the cage open');assert.equal(b.cd,wave===5?1.65:3.5);
  assert.equal(g.api.bossDamageMultiplier(boss),1.35,'brief breakout recovery remains vulnerable');
 }
-console.log('PASS: stronger/faster early bosses, unchanged later/ordinary stats, quicker warned enclosure response and freeze interruption.');
+console.log('PASS: stronger/faster early bosses, shared White Brothers HP, unchanged ordinary stats, quicker warned enclosure response and freeze interruption.');
 }
 
 {
@@ -1489,13 +1489,13 @@ console.log('PASS: three first-boss attacks, sideways curved flight, swept wall 
  const saved=new Map([['doodleDefenderBestV4','7'],['saveStevieNotebookV1',JSON.stringify({version:1,scraps:90,lifetimeScraps:100,levels:{tool:6,inkTank:2,health:1}})]]),storage={getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v))};
  const env=load(true,{storage}),g=env.sandbox.testGame,original=[...saved];
  const base={wave:20,phase:'boss',toolRank:6,notebook:false,upgrades:[{name:'Fire Ink',rarity:'rare',copies:2},{name:'Poison Ink',rarity:'uncommon',copies:3},{name:'Pocket Rocks',rarity:'common',copies:2},{name:'Doodle Stitch',rarity:'rare',copies:1}]};
- assert.equal(g.api.startTestRun(base),true);assert.equal(g.state.wave,20);assert.equal(g.state.timeLeft,0);assert.equal(g.state.enemies.length,1);assert.equal(g.state.enemies[0].type,'eraser');assert.ok(g.state.enemies[0].x>0&&g.state.enemies[0].x<g.state.W&&g.state.enemies[0].y>0&&g.state.enemies[0].y<g.state.H,'boss-only test starts with a visible boss');assert.equal(g.api.bossWavePhase(),'fight');assert.equal(g.api.devRunActive(),true);assert.equal(g.api.testLabActive(),true);
+ assert.equal(g.api.startTestRun(base),true);assert.equal(g.state.wave,20);assert.equal(g.state.timeLeft,0);assert.equal(g.state.enemies.length,2);assert.equal(g.state.enemies[0].type,'eraser');assert.ok(g.state.enemies[0].x>0&&g.state.enemies[0].x<g.state.W&&g.state.enemies[0].y>0&&g.state.enemies[0].y<g.state.H,'boss-only test starts with a visible boss');assert.equal(g.api.bossWavePhase(),'fight');assert.equal(g.api.devRunActive(),true);assert.equal(g.api.testLabActive(),true);
  assert.equal(g.state.stacks['Fire Ink'],6);assert.equal(g.state.stacks['Poison Ink'],6);assert.equal(g.state.stacks['Pocket Rocks'],2);assert.equal(g.state.stacks['Doodle Stitch'],1);assert.ok(g.state.synergies.has('Plaguefire'));assert.equal(g.state.tool.slots,3);assert.equal(g.state.player.maxHp,75);assert.equal(g.state.stats.maxInk,160);assert.deepEqual([...saved],original,'setup does not write progression');
  const snapshot=JSON.stringify(g.state);assert.equal(g.api.startTestRun({...base,wave:19}),false);assert.equal(JSON.stringify(g.state),snapshot,'invalid boss selection leaves the live run intact');assert.equal(g.api.startTestRun({...base,toolRank:0,upgrades:[...base.upgrades,{name:'Electric Ink',rarity:'common',copies:1}]}),false);assert.equal(JSON.stringify(g.state),snapshot,'slot overflow is rejected before reset');assert.equal(g.api.startTestRun({...base,upgrades:[{name:'Triple Stroke',rarity:'common',copies:1}]}),false);assert.equal(g.api.startTestRun({...base,upgrades:[{name:'Loaded Deck',rarity:'common',copies:2}]}),false);
- g.state.player.hp=1;g.state.inks.fire=99;env.node('repeatTestBtn').onclick();assert.equal(g.state.player.hp,75);assert.equal(g.state.inks.fire,6);assert.equal(g.state.wave,20);assert.equal(g.state.enemies.length,1);
+ g.state.player.hp=1;g.state.inks.fire=99;env.node('repeatTestBtn').onclick();assert.equal(g.state.player.hp,75);assert.equal(g.state.inks.fire,6);assert.equal(g.state.wave,20);assert.equal(g.state.enemies.length,2);
  g.api.openInfo('pause');env.node('pauseRestartTestBtn').onclick();assert(!g.state.paused&&g.state.running);assert.equal(g.state.inks.fire,6);
  g.api.setDevMode(false);g.api.awardScraps(100);g.state.wave=90;g.api.gameOver();assert.equal(g.state.best,7);assert.deepEqual([...saved].filter(([k])=>k!=='saveStevieNoteDecks'),original,'turning dev off cannot rank a scratch run');
- env.node('deathRestartTestBtn').onclick();assert.equal(g.state.wave,20);assert.equal(g.state.player.hp,75);assert.equal(g.state.inks.fire,6);g.api.killEnemy(g.state.enemies[0]);g.api.waveComplete();assert.equal(env.node('victoryRestartTestBtn').hidden,false);env.node('victoryRestartTestBtn').onclick();assert.equal(g.state.enemies.length,1);assert.equal(g.state.running,true);
+ env.node('deathRestartTestBtn').onclick();assert.equal(g.state.wave,20);assert.equal(g.state.player.hp,75);assert.equal(g.state.inks.fire,6);g.api.killEnemy(g.state.enemies[0]);g.api.waveComplete();assert.equal(env.node('victoryRestartTestBtn').hidden,false);env.node('victoryRestartTestBtn').onclick();assert.equal(g.state.enemies.length,2);assert.equal(g.state.running,true);
  assert.equal(g.api.startTestRun({...base,wave:14,phase:'wave',notebook:true,upgrades:[]}),true);assert.equal(g.state.wave,14);assert.equal(g.state.enemies.length,0);assert.equal(g.state.timeLeft,60);assert.equal(g.state.stats.maxInk,200);assert.equal(g.state.player.maxHp,83);assert.equal(g.state.tool.rank,6);
  assert.equal(g.api.startTestRun({...base,wave:25,phase:'boss',upgrades:[]}),true);assert.equal(g.state.endless,true);assert.equal(g.state.enemies[0].type,'boss');
  assert.equal(g.api.startTestRun({...base,wave:0}),false);assert.equal(g.api.startTestRun({...base,wave:201}),false);assert.equal(g.api.startTestRun({...base,wave:NaN}),false);
@@ -2626,3 +2626,5 @@ require('./paper-crawl.cjs')(load);
 require('./parked-wave-enemies.cjs')(load);
 require('./white-brothers.cjs')(load);
 require('./desktop-ripraff.cjs')(load);
+
+require('./white-brothers-fight.cjs')(load);

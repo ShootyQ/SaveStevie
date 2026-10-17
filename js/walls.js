@@ -51,6 +51,7 @@ function eraseWallPath(a,b,r=20,options={}){
  const lesson=options.lesson===true&&game.api.lessonCanPaint?.('erase');
  if(!game.state.running||(game.state.paused&&!lesson)||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
  if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
+ if(!options.enemy&&!lesson){const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;}
  let changed=false,recovered=0;const result=[];
  for(const wall of game.state.walls){
   const bounds=game.api.wallGeometry(wall.pts),pad=r+wall.thick/2;
@@ -291,7 +292,7 @@ function repairTouchedWalls(points,excluded=null){
 }
 
 function strokeInkScale(point){return point&&game.api.sneakyRouteEndpoint(point) ? .15 : 1;}
-function canStartStroke(point){if(game.api.canStartCrayonStroke(point))return true;const s=game.state.stats;return game.api.wobbleInfiniteInk?.()||(s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6*strokeInkScale(point);}
+function canStartStroke(point){if(game.api.canStartWhitePencil?.(point))return true;if(game.api.canStartCrayonStroke(point))return true;const s=game.state.stats;return game.api.wobbleInfiniteInk?.()||(s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6*strokeInkScale(point);}
 
 const stitchReach=16;
 function stitchFactor(count){return [.75,.5,.25][count-1]||0;}

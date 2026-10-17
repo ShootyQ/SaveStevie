@@ -7,13 +7,13 @@ DoodleDefender.systems.whiteBrothersPreview=function(game){
  function selected(){return models.filter(m=>$('brothersCharacter').value==='both'||m.kind===$('brothersCharacter').value);}
  function sync(){
   $('brothersPauseBtn').textContent=paused?'Resume':'Pause';$('brothersPauseBtn').setAttribute?.('aria-pressed',String(paused));$('brothersShowcaseBtn').textContent=showcase?'Stop showcase':'Play showcase';$('brothersShowcaseBtn').setAttribute?.('aria-pressed',String(showcase));
-  $('brothersStatus').textContent=(!ready?'Loading monster artwork… ':showcase?'Showcase · ':'')+models.map(m=>(m.kind==='wite'?'Wite-Out: ':'Mr. Glue: ')+names[m.action]).join(' · ');
+  $('brothersStatus').textContent=(!ready?'Loading monster artwork… ':showcase?'Showcase · ':'')+models.map(m=>(m.kind==='wite'?'Mr. Out: ':'Mr. Glue: ')+names[m.action]).join(' · ');
  }
  function render(){
   if(!opened||!view)return;const {width,height,dpr,scale,x,y}=view;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);
   ctx.fillStyle='#f7f1e4';ctx.fillRect(0,0,1000,530);ctx.strokeStyle='#abc2d34d';ctx.lineWidth=1;for(let y=22;y<530;y+=28){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(1000,y);ctx.stroke();}
   ctx.strokeStyle='#c97e7666';ctx.beginPath();ctx.moveTo(40,0);ctx.lineTo(40,530);ctx.stroke();
-  ctx.textAlign='center';ctx.font='34px "Stevie Pencil",cursive';ctx.fillStyle='#315d8c';ctx.fillText('Wite-Out',270,62);ctx.fillText('Mr. Glue',730,62);
+  ctx.textAlign='center';ctx.font='34px "Stevie Pencil",cursive';ctx.fillStyle='#315d8c';ctx.fillText('Mr. Out',270,62);ctx.fillText('Mr. Glue',730,62);
   models.forEach((m,i)=>{const x=i?730:270;ctx.fillStyle='#6e635b22';ctx.beginPath();ctx.ellipse(x,426,82,12,0,0,Math.PI*2);ctx.fill();ctx.save();ctx.translate(x,302);rig.draw(ctx,ready?image:null,m,{reduced:reduced()});ctx.restore();ctx.fillStyle='#685644';ctx.font='20px "Stevie Pencil",cursive';ctx.fillText(names[m.action],x,482);});
   ctx.restore();
  }
