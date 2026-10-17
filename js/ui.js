@@ -31,10 +31,14 @@ function updateUI(){
   text(game.dom.$('liveWave'),game.state.wave);
   text(game.dom.$('pressure'),Number(game.api.wavePressure().toFixed(1))+'×');
   text(game.dom.waveEl,game.state.wave);text(game.dom.scoreEl,game.state.score);text(game.dom.killsEl,game.state.kills);text(game.dom.luckEl,game.state.stats.luck);text(game.dom.bestEl,game.state.best);
+  const whiteTool=game.api.whiteBrothersFightSnapshot?.();
   game.dom.inkBar.style.width=game.api.wobbleInfiniteInk?.()?'100%':(100*game.state.stats.ink/game.state.stats.maxInk)+'%';
   game.dom.hpBar.style.width=(100*game.state.player.hp/game.state.player.maxHp)+'%';
   game.dom.timeBar.style.width=(100*game.state.timeLeft/game.state.waveTime)+'%';
   text(game.dom.inkText,game.api.wobbleInfiniteInk?.()?'∞':Math.ceil(game.state.stats.ink)+' / '+Math.ceil(game.state.stats.maxInk));
+  text(game.dom.$('inkLabel'),whiteTool?.white>0?'WHITEOUT':'INK');
+  game.dom.inkBar.style.backgroundColor=whiteTool?.white>0?'#a89db4':'';
+  if(whiteTool?.white>0){game.dom.inkBar.style.width=(100*whiteTool.white/90)+'%';text(game.dom.inkText,Math.ceil(whiteTool.white)+' / 90');}
   text(game.dom.hpText,Math.ceil(game.state.player.hp)+' / '+Math.ceil(game.state.player.maxHp));
   text(game.dom.timeText,Math.max(0,Math.ceil(game.state.timeLeft)));
   text(game.dom.rerollsEl,game.state.rerolls);
@@ -137,7 +141,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Repulsion Ink':()=>`${r.repulsionDamage} impact damage and ${r.repulsionPush}px safe shove after every 0.8s contact; 0.12s stagger; bosses halve shove and stagger`,
     'Electric Ink':()=>{const t=game.api.electricTuning(n);return `${f(t.damage)} source damage; each jump retains 72% damage; up to ${t.count} additional enemies, ${t.range}px per hop within 360px of the source. Shared ${f(t.cooldown)}s hit recovery, ${f(t.stun)}s shock (bosses half), 1.25s shock recovery. Synergies cap at 8 jumps and 220px per hop.${game.state.stats.tesla?' · TESLA: 2s wall volleys, up to 8 targets, 160px, '+f(t.damage*4)+' damage each':''}`},
     'Blast Ink':()=>`${35+20*n} explosion damage; ${70+12*n}px radius; synergies can boost this`,
-    'Vampire Ink':()=>`${t.vampireDps} life-drain damage/s on contact; heals 25% of actual damage, sharing the 6 HP/s budget`,
+    'Vampire Ink':()=>`${t.vampireDps} life-drain damage/s on contact; heals up to ${Number((t.vampireDps*t.vampireHeal).toFixed(3))} HP/s from actual damage, sharing the 6 HP/s budget`,
     'Gravity Ink':()=>`${t.gravityPull}px/s pull within ${t.gravityRange}px (range cap 64px; 60% pull on other bosses). No lingering slow, damage bonus or reduced wall bites. King Doodle is immune; his returnable shots get a slight wall nudge within 28px (maximum 8px per shot)`,
     'Void Ink':()=>`${r.voidDps} Void damage/s; executes ordinary enemies below ${f(r.voidExecute*100)}% HP (cap 30%); bosses take damage without execution`,
     'Chaos Ink':()=>`One random ink after every ${f(r.chaosInterval)}s contact; every roll works and adds ${r.chaosDamage} impact damage; rolls scale with Chaos level`,
@@ -166,7 +170,7 @@ function renderBuild(){
     `<article class="build-entry"><h4>${def.major?'★ ':''}${game.api.paperLabel(def.name)}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
   game.dom.$('buildDoodleScraps').innerHTML=game.api.doodleCatalogue().filter(n=>game.api.noteLevel(n.id)>0).map(n=>'<article class="build-entry"><h4>'+n.name+' ×'+game.api.noteLevel(n.id)+'</h4><p>'+n.rarity+' · '+n.desc+'</p></article>').join('')||'<p>No Doodle Scraps collected yet. Find them during a run after unlocking their Notebook project.</p>';
 }
-const infoButtons={whiteBrothers:'closeWhiteBrothersBtn',discoveries:'closeDiscoveriesBtn',betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={desktopQuit:'desktopQuitCancel',whiteBrothers:'closeWhiteBrothersBtn',discoveries:'closeDiscoveriesBtn',betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
   if(game.api.wobbleRepairActive?.())return;

@@ -4,13 +4,13 @@ let brains=new WeakMap(),marks=[],clock=0;
 const minFriendGain=70;
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
-function abilityImmune(e){return game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||game.api.isWobbleBoss(e);}
+function abilityImmune(e){return game.api.isWhiteBrother?.(e)||game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||game.api.isWobbleBoss(e);}
 function isFirstBoss(e){return e.waveBoss&&e.type==='boss'&&game.state.wave===5}
 function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/(1.1*1.2),helperCap:7,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:1.8,minThrowGain:minFriendGain}}
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
 const colors={boss:'#9b3549',stapler:'#ad741f',crayon:'#8751ac',eraser:'#b95176'};
 function bossBrain(e){let b=brains.get(e);if(!b){b={cd:3,cast:null,turn:0,moveCd:0,target:null,enclosed:false,enclosedAge:0,damageBudget:Math.max(30,e.maxHp*.045)*.5,contactCd:0,recovery:0,charge:0,action:null,repeat:0,helperCd:1.5,helperSerial:0,pickup:null};brains.set(e,b)}return b}
-function resetBossEncounters(){game.api.resetCrayonBoss?.();brains=new WeakMap();marks=[];clock=0}
+function resetBossEncounters(){game.api.resetWhiteBrothers?.();game.api.resetCrayonBoss?.();brains=new WeakMap();marks=[];clock=0}
 function inside(e,w){let yes=false;const pts=w.pts;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a.y>e.y)!==(b.y>e.y)&&e.x<(b.x-a.x)*(e.y-a.y)/(b.y-a.y)+a.x)yes=!yes}return yes}
 function nearestBossWall(e,range=150){let best=null;for(const w of game.state.walls){const p=game.api.nearestPointOnWall(e,w);if(!p)continue;const d=Math.hypot(p.x-e.x,p.y-e.y);if(d<range){range=d;best={wall:w,...p}}}return best}
 function updateBossDamageBudgets(dt){for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e),rate=Math.max(30,e.maxHp*.045);b.damageBudget=Math.min(rate*.5,b.damageBudget+rate*dt)}}
@@ -213,6 +213,7 @@ function tryDriveByFling(e,dt){
  }
 }
 function updateBossEncounter(e,dt){
+ if(game.api.isWhiteBrother?.(e)){game.api.updateWhiteBrothers(e,dt);return;}
  if(game.api.isCrayonBoss?.(e)){game.api.updateCrayonBoss(e,dt);return}
  if(game.api.isWobbleBoss(e)){game.api.updateWobbleBoss(e,dt);return}
  if(game.api.isStapleBoss(e)){game.api.updateStapleBoss(e,dt);return}
@@ -332,7 +333,7 @@ function drawBossEncounters(){const ctx=game.dom.ctx;
  }
 
  for(const m of marks){if(m.age<1.2){ctx.save();ctx.strokeStyle='#8751ac';ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(m.originX,m.originY);ctx.lineTo(m.x,m.y);ctx.stroke();ctx.restore()}const color=m.kind==='red'?'#c34937':m.kind==='blue'?'#3887ba':'#57913b';ctx.save();ctx.translate(m.x,m.y);ctx.strokeStyle=color;ctx.fillStyle=color;ctx.globalAlpha=m.age<1.2?.45:.2;ctx.beginPath();ctx.arc(0,0,m.r,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.8;ctx.lineWidth=2;ctx.setLineDash(m.age<1.2?[5,5]:[]);ctx.stroke();ctx.font='bold 18px sans-serif';ctx.textAlign='center';ctx.fillText(m.kind==='green'?'✦':m.kind==='blue'?'~':'!',0,6);ctx.restore()}
- for(const e of game.state.enemies){if(!e.waveBoss||e.hp<=0)continue;if(game.api.isCrayonBoss?.(e))continue;if(game.api.isStapleBoss(e)){game.api.drawStapleBoss(e);continue}const b=bossBrain(e);ctx.save();ctx.strokeStyle=colors[e.type];ctx.fillStyle=colors[e.type];ctx.lineWidth=2;
+ for(const e of game.state.enemies){if(!e.waveBoss||e.hp<=0)continue;if(game.api.isCrayonBoss?.(e)||game.api.isWhiteBrother?.(e))continue;if(game.api.isStapleBoss(e)){game.api.drawStapleBoss(e);continue}const b=bossBrain(e);ctx.save();ctx.strokeStyle=colors[e.type];ctx.fillStyle=colors[e.type];ctx.lineWidth=2;
   if(e.type==='crayon'&&b.contactWarning>0){ctx.strokeStyle='#b34936';ctx.beginPath();ctx.arc(e.x,e.y,e.r+10,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,b.contactWarning/1.3));ctx.stroke();ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText('CONTACT · DRAW COVER',game.api.clamp(e.x,85,game.state.W-85),Math.max(100,e.y-e.r-18))}
   if(isFirstBoss(e)){
    ctx.strokeStyle=b.recovery>0?'#278f82':firstBossTuning(e).furious?'#b3483b':'#6e586d';ctx.fillStyle=ctx.strokeStyle;ctx.setLineDash(b.recovery>0?[]:[3,5]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+12,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);

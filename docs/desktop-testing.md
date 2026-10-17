@@ -70,3 +70,15 @@ The playfield uses a pencil cursor with its point at the draw location and an er
 Desktop blur or a hidden tab freezes gameplay behind a click-to-resume note. Focus returning and key presses cannot resume it. Click Resume restores the prior pause/menu state; a partial stroke is cancelled and input is cleared. Browser/OS modifier shortcuts remain available. Phone background behavior is unchanged.
 
 Checks: `node tests/validate.cjs` and `node tests/browser-desktop-polish.cjs`.
+
+## Single-screen transitions, distant specialists and Quit (Alpha 0.1.100)
+
+Desktop monster introductions bypass generic pagination. Their quick ability/counter summaries, stat blocks and Continue/skip controls share one screen; full descriptions remain in Monster Notes. Wave-clear and specialization screens also bypass generic paging. Wave-clear details may expand within the summary while Next stays available. PC Pause uses a compact two-column action layout, including Quit.
+
+Rip-Raff picks a safe far-margin cutting site on each arena shape, snips with animated scissors, visibly winds up a grenade and follows through on its throw. Flying fire grenades use a higher, longer arc and a 12px eraser hit allowance beyond the eraser radius. Erasing one through the normal eraser path removes it before the exit/recruitment effect. Work sites, warnings and existing hole/recruit budgets remain. Frozen/stunned and reduced-motion workers keep their tools steady.
+
+Pew-Pew retains 90px minimum aim distance and 260px touch maximum. PC maximum scales with the arena from 420 to 720px; positioning searches and pencil/eraser lifetimes support that range. Committed warnings and reflection behavior remain.
+
+Native desktop exposes Quit to Desktop on the cover, Pause and Settings. A game-owned confirmation explains lost run progress and retained banked progress. Cancel returns to the prior menu; confirm invokes a sandboxed quit bridge, checked against the trusted app main frame. Browser/phone pages hide all quit entries. No browser window-close workaround is used.
+
+Checks: `node tests/validate.cjs`, `node tests/browser-desktop-ripraff.cjs`, and `node tests/desktop-quit-native.cjs <electron executable> <staged app directory>`. The native check verifies Node isolation, an untrusted quit rejection, cancel and actual process exit.

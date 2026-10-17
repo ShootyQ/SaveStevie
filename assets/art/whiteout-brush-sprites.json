@@ -1,0 +1,40 @@
+{
+  "image": "whiteout-brush-sprites.png",
+  "columns": 4,
+  "rows": 3,
+  "frameWidth": 362,
+  "frameHeight": 362,
+  "animations": {
+    "march": {
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "fps": 10,
+      "loop": true
+    },
+    "glued": {
+      "frames": [
+        8,
+        9
+      ],
+      "fps": 4,
+      "loop": true
+    },
+    "drain": {
+      "frames": [
+        10,
+        11
+      ],
+      "fps": 3,
+      "loop": false
+    }
+  },
+  "notes": "Art preview only; encounter and damage behavior are not wired. Preserve frame registration when integrating. Reduced motion displays one representative frame."
+}

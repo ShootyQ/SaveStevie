@@ -29,7 +29,8 @@ const defs=game.catalog.enemyDefs={
     'wobble-tooth':{r:10,hp:6,speed:45,dmg:7,color:'#e6d4a7'},
     stapler:{r:30,hp:410,speed:19,dmg:27,color:'#c98a32',boss:true},
     crayon:{r:30,hp:540,speed:17,dmg:29,color:'#9354b9',boss:true},
-    eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'}
+    eraser:{r:34,hp:950,speed:23,dmg:34,color:'#ef8ba6'},
+    'mr-glue':{r:34,hp:1000,speed:40,dmg:0,color:'#d6c4e6',boss:true}
   };
 
 const pressure=game.catalog.pressureSettings={startWave:5,fullWave:20,maxMultiplier:3,speedBonus:.28,
@@ -43,7 +44,7 @@ function enemyType(){
   const pool=game.state.wave>=12?['grunt']:['grunt','grunt'];
   for(const m of game.catalog.monsters){
     if(m.type==='catapulter'&&!game.api.canSpawnCatapulter())continue;
-    if(m.wave<=game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser'].includes(m.type)){pool.push(m.type);if(game.state.wave>=12&&['sniper','flanker','wallpuller','catapulter','papertearer'].includes(m.type))pool.push(m.type,m.type);}
+    if(m.wave<=game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser','mr-glue'].includes(m.type)){pool.push(m.type);if(game.state.wave>=12&&['sniper','flanker','wallpuller','catapulter','papertearer'].includes(m.type))pool.push(m.type,m.type);}
   }
   return game.api.pick(pool.filter(type=>!['wallpuller','papertearer'].includes(type)||!game.state.enemies.some(e=>e.type===type&&e.hp>0)).filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
 }
@@ -133,18 +134,19 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
   if(type==='catapulter')enemy.catapultId=game.api.registerCatapulter();
   game.state.enemies.push(enemy);game.api.discoverMonster(type);
-  if(forceBoss){game.api.resetCircleShapes();const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;if(game.api.isCrayonBoss?.(enemy))game.api.initCrayonBoss(enemy);bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
+  if(forceBoss){game.api.resetCircleShapes();const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;if(game.api.isWhiteBrother?.(enemy))game.api.initWhiteBrothers(enemy);if(game.api.isCrayonBoss?.(enemy))game.api.initCrayonBoss(enemy);bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
   return enemy;
 }
 
 function killEnemy(e){
   if(!game.state.enemies.includes(e))return;
+  if(e.whiteBrother&&e.whiteKind==='glue'&&game.state.enemies.includes(e.bossOwner)){if(e.bossOwner.hp<=0)killEnemy(e.bossOwner);return;}
   game.api.recordShapeVictory(e);
   game.api.playSound('defeated');
   game.state.kills++;game.state.waveKills++;game.api.awardKillScore(e);
   game.api.awardKillScraps(e);game.api.dropDoodleScrap(e);
   game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
-  if(e.waveBoss){if(game.api.isCrayonBoss?.(e))game.api.clearCrayonBoss(e);if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
+  if(e.waveBoss){if(game.api.isWhiteBrother?.(e))game.api.clearWhiteBrothers(e);if(game.api.isCrayonBoss?.(e))game.api.clearCrayonBoss(e);if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
   game.api.burst(e.x,e.y,e.color,12);
 
   if(e.type==='eraser') game.state.finalBossDefeated=true;
@@ -364,8 +366,8 @@ function fireSniper(e,eraser=false,host=null){
   const aim=!eraser&&e.sniperAim||game.state.player,dx=aim.x-e.x,dy=aim.y-e.y,d=Math.hypot(dx,dy)||1;
   if(!eraser)delete e.sniperAim;
   if(eraser){const tankRadius=game.catalog.enemyDefs.tank.r,side=host?Math.abs((e.x-host.x)*dy/d-(e.y-host.y)*dx/d):0,radius=Math.max(tankRadius,host?.r||0)+8+Math.min(22,side);
-   game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*240,vy:dy/d*240,life:Math.min(6,(d+100)/240),r:5,damage:0,eraser:true,eraseRadius:radius,sniperOwner:e,reflected:false});game.api.playSound('pencil');
-  }else game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:Math.max(2,Math.min(6,(d+30)/150)),r:3,damage:7,sniperOwner:e,reflected:false});
+   game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*240,vy:dy/d*240,life:Math.min(game.api.desktopUiEnabled?.()?12:6,(d+100)/240),r:5,damage:0,eraser:true,eraseRadius:radius,sniperOwner:e,reflected:false});game.api.playSound('pencil');
+  }else game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:Math.max(2,Math.min(game.api.desktopUiEnabled?.()?12:6,(d+30)/150)),r:3,damage:7,sniperOwner:e,reflected:false});
   game.api.animateEnemyAction(e,'fire');
   game.api.burst(e.x,e.y,'#4b79d8',3);
 }
@@ -530,7 +532,7 @@ function updateBossArrival(dt){
  if(!arrival&&game.state.wave===5){beginFirstBossIntro();return}
  if(!arrival&&game.state.wave===10&&game.api.bossTypeForWave()==='wobblechomp'){beginWobbleIntro();return}
  if(!arrival&&game.state.wave===10){game.api.resetCircleShapes();const p=game.api.stapleEntrancePoint();game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);arrival={...p,stapleIntro:true,age:0,left:3.3};bossPhase='entrance';game.api.resetCircleShapes();game.api.playSound('bossEnter');game.api.setMsg('Something is chewing through the notebook…');return}
- if(!arrival){game.api.resetCircleShapes();arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===15?' is coming. Get ready to erase wax and draw colour back!':game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
+ if(!arrival){game.api.resetCircleShapes();arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===20?' are coming. Collect whiteout with your pencil and glue with your eraser!':game.state.wave===15?' is coming. Get ready to erase wax and draw colour back!':game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
  arrival.left=Math.max(0,arrival.left-dt);
  if(arrival.left===0){const point={...arrival};game.api.spawnEnemy(true,point.x,point.y);game.api.setMsg('Boss encounter. Defeat '+game.api.monsterName(game.api.bossTypeForWave())+'!')}
 }
@@ -584,7 +586,7 @@ function spawnWaveEnemies(dt){
   if(game.state.wave>=6&&groupsSpawned<2&&elapsed>=[20,40][groupsSpawned]){game.api.spawnChapterGroup();groupsSpawned++}
   game.state.spawnTimer-=dt;
   if(game.state.spawnTimer<=0){
-    const newcomers=game.catalog.monsters.filter(m=>m.wave===game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser'].includes(m.type));
+    const newcomers=game.catalog.monsters.filter(m=>m.wave===game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser','mr-glue'].includes(m.type));
     const newcomer=newcomers[introducedSpawned];
     const spawned=spawnScheduledEnemy(null,null,newcomer?.type||null,!!newcomer);
     if(newcomer&&spawned)introducedSpawned++;
@@ -686,11 +688,12 @@ function updateEnemyBehavior(e,dt){
 }
 // Cached, deterministic firing-position search. Closed defenses remain solid.
 let sniperRoutes=new WeakMap();
-function sniperCanAim(e){if(e.sniperAim)return true;const p=game.state.player,d=Math.hypot(e.x-p.x,e.y-p.y);return d>=90&&d<=260&&!game.api.shotBlocked(e.x,e.y,p.x,p.y,3)}
+function sniperRange(){return game.api.desktopUiEnabled?.()?Math.min(720,Math.max(420,Math.max(game.state.W,game.state.H)*.65)):260;}
+function sniperCanAim(e){if(e.sniperAim)return true;const p=game.state.player,d=Math.hypot(e.x-p.x,e.y-p.y);return d>=90&&d<=sniperRange()&&!game.api.shotBlocked(e.x,e.y,p.x,p.y,3)}
 function sniperPathClear(e,x,y){const p=game.state.player;return game.api.pointSegDist(p.x,p.y,e.x,e.y,x,y)>p.r+e.r+40&&bouncePathClear(e,x,y,0)}
 function sniperRoute(e){
  const p=game.state.player,candidates=[],margin=e.r+20;
- for(const radius of [145,210])for(let i=0;i<16;i++){
+ for(const radius of game.api.desktopUiEnabled?.()?[sniperRange()*.8,sniperRange()*.55,210]:[145,210])for(let i=0;i<16;i++){
   const a=i*Math.PI/8,x=game.api.clamp(p.x+Math.cos(a)*radius,margin,game.state.W-margin),y=game.api.clamp(p.y+Math.sin(a)*radius,margin,game.state.H-margin);
   if(Math.hypot(x-p.x,y-p.y)<90||game.api.shotBlocked(x,y,p.x,p.y,3))continue;
   candidates.push({x,y});
@@ -855,7 +858,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { specialistReinforcements,specialistTarget,hitPaper,throwPaper,resetScrubberRub,eraseScrubber,resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie,spawnScheduledEnemy, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { specialistReinforcements,specialistTarget,hitPaper,throwPaper,resetScrubberRub,eraseScrubber,resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperRange,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie,spawnScheduledEnemy, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };

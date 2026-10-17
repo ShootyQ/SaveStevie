@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.70
+# Save Stevie upgrade reference — Alpha 0.1.100
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -51,7 +51,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Repulsion Ink | Ink effects | Timed contact pulses deal impact damage, shove enemies safely away from Stevie and briefly stagger them. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Electric Ink | Ink effects | Wall contact sparks a fading chain with brief shock. Shared recovery prevents overlapping zaps; every three levels add a jump, with capped reach and targets. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Blast Ink | Ink effects | Destroyed walls explode and damage nearby enemies. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
-| Vampire Ink | Ink effects | Deals life-drain damage on contact and heals for 25% of damage dealt, sharing the 6 HP/s healing budget. | Repeatable; caps/diminishing returns may apply; Shared combat-healing budget: 6 HP/s; no healing at full health. |
+| Vampire Ink | Ink effects | Deals life-drain damage on contact; heals up to 1.4 HP/s at rank one, plus 0.375 HP/s per additional rank, from actual damage dealt. Shares the 6 HP/s healing budget. | Repeatable; caps/diminishing returns may apply; Shared combat-healing budget: 6 HP/s; no healing at full health. |
 | Gravity Ink | Ink effects | Tugs nearby enemies toward wall segments without slowing movement or wall bites. Tight reach; King Doodle resists the pull, but his returnable shots bend slightly toward nearby walls. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Void Ink | Ink effects | Deals steady Void damage on contact and executes weakened ordinary enemies; bosses cannot be executed. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Chaos Ink | Ink effects | Sustained contact guarantees timed random ink rolls. Every roll has a working effect and extra impact damage. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |

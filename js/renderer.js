@@ -412,6 +412,7 @@ function tintedDoodle(name,colors){
   return canvas;
 }
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
+ if(game.api.drawWhiteBrotherBody?.(e))return true;
  if(game.api.drawCrayonWaxling(e))return true;
   const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
   const framed=/^(catapulter|grunt|fast|sprinter|sniper|boss)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
@@ -419,6 +420,7 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
   ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
+  if(e.type==='papertearer'){const p=game.api.papertearerPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
   if(e.type==='wallpuller'){const p=game.api.yankPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
   if(e.type==='catapulter'){const p=game.api.catapulterPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
   // Squash around the feet so hit reactions remain small and planted.
@@ -541,7 +543,7 @@ function resize(){
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
     game.api.movePlaguefire(dx,dy);game.api.moveWaveFinale(dx,dy,r.width,r.height);
-    game.api.moveRefuge(dx,dy);game.api.moveSupportInkVisuals(dx,dy);game.api.moveBossFields(dx,dy);
+    game.api.moveRefuge(dx,dy);game.api.moveSupportInkVisuals(dx,dy);game.api.moveBossFields(dx,dy);game.api.moveWhiteBrothers?.(dx,dy);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
   game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;game.api.refreshBossArrival();game.api.moveFirstLesson?.(dx,dy);
@@ -787,7 +789,7 @@ function draw(){
     ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();
     if(erase){ctx.fillStyle='#a54e78';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('ERASER FIRST',e.x,e.y-e.r-12);}ctx.restore();
   }
-  game.api.drawBossEncounters();game.api.drawWobbleFields();game.api.drawCrayonBossFields();
+  game.api.drawBossEncounters();game.api.drawWobbleFields();game.api.drawCrayonBossFields();game.api.drawWhiteBrothersFields?.();
   for(const n of game.state.enemies)if(n.type==='jamling'&&n.jamWarning>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b34936';ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,n.r+5,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.jamWarning/1.3));ctx.stroke();ctx.restore()}
   for(const shot of game.state.enemyShots){
     if(shot.wobbleOwner){const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));if(!motionReduced){ctx.strokeStyle='rgba(173,110,40,.35)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-5,0);ctx.stroke()}ctx.fillStyle='#edb538';ctx.strokeStyle='#3b3024';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-13,-4);ctx.lineTo(-11,0);ctx.lineTo(-13,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();continue}
@@ -861,7 +863,8 @@ function draw(){
     game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y-game.api.enemyFlightHeight(e)-game.api.wobbleToothHeight(e)-(game.api.isStapleBoss(e)&&!motionReduced?game.api.stapleHopHeight(e):0));
     if(e.flight&&!motionReduced){const t=e.flight.age/e.flight.duration;game.dom.ctx.rotate(e.flight.spin*Math.sin(t*Math.PI)*.8);const scale=1+Math.sin(t*Math.PI)*.16;game.dom.ctx.scale(scale,scale);}
 
-    if(e.type==='wobblechomp'){game.api.drawWobbleEnemy(e);drawEnemyHealthBar(e,hpRatio);}
+    if(game.api.drawWhiteBrotherBody?.(e)){}
+    else if(e.type==='wobblechomp'){game.api.drawWobbleEnemy(e);drawEnemyHealthBar(e,hpRatio);}
     else if(e.type==='wobble-tooth'){game.api.drawWobbleTooth(e);drawEnemyHealthBar(e,hpRatio);}
     else if(e.type==='eraser'){
       if(doodles.eraser){
@@ -986,7 +989,7 @@ function draw(){
     if(stapleIntro.stage==='snap'){ctx.font='bold 22px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillStyle='#995c29';ctx.fillText(stapleIntro.age<2.55?'CLACK!':'CLACK CLACK!',0,-60)}ctx.restore();
   }
   game.api.drawThrowAim?.();
-  game.api.drawEraserCursor?.();
+  game.api.drawEraserCursor?.();game.api.drawWhiteBrothersHud?.();
   game.api.drawWaveFinale(drawDoodleEnemy);game.dom.ctx.restore();game.api.drawBossVictory();
   game.api.drawFirstLesson();
   if(game.state.paused&&!game.api.firstLessonActive()){

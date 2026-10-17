@@ -51,6 +51,7 @@ function eraseWallPath(a,b,r=20,options={}){
  const lesson=options.lesson===true&&game.api.lessonCanPaint?.('erase');
  if(!game.state.running||(game.state.paused&&!lesson)||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
  if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
+ if(!options.enemy&&!lesson){const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;}
  let changed=false,recovered=0;const result=[];
  for(const wall of game.state.walls){
   const bounds=game.api.wallGeometry(wall.pts),pad=r+wall.thick/2;
@@ -291,7 +292,7 @@ function repairTouchedWalls(points,excluded=null){
 }
 
 function strokeInkScale(point){return point&&game.api.sneakyRouteEndpoint(point) ? .15 : 1;}
-function canStartStroke(point){if(game.api.canStartCrayonStroke(point))return true;const s=game.state.stats;return game.api.wobbleInfiniteInk?.()||(s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6*strokeInkScale(point);}
+function canStartStroke(point){if(game.api.canStartWhitePencil?.(point))return true;if(game.api.canStartCrayonStroke(point))return true;const s=game.state.stats;return game.api.wobbleInfiniteInk?.()||(s.firstFree&&!s.firstStrokeUsed)||s.ink+(s.freehandLevel>0?s.freehandBank:0)>=6*strokeInkScale(point);}
 
 const stitchReach=16;
 function stitchFactor(count){return [.75,.5,.25][count-1]||0;}
@@ -582,7 +583,7 @@ function applyOneInk(kind,e,dt,chaos=false){
   if(kind==='blast')for(const target of game.state.enemies){if(target.hp>0&&game.api.withinRadius(target.x,target.y,e.x,e.y,65+3*n))game.api.dealDamage(target,10+3*n,'blast')}
   if(kind==='vampire'){
     const hp=e.hp;game.api.dealDamage(e,8+2*n,'vampire');const before=game.state.player.hp;
-    if(game.state.player.hp>0)game.api.healStevie(Math.max(0,Math.min(hp,hp-e.hp))*.25);
+    if(game.state.player.hp>0)game.api.healStevie(Math.max(0,Math.min(hp,hp-e.hp))*game.api.supportInkTuning(n).vampireHeal);
     game.api.animateLeech(e,game.state.player.hp-before);
   }
   if(kind==='gravity'&&!game.api.isFirstBoss(e)){const p=game.api.nearestWallPoint(e.x,e.y,42);if(p){const dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1;game.api.moveEnemySafely(e,dx/d*8,dy/d*8)}}
