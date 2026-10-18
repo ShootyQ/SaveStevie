@@ -3,8 +3,8 @@ DoodleDefender.systems.enemies = function createEnemiesSystem(game) {
 const defs=game.catalog.enemyDefs={
     catapulter:{r:17,hp:60,speed:44,dmg:0,color:'#b941a4'},
     grunt:{r:11,hp:20,speed:30,dmg:6,color:'#cf5b51'},
-    wallpuller:{r:15,hp:52,speed:86,dmg:6,color:'#3bbcb8'},
-    papertearer:{r:15,hp:60,speed:30,dmg:6,color:'#9d66cb'},
+    wallpuller:{r:12,hp:52,speed:86,dmg:6,color:'#3bbcb8'},
+    papertearer:{r:12,hp:60,speed:30,dmg:6,color:'#9d66cb'},
     scrubber:{r:11,hp:18,speed:70,dmg:0,color:'#89ad3f'},
     fast:{r:8,hp:18,speed:60,dmg:7,color:'#d8893c'},
     bouncer:{r:10,hp:28,speed:44,dmg:8,color:'#2e9f92'},
@@ -460,8 +460,9 @@ function eraserAttack(e,dt){
   }
 }
 
+let tunnelAdds=0;
 let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,introducedSpawned=0,bossPhase='timed',arrival=null,commonArrivals=0,specialistAdds=0;
-function resetEnemyWave(){game.api.resetChompzilla?.();game.api.resetChonksShield?.();game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;commonArrivals=0;specialistAdds=0;game.api.resetBossEncounters()}
+function resetEnemyWave(){game.api.resetChompzilla?.();game.api.resetChonksShield?.();game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;commonArrivals=0;specialistAdds=0;tunnelAdds=0;game.api.resetBossEncounters()}
 function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}
@@ -543,7 +544,7 @@ const commonSpawnTypes=new Set(['grunt','fast','brute','elite']);
 function specialistReinforcements(point,count,job){
  if(game.state.wave<(job.kind==='tunnel'?11:13)||game.state.timeLeft<=0||bossPhase!=='timed')return [];
  const sides=[{d:point.x,x:-26,y:point.y},{d:game.state.W-point.x,x:game.state.W+26,y:point.y},{d:point.y-90,x:point.x,y:-26},{d:game.state.H-point.y,x:point.x,y:game.state.H+26}],edge=sides.sort((a,b)=>a.d-b.d)[0],spawned=[];
- for(let i=0;i<count&&specialistAdds<10;i++){const n=game.api.spawnEnemy(false,edge.x,edge.y,'grunt');if(!n)break;specialistAdds++;n.specialistJob={...job};n.speed*=1.4;spawned.push(n);}
+ for(let i=0;i<count&&(job.kind==='tunnel'?tunnelAdds<20:specialistAdds<10);i++){const n=game.api.spawnEnemy(false,edge.x,edge.y,'grunt');if(!n)break;if(job.kind==='tunnel')tunnelAdds++;else specialistAdds++;n.specialistJob={...job};n.speed*=1.4;spawned.push(n);}
  return spawned;
 }
 function specialistTarget(e){const job=e.specialistJob;if(!job)return null;
@@ -690,7 +691,7 @@ function updateEnemyBehavior(e,dt){
 }
 // Cached, deterministic firing-position search. Closed defenses remain solid.
 let sniperRoutes=new WeakMap();
-function sniperRange(){return game.api.desktopUiEnabled?.()?Math.min(380,Math.max(280,Math.min(game.state.W,game.state.H)*.48)):260;}
+function sniperRange(){return game.api.desktopUiEnabled?.()?Math.min(550,Math.max(350,(Math.max(game.state.W,game.state.H)*.65+Math.min(game.state.W,game.state.H)*.48)/2)):260;}
 function sniperOnPage(e){return e.x>=e.r+12&&e.x<=game.state.W-e.r-12&&e.y>=Math.max(80,e.r+12)&&e.y<=game.state.H-e.r-12;}
 function sniperCanAim(e){if(e.sniperAim)return true;const p=game.state.player,d=Math.hypot(e.x-p.x,e.y-p.y);return sniperOnPage(e)&&d>=90&&d<=sniperRange()&&!game.api.shotBlocked(e.x,e.y,p.x,p.y,3)}
 function sniperPathClear(e,x,y){const p=game.state.player;return game.api.pointSegDist(p.x,p.y,e.x,e.y,x,y)>p.r+e.r+40&&bouncePathClear(e,x,y,0)}

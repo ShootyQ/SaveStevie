@@ -69,14 +69,17 @@ function drawDeskGrain(ctx,scar){
     for(let i=0;i<3;i++){const x=Math.sin(scar.seed*2+i)*scar.r*.65,y=Math.cos(scar.seed+i)*scar.r*.6;ctx.beginPath();ctx.moveTo(x-6,y+2);ctx.lineTo(x+8,y-1);ctx.stroke()}
 }
 function drawBurnedDesk(ctx){
-  if(!scars.length)return;
-  const {W,H}=game.state,key=scarRevision+':'+W+':'+H;
+  if(!scars.length&&!patches.length)return;
+  const {W,H}=game.state,key=scarRevision+':'+W+':'+H+':'+patches.map(p=>p.seed+','+Math.floor(radius(p))).join(';');
   if(!deskLayer){deskLayer=document.createElement('canvas');deskKey=null;}
   if(key!==deskKey){
     deskLayer.width=Math.ceil(W);deskLayer.height=Math.ceil(H);const dc=deskLayer.getContext('2d');
     dc.clearRect(0,0,W,H);dc.save();dc.beginPath();
     // Same winding fills the union: overlaps reveal uninterrupted desk.
     for(const scar of scars)outline(dc,scar.r,scar,true);
+    // Active burns reveal desk as they grow, not only after burnout. Whole-pixel
+    // radii bound cache rebuilds; one union keeps overlapping burns uncluttered.
+    for(const p of patches)outline(dc,Math.floor(radius(p)),p,true);
     dc.fillStyle='#c59b70';dc.fill();dc.clip();
     dc.lineWidth=1;dc.strokeStyle='rgba(114,77,43,.22)';dc.beginPath();
     for(let y=0;y<H;y+=12){dc.moveTo(0,y);dc.bezierCurveTo(W*.3,y-2,W*.7,y+2,W,y);}
@@ -102,7 +105,7 @@ function drawPlaguefire(){
     }
     for(let i=0;i<2;i++){
       const a=i*Math.PI+.6,x=Math.cos(a)*r*.68,y=Math.sin(a)*r*.5;
-      const h=reduced?8:7+Math.sin(phase*7+i+p.seed)*2;
+      const h=reduced?9:9+r*.12+Math.sin(phase*7+i+p.seed)*3;
       ctx.beginPath();ctx.moveTo(x-4,y+2);ctx.quadraticCurveTo(x-7,y-4,x+Math.sin(phase*5+i)*2,y-h);ctx.quadraticCurveTo(x+5,y-4,x+4,y+2);ctx.closePath();
       ctx.fillStyle='#e18c31';ctx.fill();ctx.strokeStyle='#80522b';ctx.lineWidth=1;ctx.stroke();
       ctx.beginPath();ctx.moveTo(x-2,y);ctx.lineTo(x,y-h*.65);ctx.lineTo(x+2,y);ctx.closePath();ctx.fillStyle='#d7ed6d';ctx.fill();

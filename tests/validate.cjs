@@ -2636,3 +2636,5 @@ require('./ash-impostor.cjs')(load);
 require('./boss-presentation.cjs')(load);
 
 require('./dash-recharge.cjs')(load);
+
+require('./crew-patrol.cjs')(load);
