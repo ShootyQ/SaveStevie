@@ -7,8 +7,8 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['ash-impostor','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
-const coreArtwork=new Set(['paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
+const doodleNames=['gnawer-animations','ash-impostor','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const coreArtwork=new Set(['gnawer-animations','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
 const artworkLoads=new Map(),artworkSupported=typeof Image!=='undefined';
 function artworkStatus(){const loaded=[...coreArtwork].filter(name=>!!doodles[name]).length;return {ready:!artworkSupported||loaded===coreArtwork.size,loaded,total:coreArtwork.size,failed:[...artworkLoads].filter(([,r])=>r.failed).map(([name])=>name),loading:[...artworkLoads].filter(([,r])=>r.loading).map(([name])=>name)};}
 function syncArtworkUI(){
@@ -412,6 +412,7 @@ function tintedDoodle(name,colors){
   return canvas;
 }
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
+ if(game.api.drawChompzilla?.(e)){game.api.drawBlackIceLimbs(e);game.api.drawThermalShockEnemy(e);if(showHealth)drawEnemyHealthBar(e,hpRatio);return true;}
  if(game.api.drawWhiteBrotherBody?.(e))return true;
  if(game.api.drawCrayonWaxling(e))return true;
   const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
@@ -538,7 +539,7 @@ function resize(){
     for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.rockCharge&&!movedCharges.has(wall.rockCharge)){movedCharges.add(wall.rockCharge);wall.rockCharge.x+=dx;wall.rockCharge.y+=dy;}if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
-    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.moveBlackIce(dx,dy);game.api.moveThermalShock(dx,dy);game.api.moveBackdraft(dx,dy);game.api.moveTesla(dx,dy);game.api.movePaper(dx,dy);game.api.moveCircleShapes(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveCatapults(dx,dy);game.api.moveDoodleScraps(dx,dy);
+    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.moveChompzilla?.(dx,dy);game.api.moveBlackIce(dx,dy);game.api.moveThermalShock(dx,dy);game.api.moveBackdraft(dx,dy);game.api.moveTesla(dx,dy);game.api.movePaper(dx,dy);game.api.moveCircleShapes(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveCatapults(dx,dy);game.api.moveDoodleScraps(dx,dy);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
@@ -789,7 +790,7 @@ function draw(){
     ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();
     if(erase){ctx.fillStyle='#a54e78';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('ERASER FIRST',e.x,e.y-e.r-12);}ctx.restore();
   }
-  game.api.drawBossEncounters();game.api.drawWobbleFields();game.api.drawCrayonBossFields();game.api.drawWhiteBrothersFields?.();
+  game.api.drawBossEncounters();game.api.drawWobbleFields();game.api.drawCrayonBossFields();game.api.drawWhiteBrothersFields?.();game.api.drawChompzillaMarks?.();
   for(const n of game.state.enemies)if(n.type==='jamling'&&n.jamWarning>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b34936';ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,n.r+5,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.jamWarning/1.3));ctx.stroke();ctx.restore()}
   for(const shot of game.state.enemyShots){
     if(shot.wobbleOwner){const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));if(!motionReduced){ctx.strokeStyle='rgba(173,110,40,.35)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-5,0);ctx.stroke()}ctx.fillStyle='#edb538';ctx.strokeStyle='#3b3024';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-13,-4);ctx.lineTo(-11,0);ctx.lineTo(-13,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();continue}

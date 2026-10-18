@@ -37,16 +37,16 @@ const pressure=game.catalog.pressureSettings={startWave:5,fullWave:20,maxMultipl
   surgeCycle:12,surgeSeconds:4,surgeMultiplier:1.35,quietMultiplier:.9,maxEnemies:180};
 game.catalog.enemyGuide=game.catalog.monsters.filter(m=>['wardling','sprinter','brood','bulwark','medic','sapper'].includes(m.type)).map(m=>({wave:m.wave,type:m.type,name:m.name,desc:m.ability+' '+m.tip}));
 
-// Keep late waves focused on the early cast and the two interactive builders.
-const lateRoster=new Set([...game.catalog.monsters.filter(m=>m.wave<=9&&!['splitter','mini','boss'].includes(m.type)).map(m=>m.type),'wallpuller','catapulter','papertearer']);
-function scheduledTypeAvailable(type){return !game.catalog.monsters.find(m=>m.type===type)?.pausedFromWaves&&(game.state.wave<11||lateRoster.has(type));}
+// Keep late waves focused on the early cast and interactive wall counters.
+const lateRoster=new Set([...game.catalog.monsters.filter(m=>m.wave<=9&&!['splitter','mini','boss'].includes(m.type)).map(m=>m.type),'wallpuller','catapulter','papertearer','gnawer']);
+function scheduledTypeAvailable(type){return (type!=='gnawer'||game.state.wave>=12)&&!game.catalog.monsters.find(m=>m.type===type)?.pausedFromWaves&&(game.state.wave<11||lateRoster.has(type));}
 function enemyType(){
   const pool=game.state.wave>=12?['grunt']:['grunt','grunt'];
   for(const m of game.catalog.monsters){
     if(m.type==='catapulter'&&!game.api.canSpawnCatapulter())continue;
     if(m.wave<=game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser','mr-glue'].includes(m.type)){pool.push(m.type);if(game.state.wave>=12&&['sniper','flanker','wallpuller','catapulter','papertearer'].includes(m.type))pool.push(m.type,m.type);}
   }
-  return game.api.pick(pool.filter(type=>!['wallpuller','papertearer'].includes(type)||!game.state.enemies.some(e=>e.type===type&&e.hp>0)).filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
+  return game.api.pick(pool.filter(type=>type!=='gnawer'||game.state.enemies.filter(e=>e.type==='gnawer'&&e.hp>0).length<2).filter(type=>!['wallpuller','papertearer'].includes(type)||!game.state.enemies.some(e=>e.type===type&&e.hp>0)).filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
 }
 
 function bossTypeForWave(wave=game.state.wave){
@@ -112,6 +112,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(['wallpuller','papertearer'].includes(type)&&game.state.enemies.some(e=>e.type===type&&e.hp>0))return null;
   if(type==='tank'&&game.state.wave>=6&&game.state.enemies.filter(e=>e.type==='tank'&&e.hp>0).length>=2)return null;
   if(type==='flanker'&&game.state.enemies.filter(e=>e.type==='flanker'&&e.hp>0).length>=2)return null;
+  if(type==='gnawer'&&game.state.enemies.filter(e=>e.type==='gnawer'&&e.hp>0).length>=2)return null;
   if(type==='scrubber'&&game.state.enemies.filter(e=>e.type==='scrubber'&&e.hp>0).length>=3)return null;
   if(type==='basil'&&game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length>=2)return null;
   if(type==='catapulter'&&!game.api.canSpawnCatapulter())return null;
@@ -460,7 +461,7 @@ function eraserAttack(e,dt){
 }
 
 let bossSpawned=false,bossResolved=false,groupsSpawned=0,relocatedSpawned=0,introducedSpawned=0,bossPhase='timed',arrival=null,commonArrivals=0,specialistAdds=0;
-function resetEnemyWave(){game.api.resetChonksShield?.();game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;commonArrivals=0;specialistAdds=0;game.api.resetBossEncounters()}
+function resetEnemyWave(){game.api.resetChompzilla?.();game.api.resetChonksShield?.();game.api.resetHardhatCrew?.();game.api.resetEnemyTactics?.();if(bossEntranceActive())game.api.suspendMusic(false);sniperRoutes=new WeakMap();bossPhase='timed';arrival=null;bossSpawned=false;bossResolved=false;groupsSpawned=0;relocatedSpawned=0;introducedSpawned=0;commonArrivals=0;specialistAdds=0;game.api.resetBossEncounters()}
 function bossFightResolved(){return game.state.wave%5===0&&bossSpawned&&bossResolved}
 function campaignBossPending(){return !game.state.endless&&game.state.wave<=20&&game.state.wave%5===0&&!bossResolved}
 function ensureWaveBoss(){if(!bossSpawned)game.api.spawnEnemy(true)}

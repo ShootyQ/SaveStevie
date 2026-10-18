@@ -1,0 +1,47 @@
+{
+  "image": "gnawer-animations.png",
+  "columns": 4,
+  "referenceWidth": 1297,
+  "rowBounds": [
+    0,
+    310,
+    609,
+    889,
+    1213
+  ],
+  "actions": {
+    "walk": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "windup": [
+      4,
+      5
+    ],
+    "chomp": [
+      6,
+      7
+    ],
+    "chew": [
+      8,
+      9
+    ],
+    "squeeze": [
+      10,
+      11
+    ],
+    "miss": [
+      12,
+      13
+    ],
+    "hit": [
+      14
+    ],
+    "defeat": [
+      15
+    ]
+  },
+  "notes": "Full drawn character frames, including face and limbs; no procedural character animation."
+}

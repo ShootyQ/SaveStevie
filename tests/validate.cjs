@@ -659,7 +659,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 // A mixed-status crowd must reuse its tinted sprites instead of allocating each frame.
 {
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
-const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['catapulter','basil','scrubber','flanker','wallpuller','papertearer','wobblechomp','wobble-tooth','eraser','mr-glue'].includes(type));
+const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['catapulter','basil','scrubber','flanker','wallpuller','papertearer','wobblechomp','wobble-tooth','eraser','mr-glue','gnawer'].includes(type));
 for(let i=0;i<76;i++){
  const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][Math.floor(i/types.length)%4];
  e.burn=mask&1?2:0;e.poison=mask&2?2:0;e.freeze=mask&4?2:0;e.charged=mask&8?2:0;e.gravitySlow=mask&16?.4:0;
@@ -890,9 +890,9 @@ console.log('PASS: minimum ink and affordable clipping, free-stroke limits, 2–
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;
  const wall=(x=200)=>({pts:[{x,y:80},{x,y:280}],hp:500,maxHp:500,thick:8,life:72,maxLife:72});
  const gnawer=g.api.spawnEnemy(false,190,160,'gnawer');gnawer.speed=0;g.state.walls=[wall()];
- g.api.update(.03);assert.equal(g.api.enemyActionCue(gnawer),'bite');assert.equal(g.state.walls[0].hp,500-gnawer.dmg,'one actual bite');
- assert.ok(g.api.enemyAnimationPose(gnawer).x>0,'chomp points toward the wall');
- g.state.walls=[];g.api.update(.3);assert.equal(g.api.enemyActionCue(gnawer),null,'no phantom bites');
+ g.api.update(.03);assert.equal(g.api.chompzillaSnapshot(gnawer).phase,'windup');assert.equal(g.state.walls[0].hp,500,'windup preserves the whole stroke');
+ for(let i=0;i<27;i++)g.api.update(.025);assert.equal(g.api.chompzillaSnapshot(gnawer).bites,1);assert.equal(g.state.walls[0].hp,500,'first bite marks a local section');
+ g.state.walls=[];g.api.update(.025);assert.equal(g.api.chompzillaSnapshot(gnawer).phase,'miss','no phantom bites after a removed target');
  const grunt=g.api.spawnEnemy(false,190,200,'grunt');grunt.speed=0;g.state.walls=[wall()];g.api.update(.03);
  assert.equal(g.api.enemyActionCue(grunt),'bite','opening-wave Grunts chomp on real wall hits');g.state.walls=[];
  const fast=g.api.spawnEnemy(false,100,100,'fast');g.api.updateEnemyAnimations(.016);fast.x+=2;g.api.updateEnemyAnimations(.016);assert.ok(g.api.enemyAnimationPose(fast).angle>.05,'little runners lean into their travel');
@@ -2628,3 +2628,5 @@ require('./white-brothers.cjs')(load);
 require('./desktop-ripraff.cjs')(load);
 
 require('./white-brothers-fight.cjs')(load);
+
+require('./chompzilla.cjs')(load);

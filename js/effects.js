@@ -85,6 +85,7 @@ function dealDamage(enemy,amount,kind='physical',source=null){
   amount=game.api.limitBossDamage(enemy,Math.max(0,amount),kind);
   const before=enemy.hp,actual=Math.min(Math.max(0,before),amount);
   enemy.hp-=amount;
+  if(actual>=4)game.api.chompzillaHit?.(enemy);
   if(actual>0){if(kind==='physical'&&game.state.stacks['Death Ink']>0)game.api.animateInkAccent(enemy,'death');game.api.reactEnemyHit(enemy);if(kind==='void')game.api.animateVoidHit(enemy)}
   game.api.damageNumber(enemy,actual,kind,before>0&&enemy.hp<=0);
 }

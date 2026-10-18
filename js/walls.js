@@ -54,6 +54,7 @@ function eraseWallPath(a,b,r=20,options={}){
  if(!options.enemy&&!lesson){const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;}
  let changed=false,recovered=0;const result=[];
  for(const wall of game.state.walls){
+  if(options.onlyWall&&wall!==options.onlyWall){result.push(wall);continue;}
   const bounds=game.api.wallGeometry(wall.pts),pad=r+wall.thick/2;
   if(bounds.maxX<Math.min(a.x,b.x)-pad||bounds.minX>Math.max(a.x,b.x)+pad||bounds.maxY<Math.min(a.y,b.y)-pad||bounds.minY>Math.max(a.y,b.y)+pad){result.push(wall);continue;}
   let touched=false,total=0,piece=[],pieces=[];
