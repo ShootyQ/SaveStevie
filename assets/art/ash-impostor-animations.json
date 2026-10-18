@@ -1,0 +1,42 @@
+{
+  "image": "ash-impostor-animations.png",
+  "columns": 4,
+  "rows": 4,
+  "actions": {
+    "entrance": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "taunt": [
+      4,
+      5,
+      6,
+      7
+    ],
+    "startled": [
+      8,
+      9,
+      10,
+      11
+    ],
+    "ash-out": [
+      12,
+      13,
+      14,
+      15
+    ]
+  },
+  "rowEdges": [
+    0,
+    317,
+    627,
+    940,
+    1254
+  ],
+  "sheetSize": [
+    1254,
+    1254
+  ]
+}

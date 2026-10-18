@@ -2632,3 +2632,4 @@ require('./white-brothers-fight.cjs')(load);
 require('./chompzilla.cjs')(load);
 
 require('./breathing-room.cjs')(load);
+require('./ash-impostor.cjs')(load);

@@ -11,14 +11,14 @@ DoodleDefender.systems.doodleTricks=function(game){
   if(n.dots){e.noteDotHits=(e.noteDotHits||0)+1;if(e.noteDotHits>=2){mark(e);e.noteDotLife=8;e.noteDotColor=(e.noteId-1)%palette.length;}}
   if(n.cling&&before.electric&&e.immunity!=='electric'&&!(e.noteClingCooldown>clock)){e.noteClingUntil=clock+3;e.noteClingStrength=n.cling;e.noteClingCooldown=clock+6;}
   const ash=Math.max(n.ash||0,n.influence||0);
-  if(ash&&before.burn&&e.immunity!=='fire'&&!(e.noteAshCooldown>clock)&&decoys.length<3){e.noteAshCooldown=clock+Math.max(4,8-Math.min(3,ash-1));const x=game.api.clamp(e.x+e.r+22,30,game.state.W-30),y=game.api.clamp(e.y-15,100,game.state.H-40);decoys.push({x,y,life:4+Math.min(2,ash-1),maxLife:4+Math.min(2,ash-1),owner:mark(e),payload:{...n},influence:n.influence||0});game.api.floatText(x,y-24,'ASH IMPOSTOR!','#bd693b');}
+  if(ash&&before.burn&&e.immunity!=='fire'&&!(e.noteAshCooldown>clock)&&decoys.length<3){e.noteAshCooldown=clock+Math.max(4,8-Math.min(3,ash-1));const x=game.api.clamp(e.x+e.r+22,30,game.state.W-30),y=game.api.clamp(e.y-15,100,game.state.H-40);decoys.push({x,y,life:4+Math.min(2,ash-1),maxLife:4+Math.min(2,ash-1),reaction:0,owner:mark(e),payload:{...n},influence:n.influence||0});game.api.floatText(x,y-24,'ASH IMPOSTOR!','#bd693b');}
   if(n.bubble&&before.poison&&e.immunity!=='poison'&&!(e.noteBubbleCooldown>clock)){e.noteBubbleHits=(e.noteBubbleHits||0)+1;if(e.noteBubbleHits>=2){e.noteBubbleHits=0;e.noteBubbleLife=3;e.noteBubbleCooldown=clock+7;e.noteBubbleCenter={x:e.x,y:e.y};e.noteBubbleAge=0;game.api.floatText(e.x,e.y-30,'BUBBLE TROUBLE!','#528237');}}
  }
  function clingMembers(e){const members=new Set([e]);for(let i=0;i<24;i++){const old=members.size;for(const l of clings)if(members.has(l.a)||members.has(l.b)){members.add(l.a);members.add(l.b);}if(members.size===old)break;}return members;}
  function joinCling(e){if(clings.length>=64)return false;const own=clingMembers(e);const other=game.state.enemies.filter(n=>n!==e&&surface(n)&&!own.has(n)&&Math.hypot(n.x-e.x,n.y-e.y)<e.r+n.r+24).sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y)).find(n=>clingMembers(n).size+own.size<=24);if(!other)return false;mark(e);mark(other);clings.push({a:e,b:other,life:4+.5*((e.noteClingStrength||1)-1)});e.noteClingUntil=other.noteClingUntil=0;game.api.burst((e.x+other.x)/2,(e.y+other.y)/2,'#70aacf',4);game.api.floatText(e.x,e.y-25,'STUCK TOGETHER!','#386ac3');return true;}
  function doodleClingScale(e){return clings.some(l=>l.a===e||l.b===e)?.7:1;}
  function updateDoodleTricks(dt){
-  decoys=decoys.filter(d=>(d.life-=dt)>0);snaps=snaps.filter(s=>(s.life-=dt)>0);
+  decoys=decoys.filter(d=>{d.reaction=Math.max(0,d.reaction-dt);return (d.life-=dt)>0;});snaps=snaps.filter(s=>(s.life-=dt)>0);
   for(const e of game.state.enemies)if(e.noteDotLife>0)e.noteDotLife=Math.max(0,e.noteDotLife-dt);
   clings=clings.filter(l=>(l.life-=dt)>0&&surface(l.a)&&surface(l.b)&&game.state.enemies.includes(l.a)&&game.state.enemies.includes(l.b));
   for(const l of clings){const dx=l.b.x-l.a.x,dy=l.b.y-l.a.y,d=Math.hypot(dx,dy),rest=l.a.r+l.b.r+2;if(d>rest){const step=Math.min((d-rest)*.5,65*dt);for(const [e,sign] of [[l.a,1],[l.b,-1]])if(e.freeze<=0&&e.stun<=0)game.api.moveEnemySafely(e,dx/d*step*sign,dy/d*step*sign);}}
@@ -29,7 +29,7 @@ DoodleDefender.systems.doodleTricks=function(game){
  function updateDoodleEnemy(e,dt){if(!surface(e)||e.freeze>0||e.stun>0)return false;const clock=game.api.doodleClock();
   if(e.noteClingUntil>clock)joinCling(e);
   if(e.noteBubbleLife>0){e.noteBubbleLife=Math.max(0,e.noteBubbleLife-dt);e.noteBubbleAge+=dt;const c=e.noteBubbleCenter,a=e.noteBubbleAge*3,tx=game.api.clamp(c.x+Math.sin(a)*35,30,game.state.W-30),ty=game.api.clamp(c.y+Math.cos(a)*25,100,game.state.H-40);game.api.moveEnemySafely(e,(tx-e.x)*Math.min(1,dt*3),(ty-e.y)*Math.min(1,dt*3));return true;}
-  const d=doodleTarget(e);if(d&&Math.hypot(e.x-d.x,e.y-d.y)<e.r+18){e.noteDecoyBite=Math.max(0,(e.noteDecoyBite||0)-dt);if(!e.noteDecoyBite){e.noteDecoyBite=.8;game.api.animateEnemyAction(e,'bite',d);if(d.influence)game.api.applyDoodleHit(e,d.payload,true);game.api.burst(d.x,d.y,'#daaa78',3);}return true;}return false;
+  const d=doodleTarget(e);if(d&&Math.hypot(e.x-d.x,e.y-d.y)<e.r+18){e.noteDecoyBite=Math.max(0,(e.noteDecoyBite||0)-dt);if(!e.noteDecoyBite){e.noteDecoyBite=.8;d.reaction=.4;game.api.animateEnemyAction(e,'bite',d);if(d.influence)game.api.applyDoodleHit(e,d.payload,true);game.api.burst(d.x,d.y,'#daaa78',3);}return true;}return false;
  }
  function connectDoodleDots(points){if(!game.api.noteLevel('dots')||points.length<2)return false;
   const touched=game.state.enemies.filter(e=>surface(e)&&e.noteDotLife>0&&points.some((p,i)=>i&&game.api.pointSegDist(e.x,e.y,p.x,p.y,points[i-1].x,points[i-1].y)<=e.r+14));
@@ -48,18 +48,25 @@ DoodleDefender.systems.doodleTricks=function(game){
   if(!p.rail){p.target=game.api.nearestEnemy(p.x,p.y,p.turretShot?(p.turretRange||210):game.api.paperRange(p.doodlePayload)+100+Math.min(100,(p.doodlePayload.underline-1)*30));p.manual=!p.target;p.life=Math.max(p.life,1.3);game.api.burst(p.x,p.y,'#63a38d',5);}return true;
  }
  function moveDoodleTricks(dx,dy){for(const d of decoys){d.x+=dx;d.y+=dy;}for(const s of snaps){s.ax+=dx;s.bx+=dx;s.ay+=dy;s.by+=dy;}for(const e of game.state.enemies)if(e.noteBubbleCenter){e.noteBubbleCenter.x+=dx;e.noteBubbleCenter.y+=dy;}for(const p of game.state.projectiles)if(p.rail)for(const q of p.rail.points){q.x+=dx;q.y+=dy;}}
- // The decoy's own lifetime drives cosmetics, so pause freezes every wisp.
+ // Full drawn poses; combat lifetime owns the clock, so pausing freezes the routine.
+ function ashImpostorPose(d,reduced=false){
+  const age=d.maxLife-d.life;
+  let action='taunt',row=1,frame=Math.floor(Math.max(0,age-.48)*7)%4;
+  if(d.life<=.64){action='ash-out';row=3;frame=Math.min(3,Math.floor((.64-d.life)/.16));}
+  else if(age<.48){action='entrance';row=0;frame=Math.min(3,Math.floor(age/.12));}
+  else if(d.reaction>0){action='startled';row=2;frame=Math.min(3,Math.floor((.4-d.reaction)/.1));}
+  if(reduced){row=1;frame=0;}
+  return {action,frame:row*4+frame};
+ }
  function drawAshImpostor(d,reduced){
-  const ctx=game.dom.ctx,age=d.maxLife-d.life,phase=age*3+d.owner,fade=Math.min(1,d.life/.65),appear=reduced?1:Math.min(1,age/.22),image=game.api.doodleArtwork('ash-impostor');
-  ctx.globalAlpha=fade*.18;ctx.fillStyle='#634c3c';ctx.beginPath();ctx.ellipse(0,17,18+(reduced?0:Math.sin(phase)*2),5,0,0,Math.PI*2);ctx.fill();
-  // Five fixed ember/ash paths: no combat particles, random calls or allocations.
+  const ctx=game.dom.ctx,age=d.maxLife-d.life,fade=Math.min(1,d.life/.2),image=game.api.doodleArtwork('ash-impostor-animations'),pose=ashImpostorPose(d,reduced);
+  ctx.globalAlpha=fade*.18;ctx.fillStyle='#634c3c';ctx.beginPath();ctx.ellipse(0,20,18,5,0,0,Math.PI*2);ctx.fill();
+  // Five fixed ember paths, without adding combat particles or rolling gameplay RNG.
   for(let i=0;i<5;i++){const t=reduced?.4:(age*.6+i/5)%1,angle=i*2.4+d.owner;ctx.globalAlpha=fade*(1-t)*.6;ctx.fillStyle=i%2?'#d77835':'#6c6258';ctx.beginPath();ctx.arc(Math.sin(angle+t)*23,-5-t*27,1.1+(i%2)*.6,0,Math.PI*2);ctx.fill();}
-  ctx.save();ctx.translate(0,reduced?0:-3+Math.sin(phase)*3);ctx.rotate(reduced?0:Math.sin(phase*.7)*.065);
-  const pop=reduced?1:(.6+.4*appear)*(1+Math.sin(Math.min(1,age/.35)*Math.PI)*.12),breath=reduced?0:Math.sin(phase*1.4)*.025;
-  ctx.scale(pop*(1+breath),pop*(1-breath));ctx.globalAlpha=fade*appear*.94;
-  if(image)ctx.drawImage(image,-32,-35,64,58.5);
-  else{ctx.strokeStyle='#695b51';ctx.fillStyle='#eee4d6';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-16,13);ctx.bezierCurveTo(-26,-30,25,-30,16,13);ctx.lineTo(8,8);ctx.lineTo(0,15);ctx.lineTo(-8,8);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#5b3e30';ctx.beginPath();ctx.arc(-5,-4,2,0,7);ctx.arc(5,-4,2,0,7);ctx.fill();ctx.beginPath();ctx.arc(0,0,6,0,Math.PI);ctx.stroke();}
-  ctx.restore();ctx.globalAlpha=fade*.8;
+  ctx.globalAlpha=fade*.94;
+  if(image){const w=image.naturalWidth/4,row=Math.floor(pose.frame/4),edges=[0,317/1254,627/1254,940/1254,1],y=edges[row]*image.naturalHeight,h=(edges[row+1]-edges[row])*image.naturalHeight;ctx.drawImage(image,(pose.frame%4)*w,y,w,h,-34,-42,68,68);}
+  else{const still=game.api.doodleArtwork('ash-impostor');if(still)ctx.drawImage(still,-32,-35,64,58.5);}
+  ctx.globalAlpha=fade*.8;
  }
  function drawDoodleTricks(){const ctx=game.dom.ctx,time=game.api.doodleClock(),reduced=game.api.enemyMotionReduced();ctx.save();
   for(const d of decoys){ctx.save();ctx.translate(d.x,d.y);drawAshImpostor(d,reduced);if(d.influence){const colors=Object.keys(d.payload).filter(k=>['fire','electric','poison','frost','eraser'].includes(k)).map(k=>({fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a'}[k]));colors.forEach((c,i)=>{ctx.strokeStyle=c;ctx.beginPath();ctx.arc(0,0,21+i*3,0,Math.PI*2);ctx.stroke();});}ctx.restore();}
@@ -69,5 +76,5 @@ DoodleDefender.systems.doodleTricks=function(game){
   ctx.globalAlpha=1;for(const e of game.state.enemies){if(!surface(e))continue;if(e.noteDotLife>0){const y=e.y-e.r-13,r=reduced?8:8+Math.sin(time*5+e.noteId)*1.2;ctx.fillStyle=palette[e.noteDotColor];ctx.strokeStyle='#fff9e9';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,y,r,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff9e9';ctx.font='bold 10px sans-serif';ctx.textAlign='center';ctx.fillText(String((e.noteId-1)%9+1),e.x,y+3);ctx.strokeStyle=palette[e.noteDotColor];ctx.setLineDash([2,4]);ctx.beginPath();ctx.arc(e.x,e.y,e.r+9,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);}if(e.noteBubbleLife>0){ctx.fillStyle='#98ce7144';ctx.strokeStyle='#6f9c57';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.r+13,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle='#fff9e9';ctx.beginPath();ctx.arc(e.x-3,e.y-3,e.r+7,Math.PI,Math.PI*1.6);ctx.stroke();}if(e.noteClingUntil>time){ctx.strokeStyle='#386ac3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(e.x-6,e.y-e.r-6);ctx.lineTo(e.x,e.y-e.r-15);ctx.lineTo(e.x+2,e.y-e.r-9);ctx.lineTo(e.x+8,e.y-e.r-17);ctx.stroke();}}
   ctx.restore();
  }
- const api={doodleClingScale,resetDoodleTricks,doodleTrickHit,updateDoodleTricks,doodleTarget,updateDoodleEnemy,connectDoodleDots,eraseDoodlePath,erasedDoodleShot,secondDraft,guideDoodleProjectile,advanceDoodleRail,moveDoodleTricks,drawDoodleTricks,doodleTricksSnapshot:()=>({decoys:decoys.map(d=>({x:d.x,y:d.y,life:d.life,influence:d.influence})),links:links.map(l=>({a:l.a.noteId,b:l.b.noteId,life:l.life,length:l.length})),snaps:snaps.length,clings:clings.map(l=>({a:l.a.noteId,b:l.b.noteId,life:l.life}))})};Object.assign(game.api,api);return api;
+ const api={ashImpostorPose,doodleClingScale,resetDoodleTricks,doodleTrickHit,updateDoodleTricks,doodleTarget,updateDoodleEnemy,connectDoodleDots,eraseDoodlePath,erasedDoodleShot,secondDraft,guideDoodleProjectile,advanceDoodleRail,moveDoodleTricks,drawDoodleTricks,doodleTricksSnapshot:()=>({decoys:decoys.map(d=>({x:d.x,y:d.y,life:d.life,influence:d.influence,reaction:d.reaction,...ashImpostorPose(d)})),links:links.map(l=>({a:l.a.noteId,b:l.b.noteId,life:l.life,length:l.length})),snaps:snaps.length,clings:clings.map(l=>({a:l.a.noteId,b:l.b.noteId,life:l.life}))})};Object.assign(game.api,api);return api;
 };
