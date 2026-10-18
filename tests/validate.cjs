@@ -2633,3 +2633,4 @@ require('./chompzilla.cjs')(load);
 
 require('./breathing-room.cjs')(load);
 require('./ash-impostor.cjs')(load);
+require('./boss-presentation.cjs')(load);

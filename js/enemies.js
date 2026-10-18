@@ -506,7 +506,8 @@ function firstBossIntroActive(){return !!arrival?.intro}
 function firstBossIntroPose(){
  if(!firstBossIntroActive())return null;
  const a=arrival,t=game.api.clamp(a.age/3.375,0,1),reduced=game.api.enemyMotionReduced();
- return {x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.stage,frame:reduced?0:a.stage==='stomp'?Math.floor(a.age*8)%4:a.stage==='roar'?4+Math.min(3,Math.floor((a.age-3.375)/2.757*4)):8,zoom:reduced?1:1+.65*game.api.clamp(t*2,0,1)*(a.stage==='smash'?game.api.clamp((6.582-a.age)/.45,0,1):1),hop:reduced||a.stage!=='stomp'?0:Math.abs(Math.sin(a.age*9))*5};
+ const artFrame=reduced?15:a.stage==='stomp'?(a.age<2.85?Math.floor(a.age*7)%4:4+Math.min(3,Math.floor((a.age-2.85)/.525*4))):a.stage==='roar'?((a.age-3.375)<.5?8+Math.min(2,Math.floor((a.age-3.375)/.5*3)):(a.age-3.375)<2.35?10+Math.floor((a.age-3.875)*5)%2:12+Math.min(3,Math.floor((a.age-5.725)/.407*4))):7;
+ return {artFrame,x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.stage,frame:reduced?0:a.stage==='stomp'?Math.floor(a.age*8)%4:a.stage==='roar'?4+Math.min(3,Math.floor((a.age-3.375)/2.757*4)):8,zoom:reduced?1:1+.65*game.api.clamp(t*2,0,1)*(a.stage==='smash'?game.api.clamp((6.582-a.age)/.45,0,1):1),hop:reduced||a.stage!=='stomp'?0:Math.abs(Math.sin(a.age*9))*5};
 }
 function beginFirstBossIntro(){game.api.resetCircleShapes();
  const {W,player}=game.state;game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);
