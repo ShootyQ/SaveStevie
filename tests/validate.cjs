@@ -2630,3 +2630,5 @@ require('./desktop-ripraff.cjs')(load);
 require('./white-brothers-fight.cjs')(load);
 
 require('./chompzilla.cjs')(load);
+
+require('./boss-presentation.cjs')(load);
