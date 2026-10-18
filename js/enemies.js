@@ -39,7 +39,7 @@ game.catalog.enemyGuide=game.catalog.monsters.filter(m=>['wardling','sprinter','
 
 // Keep late waves focused on the early cast and interactive wall counters.
 const lateRoster=new Set([...game.catalog.monsters.filter(m=>m.wave<=9&&!['splitter','mini','boss'].includes(m.type)).map(m=>m.type),'wallpuller','catapulter','papertearer','gnawer']);
-function scheduledTypeAvailable(type){return (type!=='gnawer'||game.state.wave>=12)&&!game.catalog.monsters.find(m=>m.type===type)?.pausedFromWaves&&(game.state.wave<11||lateRoster.has(type));}
+function scheduledTypeAvailable(type){return (type!=='papertearer'||game.state.wave>=11)&&(type!=='gnawer'||game.state.wave>=12)&&!game.catalog.monsters.find(m=>m.type===type)?.pausedFromWaves&&(game.state.wave<11||lateRoster.has(type));}
 function enemyType(){
   const pool=game.state.wave>=12?['grunt']:['grunt','grunt'];
   for(const m of game.catalog.monsters){
@@ -506,7 +506,8 @@ function firstBossIntroActive(){return !!arrival?.intro}
 function firstBossIntroPose(){
  if(!firstBossIntroActive())return null;
  const a=arrival,t=game.api.clamp(a.age/3.375,0,1),reduced=game.api.enemyMotionReduced();
- return {x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.stage,frame:reduced?0:a.stage==='stomp'?Math.floor(a.age*8)%4:a.stage==='roar'?4+Math.min(3,Math.floor((a.age-3.375)/2.757*4)):8,zoom:reduced?1:1+.65*game.api.clamp(t*2,0,1)*(a.stage==='smash'?game.api.clamp((6.582-a.age)/.45,0,1):1),hop:reduced||a.stage!=='stomp'?0:Math.abs(Math.sin(a.age*9))*5};
+ const artFrame=reduced?15:a.stage==='stomp'?(a.age<2.85?Math.floor(a.age*7)%4:4+Math.min(3,Math.floor((a.age-2.85)/.525*4))):a.stage==='roar'?((a.age-3.375)<.5?8+Math.min(2,Math.floor((a.age-3.375)/.5*3)):(a.age-3.375)<2.35?10+Math.floor((a.age-3.875)*5)%2:12+Math.min(3,Math.floor((a.age-5.725)/.407*4))):7;
+ return {artFrame,x:a.startX+(a.targetX-a.startX)*t,y:a.y,age:a.age,stage:a.stage,frame:reduced?0:a.stage==='stomp'?Math.floor(a.age*8)%4:a.stage==='roar'?4+Math.min(3,Math.floor((a.age-3.375)/2.757*4)):8,zoom:reduced?1:1+.65*game.api.clamp(t*2,0,1)*(a.stage==='smash'?game.api.clamp((6.582-a.age)/.45,0,1):1),hop:reduced||a.stage!=='stomp'?0:Math.abs(Math.sin(a.age*9))*5};
 }
 function beginFirstBossIntro(){game.api.resetCircleShapes();
  const {W,player}=game.state;game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);
@@ -540,7 +541,7 @@ function updateBossArrival(dt){
 // Trim only scheduled plain attackers, not offspring, introductions or boss adds.
 const commonSpawnTypes=new Set(['grunt','fast','brute','elite']);
 function specialistReinforcements(point,count,job){
- if(game.state.wave<(job.kind==='tunnel'?9:13)||game.state.timeLeft<=0||bossPhase!=='timed')return [];
+ if(game.state.wave<(job.kind==='tunnel'?11:13)||game.state.timeLeft<=0||bossPhase!=='timed')return [];
  const sides=[{d:point.x,x:-26,y:point.y},{d:game.state.W-point.x,x:game.state.W+26,y:point.y},{d:point.y-90,x:point.x,y:-26},{d:game.state.H-point.y,x:point.x,y:game.state.H+26}],edge=sides.sort((a,b)=>a.d-b.d)[0],spawned=[];
  for(let i=0;i<count&&specialistAdds<10;i++){const n=game.api.spawnEnemy(false,edge.x,edge.y,'grunt');if(!n)break;specialistAdds++;n.specialistJob={...job};n.speed*=1.4;spawned.push(n);}
  return spawned;
@@ -689,8 +690,9 @@ function updateEnemyBehavior(e,dt){
 }
 // Cached, deterministic firing-position search. Closed defenses remain solid.
 let sniperRoutes=new WeakMap();
-function sniperRange(){return game.api.desktopUiEnabled?.()?Math.min(720,Math.max(420,Math.max(game.state.W,game.state.H)*.65)):260;}
-function sniperCanAim(e){if(e.sniperAim)return true;const p=game.state.player,d=Math.hypot(e.x-p.x,e.y-p.y);return d>=90&&d<=sniperRange()&&!game.api.shotBlocked(e.x,e.y,p.x,p.y,3)}
+function sniperRange(){return game.api.desktopUiEnabled?.()?Math.min(380,Math.max(280,Math.min(game.state.W,game.state.H)*.48)):260;}
+function sniperOnPage(e){return e.x>=e.r+12&&e.x<=game.state.W-e.r-12&&e.y>=Math.max(80,e.r+12)&&e.y<=game.state.H-e.r-12;}
+function sniperCanAim(e){if(e.sniperAim)return true;const p=game.state.player,d=Math.hypot(e.x-p.x,e.y-p.y);return sniperOnPage(e)&&d>=90&&d<=sniperRange()&&!game.api.shotBlocked(e.x,e.y,p.x,p.y,3)}
 function sniperPathClear(e,x,y){const p=game.state.player;return game.api.pointSegDist(p.x,p.y,e.x,e.y,x,y)>p.r+e.r+40&&bouncePathClear(e,x,y,0)}
 function sniperRoute(e){
  const p=game.state.player,candidates=[],margin=e.r+20;
@@ -720,6 +722,9 @@ function updateSniper(e,dt,options=null){
  if(e.hp<=0)return true;
  if(e.freeze>0||e.stun>0){e.shootCd=Math.max(.65,e.shootCd);if(e.sniperFollowUp>0)e.sniperFollowUp=Math.max(.65,e.sniperFollowUp);delete e.sniperErase;delete e.sniperAim;return true;}
  const convoy=options?.convoy===true,attackDt=dt*(convoy?1.2:1);
+ // Let a pencil finish its trip before preparing another; reflection/erasure frees the lane.
+ if(game.state.enemyShots.some(s=>s.sniperOwner===e&&!s.reflected&&s.life>0)){e.shootCd=Math.max(.8,e.shootCd-attackDt);return true;}
+ if(!e.sniperAim&&!sniperOnPage(e)){const x=game.api.clamp(e.x,e.r+14,game.state.W-e.r-14),y=game.api.clamp(e.y,82,game.state.H-e.r-14),dx=x-e.x,dy=y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,e.speed*dt);game.api.moveEnemySafely(e,dx/d*step,dy/d*step);e.shootCd=Math.max(.8,e.shootCd);return true;}
  if(e.sniperFollowUp>0){e.sniperFollowUp=Math.max(0,e.sniperFollowUp-attackDt);e.shootCd=e.sniperFollowUp;if(e.shootCd<=.6&&!e.sniperAim)e.sniperAim={x:game.state.player.x,y:game.state.player.y};
   if(e.sniperFollowUp===0){fireSniper(e);e.shootCd=1.7;}return true;
  }

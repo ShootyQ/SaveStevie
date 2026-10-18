@@ -1,0 +1,28 @@
+const assert=require('assert');
+module.exports=load=>{
+ const env=load(true,{images:true}),g=env.sandbox.testGame,a=g.api;a.resetRun();
+ const owner=a.spawnEnemy(false,200,250,'grunt'),attacker=a.spawnEnemy(false,250,250,'grunt');
+ owner.hp=attacker.hp=10000;owner.burn=2;
+ a.doodleTrickHit(owner,{ash:1},{burn:true},0);
+ const d=a.doodleTarget(attacker);assert(d);assert.equal(d.life,4);assert.equal(a.doodleTarget(owner),null);
+ assert.equal(a.ashImpostorPose(d).action,'entrance');
+ const frames=new Set();for(let i=0;i<4;i++){frames.add(a.ashImpostorPose(d).frame);a.updateDoodleTricks(.12);}assert.equal(frames.size,4);
+ assert.equal(a.ashImpostorPose(d).action,'taunt');
+ attacker.x=d.x;attacker.y=d.y;attacker.stun=attacker.freeze=0;
+ assert(a.updateDoodleEnemy(attacker,.01));assert.equal(a.ashImpostorPose(d).action,'startled');assert.equal(attacker.noteDecoyBite,.8);
+ const life=d.life;a.updateDoodleTricks(.2);a.updateDoodleEnemy(attacker,.01);
+ assert(d.reaction<.4,'bite cooldown does not restart the recoil every frame');assert.equal(d.life,life-.2);
+ a.updateDoodleTricks(.21);assert.equal(a.ashImpostorPose(d).action,'taunt');
+ const before=JSON.stringify(a.doodleTricksSnapshot()),state=JSON.stringify(g.state);g.state.paused=true;a.update(.2);g.state.paused=false;
+ assert.equal(JSON.stringify(a.doodleTricksSnapshot()),before,'pause freezes poses');
+ const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('cosmetics must not consume gameplay RNG');};
+ a.drawDoodleTricks();env.sandbox.Math.random=random;assert.equal(JSON.stringify(a.doodleTricksSnapshot()),before);assert.equal(JSON.stringify(g.state),state);
+ const crop=env.calls.find(c=>c[0]==='drawImage'&&c[1]?.url?.includes('ash-impostor-animations'));
+ assert(crop&&crop.length===10,'renders a complete drawn sprite cell');
+ const reduced=a.ashImpostorPose(d,true).frame;a.updateDoodleTricks(.2);assert.equal(a.ashImpostorPose(d,true).frame,reduced,'reduced motion holds a quiet pose');
+ a.updateDoodleTricks(d.life-.63);assert.equal(a.ashImpostorPose(d).action,'ash-out');
+ attacker.noteDecoyBite=0;a.updateDoodleEnemy(attacker,.01);assert.equal(a.ashImpostorPose(d).action,'ash-out','final crumble takes precedence over a bite');
+ a.updateDoodleTricks(.64);assert.equal(a.doodleTricksSnapshot().decoys.length,0,'animation never extends the distraction');assert.equal(a.doodleTarget(attacker),null);
+ a.resetDoodleTricks();assert.equal(a.doodleTricksSnapshot().decoys.length,0);
+ console.log('PASS: Ash Impostor entrance, taunt, actual-bite recoil, ash-out, cropped art, quiet reduced motion, pause/render purity and unchanged expiry/targeting.');
+};

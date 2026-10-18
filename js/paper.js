@@ -1,7 +1,7 @@
 /* The notebook itself is part of combat. Rubbing time is measured by the game
    clock, never by the number of pointer events or a stationary held eraser. */
 DoodleDefender.systems.paper=function(game){
-const tuning={wearSeconds:1,escapeSeconds:2,entryChance:.3,entryDuration:.5,patchRadius:30,holeRadius:22,holeSpacing:70,maxHoles:24,maxPatches:256,exitWarning:.7,recovery:1.2};
+const tuning={wearSeconds:1,escapeSeconds:1,entryChance:.3,entryDuration:.5,patchRadius:30,holeRadius:22,holeSpacing:70,maxHoles:24,maxPatches:256,exitWarning:.7,recovery:1.2};
 let pending=[],recentPaths=[],rubGrace=0;
 function paperActive(){const s=game.state;return s.running&&!s.paused&&!s.inUpgrade&&!s.betweenWaves&&!s.awaitingSpec&&!game.api.synergyRevealActive()&&!game.api.waveFinaleActive()&&!game.api.wobbleRepairActive()&&!game.api.bossEntranceActive();}
 function resetPaper(){game.state.paper={patches:[],holes:[],arcs:[],clock:0,surface:{origin:{x:0,y:0},cells:[],revision:0,serial:0}};pending=[];recentPaths=[];rubGrace=0;}
@@ -50,7 +50,7 @@ function updatePaperEnemy(e,dt){
   const startDistance=Math.hypot(e.x-player.x,e.y-player.y),exit=holes.filter(h=>h!==entry).map(h=>game.api.paperHoleExit(h,player,e.r+22)).filter(h=>h&&Math.hypot(h.x-player.x,h.y-player.y)<startDistance-45).sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y))[0];
   if(!exit)return false;
   const directed=e.specialistJob?.kind==='tunnel'&&e.specialistJob.entryId===entry.id&&holes.some(h=>h.id===e.specialistJob.exitId);e.paperEncounter=entry.id;if(!directed&&Math.random()>=tuning.entryChance)return false;delete e.specialistJob;
-  game.api.playSound('paperDive');t=e.paperTunnel={phase:'enter',entry:{x:e.x,y:e.y},hole:{x:entry.x,y:entry.y},entryTimer:tuning.entryDuration,entryId:entry.id,exit:{x:exit.x,y:exit.y},rub:0,rubbedAt:-Infinity,age:0};clearSurfaceEffects(e);if(e.type==='basil')game.api.finishFeast(e);game.api.floatText(e.x,e.y-24,'ZIP!','#855c3e');if(!game.state.paper.tunnelHint){game.state.paper.tunnelHint=true;game.api.setMsg('Follow the moving bump! Rub near it for 2 seconds to force the monster up. Rocks still hit underground.');}
+  game.api.playSound('paperDive');t=e.paperTunnel={phase:'enter',entry:{x:e.x,y:e.y},hole:{x:entry.x,y:entry.y},entryTimer:tuning.entryDuration,entryId:entry.id,exit:{x:exit.x,y:exit.y},rub:0,rubbedAt:-Infinity,age:0};clearSurfaceEffects(e);if(e.type==='basil')game.api.finishFeast(e);game.api.floatText(e.x,e.y-24,'ZIP!','#855c3e');if(!game.state.paper.tunnelHint){game.state.paper.tunnelHint=true;game.api.setMsg('Follow the moving bump! Rub near it for 1 second to force the monster up. Rocks still hit underground.');}
  }
  clearSurfaceEffects(e);t.age+=dt;
  if(t.phase==='enter'){t.entryTimer=Math.max(0,t.entryTimer-dt);if(t.hole){const progress=1-t.entryTimer/tuning.entryDuration;e.x=t.entry.x+(t.hole.x-t.entry.x)*progress;e.y=t.entry.y+(t.hole.y-t.entry.y)*progress;}if(!t.entryTimer)t.phase='travel';return true;}

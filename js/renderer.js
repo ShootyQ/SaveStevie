@@ -7,8 +7,10 @@ const tintLimits={entries:192,bytes:16*1024*1024};
 let tintedBytes=0,tintHits=0,tintMisses=0,tintEvictions=0;
 function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:tintedBytes,tintHits,tintMisses,tintEvictions,tintLimits:{...tintLimits}}}
 const artworkVersion=document.documentElement?.dataset?.build;
-const doodleNames=['gnawer-animations','ash-impostor','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
-const coreArtwork=new Set(['gnawer-animations','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
+// Per-column gutters keep neighboring crowns, hair and feet out of each full pose.
+const kingEntranceRows=[[0,256,501,751,1024],[0,256,500,751,1024],[0,256,501,750,1024],[0,256,502,754,1024]],stevieVictoryRows=[[0,304,615,905,1215],[0,304,614,909,1215],[0,304,608,906,1215],[0,304,615,905,1215]];
+const doodleNames=['king-entrance','stevie-victory','gnawer-animations','ash-impostor-animations','ash-impostor','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const coreArtwork=new Set(['king-entrance','stevie-victory','gnawer-animations','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
 const artworkLoads=new Map(),artworkSupported=typeof Image!=='undefined';
 function artworkStatus(){const loaded=[...coreArtwork].filter(name=>!!doodles[name]).length;return {ready:!artworkSupported||loaded===coreArtwork.size,loaded,total:coreArtwork.size,failed:[...artworkLoads].filter(([,r])=>r.failed).map(([name])=>name),loading:[...artworkLoads].filter(([,r])=>r.loading).map(([name])=>name)};}
 function syncArtworkUI(){
@@ -824,8 +826,11 @@ function draw(){
   game.api.drawRefuge(doodles['paper-fort'],motionReduced);
   // Stevie
   game.dom.ctx.save();game.dom.ctx.translate(game.state.player.x,game.state.player.y);
-  const reaction=stevieReactionPose();
-  if(doodles[reaction.sprite]){
+  const reaction=stevieReactionPose(),victory=game.api.bossVictoryPose();
+  if(victory&&doodles['stevie-victory']){
+    const image=doodles['stevie-victory'],row=Math.floor(victory.frame/4),edges=stevieVictoryRows[victory.frame%4],sy=edges[row]/1215*image.naturalHeight,sh=(edges[row+1]-edges[row])/1215*image.naturalHeight;
+    game.dom.ctx.drawImage(image,(victory.frame%4)*image.naturalWidth/4,sy,image.naturalWidth/4,sh,-54,-76,108,108);
+  }else if(doodles[reaction.sprite]){
     game.dom.ctx.translate(0,reaction.y);game.dom.ctx.rotate(reaction.angle);
     game.dom.ctx.drawImage(doodles[reaction.sprite],-34,-39.25,68,72.25);
   }else if(doodles['stevie-animations']){
@@ -974,8 +979,10 @@ function draw(){
   if(intro){
     const ctx=game.dom.ctx;ctx.save();ctx.translate(intro.x,intro.y-intro.hop);
     const e={type:'boss',introFrame:intro.frame,r:28,hp:1,maxHp:1,freeze:0,stun:0,burn:0,poison:0,charged:0,gravitySlow:0};
-    if(!drawDoodleEnemy(e,1,false)){ctx.fillStyle='#962f3d';ctx.beginPath();ctx.arc(0,0,28,0,Math.PI*2);ctx.fill()}
-    if(intro.stage==='roar'){ctx.fillStyle='#962f3d';ctx.font='bold 23px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillText('ROOOAR!',0,-65)}
+    const sheet=doodles['king-entrance'];
+    if(sheet){const frame=intro.artFrame,row=Math.floor(frame/4),edges=kingEntranceRows[frame%4],sy=edges[row]/1024*sheet.naturalHeight,sh=(edges[row+1]-edges[row])/1024*sheet.naturalHeight;ctx.drawImage(sheet,(frame%4)*sheet.naturalWidth/4,sy,sheet.naturalWidth/4,sh,-63,-52,126,84);}
+    else if(!drawDoodleEnemy(e,1,false)){ctx.fillStyle='#962f3d';ctx.beginPath();ctx.arc(0,0,28,0,Math.PI*2);ctx.fill()}
+    if(intro.stage==='roar'){if(!motionReduced){ctx.strokeStyle='#b05c36';ctx.lineWidth=2;for(let i=0;i<3;i++){const r=50+((intro.age-3.375)*35+i*15)%45;ctx.globalAlpha=(1-(r-50)/45)*.5;ctx.beginPath();ctx.arc(0,-10,r,-.65,.65);ctx.stroke();ctx.beginPath();ctx.arc(0,-10,r,Math.PI-.65,Math.PI+.65);ctx.stroke();}ctx.globalAlpha=1;}ctx.fillStyle='#962f3d';ctx.font='bold 23px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillText('ROOOAR!',0,-65)}
     if(intro.stage==='smash'){ctx.strokeStyle='#b17635';ctx.lineWidth=5;ctx.beginPath();ctx.arc(0,0,40+(intro.age-6.132)*game.state.W*3,0,Math.PI*2);ctx.stroke()}
     ctx.restore();
   }
