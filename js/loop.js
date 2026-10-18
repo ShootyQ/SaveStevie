@@ -155,6 +155,7 @@ function update(dt){
     const immobilized=e.stun>0||e.freeze>0;
     game.api.pullGravity(e,dt,immobilized);
     if(game.api.updateTwicey(e,dt))continue;
+    if(e.type==='gnawer'&&game.api.updateChompzilla(e,dt))continue;
     if(e.type==='tank'&&game.api.updateChonks(e,dt))continue;
     if(e.type==='sprinter'&&game.api.updateDash(e,dt))continue;
     if(e.type==='flanker'&&game.api.updateSneaky(e,dt))continue;

@@ -171,7 +171,7 @@ button:disabled{opacity:.5;cursor:default}
   .hud{left:7px;right:7px;top:8px;grid-template-columns:1fr 1fr 62px;grid-template-areas:"ink hp time";gap:5px}
   .box{padding:5px;border-radius:9px;border-width:1px}
   .barlabel{font-size:10px;white-space:nowrap}
-  .barlabel span{float:right}
+  .barlabel span:not(#inkLabel){float:right}
   .timer .barlabel span{float:none}
   .bar{height:8px}
   #upgradeList,#inkTags{display:none}

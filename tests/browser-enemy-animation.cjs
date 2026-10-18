@@ -59,7 +59,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    const g=testGame;g.state.spawnTimer=999;g.state.player.hp=g.state.player.maxHp=10000;
    const wall=()=>({pts:[{x:80,y:40},{x:80,y:150}],hp:500,maxHp:500,thick:8,life:72,maxLife:72});
    const gnawer=g.api.spawnEnemy(false,70,90,'gnawer');gnawer.speed=0;g.state.walls=[wall()];g.api.update(.03);
-   const bite=g.api.enemyActionCue(gnawer);g.state.enemies=[];g.state.walls=[wall()];
+   const bite=g.api.chompzillaSnapshot(gnawer)?.phase;g.state.enemies=[];g.state.walls=[wall()];
    const bounce=g.api.spawnEnemy(false,70,90,'bouncer');g.api.update(.03);const ricochet=g.api.enemyActionCue(bounce);g.state.enemies=[];g.state.walls=[wall()];
    const stapler=g.api.spawnEnemy(false,30,90,'stapler');stapler.bossCd=0;g.api.updateBossAbility(stapler,.01);g.api.updateEnemyAnimations(.05);
    const ready=g.api.enemyActionCue(stapler);g.api.updateBossAbility(stapler,1.3);g.api.updateEnemyAnimations(.08);const slam=g.api.enemyActionCue(stapler);
@@ -68,7 +68,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    const eraser=g.api.spawnEnemy(false,100,90,'eraser');eraser.eraseCd=0;g.api.eraserAttack(eraser,.01);g.api.updateEnemyAnimations(.08);
    return [bite,ricochet,ready,slam,ritual,summon,g.api.enemyActionCue(eraser)];
   });
-  assert.deepEqual(actual,['bite','bounce','slam-ready','slam','cast-ready','summon','erase']);
+  assert.deepEqual(actual,['windup','bounce','slam-ready','slam','cast-ready','summon','erase']);
   await page.evaluate(()=>{
    const g=testGame;g.api.resetRun();g.state.spawnTimer=999;g.state.player.hp=g.state.player.maxHp=10000;
    const types=['gnawer','sprinter','bouncer','stapler','crayon','eraser'];
