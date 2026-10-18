@@ -17,7 +17,7 @@ const defs=game.catalog.enemyDefs={
     brute:{r:19,hp:105,speed:20,dmg:22,color:'#51634a'},
     elite:{r:13,hp:68,speed:42,dmg:13,color:'#b34e82'},
     wardling:{r:12,hp:38,speed:36,dmg:8,color:'#9e71b5'},
-    sprinter:{r:14,hp:24,speed:86,dmg:7,color:'#e39d2d'},
+    sprinter:{r:11.9,hp:24,speed:86,dmg:7,color:'#e39d2d'},
     brood:{r:17,hp:62,speed:25,dmg:11,color:'#9053ac'},
     bulwark:{r:18,hp:80,speed:22,dmg:13,color:'#6d7e91'},
     medic:{r:12,hp:32,speed:28,dmg:5,color:'#4e9d75'},
@@ -129,7 +129,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='wardling'){enemy.immunity=game.api.pick(['fire','poison','electric','blast','frost']);enemy.immuneCd=0}
   if(type==='tank')enemy.chonks={shield:game.state.wave>=6,shieldWear:0,phase:'walk',momentum:0,windup:0,recovery:0,recoveryTotal:1.4,target:null,facing:1,bumpDamage:d.dmg};
   if(type==='scrubber')enemy.scrubOrbit=enemy.flankAngle;
-  if(type==='sprinter'){enemy.dashTime=0;enemy.screenAge=0;enemy.hurdlesLeft=1;}
+  if(type==='sprinter'){enemy.dashTime=0;enemy.screenAge=0;enemy.hurdlesLeft=1;enemy.hurdleDistance=180;}
   if(type==='sniper')enemy.returnHitsNeeded=game.state.wave<=12?1:game.state.wave<=18?2:3;
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}

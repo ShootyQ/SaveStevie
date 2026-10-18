@@ -3,12 +3,12 @@ module.exports=function(load){
  function setup(){const env=load(true),g=env.sandbox.testGame;g.api.resetRun({skipIntro:true,skipNotebook:true});g.state.W=800;g.state.H=700;g.state.player.x=700;g.state.player.y=350;g.state.spawnTimer=9999;g.state.timeLeft=300;g.state.stats.rockDamage=0;g.state.enemies=[];g.state.walls=[];return {g,env};}
  const wall=(x,y1=200,y2=500)=>({pts:[{x,y:y1},{x,y:y2}],thick:8,hp:10000,maxHp:10000,life:1000,maxLife:1000});
  {
-  const {g}=setup(),e=g.api.spawnEnemy(false,100,350,'sprinter'),first=wall(300),second=wall(370);g.state.walls=[first,second];assert(e.r>=14&&e.speed>g.catalog.enemyDefs.fast.speed);let sawJump=false;
+  const {g}=setup(),e=g.api.spawnEnemy(false,100,350,'sprinter'),first=wall(300),second=wall(370);g.state.walls=[first,second];assert(Math.abs(e.r-11.9)<1e-8&&e.speed>g.catalog.enemyDefs.fast.speed);let sawJump=false;
   for(let i=0;i<350;i++){g.api.updateEnemyBehavior(e,.02);g.api.updateDash(e,.02);sawJump||=!!e.hurdle;}
   assert(sawJump&&e.hurdlesLeft===0);assert(e.x>300&&e.x<370-e.r,'one vault reaches first wall but cannot cross backup');assert.equal(first.hp,10000,'vault preserves first wall');assert(second.hp<10000,'backup wall gets attacked normally');
   const x=e.x;e.freeze=1;g.api.updateDash(e,.5);assert.equal(e.x,x,'freeze prevents movement/attacks');e.freeze=0;
   const extra=g.api.spawnEnemy(false,280,350,'sprinter');g.state.walls=[first,wall(325)];g.api.updateDash(extra,.03);assert(!extra.hurdle,'too-tight double cover denies a safe landing');assert(extra.x<300,'no swept-frame tunneling');
-  g.state.walls=[first];const resized=g.api.spawnEnemy(false,278,350,'sprinter');g.api.updateDash(resized,.05);assert(resized.hurdle);const from={...resized.hurdle.from},to={...resized.hurdle.to};resized.x+=10;resized.y+=12;g.api.moveEnemyTactics(10,12);assert.equal(resized.hurdle.from.x,from.x+10);assert.equal(resized.hurdle.to.y,to.y+12);g.state.walls=[first,wall(resized.x+8)];const stoppedX=resized.x;g.api.updateDash(resized,.1);assert(!resized.hurdle&&resized.stun>0);assert.equal(resized.x,stoppedX,'newly drawn backup intercepts an in-progress hurdle');
+  g.state.walls=[first];const resized=g.api.spawnEnemy(false,281,350,'sprinter');g.api.updateDash(resized,.05);assert(resized.hurdle);const from={...resized.hurdle.from},to={...resized.hurdle.to};resized.x+=10;resized.y+=12;g.api.moveEnemyTactics(10,12);assert.equal(resized.hurdle.from.x,from.x+10);assert.equal(resized.hurdle.to.y,to.y+12);g.state.walls=[first,wall(resized.x+8)];const stoppedX=resized.x;g.api.updateDash(resized,.1);assert(!resized.hurdle&&resized.stun>0);assert.equal(resized.x,stoppedX,'newly drawn backup intercepts an in-progress hurdle');
   g.state.walls=[wall(665)];const near=g.api.spawnEnemy(false,640,350,'sprinter');g.api.updateDash(near,.05);assert(!near.hurdle,'no leap into Stevie’s fort');
  }
  {
@@ -39,6 +39,6 @@ module.exports=function(load){
   g.api.resetPaper();const edge=g.api.refugePoint(700,250);for(let i=0;i<110;i++){g.api.queuePaperRub({x:edge.x,y:edge.y-18},{x:edge.x+12,y:edge.y-18},20);g.api.updatePaper(.02);}assert.equal(g.state.paper.holes.length,1,'paper near the fort is no longer silently protected by a huge margin');
   const snapshot=JSON.stringify(g.state);g.api.draw();assert.equal(JSON.stringify(g.state),snapshot);g.state.paused=true;const paused=JSON.stringify(g.state);g.api.update(.5);assert.equal(JSON.stringify(g.state),paused);
  }
- console.log('PASS: fast visible Dash/single swept hurdle/backup and fort safety, deterministic multi-wall Sneaky routes and new gaps, Pew-Pew erasing/fresh aim/no refunds/freeze, immune king with physical paper and drive-by helpers, tiny/near-fort paper wear, pause and pure draw.');
+ console.log('PASS: fast visible Dash/recharging swept hurdle/backup and fort safety, deterministic multi-wall Sneaky routes and new gaps, Pew-Pew erasing/fresh aim/no refunds/freeze, immune king with physical paper and drive-by helpers, tiny/near-fort paper wear, pause and pure draw.');
 };
 if(require.main===module){const fs=require('fs'),source=fs.readFileSync(require('path').join(__dirname,'validate.cjs'),'utf8'),harness=source.slice(0,source.indexOf('// Retain explicit regression'));module.exports(new Function('require','__dirname',harness+'\nreturn load;')(require,__dirname));}

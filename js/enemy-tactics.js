@@ -161,6 +161,12 @@ DoodleDefender.systems.enemyTactics=function(game){
    game.api.moveEnemySafely(e,dx,dy);
   }
  }
+ // Only Dash's own grounded movement earns another wall vault. Air time,
+ // shoves, resize translations and waiting against a wall cannot recharge it.
+ function runDashTo(e,x,y){
+  if(e.hurdlesLeft===0){e.hurdleDistance=Math.min(180,(e.hurdleDistance||0)+Math.hypot(x-e.x,y-e.y));if(e.hurdleDistance>=180)e.hurdlesLeft=1;}
+  e.x=x;e.y=y;
+ }
  function updateDash(e,dt){
   if(e.freeze>0||e.stun>0){if(e.hurdle){delete e.hurdle;e.stun=Math.max(e.stun,.35);}return true;}
   if(e.hurdle){const h=e.hurdle;h.age=Math.min(h.duration,h.age+dt);const t=h.age/h.duration,x=h.from.x+(h.to.x-h.from.x)*t,y=h.from.y+(h.to.y-h.from.y)*t;
@@ -181,19 +187,19 @@ DoodleDefender.systems.enemyTactics=function(game){
    if(wall&&e.hurdlesLeft>0){const q=game.api.nearestPointOnWall(obstacle.n,wall);leap=Math.max(leap,((q.x-e.x)*dx+(q.y-e.y)*dy)/d+e.r+wall.thick/2+12);to={x:e.x+dx/d*leap,y:e.y+dy/d*leap};}
    const b=game.api.refugeBounds(),fort=game.api.pointSegDist(game.state.player.x,game.state.player.y,e.x,e.y,to.x,to.y)<=Math.hypot(b.halfWidth,b.halfHeight)+e.r+3;
    if((!wall||e.hurdlesLeft>0)&&!fort&&to.x>=e.r&&to.x<=game.state.W-e.r&&to.y>=e.r&&to.y<=game.state.H-e.r&&!game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},to.x,to.y,new Set(wall?[wall]:[]))){
-    if(wall)e.hurdlesLeft=0;e.hurdle={wall,from:{x:e.x,y:e.y},to,age:0,duration:.42};game.api.playSound('dashJump');game.api.animateEnemyAction(e,'hurdle');game.api.floatText(e.x,e.y-e.r-15,'COMING THROUGH!','#aa6b15');return true;
+    if(wall){e.hurdlesLeft=0;e.hurdleDistance=0;}e.hurdle={wall,from:{x:e.x,y:e.y},to,age:0,duration:.42};game.api.playSound('dashJump');game.api.animateEnemyAction(e,'hurdle');game.api.floatText(e.x,e.y-e.r-15,'COMING THROUGH!','#aa6b15');return true;
    }
   }
-  if(!hit){if(Math.hypot(nx-e.x,ny-e.y)>.05)game.api.sustainSound('dashRun');e.x=nx;e.y=ny;game.api.contactStevie(e);return true;}
+  if(!hit){if(Math.hypot(nx-e.x,ny-e.y)>.05)game.api.sustainSound('dashRun');runDashTo(e,nx,ny);game.api.contactStevie(e);return true;}
   if(e.hurdlesLeft>0){
    const q=game.api.nearestPointOnWall(e,hit.wall),distance=Math.hypot(q.x-e.x,q.y-e.y),leap=distance+e.r+hit.wall.thick/2+12,to={x:e.x+dx/d*leap,y:e.y+dy/d*leap};
    const b=game.api.refugeBounds(),fort=game.api.pointSegDist(game.state.player.x,game.state.player.y,e.x,e.y,to.x,to.y)<=Math.hypot(b.halfWidth,b.halfHeight)+e.r+3;
    if(!fort&&to.x>=e.r&&to.x<=game.state.W-e.r&&to.y>=e.r&&to.y<=game.state.H-e.r&&!game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},to.x,to.y,new Set([hit.wall]))){
-    e.hurdlesLeft=0;e.hurdle={wall:hit.wall,from:{x:e.x,y:e.y},to,age:0,duration:.42};game.api.playSound('dashJump');game.api.animateEnemyAction(e,'hurdle');game.api.floatText(e.x,e.y-e.r-15,'HUP!','#aa6b15');return true;
+    e.hurdlesLeft=0;e.hurdleDistance=0;e.hurdle={wall:hit.wall,from:{x:e.x,y:e.y},to,age:0,duration:.42};game.api.playSound('dashJump');game.api.animateEnemyAction(e,'hurdle');game.api.floatText(e.x,e.y-e.r-15,'HUP!','#aa6b15');return true;
    }
   }
   // Stop before contact even at high speed; the normal wall attack handles the block.
-  const step=Math.max(0,hit.t-.0001);e.x+=(nx-e.x)*step;e.y+=(ny-e.y)*step;
+  const step=Math.max(0,hit.t-.0001);runDashTo(e,e.x+(nx-e.x)*step,e.y+(ny-e.y)*step);
   game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');
   if(e.hp>0&&e.freeze<=0&&e.stun<=0){e.attackCd-=dt;if(e.attackCd<=0){game.api.playMonsterWall(e);game.api.damageWall(hit.wall,e.dmg,e.x,e.y);e.attackCd=.42;game.api.animateEnemyAction(e,'bounce');}}
   return true;
