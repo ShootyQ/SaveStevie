@@ -1,6 +1,7 @@
 /* loop: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.loop = function createLoopSystem(game) {
 function update(dt){
+  game.api.paperPressGuard();
   if(game.api.windowFocusBlocked?.()){game.api.stopSoundEffects();return;}
   game.api.updateStevieGuides();
   game.api.syncSoundEffects();game.api.updateMenuPencil(dt);
@@ -15,7 +16,7 @@ function update(dt){
   if(game.api.synergyRevealActive()||game.api.beginSynergyReveal())return;
   if(game.api.bossEntranceActive()){game.api.resetCircleShapes();game.api.updateBossEntrance(dt);game.api.updateUI();return}
   if((game.state.wave===5||game.state.wave===10)&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
-  game.api.updateRefuge(dt);game.api.updatePaper(dt);game.api.updateHardhatBombs(dt);game.api.updateScrubberHint(dt);if(game.api.updateDoodleScraps(dt))return;
+  game.api.updateRefuge(dt);game.api.updatePaper(dt);game.api.updatePaperPress(dt);game.api.updateHardhatBombs(dt);game.api.updateScrubberHint(dt);if(game.api.updateDoodleScraps(dt))return;
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
   game.api.updateScoring(dt);game.api.updateBackdraft(dt);game.api.updateIceberg(dt);game.api.updateTesla(dt);
   game.state.waveElapsed+=dt;
@@ -117,6 +118,7 @@ function update(dt){
     if(game.api.waveFinaleActive())break;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.updateEnemyFlight(e,dt))continue;
+    if(game.api.paperPressCaptures(e)){const hit=game.api.nearestWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
     if(game.api.heldByCatapulter(e))continue;
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
     game.api.applyCircleEnclosure(e,dt);if(e.hp<=0)continue;

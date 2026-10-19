@@ -113,6 +113,7 @@ function drawPlaguefire(){
     ctx.restore();
   }
 }
-const api={erasePlaguefire,drawDeskGrain,dropPlaguefire,updatePlaguefire,resetPlaguefire,movePlaguefire,plaguefireSnapshot,drawPlaguefire};
+function plaguefirePaperMissing(p){return patches.some(b=>Math.hypot(p.x-b.x,p.y-b.y)<=radius(b))||scars.some(b=>Math.hypot(p.x-b.x,p.y-b.y)<=b.r);}
+const api={plaguefirePaperMissing,erasePlaguefire,drawDeskGrain,dropPlaguefire,updatePlaguefire,resetPlaguefire,movePlaguefire,plaguefireSnapshot,drawPlaguefire};
 Object.assign(game.api,api);return api;
 };
