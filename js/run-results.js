@@ -1,5 +1,25 @@
 /* Run-end presentation reads the existing score ledger; it never awards progress. */
 DoodleDefender.systems.runResults=function(game){
+ // Keep the entire summary on the sheet, including short windows and larger UI scales.
+ // ResizeObserver also runs when a hidden result dialog opens or its note changes.
+ if(typeof ResizeObserver!=='undefined'&&document.querySelectorAll){
+  for(const body of document.querySelectorAll('.run-results .result-body')){
+   const content=document.createElement('div');content.className='result-content';
+   while(body.firstChild)content.appendChild(body.firstChild);body.appendChild(content);
+   const fit=()=>{
+    if(!body.clientHeight)return;
+    content.style.zoom='1';
+    let scale=1;
+    for(let i=0;i<5;i++){
+     const next=Math.min(1,(body.clientHeight-2)/Math.max(1,content.scrollHeight));
+     if(Math.abs(next-scale)<.002)break;
+     scale=next;content.style.zoom=String(scale);
+    }
+   };
+   const observer=new ResizeObserver(fit);observer.observe(body);observer.observe(content);
+   document.fonts?.ready.then(fit);
+  }
+ }
  function runBuildHighlights(){
   const s=game.state,equipped=new Set(game.api.equippedEffects().map(u=>u.name)),legendaryFlags={'Fire Ink':'backdraft','Frost Ink':'iceberg','Electric Ink':'tesla'},legendaryNames={'Fire Ink':'Backdraft','Frost Ink':'Iceberg','Electric Ink':'Tesla'};
   const upgrades=Object.entries(s.stacks).map(([name,count])=>{const base=game.catalog.upgrades.find(u=>u.name===name),legendary=!!s.stats[legendaryFlags[name]];return {name:legendary?name+' · '+legendaryNames[name]:name,count,legendary,equipped:equipped.has(name),upgrade:legendary&&base?{...base,rarity:'legendary'}:base};}).sort((a,b)=>Number(b.legendary)-Number(a.legendary)||Number(b.equipped)-Number(a.equipped)||b.count-a.count);
