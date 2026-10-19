@@ -4,9 +4,9 @@ DoodleDefender.systems.paper=function(game){
 const tuning={wearSeconds:1,escapeSeconds:1,entryChance:.3,entryDuration:.5,patchRadius:30,holeRadius:22,holeSpacing:70,maxHoles:24,maxPatches:256,exitWarning:.7,recovery:1.2};
 let pending=[],recentPaths=[],rubGrace=0;
 function paperActive(){const s=game.state;return s.running&&!s.paused&&!s.inUpgrade&&!s.betweenWaves&&!s.awaitingSpec&&!game.api.synergyRevealActive()&&!game.api.waveFinaleActive()&&!game.api.wobbleRepairActive()&&!game.api.bossEntranceActive();}
-function resetPaper(){game.state.paper={patches:[],holes:[],arcs:[],clock:0,surface:{origin:{x:0,y:0},cells:[],revision:0,serial:0}};pending=[];recentPaths=[];rubGrace=0;}
+function resetPaper(){game.api.resetPaperPress?.();game.state.paper={patches:[],holes:[],arcs:[],clock:0,surface:{origin:{x:0,y:0},cells:[],revision:0,serial:0}};pending=[];recentPaths=[];rubGrace=0;}
 function cancelPaperRub(){pending=[];recentPaths=[];rubGrace=0;}
-function beginPaperWave(){cancelPaperRub();game.state.paper.arcs=[];game.state.paper.crewHoles=0;}
+function beginPaperWave(){game.api.resetPaperPress();cancelPaperRub();game.state.paper.arcs=[];game.state.paper.crewHoles=0;}
 function underPaper(e){return !!e.paperTunnel;}
 function clearSurfaceEffects(e){for(const key of ['burn','burnDps','poison','poisonDps','freeze','stun','charged','gravitySlow','feastRush'])e[key]=0;e.feastHost=null;}
 function safePaperPoint(p,r=tuning.holeRadius){const b=game.api.refugeBounds(),near=game.api.refugePoint(p.x,p.y);return p.x>=r+8&&p.x<=game.state.W-r-8&&p.y>=r+76&&p.y<=game.state.H-r-20&&Math.hypot(p.x-near.x,p.y-near.y)> (r===tuning.holeRadius?12:r+8);}
@@ -136,7 +136,7 @@ function eraseWallReaction(wall,pieces,a,b,r,removedInk){
   game.api.floatText(e.x,e.y-25,rushing?'TRIPPED!':'WHOOPS!','#a56930');game.api.animateEnemyAction(e,'bounce');
  }
 }
-function movePaper(dx,dy){game.api.movePaperSurface(dx,dy);const p=game.state.paper;for(const q of [...p.holes,...p.patches]){q.x+=dx;q.y+=dy;}for(const arc of p.arcs)for(const q of [arc.a,arc.b]){q.x+=dx;q.y+=dy;}for(const e of game.state.enemies)if(e.paperTunnel){e.paperTunnel.exit.x+=dx;e.paperTunnel.exit.y+=dy;if(e.paperTunnel.entry){e.paperTunnel.entry.x+=dx;e.paperTunnel.entry.y+=dy;}if(e.paperTunnel.hole){e.paperTunnel.hole.x+=dx;e.paperTunnel.hole.y+=dy;}}pending=[];recentPaths=[];rubGrace=0;}
+function movePaper(dx,dy){game.api.movePaperPressBy(dx,dy);game.api.movePaperSurface(dx,dy);const p=game.state.paper;for(const q of [...p.holes,...p.patches]){q.x+=dx;q.y+=dy;}for(const arc of p.arcs)for(const q of [arc.a,arc.b]){q.x+=dx;q.y+=dy;}for(const e of game.state.enemies)if(e.paperTunnel){e.paperTunnel.exit.x+=dx;e.paperTunnel.exit.y+=dy;if(e.paperTunnel.entry){e.paperTunnel.entry.x+=dx;e.paperTunnel.entry.y+=dy;}if(e.paperTunnel.hole){e.paperTunnel.hole.x+=dx;e.paperTunnel.hole.y+=dy;}}pending=[];recentPaths=[];rubGrace=0;}
 function drawPaper(){game.api.drawPaperSurface();}
 function paperTransitionPose(e){
  const t=e.paperTunnel;if(!t||t.phase==='travel')return null;

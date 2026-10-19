@@ -166,6 +166,7 @@ function enemyFlightHeight(e){const f=e.flight;return f?Math.sin(Math.min(1,f.ag
 function updateEnemyFlight(e,dt){
  const f=e.flight;if(!f)return false;
  if(f.catapult)return game.api.updateCatapultFlight(e,dt);
+ if(f.paperBounce)return game.api.updatePaperBounceFlight(e,dt);
  f.age=Math.min(f.duration,f.age+dt);const t=f.age/f.duration;
  e.x=f.startX+(f.targetX-f.startX)*t;e.y=f.startY+(f.targetY-f.startY)*t;
  if(t>=1){

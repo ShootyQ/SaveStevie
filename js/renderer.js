@@ -738,7 +738,7 @@ function draw(){
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
 
   game.api.drawPaper();game.api.drawDoodleScraps();
-  game.api.drawPlaguefire();
+  game.api.drawPlaguefire();game.api.drawPaperPress();
   game.api.drawLaunchGround();game.api.drawBlackIce();
 
   for(const w of game.state.walls){
@@ -866,7 +866,8 @@ function draw(){
     }
     if(e.feastRush>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#cf8738';ctx.lineWidth=2;ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();ctx.restore();}
     const hpRatio=game.api.clamp(e.hp/e.maxHp,0,1);
-    game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y-game.api.enemyFlightHeight(e)-game.api.wobbleToothHeight(e)-(game.api.isStapleBoss(e)&&!motionReduced?game.api.stapleHopHeight(e):0));
+    const dip=game.api.paperPressEnemyDip(e);
+    game.dom.ctx.save();game.dom.ctx.translate(e.x,e.y+dip-game.api.enemyFlightHeight(e)-game.api.wobbleToothHeight(e)-(game.api.isStapleBoss(e)&&!motionReduced?game.api.stapleHopHeight(e):0));
     if(e.flight&&!motionReduced){const t=e.flight.age/e.flight.duration;game.dom.ctx.rotate(e.flight.spin*Math.sin(t*Math.PI)*.8);const scale=1+Math.sin(t*Math.PI)*.16;game.dom.ctx.scale(scale,scale);}
 
     if(game.api.drawWhiteBrotherBody?.(e)){}
