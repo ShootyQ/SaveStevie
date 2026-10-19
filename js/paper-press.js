@@ -4,8 +4,8 @@ DoodleDefender.systems.paperPress=function(game){
  let press=null,ripples=[];
  const allowed=()=>game.state.running&&!game.state.paused&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec&&!document.hidden&&!game.api.windowFocusBlocked?.()&&!game.api.firstLessonActive?.()&&!game.api.synergyRevealActive()&&!game.api.waveFinaleActive()&&!game.api.wobbleRepairActive()&&!game.api.bossEntranceActive()&&!game.api.whiteBrothersActive?.();
  function validPaper(p){return p.x>=24&&p.x<=game.state.W-24&&p.y>=85&&p.y<=game.state.H-30&&!game.api.surfaceHoleAt(p.x,p.y)&&!game.api.plaguefirePaperMissing(p)&&!game.api.touchesRefuge({...p,r:24})&&!game.api.crayonWaxCovers(p)&&!game.state.walls.some(w=>w.hp>0&&w.life>0&&game.api.nearestPointOnWall(p,w)&&Math.hypot(game.api.nearestPointOnWall(p,w).x-p.x,game.api.nearestPointOnWall(p,w).y-p.y)<w.thick/2+18);}
- function cancelPaperPress(){press=null;}
- function resetPaperPress(){press=null;ripples=[];}
+ function cancelPaperPress(){press=null;game.api.stopSoundEffects('paperStretch');}
+ function resetPaperPress(){cancelPaperPress();ripples=[];}
  function beginPaperPress(p){cancelPaperPress();if(!allowed()||!validPaper(p)||game.state.enemies.some(e=>e.hp>0&&(e.type==='scrubber'||game.api.hasChonksShield(e))&&!game.api.underPaper(e)&&Math.hypot(e.x-p.x,e.y-p.y)<e.r+14))return false;press={x:p.x,y:p.y,age:0,r:tuning.startRadius,depth:0};return true;}
  function movePaperPress(p){if(press&&Math.hypot(p.x-press.x,p.y-press.y)<=tuning.drift)return press.age>=tuning.delay;beginPaperPress(p);return false;}
  const eligible=e=>e.hp>0&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!['boss','eraser'].includes(e.type)&&!game.api.abilityImmune(e)&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!e.catapultHeld&&!game.api.bossFriendHeld(e)&&!game.api.heldByCatapulter(e)&&e.freeze<=0;
@@ -16,6 +16,7 @@ DoodleDefender.systems.paperPress=function(game){
   ripples=ripples.filter(r=>(r.age+=dt)<.48);
   if(!press)return;if(!validPaper(press)){cancelPaperPress();return;}
   press.age+=dt;if(press.age<tuning.delay)return;
+  if(!press.stretchPlayed){press.stretchPlayed=true;game.api.playSound('paperStretch');}
   game.api.cancelPaperRub();game.api.stopSoundEffects('erase');
   const grow=Math.min(1,(press.age-tuning.delay)/tuning.growTime);press.r=tuning.startRadius+(Math.min(tuning.maxRadius,Math.min(game.state.W,game.state.H)*.25)-tuning.startRadius)*grow;press.depth=5+17*grow;
   for(const e of game.state.enemies){if(!paperPressCaptures(e)||e.stun>0)continue;const dx=press.x-e.x,dy=press.y-e.y,d=Math.hypot(dx,dy);if(d>4){const weight=e.type==='tank'?.55:1,step=Math.min(d-4,tuning.pullSpeed*(.55+.45*grow)*weight*dt);game.api.moveEnemySafely(e,dx/d*step,dy/d*step);}}
@@ -28,7 +29,7 @@ DoodleDefender.systems.paperPress=function(game){
    const near=game.api.refugePoint(x,y);if(Math.hypot(x-near.x,y-near.y)<e.r+4){x=e.x;y=e.y;}
    e.flight={paperBounce:true,startX:e.x,startY:e.y,targetX:x,targetY:y,age:0,duration:.48,height:game.api.enemyMotionReduced()?0:20+14*p.r/tuning.maxRadius,spin:i%2?-1:1,damage:tuning.damage,stun:.25};game.api.animateEnemyAction(e,'bounce');
   });
-  cancelPaperPress();if(targets.length){game.api.playSound('boingBounce');game.api.floatText(p.x,p.y-20,'BOING!','#637d63');}return true;
+  cancelPaperPress();game.api.playSound('paperRelease');if(targets.length){game.api.floatText(p.x,p.y-20,'BOING!','#637d63');}return true;
  }
  function updatePaperBounceFlight(e,dt){
   const f=e.flight;f.targetX=game.api.clamp(f.targetX,e.r+10,game.state.W-e.r-10);f.targetY=game.api.clamp(f.targetY,85+e.r,game.state.H-e.r-20);f.age=Math.min(f.duration,f.age+dt);const t=f.age/f.duration,x=f.startX+(f.targetX-f.startX)*t,y=f.startY+(f.targetY-f.startY)*t,hit=game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},x,y);

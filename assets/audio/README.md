@@ -137,3 +137,18 @@ Alpha 0.1.80 silences Scribble Gribble's wall-attack samples. Other monsters'
 wall impacts and chewing remain. Waves 6–10 now play track A, then B, repeating
 on each song's `ended` event. Wave changes preserve the current track/time;
 the wave-10 boss entrance interrupts the playlist for boss music.
+
+## Player, pencil and paper-press cues (Alpha 0.1.108)
+
+Six user-supplied WAVs are copied unchanged into `effects/`:
+
+| Export | Supplied file | Trigger |
+| --- | --- | --- |
+| stevie-hit.wav | steviebeinghit.wav | Positive damage to Stevie; replaces generic wooden impact |
+| pew-shot.wav | pewpewshooting.wav | Pew Pew launches a normal pencil; eraser shots retain their existing cue |
+| pencil-deflect.wav | pencilbeingdeflected.wav | A wall returns Pew Pew’s pencil; the later impact retains its impact cue |
+| paper-press-stretch.wav | paperbeingstretched.eraserpresseddown.wav | Once when a stationary eraser hold passes the paper-depression threshold |
+| paper-press-release.wav | paperpulleddownbeingreleased.wav | Releasing a charged paper depression, including empty ones |
+| sneaky-plan.wav | sneakymcsneaksplanedline.wav | Successful new route creation; a 0.9-second grain matches the drawing warning |
+
+Movement, cancellation, invalid paper, pause and reset stop paper tension without playing the release cue. These are one-shot press/release effects; the existing rubbing loop remains separate. All cues use the saved effects volume, priorities, per-group cooldowns/caps and shared six-voice mixer.
