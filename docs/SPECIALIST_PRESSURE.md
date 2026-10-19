@@ -8,7 +8,7 @@ When Rip-Raff's bomb completes an exit at least 45 pixels closer to Stevie than 
 
 Yank targets finished walls while the player draws elsewhere; active unfinished strokes are excluded. Hook reach increases from 90 to 110 pixels. A full pull moves a wall up to 108 pixels instead of 72, bounded to the page. Circle metadata moves with the wall. Erasing the rope and existing damage/freeze/stun counters still apply.
 
-Hijacked Sneaky followers pause confused for two seconds at their route's endpoint. Their short stun survives retirement of the old route, giving the player a real enclosure opportunity. Specialist-directed recruits are excluded from Sneaky rallies while on their job.
+Hijacked Sneaky followers pause confused for one second at their route's endpoint. Their short stun survives retirement of the old route, giving the player a real enclosure opportunity. Specialist-directed recruits are excluded from Sneaky rallies while on their job.
 
 Turrets are available during the timed portion of boss waves and while clearing ordinary survivors. The boss warning/entrance immediately clears cannons and pending offers; direct boss spawning clears them too. No turrets can be constructed during the entrance or fight. Enclose and its existing boss immunities remain.
 
@@ -19,3 +19,7 @@ This is a first balance pass for player feedback. Required validation, focused r
 Waves 1–11 keep their existing random weights. From wave 12, Gribble has one pool ticket rather than two; Pew Pew, Sneaky, Yank, available catapults and Rip-Raff each have three. Boingus, Nugget and Wardling retain one ticket each. Basic scheduled candidates skip every fourth arrival rather than every tenth; specialist recruits retain their shared ten-per-wave budget. Existing spawn-gap timing is unchanged.
 
 Rip-Raff's unlock/introduction is wave 12. From wave 12, a timed chapter group uses an available catapult plus Pew Pew before falling back to the existing group. Builders remain one alive, four total per run, and absent during boss waves. This makes their appearance less dependent on a random roll without adding another simultaneous builder.
+
+## Alpha 0.1.107: another breather from wave 11
+
+Scheduled spawn rate is multiplied by 0.9 from wave 11, on top of the existing late-wave reductions, in both quiet periods and surges. Non-grunt random pool tickets count twice from wave 11, reducing Gribble's relative share while retaining the specialist caps, roster and scripted groups. Waves 1–10 and boss-fight helper schedules are unchanged. Hijacked Sneaky route endpoint confusion now lasts one second rather than two.

@@ -11,7 +11,7 @@ module.exports=function(load){
   assert(pool.includes('sniper')&&pool.includes('tank')&&pool.includes('wallpuller'),'specialists stay available');
   for(const type of ['fast','wardling','splitter','brood','mini','bulwark','medic','basil','brute','sapper','elite'])assert.equal(a.spawnScheduledEnemy(null,null,type,true),null,'scripted arrivals cannot reintroduce '+type);
   s.waveTime=60;
-  for(const elapsed of [3,9]){s.timeLeft=60-elapsed;const base=Math.max(.34,1.48-wave*.034),surge=elapsed%12>=8?1.35:.9,oldGap=Math.max(.12,base/(a.wavePressure()*surge));assert(Math.abs(a.spawnGap()-oldGap/(wave>=13?.48:.8))<1e-10,'20 percent slower spawn rate in quiet and surge');}
+  for(const elapsed of [3,9]){s.timeLeft=60-elapsed;const base=Math.max(.34,1.48-wave*.034),surge=elapsed%12>=8?1.35:.9,oldGap=Math.max(.12,base/(a.wavePressure()*surge));assert(Math.abs(a.spawnGap()-oldGap/((wave>=13?.48:.8)*.9))<1e-10,'additional 10 percent fewer scheduled spawns in quiet and surge');}
  }
  a.pick=pick;
  for(const wave of [1,5,8,10]){s.wave=wave;s.enemies=[];let pool;a.pick=list=>{pool=Array.from(list);return list[0];};a.enemyType();if(wave>=8)assert(pool.includes('splitter'),'early splitter remains');s.waveTime=60;s.timeLeft=57;const base=wave===1?g.catalog.balance.openingGap:wave===5?1.42:Math.max(.34,1.48-wave*.034),surge=wave>5?.9:1;assert(Math.abs(a.spawnGap()-Math.max(.12,base/(a.wavePressure()*surge)))<1e-10,'early spawning unchanged');}
