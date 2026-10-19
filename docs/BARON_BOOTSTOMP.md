@@ -1,8 +1,10 @@
-# Baron Bootstomp — wave 10 boss concept
+# Bootstomp — wave 10 boss concept
 
-Status: character concept only. Wobblechomp and his assets remain intact; this boss is not wired into encounters yet.
+Status: character concept and animation study. Wobblechomp and his assets remain intact; this boss is not wired into encounters yet.
 
 Artwork: `assets/art/concepts/baron-bootstomp.png`. Wide, horizontally oval blue crayon monster, enormous yellow boots, no crown or royal headwear; use whole-character drawn animation frames when implemented.
+
+Animation catalogue: `assets/art/bootstomp/animations.json`. Open `docs/bootstomp-preview.html` through the project server to inspect connected sequences, individual actions, and erasing references. Full production notes are in `docs/BOOTSTOMP_ANIMATIONS.md`.
 
 ## Agreed fight direction
 
@@ -12,7 +14,7 @@ Artwork: `assets/art/concepts/baron-bootstomp.png`. Wide, horizontally oval blue
 - Start with twice King Doodle-Doom’s current add spawn count. Do not buff Doodle-Doom as part of this change.
 - Shoe scrape removes sections of cover along a telegraphed strip.
 - Tantrum shuffle moves the boss and shoves enemies between stomp attempts.
-- Royal lace flick launches a nearby monster. Draw across the stretched lace to snag it before launch; otherwise block the passenger in flight. Do not scrape away a prepared footprint during the same committed stomp.
+- Bootlace flick launches a nearby monster. Draw across the stretched lace to snag it before launch; otherwise block the passenger in flight. Do not scrape away a prepared footprint during the same committed stomp.
 
 ## Input prerequisite shipped separately
 
