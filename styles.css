@@ -1842,3 +1842,9 @@ html.desktop-ui #pauseOverlay .pause-reference,html.desktop-ui #pauseOverlay .pa
 #betaScrapsOverlay #betaBuyNode:disabled{background:#eee6d6;border:2px dashed #9a8e7c;color:#756b5d;box-shadow:none;font-weight:400}
 #betaScrapsOverlay #betaBuyNode:focus-visible{outline:3px solid #315eb3;outline-offset:4px}
 @media(prefers-reduced-motion:reduce){.beta-tree-node{transition:none}}
+
+/* Browser zoom and ultrawide windows must not create an ever-larger battlefield.
+   Bound the panel itself so rendering, pointer coordinates, overlays and spawn
+   edges all continue to use the same existing one-CSS-pixel world coordinates. */
+html.desktop-ui #app > .panel{width:100%;max-width:1286px;max-height:806px;align-self:center}
+html.desktop-ui #app > .hud{width:100%;max-width:1286px;align-self:center}
