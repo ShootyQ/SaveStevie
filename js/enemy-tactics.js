@@ -43,6 +43,7 @@ DoodleDefender.systems.enemyTactics=function(game){
   const goal={x:game.state.player.x,y:game.state.player.y};let clearance=Math.max(19,e.r),path=sneakRoute({...e,r:clearance},goal);
   if(!path){clearance=e.r;path=sneakRoute(e,goal);}
   if(!path){s.wait=1.5;s.failedPlans=(s.failedPlans||0)+1;if(s.failedPlans>=3){s.phase='join';s.nav=null;}if(!s.noRoute)game.api.floatText(e.x,e.y-e.r-16,'NEED A NEW WAY!','#a87853');s.noRoute=true;return;}
+  game.api.playSound('sneakyPlan');
   s.noRoute=false;s.failedPlans=0;s.runs++;s.order={id:++orderSerial,points:[{x:e.x,y:e.y},...path],clearance,age:0,blocked:0,audit:0,erased:false};
   if(s.runs>=3)s.phase='join';
   game.api.animateEnemyAction(e,'aim',goal);game.api.floatText(e.x,e.y-e.r-16,s.runs===3?'MY TURN!':'THIS WAY!','#566fb0');

@@ -1,0 +1,24 @@
+const {chromium}=require('playwright'),assert=require('assert'),fs=require('fs'),path=require('path');
+const root=path.resolve(__dirname,'..');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+ for(const viewport of [{width:1280,height:900},{width:393,height:851}]){
+  const page=await browser.newPage({viewport}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieLessonsV1',JSON.stringify({draw:true,erase:true}));localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');localStorage.setItem('saveStevieNotebookV1',JSON.stringify({version:2,scraps:100,lifetimeScraps:100,scrapTutorialDone:true,levels:{doodleScraps:1,starterEraser:1}}));});
+  await page.route('http://stevie.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}if(name==='game.js')body=body.toString().replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');return route.fulfill({body,contentType:({'.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.wav':'audio/wav','.mp3':'audio/mpeg','.ttf':'font/ttf'})[path.extname(name)]||'text/html'});});
+  await page.goto('http://stevie.test/',{waitUntil:'domcontentloaded',timeout:60000});await page.waitForFunction(()=>testGame.api.artworkStatus().ready,null,{polling:100,timeout:90000});await page.evaluate(()=>{testGame.api.setFirstLessonsEnabled(false);testGame.api.setMonsterIntrosEnabled(false)});await page.click('#startBtn');
+  await page.evaluate(async()=>{testGame.api.resetRun();testGame.state.spawnTimer=9999;await testGame.api.unlockSoundEffects()});assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().ready),69);assert.equal(await page.evaluate(()=>testGame.api.soundEffectsSnapshot().failed),0);
+  const events=await page.evaluate(()=>{
+   const g=testGame,a=g.api,kinds=()=>a.soundEffectsSnapshot().voices.map(v=>v.kind),clear=()=>{a.resetSoundEffects();g.state.enemies=[];g.state.walls=[];g.state.enemyShots=[]};clear();
+   a.damageStevie(1,'test hit');const hit=kinds();a.resetSoundEffects();a.damageStevie(0,'zero');const zero=kinds();clear();
+   const sniper=a.spawnEnemy(false,50,180,'sniper');a.fireSniper(sniper);const shot=kinds();a.resetSoundEffects();
+   g.state.walls=[{pts:[{x:100,y:80},{x:100,y:g.state.H-20}],thick:8,hp:100,maxHp:100,life:60,maxLife:60}];a.updateEnemyShots(.7);const deflect=kinds(),returned=g.state.enemyShots.some(s=>s.reflected);clear();
+   const sneak=a.spawnEnemy(false,60,160,'flanker');a.updateSneaky(sneak,1.2);const plan=kinds();a.resetSoundEffects();a.updateSneaky(sneak,.01);const noRepeat=kinds();clear();
+   const p={x:70,y:160};if(!a.beginPaperPress(p))throw Error('test point must support a press');a.updatePaperPress(.39);const early=kinds();a.updatePaperPress(.02);const stretch=kinds();const played=a.soundEffectsSnapshot().played;a.updatePaperPress(.5);const once=a.soundEffectsSnapshot().played===played;
+   const released=a.releasePaperPress(),release=kinds();clear();a.beginPaperPress(p);a.updatePaperPress(.5);a.movePaperPress({x:110,y:160});const moved=kinds();a.cancelPaperPress();const cancelled=a.releasePaperPress();clear();
+   a.beginPaperPress(p);a.updatePaperPress(.5);g.state.paused=true;a.updatePaperPress(.01);a.syncSoundEffects();const paused=kinds();g.state.paused=false;const afterPause=a.releasePaperPress();
+   return {hit,zero,shot,deflect,returned,plan,noRepeat,early,stretch,once,released,release,moved,cancelled,paused,afterPause};
+  });
+  for(const [event,kind] of Object.entries({hit:'stevieHit',shot:'pewShot',deflect:'pencilDeflect',plan:'sneakyPlan',stretch:'paperStretch',release:'paperRelease'}))assert(events[event].includes(kind),event+' '+JSON.stringify(events));
+  assert(events.returned&&events.once&&events.released);assert.deepEqual(events.zero,[]);assert.deepEqual(events.noRepeat,[]);assert.deepEqual(events.early,[]);assert(!events.release.includes('paperStretch'));assert(!events.moved.includes('paperStretch'));assert(!events.moved.includes('paperRelease'));assert.equal(events.cancelled,false);assert.equal(events.afterPause,false);assert.deepEqual(events.paused,[]);assert.deepEqual(errors,[]);await page.close();console.log('PASS: '+viewport.width+'px 69 decoded effects; dedicated hurt, real pencil launch/deflection and route creation; paper threshold, single stretch, empty release, drift/cancel/pause cleanup');
+ }
+}finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});

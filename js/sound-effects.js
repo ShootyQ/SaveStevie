@@ -1,6 +1,12 @@
 /* Gesture-unlocked effects; bounded mixing never consumes gameplay randomness. */
 DoodleDefender.systems.soundEffects=function(game){
 const groups={
+ stevieHit:{files:['stevie-hit'],gain:.6,gap:.2,cap:1,priority:4},
+ pewShot:{files:['pew-shot'],gain:.4,gap:.15,cap:2,priority:2},
+ pencilDeflect:{files:['pencil-deflect'],gain:.6,gap:.1,cap:2,priority:3},
+ paperStretch:{files:['paper-press-stretch'],gain:.3,gap:0,cap:1,priority:1},
+ paperRelease:{files:['paper-press-release'],gain:.23,gap:.12,cap:1,priority:3},
+ sneakyPlan:{files:['sneaky-plan'],gain:.55,gap:.5,cap:1,priority:2,duration:.9},
  chonksStep:{files:['chonks-step-1','chonks-step-2'],gain:.22,gap:.25,cap:1,priority:0,duration:.25},
  dashRun:{files:['dash-run'],gain:.13,gap:0,cap:1,priority:0,loop:true,idle:.14},
  dashJump:{files:['dash-jump'],gain:.33,gap:.12,cap:1,priority:2},

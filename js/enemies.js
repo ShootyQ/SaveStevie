@@ -369,7 +369,7 @@ function fireSniper(e,eraser=false,host=null){
   if(!eraser)delete e.sniperAim;
   if(eraser){const tankRadius=game.catalog.enemyDefs.tank.r,side=host?Math.abs((e.x-host.x)*dy/d-(e.y-host.y)*dx/d):0,radius=Math.max(tankRadius,host?.r||0)+8+Math.min(22,side);
    game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*240,vy:dy/d*240,life:Math.min(game.api.desktopUiEnabled?.()?12:6,(d+100)/240),r:5,damage:0,eraser:true,eraseRadius:radius,sniperOwner:e,reflected:false});game.api.playSound('pencil');
-  }else game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:Math.max(2,Math.min(game.api.desktopUiEnabled?.()?12:6,(d+30)/150)),r:3,damage:7,sniperOwner:e,reflected:false});
+  }else{game.api.playSound('pewShot');game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:Math.max(2,Math.min(game.api.desktopUiEnabled?.()?12:6,(d+30)/150)),r:3,damage:7,sniperOwner:e,reflected:false});}
   game.api.animateEnemyAction(e,'fire');
   game.api.burst(e.x,e.y,'#4b79d8',3);
 }
@@ -429,7 +429,7 @@ function updateEnemyShots(dt){
       const distance=Math.hypot(shot.sniperOwner.x-shot.x,shot.sniperOwner.y-shot.y)||1;
       shot.vx=(shot.sniperOwner.x-shot.x)/distance*245;shot.vy=(shot.sniperOwner.y-shot.y)/distance*245;
       game.api.burst(shot.x,shot.y,'#61aca0',6);game.api.floatText(shot.x,shot.y-10,'RETURN!','#287a78');
-      game.api.playSound('rock');remaining.push(shot);continue;
+      game.api.playSound('pencilDeflect');remaining.push(shot);continue;
     }
     const stapleWall=(shot.stapleOwner||shot.wobbleOwner)?game.api.bossShotWallHit(shot,endX,endY):null;
     if(stapleWall){const x=shot.x+(endX-shot.x)*stapleWall.t,y=shot.y+(endY-shot.y)*stapleWall.t;game.api.damageWall(stapleWall.wall,shot.wobbleOwner?4:8,x,y);game.api.burst(x,y,'#928276',5);if(shot.wobbleOwner)game.api.counterWobbleSpike(shot);continue}
@@ -836,8 +836,9 @@ function moveEnemySafely(e,dx,dy){
 }
 function damageStevie(damage,source,impact=game.state.player){
   if(game.state.player.hp<=0)return;
+  if(damage>0)game.api.playSound('stevieHit');
   game.state.player.hp=Math.max(0,game.state.player.hp-damage);
-  if(damage>0){game.state.lastDamage={source,amount:damage,fatal:game.state.player.hp<=0};game.api.playSound('woodImpact');game.api.breakScoreStreak();game.api.reactStevieHit();game.api.refugeImpact(impact)}
+  if(damage>0){game.state.lastDamage={source,amount:damage,fatal:game.state.player.hp<=0};game.api.breakScoreStreak();game.api.reactStevieHit();game.api.refugeImpact(impact)}
   game.state.floaters.push({hitMarker:true,x:impact.x,y:impact.y,r:impact.r||5,type:impact.type||'arrow',t:.9,source,amount:damage});
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }
