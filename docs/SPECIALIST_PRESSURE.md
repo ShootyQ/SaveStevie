@@ -8,7 +8,7 @@ When Rip-Raff's bomb completes an exit at least 45 pixels closer to Stevie than 
 
 Yank targets finished walls while the player draws elsewhere; active unfinished strokes are excluded. Hook reach increases from 90 to 110 pixels. A full pull moves a wall up to 108 pixels instead of 72, bounded to the page. Circle metadata moves with the wall. Erasing the rope and existing damage/freeze/stun counters still apply.
 
-Hijacked Sneaky followers pause confused for two seconds at their route's endpoint. Their short stun survives retirement of the old route, giving the player a real enclosure opportunity. Specialist-directed recruits are excluded from Sneaky rallies while on their job.
+Hijacked Sneaky followers pause confused for one second at their route's endpoint. Their short stun survives retirement of the old route, giving the player a real enclosure opportunity. Specialist-directed recruits are excluded from Sneaky rallies while on their job.
 
 Turrets are available during the timed portion of boss waves and while clearing ordinary survivors. The boss warning/entrance immediately clears cannons and pending offers; direct boss spawning clears them too. No turrets can be constructed during the entrance or fight. Enclose and its existing boss immunities remain.
 

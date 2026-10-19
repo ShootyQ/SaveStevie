@@ -87,7 +87,7 @@ DoodleDefender.systems.enemyTactics=function(game){
    followers.delete(e);return null;
   }
   const pts=f.order.points;while(f.index<pts.length&&Math.hypot(e.x-pts[f.index].x,e.y-pts[f.index].y)<Math.max(8,e.r*.6))f.index++;
-  if(f.index>=pts.length){if(f.order.hijacked){if(!f.endWait){f.endWait=true;f.wait=2;e.stun=Math.max(e.stun,2);game.api.floatText(e.x,e.y-e.r-12,'...HUH?','#278f79');}if(f.wait>0)return {x:e.x,y:e.y};}followers.delete(e);return null;}if(!clear(e,e,pts[f.index])){followers.delete(e);return null;}const p=pts[f.index];if(f.order.hijacked)return {x:game.api.clamp(p.x,e.r+18,game.state.W-e.r-18),y:game.api.clamp(p.y,90+e.r,game.state.H-e.r-35)};return p;
+  if(f.index>=pts.length){if(f.order.hijacked){if(!f.endWait){f.endWait=true;f.wait=1;e.stun=Math.max(e.stun,1);game.api.floatText(e.x,e.y-e.r-12,'...HUH?','#278f79');}if(f.wait>0)return {x:e.x,y:e.y};}followers.delete(e);return null;}if(!clear(e,e,pts[f.index])){followers.delete(e);return null;}const p=pts[f.index];if(f.order.hijacked)return {x:game.api.clamp(p.x,e.r+18,game.state.W-e.r-18),y:game.api.clamp(p.y,90+e.r,game.state.H-e.r-35)};return p;
  }
  function navigate(e,s,goal,dt,speed=1){
   let nav=s.nav;const walls=game.state.walls.filter(live);
