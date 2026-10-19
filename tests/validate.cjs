@@ -2198,7 +2198,7 @@ require('./wobblechomp-overhaul.cjs')(load);
  g.state.walls=[];canvas.listeners.pointerdown(event(1,100,300));canvas.listeners.pointermove(event(1,180,300));
  button.listeners.pointerdown(event(2,0,0));assert.equal(g.api.eraserActive(),true);assert.equal(g.state.currentWall,null,'draw segment commits before switching');canvas.listeners.pointermove(event(1,150,300));
  const paidInk=g.state.stats.ink;button.listeners.pointerup(event(2,0,0));assert.equal(g.api.eraserActive(),false);assert.equal(g.state.currentWall[0].x,150,'same finger resumes drawing at current point');canvas.listeners.pointermove(event(1,150,350));canvas.listeners.pointerup(event(1,150,350));assert(g.state.stats.ink<paidInk,'resumed drawing pays normal cost');
- g.state.stats.ink=0;g.state.walls=[w];canvas.listeners.pointerdown(event(3,200,200,2));canvas.listeners.pointermove(event(4,300,300));assert.equal(g.state.walls.length,2,'other finger cannot draw or extend eraser path');canvas.listeners.pointerup(event(4,300,300));assert(g.api.eraserActive(),'unrelated pointerup does not end erasing');canvas.listeners.pointerup(event(3,200,200));assert.equal(g.api.eraserActive(),false);assert.equal(g.state.stats.ink,0,'right erasing works with empty ink');
+ g.state.stats.ink=0;g.state.walls=[w];canvas.listeners.pointerdown(event(3,200,200,2));canvas.listeners.pointermove(event(4,300,300));assert.equal(g.state.walls.length,1,'clicking and other fingers cannot erase');canvas.listeners.pointerup(event(4,300,300));assert(g.api.eraserActive(),'unrelated pointerup does not end erasing');canvas.listeners.pointermove(event(3,200,210,2));assert.equal(g.state.walls.length,2,'actual rubbing erases with empty ink');canvas.listeners.pointerup(event(3,200,210));assert.equal(g.api.eraserActive(),false);assert.equal(g.state.stats.ink,0,'right erasing works with empty ink');
  g.api.setDrawingControl('eraserToggle',true);button.onclick({detail:1});assert(g.api.eraserActive());g.api.endDraw();assert.equal(g.api.eraserActive(),false,'pause/UI close resets sticky mode');
  button.onclick({detail:1});g.api.resetRun();assert.equal(g.api.eraserActive(),false,'run reset releases eraser');assert.equal(g.api.drawingControls().eraserToggle,true,'run reset preserves preference');
  const saved={};const controls=load(true,{storage:{getItem:k=>saved[k]||null,setItem:(k,v)=>{saved[k]=v}}});controls.sandbox.testGame.api.setDrawingControl('eraserToggle',true);controls.sandbox.testGame.api.setDrawingControl('eraserLeft',true);const reload=load(true,{storage:{getItem:k=>saved[k]||null,setItem(){}}});assert.equal(reload.sandbox.testGame.api.drawingControls().eraserToggle,true);assert.equal(reload.sandbox.testGame.api.drawingControls().eraserLeft,true);
@@ -2640,3 +2640,5 @@ require('./dash-recharge.cjs')(load);
 require('./crew-patrol.cjs')(load);
 
 require('./paper-press.cjs')(load);
+
+require('./eraser-motion.cjs')(load);

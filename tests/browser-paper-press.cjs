@@ -5,7 +5,7 @@ const root=path.resolve(__dirname,'..');
   const page=await browser.newPage({viewport,hasTouch:viewport.width<600}),errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');});
   await page.route('http://stevie.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}if(name==='game.js')body=body.toString().replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');return route.fulfill({body,contentType:({'.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.wav':'audio/wav','.mp3':'audio/mpeg','.ttf':'font/ttf'})[path.extname(name)]||'text/html'});});
-  await page.goto('http://stevie.test/',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>testGame.api.artworkStatus().ready);
+  await page.goto('http://stevie.test/',{waitUntil:'domcontentloaded',timeout:120000});await page.waitForFunction(()=>testGame.api.artworkStatus().ready,null,{timeout:120000});
   const setup=async()=>{await page.evaluate(()=>{const g=testGame,a=g.api;a.setFirstLessonsEnabled(false);a.setMonsterIntrosEnabled(false);a.setSynergyRevealsEnabled(false);a.resetRun();g.state.enemies=[];g.state.walls=[];g.state.spawnTimer=999999;g.state.timeLeft=300;g.state.stats.rockDamage=0;});return page.evaluate(()=>({x:testGame.state.W*.35,y:testGame.state.player.y-140}));};
   const tick=async t=>page.evaluate(t=>{for(let i=0;i<Math.round(t/.05);i++)testGame.api.update(.05);testGame.api.draw();},t);
   const point=await setup(),box=await page.locator('#game').boundingBox(),x=box.x+point.x,y=box.y+point.y;
@@ -25,6 +25,17 @@ const root=path.resolve(__dirname,'..');
   await tick(.6);assert(await page.evaluate(()=>testGame.api.paperPressSnapshot().press.depth>0));
   if(cdp)await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});else{await page.keyboard.press('Escape');await page.mouse.up({button:'right'});}
   assert.equal(await page.evaluate(()=>testGame.api.paperPressSnapshot().press),null);
+  // Clicking/tapping in place cannot replace actual rubbing, on either platform.
+  const rub=await setup();await page.evaluate(p=>{window.rubTarget=testGame.api.spawnEnemy(false,p.x,p.y,'scrubber');},rub);
+  const rx=box.x+rub.x,ry=box.y+rub.y;
+  if(cdp){
+   await page.evaluate(()=>testGame.api.setDrawingControl('eraserToggle',true));await page.locator('#eraserBtn').tap();
+   for(let i=0;i<6;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{id:40,x:rx,y:ry}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}
+  }else for(let i=0;i<6;i++)await page.mouse.click(rx,ry,{button:'right'});
+  assert.equal(await page.evaluate(()=>rubTarget.eraseHits||0),0,'click/tap spam does not erase chunks');
+  if(cdp){await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{id:41,x:rx,y:ry}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{id:41,x:rx+12,y:ry}]});await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});}
+  else{await page.mouse.move(rx,ry);await page.mouse.down({button:'right'});await page.mouse.move(rx+12,ry,{steps:12});await page.mouse.up({button:'right'});}
+  assert.equal(await page.evaluate(()=>rubTarget.eraseHits),1,'real rubbing still removes one chunk');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+'px real mouse/touch hold, pull, release, light damage and safe pause/cancel');await page.close();
  }
 }finally{await browser.close()}})().catch(e=>{console.error(e);process.exitCode=1});
