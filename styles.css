@@ -1819,3 +1819,26 @@ html.desktop-ui #pauseOverlay .pause-reference,html.desktop-ui #pauseOverlay .pa
 .result-content{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:20px;align-items:start}
 @media(max-width:600px){.result-content{grid-template-columns:1fr;gap:8px}}
 @media(max-height:600px) and (min-width:601px){.result-content{gap:14px}}
+
+/* Consistent control cues on the decorated beta page; map geometry is unchanged. */
+.beta-tree-node{border:3px solid #78664c;border-radius:8px 3px 9px 4px;background:#fff9e9d9;box-shadow:2px 4px 0 #65583f55;transition:box-shadow .12s,background-color .12s}
+.beta-tree-node .beta-node-state{font-size:19px;color:#514a3c}
+.beta-tree-node .beta-node-action{display:table;margin:9px auto 0;padding:4px 13px;border:2px solid currentColor;border-radius:3px 7px 2px 5px;background:#fffdf3;color:#365b7d;font-size:20px;line-height:1.1;white-space:nowrap;box-shadow:1px 2px 0 #594f3833}
+.beta-tree-node[data-buyable=true]{border-color:#416337;box-shadow:2px 4px 0 #41633766}
+.beta-tree-node[data-buyable=true] .beta-node-state{color:#294e22;font-weight:700}
+.beta-tree-node[data-buyable=true] .beta-node-action{background:#f7e9a8;color:#294e22}
+.beta-tree-node.owned:not([data-buyable=true]){border-color:#58704e}
+.beta-tree-node.locked,.beta-tree-node.future{border-style:dashed;border-color:#92836c;background:#f4eddcd9}
+.beta-tree-node.future{opacity:.85}
+.beta-tree-node.locked .beta-node-action,.beta-tree-node.future .beta-node-action{color:#655c4d;background:#f4eddf}
+.beta-tree-node:hover{background:#fff9e9;box-shadow:3px 7px 0 #65583f77}
+.beta-tree-node[aria-pressed=true]{outline:5px solid #315eb3;outline-offset:5px;box-shadow:3px 7px 0 #315eb366}
+.beta-tree-node:focus-visible{outline:5px dashed #315eb3;outline-offset:6px}
+.beta-branch-title{border:1px dashed #647f94;border-radius:4px;background:#f8f4e7bb;text-decoration:underline;text-underline-offset:4px}
+.beta-branch-title:hover{background:#fff9e9;border-color:#315eb3}
+.beta-map-note{border:2px solid #78664c;border-radius:5px 2px 6px 3px;text-decoration:underline;text-underline-offset:4px}
+#betaScrapsOverlay #betaBuyNode{padding:12px 10px;border:2px solid #496334;border-radius:5px 2px 7px 3px;background:#f4df89;box-shadow:2px 4px 0 #65583f55;text-decoration:none;clip-path:none;min-height:52px;color:#294522;font-weight:700}
+#betaScrapsOverlay #betaBuyNode:hover:enabled{background:#ffe89b;box-shadow:2px 6px 0 #65583f66}
+#betaScrapsOverlay #betaBuyNode:disabled{background:#eee6d6;border:2px dashed #9a8e7c;color:#756b5d;box-shadow:none;font-weight:400}
+#betaScrapsOverlay #betaBuyNode:focus-visible{outline:3px solid #315eb3;outline-offset:4px}
+@media(prefers-reduced-motion:reduce){.beta-tree-node{transition:none}}
