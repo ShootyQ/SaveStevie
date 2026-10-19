@@ -2,7 +2,7 @@
 
 Status: character concept only. Wobblechomp and his assets remain intact; this boss is not wired into encounters yet.
 
-Artwork: `assets/art/concepts/baron-bootstomp.png`. Blue crayon monster, enormous yellow boots, tiny crown; use whole-character drawn animation frames when implemented.
+Artwork: `assets/art/concepts/baron-bootstomp.png`. Wide, horizontally oval blue crayon monster, enormous yellow boots, no crown or royal headwear; use whole-character drawn animation frames when implemented.
 
 ## Agreed fight direction
 
