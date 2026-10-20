@@ -1361,7 +1361,7 @@ console.log('PASS: zero-time cleanup, stopped arrivals, split children, pause, d
 
 {
 const env=load(true),g=env.sandbox.testGame;
-for(const [wave,hp,speed] of [[5,1242,144.612],[10,150,66],[15,1512,18.53],[20,1000,25.76]]){
+for(const [wave,hp,speed] of [[5,1242,144.612],[10,150,110],[15,1512,18.53],[20,1000,25.76]]){
  g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,250,250);
  assert.ok(Math.abs(boss.maxHp-hp)<1e-8,'boss HP '+wave);assert.ok(Math.abs(boss.speed-speed)<1e-8,'boss speed '+wave);
  const ordinary=g.api.spawnEnemy(false,100,100,'grunt');assert.equal(ordinary.maxHp,20*g.api.enemyHpScale());

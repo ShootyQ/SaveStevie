@@ -2,7 +2,7 @@
  * Simulation owns all clocks/randomness. Rendering only selects drawn frames. */
 DoodleDefender.systems.bootstompBoss=function(game){
  const a=game.api,atlas=DoodleDefender.bootstompArt;
- const tune={charge:3.25,threshold:.8,exposure:3.2,swipeDistance:18,swipeGap:.6,rippleDamage:14,rippleSpeed:370,helperCap:14,moveScale:.6,enterDuration:2,challengeDuration:1.44};
+ const tune={charge:3.25,threshold:.8,exposure:3.2,swipeDistance:18,swipeGap:.6,rippleDamage:14,rippleSpeed:370,helperCap:14,enterDuration:2.4,challengeDuration:1.44,helperRate:.7};
  const names=['left_fist','right_fist','left_boot','right_boot','star'];
  let brains=new WeakMap(),ripples=[],lastErase=false,serial=0,frameCache=new Map();
  const isBootstomp=e=>!!e&&e.type==='bootstomp';
@@ -20,7 +20,7 @@ DoodleDefender.systems.bootstompBoss=function(game){
  }
  function initBootstomp(e){
   if(brains.has(e))return brains.get(e);
-  const p=safePoint(-Math.PI/2);e.x=p.x;e.y=p.y;e.r=30;e.speed=66;e.hp=e.maxHp=150;e.waveBoss=true;
+  const p=safePoint(-Math.PI/2);e.x=p.x;e.y=p.y;e.r=30;e.speed=110;e.hp=e.maxHp=150;e.waveBoss=true;
   const b={phase:'intro',age:0,time:0,wear:Object.fromEntries(names.map(n=>[n,0])),turn:0,attack:0,side:'right',target:null,goal:null,helperCd:1,helperSerial:0,swipeCd:0,rubs:{},reaction:0,passenger:null,finished:false,introGoal:{x:p.x,y:p.y},introStart:{x:game.state.player.x>=game.state.W/2?-120:game.state.W+120,y:p.y}};e.x=b.introStart.x;brains.set(e,b);
   a.resetCircleShapes();a.setMsg('Bootstomp! Hold the eraser in his footprint until he lands. When he falls, rub out his five patches!');return b;
  }
@@ -28,7 +28,7 @@ DoodleDefender.systems.bootstompBoss=function(game){
  function setPhase(e,phase){const b=state(e);b.phase=phase;b.age=0;}
  function clipAt(e){
   const b=state(e),left=b.side==='left';
-  if(b.phase==='intro')return b.age<tune.enterDuration?['intro_enter',b.age*tune.moveScale]:['intro_challenge',b.age-tune.enterDuration];
+  if(b.phase==='intro')return b.age<tune.enterDuration?['intro_enter',b.age*1.2/tune.enterDuration]:['intro_challenge',b.age-tune.enterDuration];
   if(b.phase==='walk')return ['walk',b.age];
   if(b.phase==='windup')return ['windup_'+b.side,b.age*3/tune.charge];
   if(b.phase==='impact')return ['impact_'+b.side,b.age];
@@ -78,9 +78,9 @@ DoodleDefender.systems.bootstompBoss=function(game){
   }
   const clear=Math.hypot(a.refugeBounds().halfWidth,a.refugeBounds().halfHeight)+e.r+18;
   if(a.pointSegDist(p.x,p.y,e.x,e.y,target.x,target.y)<clear){const angle=Math.atan2(e.y-p.y,e.x-p.x),end=Math.atan2(target.y-p.y,target.x-p.x),turn=Math.atan2(Math.sin(end-angle),Math.cos(end-angle));target={x:a.clamp(p.x+Math.cos(angle+Math.sign(turn)*.48)*(clear+22),e.r+35,game.state.W-e.r-35),y:a.clamp(p.y+Math.sin(angle+Math.sign(turn)*.48)*(clear+22),130,game.state.H-90)};}
-  const d=Math.hypot(target.x-e.x,target.y-e.y),step=Math.min(d,speed*tune.moveScale*dt),old={x:e.x,y:e.y};if(d){const nx=e.x+(target.x-e.x)/d*step,ny=e.y+(target.y-e.y)/d*step;if(Math.hypot(nx-p.x,ny-p.y)>=clear){e.x=nx;e.y=ny;}}sweep(e,old,e);return Math.hypot(final.x-e.x,final.y-e.y)<4;}
+  const d=Math.hypot(target.x-e.x,target.y-e.y),step=Math.min(d,speed*dt),old={x:e.x,y:e.y};if(d){const nx=e.x+(target.x-e.x)/d*step,ny=e.y+(target.y-e.y)/d*step;if(Math.hypot(nx-p.x,ny-p.y)>=clear){e.x=nx;e.y=ny;}}sweep(e,old,e);return Math.hypot(final.x-e.x,final.y-e.y)<4;}
  function helpers(e,dt){const b=state(e);if(['down','fall','stumble','defeat','intro'].includes(b.phase))return;b.helperCd-=dt;if(b.helperCd>0)return;
-  b.helperCd=a.firstBossTuning(e).helperGap/2;
+  b.helperCd=a.firstBossTuning(e).helperGap/(2*tune.helperRate);
   if(game.state.enemies.filter(n=>n.bossOwner===e&&n.hp>0).length>=tune.helperCap)return;
   const i=b.helperSerial++%4,{W,H}=game.state;
   const n=a.spawnEnemy(false,i===1?W+26:i===3?-26:W*(i===0?.25:.75),i===0?-26:i===2?H+26:H*(i===1?.3:.7),'grunt');if(n)n.bossOwner=e;
@@ -108,7 +108,7 @@ DoodleDefender.systems.bootstompBoss=function(game){
   b.age+=dt;b.time+=dt;b.swipeCd=Math.max(0,b.swipeCd-dt);b.reaction=Math.max(0,b.reaction-dt);e.freeze=e.stun=e.gravitySlow=e.burn=e.poison=e.charged=0;
   if(b.phase==='defeat'){if(b.age>=3.09){e.hp=0;a.killEnemy(e);}return;}
   updateRipples(e,dt);helpers(e,dt);sweep(e,e,e);
-  if(b.phase==='intro'){const t=Math.min(1,b.age/tune.enterDuration),old={x:e.x,y:e.y};e.x=b.introStart.x+(b.introGoal.x-b.introStart.x)*t;e.y=b.introGoal.y;sweep(e,old,e);if(Math.floor(b.age/.5)!==Math.floor((b.age-dt)/.5)&&b.age<tune.enterDuration)a.playSound('chonksStep');if(b.age>=tune.enterDuration+tune.challengeDuration){setPhase(e,'idle');a.setMsg('Bootstomp · Hold his footprint, then rub out the fallen patches!');}return;}
+  if(b.phase==='intro'){const t=Math.min(1,b.age/tune.enterDuration),old={x:e.x,y:e.y};e.x=b.introStart.x+(b.introGoal.x-b.introStart.x)*t;e.y=b.introGoal.y;sweep(e,old,e);if(Math.floor(b.age/.6)!==Math.floor((b.age-dt)/.6)&&b.age<tune.enterDuration)a.playSound('chonksStep');if(b.age>=tune.enterDuration+tune.challengeDuration){setPhase(e,'idle');a.setMsg('Bootstomp · Hold his footprint, then rub out the fallen patches!');}return;}
   if(b.phase==='idle'){if(b.age>=.8)chooseAttack(e);return;}
   if(b.phase==='windup'){
    if(b.age>=tune.charge){if(pressure(e)>=tune.threshold){a.cancelPaperPress();setPhase(e,'stumble');a.playSound('boingBounce');a.floatText(e.x,e.y-75,'BAD FOOTING!','#386db0');}else{setPhase(e,'impact');launchRipple(e);}}return;
