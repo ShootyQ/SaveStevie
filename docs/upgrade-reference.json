@@ -1,5 +1,5 @@
 {
-  "version": "0.1.116",
+  "version": "0.1.117",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -318,6 +318,54 @@
       "synergies": [
         "Stevie the Unreasonable"
       ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "id": "Margin of Error",
+      "name": "Margin of Error",
+      "category": "Walls / shapes",
+      "effect": "Erase an end of a paid, open 55–260px wall to hinge it at the other end. The next ordinary monster swings it through a safe arc, sweeping enemies away from Stevie. One hinge per wall; up to four ready gates. No ink refund for converted walls.",
+      "rarities": "rare",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "id": "Stevie's Terrible Idea",
+      "name": "Stevie's Terrible Idea",
+      "category": "Drawing / ink economy",
+      "effect": "Finish a paid, open 55–260px stroke, hold its tip still for 1 second, then release. Spend 12 extra ink to crumple it into a rolling boulder carrying your ink effects. Rolls along the stroke direction, then unfolds at half its remaining HP if room permits. 8-second cooldown; no ink refunds or repeat crumpling. Bosses resist the roll.",
+      "rarities": "legendary",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "id": "Spitball Express",
+      "name": "Spitball Express",
+      "category": "Stevie / paper balls / survival",
+      "effect": "Requires permanent paper balls and Circle Studies. Allows at least two active turrets. Draw a paid line from one turret to another: the first sends its shots along it, charging them for 75% extra damage before the far turret fires. Break the line or lose either turret and the delivery stops. Draw direction sets the route.",
+      "rarities": "rare",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "id": "Red Pen Corrections",
+      "name": "Red Pen Corrections",
+      "category": "Stevie / paper balls / survival",
+      "effect": "A red correction mark appears over an ordinary monster. Rub the mark to recruit it for 8 seconds: it throws paper balls at enemies, then runs away. One friend at a time; a new mark becomes available after 12 seconds. Bosses and specialist monsters cannot be recruited.",
+      "rarities": "legendary",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
       "source": "js/upgrades.js"
     },
     {
@@ -1574,6 +1622,58 @@
       "name": "Stevie Has Had Enough",
       "category": "Stevie / paper balls / survival",
       "effect": "Improve paper-ball damage with diminishing gains toward 30 base damage. Each level shortens throws by 0.14s, down to 0.45s.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "id": "Margin of Error",
+      "name": "Margin of Error",
+      "category": "Walls / shapes",
+      "effect": "Erase an end of a paid, open 55–260px wall to hinge it at the other end. The next ordinary monster swings it through a safe arc, sweeping enemies away from Stevie. One hinge per wall; up to four ready gates. No ink refund for converted walls.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "id": "Stevie's Terrible Idea",
+      "name": "Stevie's Terrible Idea",
+      "category": "Drawing / ink economy",
+      "effect": "Finish a paid, open 55–260px stroke, hold its tip still for 1 second, then release. Spend 12 extra ink to crumple it into a rolling boulder carrying your ink effects. Rolls along the stroke direction, then unfolds at half its remaining HP if room permits. 8-second cooldown; no ink refunds or repeat crumpling. Bosses resist the roll.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "id": "Spitball Express",
+      "name": "Spitball Express",
+      "category": "Stevie / paper balls / survival",
+      "effect": "Requires permanent paper balls and Circle Studies. Allows at least two active turrets. Draw a paid line from one turret to another: the first sends its shots along it, charging them for 75% extra damage before the far turret fires. Break the line or lose either turret and the delivery stops. Draw direction sets the route.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "id": "Red Pen Corrections",
+      "name": "Red Pen Corrections",
+      "category": "Stevie / paper balls / survival",
+      "effect": "A red correction mark appears over an ordinary monster. Rub the mark to recruit it for 8 seconds: it throws paper balls at enemies, then runs away. One friend at a time; a new mark becomes available after 12 seconds. Bosses and specialist monsters cannot be recruited.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",

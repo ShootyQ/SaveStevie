@@ -1848,3 +1848,24 @@ html.desktop-ui #pauseOverlay .pause-reference,html.desktop-ui #pauseOverlay .pa
    edges all continue to use the same existing one-CSS-pixel world coordinates. */
 html.desktop-ui #app > .panel{width:100%;max-width:1286px;max-height:806px;align-self:center}
 html.desktop-ui #app > .hud{width:100%;max-width:1286px;align-self:center}
+
+/* Stevie's kept page: the same torn scraps and pencil lettering as his menus. */
+#waveOverlay .wave-clear-book{position:relative;background:#f6f0df url('assets/art/ui/recess-sheet.svg') center/100% 100%;border:0;border-radius:8px 17px 12px 7px;box-shadow:6px 9px 0 #423b3429;padding:28px;isolation:isolate}
+#waveOverlay .wave-summary-body{position:relative;padding:5px 3px 8px}
+#waveOverlay .section-kicker{font-family:'Stevie Pencil',cursive;letter-spacing:1px;color:#77664b;font-size:14px}
+#waveOverlay .wave-pass-stamp{position:absolute;right:12px;top:5px;transform:rotate(9deg);font-family:'Stevie Pencil',cursive;font-weight:bold;font-size:23px;letter-spacing:2px;border:3px double #a65b4f;border-radius:3px 8px 4px 6px;padding:3px 9px;color:#a65b4f;opacity:.8}
+#waveOverlay .wave-heading{justify-content:center;gap:10px;margin:12px 0 0}
+#waveOverlay .wave-heading h2{transform:rotate(-1deg);font-size:clamp(28px,4vw,42px)}
+#waveOverlay .wave-stevie-note{text-align:center;font-family:'Stevie Pencil',cursive;color:#6c765a;font-size:20px;transform:rotate(-2deg);margin:2px 0 15px}
+#waveOverlay .wave-grade{background:transparent url('assets/art/ui/menu-scrap.png') center/100% 145% no-repeat;border:0;box-shadow:none;transform:rotate(-3deg);width:64%;padding:10px 18px;margin:14px auto 20px;color:#477440;font-size:54px}
+#waveOverlay .summary{gap:10px 14px;padding:0 5px}
+#waveOverlay .summary>div{background:transparent url('assets/art/ui/menu-scrap.png') center/100% 145% no-repeat;border:0;border-radius:0;box-shadow:none;font-family:'Stevie Pencil',cursive;font-size:20px;padding:12px 14px;align-items:center}
+#waveOverlay .summary>div:nth-child(odd){transform:rotate(-1.3deg)}
+#waveOverlay .summary>div:nth-child(even){transform:rotate(1deg)}
+#waveOverlay .summary span{font-size:24px}
+#waveOverlay .wave-run-details>summary,#waveOverlay .score-details>summary{font-family:'Stevie Pencil',cursive;font-size:18px;color:#566958;padding:7px 0}
+#waveOverlay .scrap-summary{font-family:'Stevie Pencil',cursive;font-size:16px}
+#waveOverlay #continueBtn{font-size:28px;min-height:56px;color:#294e3c;outline:2px solid #66836d;outline-offset:-9px;border-radius:5px 9px 4px 8px}
+#waveOverlay #waveRestartTestBtn{align-self:center;width:auto;max-width:100%;background:none;border:1px dashed #a59a7e;box-shadow:none;font-size:17px;min-height:38px;padding:6px 16px;margin:6px auto;opacity:.85}
+@media(max-width:600px){#waveOverlay .wave-clear-book{padding:20px 16px}#waveOverlay .wave-pass-stamp{font-size:17px;right:2px;top:0}#waveOverlay .section-kicker{font-size:11px}#waveOverlay .wave-stevie-note{font-size:17px}#waveOverlay .summary>div{font-size:17px;padding:10px}#waveOverlay .summary span{font-size:20px}#waveOverlay .wave-grade{margin:12px auto;font-size:44px}#waveOverlay #continueBtn{font-size:26px}}
+@media(max-height:650px){#waveOverlay .wave-clear-book{padding:14px}#waveOverlay .wave-stevie-note{font-size:16px;margin:0 0 6px}#waveOverlay .wave-grade{font-size:36px;margin:5px auto}#waveOverlay .summary>div{padding:7px 10px;font-size:16px}#waveOverlay .summary span{font-size:19px}}

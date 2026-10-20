@@ -222,6 +222,12 @@ game.catalog.upgrades = [
   {name:'Really Good Rocks',cat:'stevie',desc:'A stronger paper-ball damage boost, with diminishing gains toward 30 base damage. Each level shortens throws by 0.08s, down to 0.55s.',apply:()=>game.api.applyRockUpgrade('Really Good Rocks')},
   {name:'Stevie Has Had Enough',cat:'stevie',desc:'Improve paper-ball damage with diminishing gains toward 30 base damage. Each level shortens throws by 0.14s, down to 0.45s.',apply:()=>game.api.applyRockUpgrade('Stevie Has Had Enough')},
 
+  // One-time drawing toys: fixed rarity, no effect slot.
+  {name:'Margin of Error',exclusiveRarity:'rare',cat:'defense',desc:'Erase an end of a paid, open 55–260px wall to hinge it at the other end. The next ordinary monster swings it through a safe arc, sweeping enemies away from Stevie. One hinge per wall; up to four ready gates. No ink refund for converted walls.',apply:()=>{}},
+  {name:"Stevie's Terrible Idea",exclusiveRarity:'legendary',cat:'draw',desc:'Finish a paid, open 55–260px stroke, hold its tip still for 1 second, then release. Spend 12 extra ink to crumple it into a rolling boulder carrying your ink effects. Rolls along the stroke direction, then unfolds at half its remaining HP if room permits. 8-second cooldown; no ink refunds or repeat crumpling. Bosses resist the roll.',apply:()=>{}},
+  {name:'Spitball Express',exclusiveRarity:'rare',cat:'stevie',desc:'Requires permanent paper balls and Circle Studies. Allows at least two active turrets. Draw a paid line from one turret to another: the first sends its shots along it, charging them for 75% extra damage before the far turret fires. Break the line or lose either turret and the delivery stops. Draw direction sets the route.',apply:()=>{}},
+  {name:'Red Pen Corrections',exclusiveRarity:'legendary',cat:'stevie',desc:'A red correction mark appears over an ordinary monster. Rub the mark to recruit it for 8 seconds: it throws paper balls at enemies, then runs away. One friend at a time; a new mark becomes available after 12 seconds. Bosses and specialist monsters cannot be recruited.',apply:()=>{}},
+
   // Economy / luck
   {name:'Loaded Deck',cat:'economy',desc:'Future normal rewards cannot roll below Uncommon.',apply:()=>game.state.stats.uncommonFloor=true},
   {name:'Reroll Coupon',cat:'economy',desc:'+2 rerolls immediately.',apply:()=>game.state.rerolls=Math.min(5,game.state.rerolls+2)},
@@ -242,8 +248,9 @@ game.catalog.upgrades = [
   {name:'Death Ink',cat:'ink',desc:'Per level: +5 base wall damage per second. Physical hits deal bonus damage against enemies at half health or lower.',apply:()=>game.state.stats.wallDamage+=5},
 ];
 
-const oneTimeUpgrades = new Set(['Doodle Stitch','Loaded Deck','Collector','Greedy Goblin']);
+const oneTimeUpgrades = new Set(['Margin of Error',"Stevie's Terrible Idea",'Spitball Express','Red Pen Corrections','Doodle Stitch','Loaded Deck','Collector','Greedy Goblin']);
 function upgradeAvailable(u){
+  if(u.name==='Spitball Express'&&!game.api.devRunActive()){const l=game.api.notebookSnapshot().levels;if(!l.rocks||!l.circles)return false;}
   if(u.name==='Electric Rocks'&&game.state.stats.electricRocks>=6)return false;
   if(oneTimeUpgrades.has(u.name)&&game.state.stacks[u.name])return false;
   if(u.name==='Greedy Goblin'&&game.state.stats.extraChoice)return false;
@@ -285,6 +292,7 @@ const upgradeArtGroups=[
  ['Pocket Rocks','Better Rocks','Emergency Medicine','Really Good Rocks','Stevie Has Had Enough','Loaded Deck','Reroll Coupon','Collector','Greedy Goblin']
 ];
 function upgradeArtworkInfo(u){
+ const toys=['Margin of Error',"Stevie's Terrible Idea",'Spitball Express','Red Pen Corrections'],toy=toys.indexOf(u.name);if(toy>=0)return {file:'assets/art/upgrades/utility-toys.png',grid:2,x:toy%2,y:Math.floor(toy/2)};
  if(u.name==='Electric Ink'&&u.rarity==='legendary')return {file:'assets/art/upgrades/tesla.svg',grid:1,x:0,y:0};
  if(u.name==='Frost Ink'&&u.rarity==='legendary')return {file:'assets/art/upgrades/iceberg.svg',grid:1,x:0,y:0};
  if(u.name==='Fire Ink'&&u.rarity==='legendary')return {file:'assets/art/upgrades/backdraft.svg',grid:1,x:0,y:0};
@@ -295,6 +303,7 @@ function upgradeArtworkInfo(u){
  return null;
 }
 function legacyUpgradeArtwork(u){
+ if(['Margin of Error',"Stevie's Terrible Idea",'Spitball Express','Red Pen Corrections'].includes(u.name))return 'assets/art/upgrades/loaded-deck.svg';
  if(u.name==='Electric Rocks')return 'assets/art/electric.png';
  if(u.name==='Clean Erasing')return 'assets/art/upgrades/recycling.svg';
  const existing={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos','Fine Tip':'pencil','Stevie Has Had Enough':'pencil'};

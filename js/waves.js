@@ -123,6 +123,7 @@ function resetRun(options={}){
 }
 
 function startWave(options={}){
+  game.api.resetUtilityToys();
   game.api.resetCircleShapes();
   game.api.beginScoreWave();
   game.api.resetWaveFinale();
@@ -154,7 +155,7 @@ function waveComplete(){
   if(game.api.waveFinaleActive())return;
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending()||(game.state.wave%5!==0&&game.state.enemies.length>0)||(game.state.wave%5===0&&!game.api.bossFightResolved()))return;
   game.api.stopSoundEffects();
-  game.state.betweenWaves=true;game.api.resetCircleShapes();
+  game.state.betweenWaves=true;game.api.resetUtilityToys();game.api.resetCircleShapes();
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
   game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetBackdraft();game.api.resetTesla();
@@ -175,6 +176,7 @@ function waveComplete(){
   game.dom.$('inkBonus').textContent='+'+inkBonus;
   game.dom.$('hpBonus').textContent='+'+hpBonus;
   game.dom.$('waveScore').textContent=total;
+  game.dom.$('waveStevieNote').textContent=['that counts as homework, right?','still got all my fingers. probably.','please do not tell my teacher.','that was almost a very bad idea.','i am keeping this page.','one more page. then snacks.'][game.state.wave%6];
   game.dom.$('waveClearTitle').textContent='Wave '+game.state.wave+' cleared!';
 
   if(game.state.wave===20&&!game.state.endless){
@@ -195,6 +197,7 @@ function proceedAfterWave(){
 }
 
 function returnToMenu(){
+  game.api.resetUtilityToys();
   game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
   game.api.resetSynergyReveals();
@@ -211,6 +214,7 @@ function returnToMenu(){
   game.dom.startOverlay.style.display='grid';game.api.selectMusicTrack('splash');game.api.updateUI();game.dom.$('startBtn').focus?.();
 }
 function gameOver(){
+  game.api.resetUtilityToys();
   game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
   game.api.resetSynergyReveals();

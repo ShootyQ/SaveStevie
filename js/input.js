@@ -20,6 +20,7 @@ function finishStroke(commit=true){
  game.api.cancelPaperRub();game.api.cancelChonksRub();game.api.resetScrubberRub();
  if(commit){if(!game.api.finishLiveWall()&&game.state.drawing&&game.state.currentWall)game.api.createWall(game.state.currentWall);}else game.api.cancelLiveWall();
  game.state.drawing=false;game.state.currentWall=null;game.api.stopSoundEffects('scribble');game.api.stopSoundEffects('draw');game.api.stopSoundEffects('erase');if(lift)game.api.playSound('pencilLift');
+ game.api.utilityPointer?.(null,false);
  const id=strokePointer;strokePointer=null;rightDrag=false;lastPoint=null;cursor=null;erasePoint=null;
  if(id!==null&&game.dom.canvas.hasPointerCapture?.(id))game.dom.canvas.releasePointerCapture(id);
  syncDrawingControls();
@@ -32,7 +33,7 @@ function endDraw(){
  aimKeys.clear();held=false;toggled=false;modifierPointer=null;finishStroke(true);
 }
 function changeEraserMode(change){
- const before=eraserActive();change();const after=eraserActive();
+ game.api.utilityPointer?.(null,false);const before=eraserActive();change();const after=eraserActive();
  if(before!==after){erasePoint=lastPoint?{...lastPoint}:null;if(before&&canPaint())game.api.releasePaperPress();else game.api.cancelPaperPress();game.api.resetWhiteToolsStroke?.();game.api.resetBootstompRub?.();game.api.stopSoundEffects('draw');game.api.stopSoundEffects('erase');game.api.resetCrayonEraseStroke();game.api.resetCatapultEraseStroke();game.api.cancelPaperRub();game.api.cancelChonksRub();game.api.resetScrubberRub();}
  if(before!==after&&strokePointer!==null&&canPaint()){
   if(after){game.api.beginPaperPress(lastPoint);if(!game.api.finishLiveWall()&&game.state.currentWall)game.api.createWall(game.state.currentWall);game.state.currentWall=null;game.api.stopSoundEffects('scribble');cursor={...lastPoint,r:20};erasePoint={...lastPoint};}
@@ -132,6 +133,7 @@ game.dom.canvas.addEventListener('pointerdown',e=>{
  const erase=game.api.mouseControl(e)==='erase'||eraserActive();
  if(!erase&&!game.api.canStartStroke(game.api.pointerPos(e))){game.api.setMsg('Not enough ink to start this stroke. Let it refill, or start from a free/discounted route.');game.api.showDesktopInkFeedback?.(e);return;}
  e.preventDefault?.();strokePointer=e.pointerId;rightDrag=game.api.mouseControl(e)==='erase';lastPoint=game.api.pointerPos(e);game.state.drawing=true;game.state.currentWall=erase?null:[lastPoint];game.dom.canvas.setPointerCapture(e.pointerId);
+ game.api.utilityPointer?.(lastPoint,!erase);
  if(erase){game.api.beginPaperPress(lastPoint);cursor={...lastPoint,r:20};erasePoint={...lastPoint};}
  else if(game.api.whitePencilPath?.(lastPoint,lastPoint,true))game.state.currentWall=null;syncDrawingControls();
 });
@@ -141,6 +143,7 @@ game.dom.canvas.addEventListener('pointermove',e=>{
  if(e.pointerId!==strokePointer)return;
  if(!canPaint()){cancelDrawingInput();return;}
  const p=game.api.pointerPos(e);
+ game.api.utilityPointer?.(p,!eraserActive());
  if(eraserActive()){
   const pressing=game.api.movePaperPress(p);
   // A click is not a rub. Accumulate slow movement from an anchor so small
@@ -148,7 +151,7 @@ game.dom.canvas.addEventListener('pointermove',e=>{
   if(!erasePoint)erasePoint={...lastPoint};
   if(!pressing&&game.api.dist(erasePoint.x,erasePoint.y,p.x,p.y)>=6){
    game.api.sustainSound('erase');game.api.eraseWallPath(erasePoint,p,20);
-   if(!game.api.whiteToolsEraseHandled?.()&&!game.api.bootstompEraseHandled?.())game.api.queuePaperRub(erasePoint,p,20);
+   if(!game.api.whiteToolsEraseHandled?.()&&!game.api.bootstompEraseHandled?.()&&!game.api.utilityEraseHandled?.())game.api.queuePaperRub(erasePoint,p,20);
    erasePoint={...p};
   }
   cursor={...p,r:20};

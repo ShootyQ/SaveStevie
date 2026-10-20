@@ -83,7 +83,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button><button class="paper-slip desktop-quit-entry" id="splashQuitBtn" hidden>Quit to desktop</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.116</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.117</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -132,9 +132,10 @@
 
     <div class="overlay" id="waveOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="waveClearTitle">
       <div class="cardbox wave-clear-book">
-        <div class="wave-summary-body"><span class="section-kicker">ANOTHER PAGE SAVED</span>
+        <div class="wave-summary-body"><span class="section-kicker">ANOTHER PAGE SAVED</span><span class="wave-pass-stamp" aria-hidden="true">PASSED!</span>
         <p id="waveChapter" class="scrap-summary"></p>
         <div class="wave-heading"><canvas id="waveStevie" width="128" height="136" role="img" aria-label="Stevie celebrating the cleared wave"></canvas><h2 id="waveClearTitle">Wave Cleared!</h2></div>
+        <p id="waveStevieNote" class="wave-stevie-note">still got all my fingers. probably.</p>
         <details class="wave-run-details"><summary>Your run so far</summary><div class="stats wave-stats">
           <div class="pill">Wave <span id="wave">1</span></div>
           <div class="pill">Score <span id="score">0</span></div>
@@ -437,6 +438,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.117 · Very questionable school supplies</h3><p>Four one-time utilities add hinged walls, rolling ink boulders, charged turret deliveries and temporarily recruited monsters, with custom drawings and animated cues. Spitball Express requires permanent paper balls and Circle Studies, and allows two turrets. Rare unlocks stay Rare; the two Legendary toys use reserved Legendary offers. The wave-clear page now uses crooked paper scraps, a teacher’s stamp and Stevie’s notes.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.116 · A head start and tougher paper cannons</h3><p>Unlock Head Start for 45 scraps to choose a Common upgrade before each new run. Fat Marker is retired; Thick Ink remains the wall-durability upgrade and now pairs with Blast for Heavy Artillery. Rubble Ruff can gradually erase reinforced paper turrets: they fade as their HP drops, but keep their full firing power until erased.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.115 · Bootstomp brings backup</h3><p>Bootstomp mixes his footprint counters with double shockwaves: draw walls to catch each wave before it reaches Stevie. While relocating, he winds up and kicks nearby helpers over walls toward alternating sides of the fort, with marked landings and airborne arcs. His original stomp timing and fallen erasing windows are restored. The slower entrance, reduced helper stream and faint erased patches remain.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.114 · An entrance with less rush</h3><p>Bootstomp’s combat walking and tantrum speed are restored. His entrance travel now takes 2.4 seconds, half the original arrival speed, and his helper arrival rate is 30% lower. Wider PC positioning and faint erased patches remain.</p></article>
@@ -816,6 +818,7 @@
 <script src="js/chonks-shield.js"></script>
 <script src="js/crayon-boss.js"></script>
 <script src="js/circle-shapes.js"></script>
+<script src="js/utility-toys.js"></script>
 <script src="js/loop.js"></script>
 <script src="js/save-backup.js"></script>
 <script src="js/beta-scraps.js"></script>

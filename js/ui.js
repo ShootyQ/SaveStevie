@@ -115,6 +115,10 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
   const f=v=>Number(v.toFixed(2)),s=game.state.stats,t=game.api.supportInkTuning(n),r=game.api.remainingInkTuning(n);
   const effects={
     'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${f(game.api.regenStackEffect('Quick Refill',n))} ink/s; diminishing returns`,
+    'Margin of Error':()=>game.catalog.upgrades.find(u=>u.name==='Margin of Error').desc,
+    "Stevie's Terrible Idea":()=>game.catalog.upgrades.find(u=>u.name==="Stevie's Terrible Idea").desc,
+    'Spitball Express':()=>game.catalog.upgrades.find(u=>u.name==='Spitball Express').desc,
+    'Red Pen Corrections':()=>game.catalog.upgrades.find(u=>u.name==='Red Pen Corrections').desc,
     'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 per level`,
     'Fine Tip':()=>`${f((1-Math.pow(.88,n))*100)}% cheaper strokes (multiplicative)`,
     'Lucky Scribble':()=>`+${8*n} Luck — better rarity odds on rewards and rerolls`,

@@ -43,6 +43,7 @@ function update(dt){
     if(w.life<=0)game.state.walls=game.state.walls.filter(x=>x!==w);
   }
 
+  game.api.updateUtilityToys(dt);
   game.api.updateCircleShapes(dt);
   game.api.updateStevie(dt);game.api.updateProjectiles(dt);game.api.updateEnemyShots(dt);
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
