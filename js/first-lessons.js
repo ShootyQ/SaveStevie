@@ -222,6 +222,9 @@ DoodleDefender.systems.firstLessons=function(game){
  window.addEventListener('blur',cancelLessonGesture);
  window.addEventListener('resize',()=>{if(firstLessonActive())cancelLessonGesture();updateStevieGuides();});
  window.addEventListener('scroll',updateStevieGuides,true);
+ // Fonts and translated/wrapped notes can settle after the first placement.
+ if(typeof ResizeObserver!=='undefined')new ResizeObserver(updateStevieGuides).observe($('scrapCoachCard'));
+ document.fonts?.ready.then(updateStevieGuides);
  window.visualViewport?.addEventListener('resize',updateStevieGuides);
  const api={adoptLessonBackup:value=>{seen={draw:value.draw,erase:value.erase};},dismissFirstLesson,cancelLessonGesture,beginFirstLesson,finishFirstLesson,firstLessonActive,lessonSnapshot,resetFirstLessons,lessonCanPaint,lessonPointerDown,lessonPointerMove,lessonPointerUp,lessonEraserDown,lessonEraserUp,lessonEraserClick,drawFirstLesson,moveFirstLesson,showScrapCoach,updateStevieGuides,handleStevieGuideKey,setFirstLessonsEnabled:value=>{enabled=!!value;}};
  Object.assign(game.api,api);return api;
