@@ -1882,3 +1882,22 @@ html.desktop-ui #app > .hud{width:100%;max-width:1286px;align-self:center}
   #specializeOverlay .scard h3{font-size:18px;margin-bottom:5px}
   #specializeOverlay .scard p{font-size:13px;line-height:1.3}
 }
+
+/* Touch play uses the whole sheet; only the floating buttons catch fingers. */
+:is(html.native-app,html:not(.desktop-ui)) body{display:block;padding:0;background:var(--paper)}
+:is(html.native-app,html:not(.desktop-ui)) #app{position:fixed;inset:0;width:100%;height:100%;max-width:none;max-height:none;padding:0;gap:0}
+:is(html.native-app,html:not(.desktop-ui)) #app>.panel{width:100%;flex:1;min-height:0;border:0;border-radius:0;box-shadow:none}
+:is(html.native-app,html:not(.desktop-ui)) #app>.hud{position:absolute;z-index:6;inset:calc(6px + var(--native-top,env(safe-area-inset-top,0px)) + var(--dev-inset,0px)) calc(6px + var(--native-right,env(safe-area-inset-right,0px))) auto calc(6px + var(--native-left,env(safe-area-inset-left,0px)));padding:0;background:transparent;border:0;gap:5px;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 68px;grid-template-areas:'ink hp time'}
+:is(html.native-app,html:not(.desktop-ui)) #app>.hud .box{padding:4px 5px;background:#fffdf0dc;border-width:1px;border-radius:7px;box-shadow:0 1px 3px #493d2420}
+:is(html.native-app,html:not(.desktop-ui)) #app>.hud .bar{height:7px}
+:is(html.native-app,html:not(.desktop-ui)) #app>.bottom{position:absolute;z-index:8;inset:auto calc(10px + var(--native-right,env(safe-area-inset-right,0px))) calc(10px + var(--native-bottom,env(safe-area-inset-bottom,0px))) calc(10px + var(--native-left,env(safe-area-inset-left,0px)));height:auto;min-height:0;flex:none;display:flex;justify-content:space-between;align-items:flex-end;padding:0;gap:12px;background:none;border:0;box-shadow:none;pointer-events:none}
+:is(html.native-app,html:not(.desktop-ui)) #app>.bottom button{pointer-events:auto;border:1px solid #8d967c;border-radius:14px;background:#fff9e9eb;color:#273e3c;box-shadow:0 3px 0 #5c62465c,0 3px 10px #332b2025}
+:is(html.native-app,html:not(.desktop-ui)) #app>.bottom #pauseBtn{flex:0 0 84px;max-width:84px;height:48px;min-height:48px;font-size:20px;background:#d8e9d6ed}
+:is(html.native-app,html:not(.desktop-ui)) #app>.bottom #eraserBtn{flex:0 0 var(--eraser-button-width);height:var(--eraser-button-height);min-height:max(48px,var(--eraser-button-height));max-width:var(--eraser-button-width);font-size:21px}
+:is(html.native-app,html:not(.desktop-ui)) #app>.bottom #eraserBtn.is-erasing{background:#f7c9d5;border:2px solid #793a51}
+:is(html.native-app,html:not(.desktop-ui)) #app>.bottom #fullscreenBtn{display:none}
+:is(html.native-app,html:not(.desktop-ui)) #app.menu-view>.bottom{display:none}
+:is(html.native-app,html:not(.desktop-ui)) .score-hud{left:calc(10px + var(--native-left,env(safe-area-inset-left,0px)));bottom:calc(max(48px,var(--eraser-button-height)) + 22px + var(--native-bottom,env(safe-area-inset-bottom,0px)))}
+:is(html.native-app,html:not(.desktop-ui)) #freehandMeter{top:calc(52px + var(--native-top,env(safe-area-inset-top,0px)) + var(--dev-inset,0px))!important}
+:is(html.native-app,html:not(.desktop-ui)) #bossOvertime{top:calc(52px + var(--native-top,env(safe-area-inset-top,0px)) + var(--dev-inset,0px))}
+:is(html.native-app,html:not(.desktop-ui)) .scrubber-hint{bottom:calc(max(48px,var(--eraser-button-height)) + 22px + var(--native-bottom,env(safe-area-inset-bottom,0px)))}
