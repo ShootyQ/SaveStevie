@@ -25,6 +25,7 @@ const defs=game.catalog.enemyDefs={
     jamling:{r:10,hp:26,speed:26,dmg:5,color:'#928276'},
     mini:{r:7,hp:12,speed:49,dmg:5,color:'#a56cc1'},
     boss:{r:28,hp:270,speed:18,dmg:27,color:'#962f3d'},
+    bootstomp:{r:42,hp:150,speed:110,dmg:14,color:'#315bc8',boss:true},
     wobblechomp:{r:22,hp:380,speed:120,dmg:12,color:'#dfbd29',boss:true},
     'wobble-tooth':{r:10,hp:6,speed:45,dmg:7,color:'#e6d4a7'},
     stapler:{r:30,hp:410,speed:19,dmg:27,color:'#c98a32',boss:true},
@@ -44,7 +45,7 @@ function enemyType(){
   const pool=game.state.wave>=12?['grunt']:['grunt','grunt'];
   for(const m of game.catalog.monsters){
     if(m.type==='catapulter'&&!game.api.canSpawnCatapulter())continue;
-    if(m.wave<=game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser','mr-glue'].includes(m.type)){pool.push(m.type);if(game.state.wave>=12&&['sniper','flanker','wallpuller','catapulter','papertearer'].includes(m.type))pool.push(m.type,m.type);}
+    if(m.wave<=game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','bootstomp','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser','mr-glue'].includes(m.type)){pool.push(m.type);if(game.state.wave>=12&&['sniper','flanker','wallpuller','catapulter','papertearer'].includes(m.type))pool.push(m.type,m.type);}
   }
   const weighted=game.state.wave>=11?pool.flatMap(type=>type==='grunt'?[type]:[type,type]):pool;
   return game.api.pick(weighted.filter(type=>type!=='gnawer'||game.state.enemies.filter(e=>e.type==='gnawer'&&e.hp>0).length<2).filter(type=>!['wallpuller','papertearer'].includes(type)||!game.state.enemies.some(e=>e.type===type&&e.hp>0)).filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
@@ -52,7 +53,7 @@ function enemyType(){
 
 function bossTypeForWave(wave=game.state.wave){
   if(wave===20&&!game.state.endless)return 'eraser';
-  if(wave===10)return 'wobblechomp';
+  if(wave===10)return 'bootstomp';
   if(wave===15)return 'crayon';
   return 'boss';
 }
@@ -135,8 +136,8 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
   if(type==='catapulter')enemy.catapultId=game.api.registerCatapulter();
-  game.state.enemies.push(enemy);game.api.discoverMonster(type);
-  if(forceBoss){game.api.resetCircleShapes();const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;if(game.api.isWhiteBrother?.(enemy))game.api.initWhiteBrothers(enemy);if(game.api.isCrayonBoss?.(enemy))game.api.initCrayonBoss(enemy);bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
+  game.state.enemies.push(enemy);if(type==='bootstomp')game.api.initBootstomp(enemy);game.api.discoverMonster(type);
+  if(forceBoss){game.api.resetCircleShapes();if(game.api.isBootstomp?.(enemy))game.api.initBootstomp(enemy);const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;if(game.api.isWhiteBrother?.(enemy))game.api.initWhiteBrothers(enemy);if(game.api.isCrayonBoss?.(enemy))game.api.initCrayonBoss(enemy);bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isBootstomp?.(enemy))game.api.selectMusicTrack('wobblechomp');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
   return enemy;
 }
 
@@ -148,7 +149,7 @@ function killEnemy(e){
   game.state.kills++;game.state.waveKills++;game.api.awardKillScore(e);
   game.api.awardKillScraps(e);game.api.dropDoodleScrap(e);
   game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
-  if(e.waveBoss){if(game.api.isWhiteBrother?.(e))game.api.clearWhiteBrothers(e);if(game.api.isCrayonBoss?.(e))game.api.clearCrayonBoss(e);if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
+  if(e.waveBoss){if(game.api.isBootstomp?.(e))game.api.clearBootstomp(e);if(game.api.isWhiteBrother?.(e))game.api.clearWhiteBrothers(e);if(game.api.isCrayonBoss?.(e))game.api.clearCrayonBoss(e);if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
   game.api.burst(e.x,e.y,e.color,12);
 
   if(e.type==='eraser') game.state.finalBossDefeated=true;
@@ -590,7 +591,7 @@ function spawnWaveEnemies(dt){
   if(game.state.wave>=6&&groupsSpawned<2&&elapsed>=[20,40][groupsSpawned]){game.api.spawnChapterGroup();groupsSpawned++}
   game.state.spawnTimer-=dt;
   if(game.state.spawnTimer<=0){
-    const newcomers=game.catalog.monsters.filter(m=>m.wave===game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser','mr-glue'].includes(m.type));
+    const newcomers=game.catalog.monsters.filter(m=>m.wave===game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','bootstomp','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser','mr-glue'].includes(m.type));
     const newcomer=newcomers[introducedSpawned];
     const spawned=spawnScheduledEnemy(null,null,newcomer?.type||null,!!newcomer);
     if(newcomer&&spawned)introducedSpawned++;

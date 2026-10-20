@@ -4,13 +4,13 @@ let brains=new WeakMap(),marks=[],clock=0;
 const minFriendGain=70;
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
-function abilityImmune(e){return game.api.isWhiteBrother?.(e)||game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||game.api.isWobbleBoss(e);}
+function abilityImmune(e){return game.api.isBootstomp?.(e)||game.api.isWhiteBrother?.(e)||game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||game.api.isWobbleBoss(e);}
 function isFirstBoss(e){return e.waveBoss&&e.type==='boss'&&game.state.wave===5}
 function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/(1.1*1.2),helperCap:7,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:1.8,minThrowGain:minFriendGain}}
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
 const colors={boss:'#9b3549',stapler:'#ad741f',crayon:'#8751ac',eraser:'#b95176'};
 function bossBrain(e){let b=brains.get(e);if(!b){b={cd:3,cast:null,turn:0,moveCd:0,target:null,enclosed:false,enclosedAge:0,damageBudget:Math.max(30,e.maxHp*.045)*.5,contactCd:0,recovery:0,charge:0,action:null,repeat:0,helperCd:1.5,helperSerial:0,pickup:null};brains.set(e,b)}return b}
-function resetBossEncounters(){game.api.resetWhiteBrothers?.();game.api.resetCrayonBoss?.();brains=new WeakMap();marks=[];clock=0}
+function resetBossEncounters(){game.api.resetBootstomp?.();game.api.resetWhiteBrothers?.();game.api.resetCrayonBoss?.();brains=new WeakMap();marks=[];clock=0}
 function inside(e,w){let yes=false;const pts=w.pts;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const a=pts[i],b=pts[j];if((a.y>e.y)!==(b.y>e.y)&&e.x<(b.x-a.x)*(e.y-a.y)/(b.y-a.y)+a.x)yes=!yes}return yes}
 function nearestBossWall(e,range=150){let best=null;for(const w of game.state.walls){const p=game.api.nearestPointOnWall(e,w);if(!p)continue;const d=Math.hypot(p.x-e.x,p.y-e.y);if(d<range){range=d;best={wall:w,...p}}}return best}
 function updateBossDamageBudgets(dt){for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e),rate=Math.max(30,e.maxHp*.045);b.damageBudget=Math.min(rate*.5,b.damageBudget+rate*dt)}}
@@ -79,6 +79,7 @@ function pickupPathClear(e,n){const p=game.state.player,r=game.api.refugeBounds(
 
 function bossChaseScale(e){return isFirstBoss(e)&&bossBrain(e).pickup?firstBossTuning(e).chaseScale:1}
 function bossFriendHeld(n){
+ if(game.api.bootstompFriendHeld?.(n))return true;
  const e=n.bossOwner;if(!e||!isFirstBoss(e)||e.hp<=0||e.freeze>0||e.stun>0||!game.state.enemies.includes(e))return false;
  const c=bossBrain(e).cast;return c?.kind==='friend-fling'&&c.friend===n&&c.left>0&&n.hp>0&&n.freeze<=0&&n.stun<=0;
 }
@@ -213,6 +214,7 @@ function tryDriveByFling(e,dt){
  }
 }
 function updateBossEncounter(e,dt){
+ if(game.api.isBootstomp?.(e)){game.api.updateBootstomp(e,dt);return;}
  if(game.api.isWhiteBrother?.(e)){game.api.updateWhiteBrothers(e,dt);return;}
  if(game.api.isCrayonBoss?.(e)){game.api.updateCrayonBoss(e,dt);return}
  if(game.api.isWobbleBoss(e)){game.api.updateWobbleBoss(e,dt);return}
@@ -304,7 +306,7 @@ function updateBossFields(dt){clock+=dt;for(const e of game.state.enemies)if(e.w
   }
  }marks=marks.filter(m=>m.age<m.life);
 }
-function moveBossFields(dx,dy){game.api.moveCrayonFields?.(dx,dy);game.api.moveWobbleFields(dx,dy);moveFirstBossShots(dx,dy);for(const m of marks){m.x+=dx;m.y+=dy;m.originX+=dx;m.originY+=dy}for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e);if(game.api.isStapleBoss(e))game.api.moveStapleBoss(e,dx,dy);for(const p of [b.cast,b.target])if(p&&p!==game.state.player){p.x+=dx;p.y+=dy;for(const q of p.targets||[]){q.x+=dx;q.y+=dy}if(p.landing){p.landing.x+=dx;p.landing.y+=dy}}if(b.chargeX!==undefined){b.chargeX+=dx;b.chargeY+=dy}}}
+function moveBossFields(dx,dy){game.api.moveBootstomp?.(dx,dy);game.api.moveCrayonFields?.(dx,dy);game.api.moveWobbleFields(dx,dy);moveFirstBossShots(dx,dy);for(const m of marks){m.x+=dx;m.y+=dy;m.originX+=dx;m.originY+=dy}for(const e of game.state.enemies)if(e.waveBoss){const b=bossBrain(e);if(game.api.isStapleBoss(e))game.api.moveStapleBoss(e,dx,dy);for(const p of [b.cast,b.target])if(p&&p!==game.state.player){p.x+=dx;p.y+=dy;for(const q of p.targets||[]){q.x+=dx;q.y+=dy}if(p.landing){p.landing.x+=dx;p.landing.y+=dy}}if(b.chargeX!==undefined){b.chargeX+=dx;b.chargeY+=dy}}}
 function bossEncounterSnapshot(){return {marks:marks.map(m=>({x:m.x,y:m.y,age:m.age,kind:m.kind})),bosses:game.state.enemies.filter(e=>e.waveBoss).map(e=>{const b=bossBrain(e);return {type:e.type,wobble:game.api.isWobbleBoss(e)?game.api.wobbleSnapshot(e):null,staple:game.api.isStapleBoss(e)?game.api.stapleSnapshot(e):null,pickup:b.pickup?{x:b.pickup.friend.x,y:b.pickup.friend.y,left:b.pickup.left}:null,enclosed:b.enclosed,cast:b.cast?{kind:b.cast.kind,x:b.cast.x,y:b.cast.y,left:b.cast.left,targets:b.cast.targets?.map(p=>({...p})),landing:b.cast.landing?{...b.cast.landing}:undefined}:null,recovery:b.recovery,charge:b.charge,action:b.action?{...b.action}:null}})}}
 function drawLobTarget(ctx,x,y,progress){
  ctx.save();ctx.translate(x,y);ctx.strokeStyle='#b07535';ctx.fillStyle='rgba(190,122,48,.13)';ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,46,0,Math.PI*2);ctx.fill();ctx.setLineDash([5,4]);ctx.stroke();ctx.setLineDash([]);

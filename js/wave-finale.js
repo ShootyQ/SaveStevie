@@ -47,6 +47,7 @@ function drawWaveFinale(drawEnemy){
  if(!finale)return;
  const f=finale,e=f.enemy,ctx=game.dom.ctx,popAt=f.reduced?.22:1.02;
  ctx.save();ctx.translate(e.x,e.y);
+ if(e.type==='bootstomp'){ctx.restore();return;}
  if(f.age<popAt){
   const t=f.age/popAt,shake=f.reduced?0:Math.sin(f.age*55)*t*3;
   ctx.translate(shake,0);ctx.rotate(f.reduced?0:Math.sin(f.age*36)*t*.22);ctx.scale(1+t*.25,1-t*.13);

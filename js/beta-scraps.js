@@ -50,7 +50,7 @@ DoodleDefender.systems.betaScraps=function(game){
   const price=id==='start'?0:perk?game.api.notebookPerkPrice(n.perk):null,max=perk?.max??1;
   let reason='';
   if(n.later)reason='Coming later · not purchasable';
-  else if(n.perk==='circles'&&!game.api.shapeStudiesAvailable())reason='Beat wave 10 Wobblechomp to open Shapes';
+  else if(n.perk==='circles'&&!game.api.shapeStudiesAvailable())reason='Beat the wave 10 boss to open Shapes';
   else if(n.link)reason='Included with your Pencil Case ranks';
   else if(rank>=max)reason='Fully owned';
   else if(!game.api.canSpendScraps())reason='Finish this run before purchasing';
