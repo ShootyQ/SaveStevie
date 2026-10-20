@@ -8,7 +8,7 @@ const root=path.resolve(__dirname,'..');
   await page.goto('http://stevie.test/',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>testGame.api.artworkStatus().ready);
   const desktop=viewport.width>=600;
   await page.click('#splashHubBtn');assert.equal(await page.locator('#hubOverlay .desktop-page-nav').count(),0);
-  for(const id of ['hubMonstersBtn','hubToolBtn','hubNotebookBtn','hubBetaScrapsBtn','hubSettingsBtn','hubStatsBtn','hubChangelogBtn']){assert(await page.locator('#'+id).isVisible());if(desktop){const r=await page.locator('#'+id).boundingBox();assert(r.y>=0&&r.y+r.height<=viewport.height,'hub button fits '+id);}}
+  for(const id of ['hubMonstersBtn','hubToolBtn','hubNotebookBtn','hubSettingsBtn','hubStatsBtn','hubChangelogBtn']){assert(await page.locator('#'+id).isVisible());if(desktop){const r=await page.locator('#'+id).boundingBox();assert(r.y>=0&&r.y+r.height<=viewport.height,'hub button fits '+id);}}
   await page.screenshot({path:'/tmp/menu-hub-'+viewport.width+'x'+viewport.height+'.png'});await page.click('#hubSettingsBtn');
   if(desktop){
    assert.equal(await page.locator('#optionsOverlay .desktop-page-nav').count(),0);assert.equal(await page.locator('.desktop-settings-nav [role=tab]:visible').count(),6);

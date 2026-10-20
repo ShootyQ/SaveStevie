@@ -73,7 +73,7 @@ DoodleDefender.systems.desktopUi=function(game){
   const units=[],lists=[];
   for(const n of [...b.content.children]){
    if(n.hidden||getComputedStyle(n).display==='none')continue;
-   const list=n.matches('#notebookPerks,#monsterCards,#changelogEntries,#monsterIntroCards,#buildUpgrades,#buildSynergies,#buildDoodleScraps')?n:n.querySelector('#notebookPerks,#monsterCards,#changelogEntries,#monsterIntroCards,#buildUpgrades,#buildSynergies,#buildDoodleScraps');
+   const list=n.matches('#monsterCards,#changelogEntries,#monsterIntroCards,#buildUpgrades,#buildSynergies,#buildDoodleScraps')?n:n.querySelector('#monsterCards,#changelogEntries,#monsterIntroCards,#buildUpgrades,#buildSynergies,#buildDoodleScraps');
    if(list&&list.children.length){lists.push(list);for(const child of [...list.children])units.push({node:n,item:child});}
    else units.push({node:n,item:null});
   }

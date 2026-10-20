@@ -15,13 +15,13 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..')),native=proce
    return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
   });
   await page.goto('http://127.0.0.1:8001/');await page.waitForFunction(()=>testGame.api.artworkReady());await page.click('#splashHubBtn');await page.click('#hubNotebookBtn');
-  assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),1081);assert.equal(await page.locator('#notebookBuy-pencil').count(),0);assert.match(await page.textContent('#notebookNotice'),/81 scraps returned/);
+  assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),1081);assert.equal(await page.locator('#notebookOverlay').count(),0);await page.evaluate(()=>testGame.api.selectBetaNode('start'));await page.click('#betaBuyNode');await page.evaluate(()=>testGame.api.selectBetaNode('tool'));
   for(let rank=0;rank<=10;rank++){
-   await page.waitForFunction(()=>[...document.querySelectorAll('#notebookPerks .instrument-art')].every(e=>e.complete&&e.naturalWidth>0));
-   const art=page.locator('.tool-rank-comparison .tool-rank-art').first();assert.equal(await art.getAttribute('data-tool-rank'),String(rank));assert.match(await page.textContent('#notebookLoadout'),new RegExp((65+rank*8)+' wall HP'));
-   assert.equal(await art.locator('.tool-socket').count(),rank===10?4:rank>=6?3:2);for(const box of await art.locator('.tool-socket').evaluateAll(nodes=>nodes.map(e=>{const b=e.getBoundingClientRect();return {w:b.width,h:b.height};})))assert(Math.abs(box.w-box.h)<1,'socket remains round in small previews');assert.equal(await page.locator('#notebookOverlay').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true);
-   if([0,3,6,10].includes(rank)){await page.locator('#notebookBuy-tool').scrollIntoViewIfNeeded();if(viewport.width<600)await page.locator('#notebookOverlay .build-box').evaluate(e=>e.scrollTop=Math.max(0,e.scrollTop-160));await page.screenshot({path:'/tmp/tool-rank-'+viewport.width+'-'+rank+'.png'});}
-   if(rank<10)await page.click('#notebookBuy-tool');else assert(await page.locator('#notebookBuy-tool').isDisabled());
+   await page.waitForFunction(()=>[...document.querySelectorAll('#betaNodeNote .instrument-art')].every(e=>e.complete&&e.naturalWidth>0));
+   const art=page.locator('#betaNodeArt .case-tool.earned .tool-rank-art').last();assert.equal(await art.getAttribute('data-tool-rank'),String(rank));assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().levels.tool),rank);
+   assert.equal(await art.locator('.tool-socket').count(),rank===10?4:rank>=6?3:2);for(const box of await art.locator('.tool-socket').evaluateAll(nodes=>nodes.map(e=>{const b=e.getBoundingClientRect();return {w:b.width,h:b.height};})))assert(Math.abs(box.w-box.h)<1,'socket remains round in small previews');assert.equal(await page.locator('#betaNodeNote').evaluate(e=>e.scrollWidth<=e.clientWidth+1),true);
+   if([0,3,6,10].includes(rank)){await page.locator('#betaBuyNode').scrollIntoViewIfNeeded();await page.screenshot({path:'/tmp/tool-rank-'+viewport.width+'-'+rank+'.png'});}
+   if(rank<10)await page.click('#betaBuyNode');else assert(await page.locator('#betaBuyNode').isDisabled());
   }
   assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),831);
   await page.evaluate(()=>{testGame.api.closeInfo();testGame.api.resetRun({skipIntro:true});for(const name of ['Fire Ink','Frost Ink','Poison Ink','Electric Ink'])testGame.api.applyUpgrade({...testGame.catalog.upgrades.find(u=>u.name===name),rarity:'common'});testGame.api.openInfo('build');});

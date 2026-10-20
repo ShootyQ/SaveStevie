@@ -29,6 +29,9 @@ DoodleDefender.systems.runResults=function(game){
  function renderRunResults(victory,previousBest=game.api.bestRunScore()){
   const prefix=victory?'victory':'death',s=game.state,score=game.api.scoringSnapshot(),practice=game.api.devRunActive(),badge=game.dom.$(prefix+'RecordBadge');
   badge.hidden=!practice&&s.score<=previousBest;badge.textContent=practice?'Practice run · records unchanged':score.storageIssue?'New high score · this visit':'New high score!';
+  const menuFirst=!practice&&game.api.scrapLessonPending();
+  for(const id of victory?['newRunBtn','endlessBtn']:['deathNewRunBtn'])game.dom.$(id).hidden=menuFirst;
+  game.dom.$(victory?'victoryMenuBtn':'againBtn').textContent=menuFirst?'Main menu · visit Scrap Tree →':'Main menu';
   const highlights=runBuildHighlights();game.dom.$(prefix+'Highlights').innerHTML=highlights.map(h=>'<article class="result-upgrade">'+(h.upgrade?game.api.upgradeArtworkMarkup(h.upgrade,32):'<span class="result-note-mark" aria-hidden="true">✎</span>')+'<div><strong>'+h.name+'</strong><small>'+(h.note?h.rarity+' Doodle Scrap':h.legendary?'Legendary wall':'Run upgrade')+' · ×'+h.count+'</small></div></article>').join('')||'<p class="option-help">The starting pencil and a brave little Stevie. Your first upgrade is waiting after wave one.</p>';
   const synergies=[...s.synergies].map(name=>game.api.paperLabel(name));game.dom.$(prefix+'Synergies').textContent=synergies.length?'Synergies: '+synergies.slice(0,4).join(' · ')+(synergies.length>4?' · +'+(synergies.length-4)+' more':''):'No synergies this time. Another notebook, another experiment.';
   game.dom.$(prefix+'RunFacts').innerHTML=[['Wave reached',s.wave],['Monsters defeated',s.kills],['Best kill streak',score.run.bestStreak]].map(([label,value])=>'<div><span>'+label+'</span><strong>'+Number(value).toLocaleString('en-US')+'</strong></div>').join('');

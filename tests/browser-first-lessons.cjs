@@ -1,4 +1,4 @@
-// First-play lessons, native/desktop practice and required starter purchase.
+// First-play lessons, native/desktop practice and required Scrap Tree introduction.
 const {chromium}=require('playwright'),assert=require('assert'),fs=require('fs'),path=require('path');
 const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
 (async()=>{
@@ -61,14 +61,14 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   }
   for(let i=0;i<3;i++)await page.click('#lessonNext');
   assert.equal(await page.evaluate(()=>testGame.state.paused),false);assert.equal(await page.evaluate(()=>testGame.state.stats.ink),await page.evaluate(()=>testGame.state.stats.maxInk));assert.equal(await page.evaluate(()=>testGame.state.walls.length),0);
-  await page.evaluate(()=>{testGame.api.awardScraps(1);testGame.api.gameOver()});await page.click('#againBtn');
+  await page.evaluate(()=>{testGame.api.awardScraps(1);testGame.api.gameOver()});assert(!await page.locator('#deathNewRunBtn').isVisible());await page.click('#againBtn');
   assert(await page.locator('#scrapCoach').isVisible());assert(await page.locator('#startBtn').isDisabled());
   await page.screenshot({path:'/tmp/on-page-scrap-cover-'+viewport.width+'.png'});await page.keyboard.press('Tab');assert.equal(await page.evaluate(()=>document.activeElement.id),'splashHubBtn');await page.click('#splashHubBtn');
-  assert.match(await page.textContent('#scrapCoachProgress'),/2 of 3/);await page.click('#hubNotebookBtn');
-  assert.match(await page.textContent('#scrapCoachProgress'),/3 of 3/);const balance=await page.evaluate(()=>testGame.api.notebookSnapshot().scraps);
-  await page.screenshot({path:'/tmp/on-page-scrap-buy-'+viewport.width+'.png'});await page.click('#notebookBuy-starterEraser');
+  assert.match(await page.textContent('#scrapCoachProgress'),/2 of 5/);await page.click('#hubNotebookBtn');
+  assert.match(await page.textContent('#scrapCoachProgress'),/3 of 5/);const balance=await page.evaluate(()=>testGame.api.notebookSnapshot().scraps);
+  await page.screenshot({path:'/tmp/on-page-scrap-open-'+viewport.width+'.png'});await page.click('#beta-node-start');assert(await page.locator('#scrapCoachCard').evaluate(card=>{const r=card.getBoundingClientRect();return card.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'tree coach renders above map');assert.match(await page.textContent('#scrapCoachProgress'),/4 of 5/);await page.screenshot({path:'/tmp/on-page-scrap-buy-'+viewport.width+'.png'});await page.click('#betaBuyNode');assert.match(await page.textContent('#scrapCoachProgress'),/5 of 5/);await page.screenshot({path:'/tmp/on-page-scrap-done-'+viewport.width+'.png'});await page.click('#closeBetaScrapsBtn');
   assert(!await page.locator('#scrapCoach').isVisible());assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),balance);
-  await page.reload();await page.waitForFunction(()=>testGame.api.artworkReady());await page.click('#startBtn');assert(!await page.locator('#lessonOverlay').isVisible());assert.equal(await page.evaluate(()=>testGame.state.stats.eraseRefund),.3);
+  await page.reload();await page.waitForFunction(()=>testGame.api.artworkReady());await page.click('#startBtn');assert(!await page.locator('#lessonOverlay').isVisible());assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().betaPencilClaimed),true);assert.equal(await page.evaluate(()=>testGame.state.stats.eraseRefund),.25);await page.evaluate(()=>testGame.api.gameOver());assert(await page.locator('#deathNewRunBtn').isVisible());await page.click('#deathNewRunBtn');assert.equal(await page.evaluate(()=>testGame.state.running),true);
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);console.log('PASS:',viewport.width,'real-page tools, pause, HUD pointing, required actual menu buttons and saved lessons');await page.close();
  }
  }finally{await browser.close()}

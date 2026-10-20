@@ -324,13 +324,20 @@ unchanged. The optional `tests/browser-performance.cjs` benchmark has a
 combat hashes. See `docs/performance.md` for measured results and limits.
 
 
-## Notebook Scraps (first progression layer)
+## Scrap Tree (permanent progression)
 
-Open **Back of the Notebook** from the splash screen, defeat/victory screens,
-or Your Build. The permanent perks show current and next effects, rank
-caps, prices, and a preview of your next starting kit. Purchases are available
-outside an active run and apply on the next new run; they stack with run
-upgrades. Continuing Endless uses the current run's kit.
+Open **Notebook → Scrap Tree** from the main menu, or **Scrap Tree** in
+Settings. The tree replaces the original shop and keeps the same saved scrap
+bank and purchased ranks. Open a scrap to inspect its current/next effects and
+price; the separate purchase button spends scraps. Claim the free Fresh Pencil
+and follow connected branches. Purchases apply on the next new run and stack
+with run upgrades. Continuing Endless keeps the current run’s kit.
+
+After the first run earns scraps, its results require returning to the main
+menu. Stevie guides the player to the tree, shows how to inspect a scrap, and
+helps claim the free pencil without spending their earnings. Back completes the
+introduction; later results offer a new run again. Tutorial progress and existing
+purchases survive reloads. Reset game progress is available in Settings.
 
 Scraps are banked immediately: 1 per 25 kills (at most 8 per run), 1 per
 cleared wave, plus 6/8/10/12 for the four campaign chapter clears and 5 for

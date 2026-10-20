@@ -6,7 +6,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
  try{
  for(const viewport of [{width:1280,height:900},{width:393,height:851},{width:360,height:640},{width:851,height:393}]){
   const page=await browser.newPage({viewport,hasTouch:viewport.width<600}),errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieLessonsV1',JSON.stringify({draw:true,erase:true}));if(!localStorage.getItem('saveStevieNotebookV1'))localStorage.setItem('saveStevieNotebookV1',JSON.stringify({version:2,scraps:25,lifetimeScraps:40,levels:{starterEraser:1}}));localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');Object.defineProperty(Element.prototype,'requestFullscreen',{value:undefined});});
+  await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieLessonsV1',JSON.stringify({draw:true,erase:true}));if(!localStorage.getItem('saveStevieNotebookV1'))localStorage.setItem('saveStevieNotebookV1',JSON.stringify({version:2,scraps:25,lifetimeScraps:40,betaPencilClaimed:true,levels:{starterEraser:1,rocks:1}}));localStorage.setItem('saveStevieMonsterIntros','off');localStorage.setItem('saveStevieMusicMuted','yes');Object.defineProperty(Element.prototype,'requestFullscreen',{value:undefined});});
   await page.route('http://127.0.0.1:8001/**',route=>{
    const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;
    try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}
@@ -15,8 +15,8 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
   });
   await page.goto('http://127.0.0.1:8001/');await page.waitForFunction(()=>testGame.api.artworkReady()&&testGame.api.noteArtworkReady(),null,{polling:50});
-  await page.click('#splashHubBtn');await page.click('#hubNotebookBtn');await page.click('#notebookBuy-doodleScraps');assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),0);
-  await page.click('#closeNotebookBtn');await page.click('#closeHubBtn');await page.click('#startBtn');
+  await page.click('#splashHubBtn');await page.click('#hubNotebookBtn');await page.evaluate(()=>testGame.api.selectBetaNode('doodleScraps'));await page.click('#betaBuyNode');assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),0);
+  await page.click('#closeBetaScrapsBtn');await page.click('#closeHubBtn');await page.click('#startBtn');
   const drop=await page.evaluate(()=>{const g=testGame,random=Math.random;Math.random=()=>.5;g.api.startDoodleWave();Math.random=random;for(let i=0;i<8&&!g.api.doodleScrapsSnapshot().drop;i++){const e=g.api.spawnEnemy(false,null,null,'grunt');e.x=g.state.player.x+80;e.y=g.state.player.y-100;e.hp=0;g.api.killEnemy(e)}g.api.draw();return g.api.doodleScrapsSnapshot().drop});assert(drop);
   await page.screenshot({path:'/tmp/doodle-drop-'+viewport.width+'.png'});
   const canvas=await page.locator('#game').boundingBox(),size=await page.evaluate(()=>({w:testGame.state.W,h:testGame.state.H})),x=canvas.x+drop.x*canvas.width/size.w,y=canvas.y+drop.y*canvas.height/size.h;

@@ -52,13 +52,20 @@ DoodleDefender.systems.firstLessons=function(game){
   const belowLimit=Math.min(H-margin,...extra.filter(r=>r.top>focus.bottom).map(r=>r.top-10)),available=belowLimit-focus.bottom-gap;
   const maxHeight=W<600&&available>=140?available+'px':'';
   if(card.style.maxHeight!==maxHeight)card.style.maxHeight=maxHeight;
-  const box=card.getBoundingClientRect(),w=box.width||340,h=box.height||220;
+  const box=card.getBoundingClientRect(),w=box.width||340;let h=box.height||220;
   const cx=(focus.left+focus.right)/2,cy=(focus.top+focus.bottom)/2;
   const candidates=[
    {x:focus.right+gap,y:game.api.clamp(cy-h/2,margin,Math.max(margin,H-h-margin))},{x:focus.left-gap-w,y:game.api.clamp(cy-h/2,margin,Math.max(margin,H-h-margin))},
    {x:cx-w/2,y:focus.bottom+gap},{x:cx-w/2,y:focus.top-gap-h}
   ];
   let p=candidates.find(p=>p.x>=margin&&p.y>=margin&&p.x+w<=W-margin&&p.y+h<=H-margin&&!holes.slice(1).some(r=>p.x<r.right&&p.x+w>r.left&&p.y<r.bottom&&p.y+h>r.top));
+  if(!p&&id==='scrapCoach'){
+   // On compact covers, shrink the scrollable note into the larger gap instead
+   // of covering the very button Stevie is asking the player to press.
+   const above=Math.max(0,focus.top-gap-margin),below=Math.max(0,H-margin-focus.bottom-gap),under=below>=above;
+   card.style.maxHeight=Math.max(40,under?below:above)+'px';h=card.getBoundingClientRect().height||h;
+   p={x:game.api.clamp(cx-w/2,margin,Math.max(margin,W-w-margin)),y:under?focus.bottom+gap:Math.max(margin,focus.top-h-gap)};
+  }
   if(!p)p={x:game.api.clamp(cx-w/2,margin,Math.max(margin,W-w-margin)),y:focus.bottom+h+gap<H?focus.bottom+gap:Math.max(margin,focus.top-h-gap)};
   card.style.left=p.x+'px';card.style.top=p.y+'px';card.classList?.toggle('coach-points-right',cx>p.x+w/2);
   // The leader starts beside Stevie's raised hand and lands on the real target.
@@ -79,8 +86,14 @@ DoodleDefender.systems.firstLessons=function(game){
  function showScrapCoach(stage){
   scrapStage=stage;
   if(!stage){$('scrapCoach').style.display='none';lastScrapTarget=null;return;}
-  const data={cover:['splashHubBtn','Our scraps are safe!','Tap Notebook right here. I saved you a free first upgrade!'],hub:['hubNotebookBtn','This page is for permanent upgrades.','Tap Spend scraps. These upgrades stay with us between adventures.'],shop:['notebookBuy-starterEraser','Your first purchase!','Tap this highlighted Buy button to claim the Starter Eraser. It costs 0 scraps and helps every future run recover more ink.']};
-  const [target,title,text]=data[stage];$('scrapCoachTitle').textContent=title;$('scrapCoachText').textContent=text;$('scrapCoachProgress').textContent='Stevie’s scrap trail · '+({cover:1,hub:2,shop:3}[stage])+' of 3';$('scrapCoach').style.display='grid';
+  const data={
+   cover:['splashHubBtn','Our scraps are safe!','You earned saved scraps! Tap Notebook and I’ll show you where we turn them into permanent upgrades.'],
+   hub:['hubNotebookBtn','Meet my Scrap Tree.','Open Scrap Tree. These upgrades stay with us between adventures—unlike the upgrades we find during a run.'],
+   treeOpen:['beta-node-start','Start with a free pencil.','Tap Fresh Pencil to unfold its note. Opening a scrap shows what it does and its price; it never spends your scraps.'],
+   treeBuy:['betaBuyNode','This one is on me!','Claim Fresh Pencil for 0 scraps. It opens the first branches without spending any of your saved scraps.'],
+   treeDone:['closeBetaScrapsBtn','Follow the pencil lines!','Drag the paper to explore; pinch or scroll to zoom. Buy one rank to open the next connected scrap. Both sides of a fork can be yours! Purchases help future runs. Tap Back when you’re ready.']
+  };
+  const [target,title,text]=data[stage];$('scrapCoachTitle').textContent=title;$('scrapCoachText').textContent=text;$('scrapCoachProgress').textContent='Stevie’s scrap trail · '+({cover:1,hub:2,treeOpen:3,treeBuy:4,treeDone:5}[stage])+' of 5';$('scrapCoach').style.display='grid';
   game.api.revealDesktopTarget?.($(target));
   if(lastScrapTarget!==target){lastScrapTarget=target;$(target).scrollIntoView?.({block:'center',behavior:'instant'});$(target).focus?.({preventScroll:true});}
   updateStevieGuides();

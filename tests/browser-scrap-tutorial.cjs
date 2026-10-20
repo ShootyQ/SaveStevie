@@ -14,19 +14,25 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    return route.fulfill({body,contentType:name.endsWith('.js')?'text/javascript':name.endsWith('.css')?'text/css':name.endsWith('.png')?'image/png':name.endsWith('.svg')?'image/svg+xml':name.endsWith('.mp3')?'audio/mpeg':'text/html'});
   });
   await page.goto('http://127.0.0.1:8001/');await page.waitForFunction(()=>testGame.api.artworkReady(),null,{polling:50});await page.click('#startBtn');
-  assert.equal(await page.locator('#scrapCoach').isVisible(),false);
+  assert(await page.locator('#scrapCoach').isHidden());
   await page.evaluate(()=>{testGame.api.awardScraps(1);testGame.api.gameOver()});
-  await page.getByRole('button',{name:'Return to main menu',exact:true}).click();
-  assert.equal(await page.evaluate(()=>testGame.state.running),false);assert.equal(await page.locator('#scrapCoach').isVisible(),true);
-  await page.locator('#splashHubBtn').scrollIntoViewIfNeeded();await page.screenshot({path:'/tmp/scrap-guide-cover-'+viewport.width+'.png'});await page.click('#splashHubBtn');
-  assert.equal(await page.locator('#scrapCoach').isVisible(),true);await page.click('#hubNotebookBtn');
-  assert.equal(await page.locator('#scrapCoach').isVisible(),true);assert.equal(await page.locator('#notebookPerks button').first().isDisabled(),false);
-  await page.screenshot({path:'/tmp/scrap-guide-shop-'+viewport.width+'.png'});
-  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
-  await page.click('#notebookBuy-starterEraser');assert.equal(await page.locator('#scrapCoach').isVisible(),false);
-  await page.reload();assert.equal(await page.locator('#scrapCoach').isVisible(),false);
-  const progress=await page.evaluate(()=>testGame.api.notebookSnapshot());assert.equal(progress.scraps,1);assert.equal(progress.scrapTutorialDone,true);
-  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' defeat menu return, Stevie walkthrough, affordable controls, required free purchase and reload persistence');await page.close();
+  assert(await page.locator('#deathNewRunBtn').isHidden());await page.click('#againBtn');
+  const checkGuide=async()=>{
+   assert(await page.locator('#scrapCoachCard').isVisible());
+   assert(await page.locator('#scrapCoachCard').evaluate(card=>{const r=card.getBoundingClientRect();return r.x>=0&&r.y>=0&&r.right<=innerWidth+1&&r.bottom<=innerHeight+1&&card.contains(document.elementFromPoint(r.x+r.width/2,r.y+r.height/2));}),'coach is on screen and above the tree');
+  };
+  const openTree=async()=>{await page.click('#splashHubBtn');await page.click('#hubNotebookBtn');await checkGuide();};
+  await checkGuide();await page.reload();await page.waitForFunction(()=>testGame.api.artworkReady(),null,{polling:50});assert(await page.locator('#startBtn').isDisabled());await openTree();
+  assert.equal(await page.locator('#notebookOverlay').count(),0);assert.equal(await page.textContent('#betaTreeTitle'),'Scrap Tree');
+  await page.click('#beta-node-start');await checkGuide();assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),1,'inspection does not spend');
+  await page.screenshot({path:'/tmp/scrap-guide-buy-'+viewport.width+'.png'});
+  await page.reload();await openTree();await page.click('#beta-node-start');await page.click('#betaBuyNode');await checkGuide();
+  assert.match(await page.textContent('#scrapCoachProgress'),/5 of 5/);assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scrapTutorialDone),false);
+  await page.reload();await openTree();assert.match(await page.textContent('#scrapCoachProgress'),/5 of 5/);await page.click('#closeBetaScrapsBtn');assert(await page.locator('#scrapCoach').isHidden());
+  await page.reload();await page.waitForFunction(()=>testGame.api.artworkReady(),null,{polling:50});assert(await page.locator('#scrapCoach').isHidden());
+  const progress=await page.evaluate(()=>testGame.api.notebookSnapshot());assert.equal(progress.scraps,1);assert.equal(progress.scrapTutorialDone,true);assert.equal(progress.betaPencilClaimed,true);
+  await page.click('#startBtn');await page.evaluate(()=>testGame.api.gameOver());assert(await page.locator('#deathNewRunBtn').isVisible());await page.click('#deathNewRunBtn');assert.equal(await page.evaluate(()=>testGame.state.running),true);
+  assert.deepEqual(errors,[]);console.log('PASS: '+viewport.width+' defeat menu return, Stevie walkthrough, visible tree coach, inspection, free pencil, interrupted reloads and later replay');await page.close();
  }
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exit(1)});
