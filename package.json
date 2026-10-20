@@ -1,6 +1,6 @@
 {
   "name": "save-stevie",
-  "version": "0.1.118",
+  "version": "0.1.119",
   "private": true,
   "description": "Android and desktop tools for the dependency-free Save Stevie web game",
   "scripts": {

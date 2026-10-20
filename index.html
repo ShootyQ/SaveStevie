@@ -19,7 +19,7 @@
         <div id="hpBar" class="bar"></div>
       </div>
       <div class="box timer">
-        <div class="barlabel">W<span id="liveWave">1</span><span id="waveCountdown"> · <span id="timeText">60</span>s</span></div>
+        <div class="barlabel"><span class="wave-number">W<span id="liveWave">1</span></span><span id="waveCountdown"> · <span id="timeText">60</span>s</span></div>
         <div id="timeBar" class="bar"></div>
       </div>
       <button id="quickBuildBtn" class="desktop-run-build" hidden title="Inspect your pencil, upgrades, synergies and Doodle Scraps (B)">Build <kbd>B</kbd></button>
@@ -83,7 +83,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button><button class="paper-slip desktop-quit-entry" id="splashQuitBtn" hidden>Quit to desktop</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.118</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.119</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -426,6 +426,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.119 · Clearer timers and stronger shoves</h3><p>The mobile wave timer keeps its numbers in order, and all three direction choices fit without scrolling on portrait phones. Repulsion Ink now pushes 10 pixels farther per rank, starting at 40 pixels; bosses still resist half the shove.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.118 · Something lives under this desk</h3><p>Five one-time utilities add hinged walls, rolling ink boulders, charged turret deliveries, recruited monsters and Under the Desk: erase an X inside a closed shape to summon a wood-splintering creature that grabs up to three ordinary monsters. Includes custom artwork and animations. Spitball Express requires permanent paper balls and Circle Studies, and allows two turrets. Rare unlocks stay Rare; the three Legendary toys use reserved Legendary offers. The wave-clear page now uses crooked paper scraps, a teacher’s stamp and Stevie’s notes.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.117 · Scrap Tree takes root</h3><p>Scrap Tree replaces the original scrap shop. Your saved scraps and purchased upgrades carry over. After your first adventure, return to the menu and follow Stevie to the tree: open a scrap, claim the free Fresh Pencil, and learn how connected permanent upgrades work. Later runs keep the quick replay option.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.116 · A head start and tougher paper cannons</h3><p>Unlock Head Start for 45 scraps to choose a Common upgrade before each new run. Fat Marker is retired; Thick Ink remains the wall-durability upgrade and now pairs with Blast for Heavy Artillery. Rubble Ruff can gradually erase reinforced paper turrets: they fade as their HP drops, but keep their full firing power until erased.</p></article>
