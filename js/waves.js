@@ -87,7 +87,7 @@ function waveDuration(){
 
 let paperChapter=null;
 function resetRun(options={}){
-  paperChapter=null;delete game.state.lastDamage;
+  paperChapter=null;delete game.state.lastDamage;game.state.startingUpgrade=false;game.state.startingUpgradeSkipIntro=false;
   game.api.resetCircleShapes();game.api.resetScoring();game.api.resetCatapulterRun();
   game.api.resetPaper();game.api.resetDoodleScraps();game.api.resetScrubberHint();
   game.api.cancelDrawingInput?.();
@@ -117,7 +117,9 @@ function resetRun(options={}){
   game.state.running=true;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;
   game.dom.startOverlay.style.display='none';game.dom.gameOverOverlay.style.display='none';game.dom.upgradeOverlay.style.display='none';
   game.dom.waveOverlay.style.display='none';game.dom.victoryOverlay.style.display='none';game.dom.specializeOverlay.style.display='none';
-  game.api.startWave({skipIntro:options.skipIntro});
+  const headStart=!options.skipNotebook&&!game.api.devRunActive()&&game.api.notebookSnapshot().levels.startingUpgrade>0;
+  game.api.startWave({skipIntro:headStart||options.skipIntro});
+  if(headStart)game.api.openUpgrade({starting:true,skipIntro:options.skipIntro});
 }
 
 function startWave(options={}){

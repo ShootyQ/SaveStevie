@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.100
+# Save Stevie upgrade reference — Alpha 0.1.116
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -21,7 +21,6 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Thick Ink | Walls / shapes | +20 base wall durability. Long strokes multiply this further. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | First Aid | Stevie / paper balls / survival | +18 max HP and heal 18. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Fine Tip | Drawing / ink economy | Lines cost 12% less ink. | Repeatable; caps/diminishing returns may apply; Each level multiplies ink cost by 0.88; a paid stroke still costs at least 6 ink. |
-| Fat Marker | Walls / shapes | +2 line width and +15 wall HP. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Lucky Scribble | Rewards / recovery | +8 Luck: improves rarity odds for future upgrades and rerolls. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Clean Erasing | Rewards / recovery | Recover 10 percentage points more paid ink from healthy erased walls per level, up to 60%. Damaged walls return less; free lines and copies return nothing. | Repeatable; caps/diminishing returns may apply; Erased paid-ink recovery capped at 60%; damaged sections return less; no free/copy refunds. |
 | Recycling | Rewards / recovery | Kills refund 5 ink, sharing an 8 ink/s refill budget. | Repeatable; caps/diminishing returns may apply; Shared kill-ink recovery budget: 8 ink/s. |
@@ -79,7 +78,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Demolition Grid | Blast Ink + Architect | Intersections make wall explosions larger and stronger. |
 | Blood Patch | Vampire Ink + Patchwork | Repairing walls also heals Stevie. |
 | Needlepoint | Poison Ink + Fine Tip | Cheap thin lines stack poison much faster. |
-| Heavy Artillery | Blast Ink + Fat Marker | Thicker walls create larger explosions. |
+| Heavy Artillery | Blast Ink + Thick Ink | Thick Ink makes Blast wall explosions larger. |
 | Hot Paper | Fire Ink + Paper Balls | Stevie's paper balls ignite enemies. |
 | Snowball Fight | Frost Ink + Paper Balls | Stevie's paper balls chill and sometimes freeze enemies. |
 | Thunder Paper | Electric Ink + Paper Balls | Stevie's paper balls chain lightning and burst sparks from Electric Ink walls. |
@@ -95,7 +94,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 
 | Perk | Current effect | Ranks | Costs per rank |
 | --- | --- | --- | --- |
-| Circle Studies | After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. The turret branch improves range, duration, capacity, firing rate and build time. A new turret replaces the oldest when your capacity is full. Turrets work during the timed wave and disappear when its boss enters. | 1 | 25 |
+| Circle Studies | After defeating the wave 10 boss, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. Rubble Ruff can gradually erase their reinforced paper; fading turrets keep full firing power until erased. The turret branch improves range, duration, capacity, firing rate and build time. A new turret replaces the oldest when your capacity is full. Turrets work during the timed wave and disappear when its boss enters. | 1 | 25 |
 | Long Paper Barrel | After Circle Studies: +30 turret targeting range per rank, from 210 to 300. Doodle Note range bonuses still belong to Stevie. | 3 | 10, 20, 35 |
 | Stubborn Folds | After Circle Studies: +3 seconds per turret per rank, from 10 to 19 seconds. Replacement always starts a fresh lifetime. | 3 | 10, 20, 35 |
 | Cannon Club | After Circle Studies: +1 active turret per rank, up to three. Building beyond your limit crumbles the oldest cannon. | 2 | 30, 60 |
@@ -106,6 +105,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Your Drawing Tool | Grow from Pencil to Mechanical Pencil (rank 3), Simple Pen (rank 6), and Scented Sharpie (rank 10). Every rank has its own artwork and adds +8 base wall HP. Pens unlock a third effect slot; Sharpies unlock a fourth. | 10 | 5, 8, 12, 16, 20, 24, 30, 36, 44, 55 |
 | Bigger Starting Tank | +20 starting/max ink per rank. | 5 | 5, 12, 24, 40, 60 |
 | Refill Practice | +1 starting ink regeneration per second per rank. Stacks with run upgrades. | 3 | 5, 12, 24 |
+| Head Start | Choose one Common upgrade before wave 1 of every new run. Uses your normal reward-choice count and starting rerolls. Does not consume a wave reward or a reserved Legendary offer. | 1 | 45 |
 | Extra Credit | Start every run with four reward choices instead of three. Boss rewards already have four. | 1 | 25 |
 | Lunchbox Band-Aids | +8 starting/max Stevie HP per rank. | 4 | 5, 12, 24, 40 |
 | Paper Ball Practice | Start throwing crumpled paper: 2 damage per rank. Higher ranks throw a little faster. | 3 | 5, 12, 24 |

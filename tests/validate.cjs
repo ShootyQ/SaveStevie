@@ -57,7 +57,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['scoring','doubleLine','tripleLine','paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>['doubleLine','tripleLine','synergySplashTimer'].includes(key)?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['startingUpgrade','startingUpgradeSkipIntro','scoring','doubleLine','tripleLine','paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>['doubleLine','tripleLine','synergySplashTimer'].includes(key)?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
 for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -706,8 +706,8 @@ assert.ok(Number(stored.get('doodleDefenderBestV4'))>=15,'existing best never er
 const richStore={getItem:k=>k===key?JSON.stringify({version:1,scraps:2000,lifetimeScraps:2000,levels:{}}):k==='doodleDefenderBestV4'?'11':null,setItem(){}};
 const rich=load(true,{storage:richStore}).sandbox.testGame;
 for(const p of rich.catalog.notebookPerks){for(let rank=0;rank<p.max;rank++)assert.equal(rich.api.buyNotebookPerk(p.id),true);assert.equal(rich.api.buyNotebookPerk(p.id),false,'rank cap')}
-assert.equal(rich.api.notebookSnapshot().scraps,943,'all rank prices charged exactly');
-rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,9);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);rich.api.rollCards();assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,145,107,6,1.3,2,8]);
+assert.equal(rich.api.notebookSnapshot().scraps,898,'all rank prices charged exactly');
+rich.api.resetRun();assert.equal(rich.state.stats.inkRegen,9);assert.equal(rich.state.stats.extraChoice,true);assert.equal(rich.api.upgradeAvailable(rich.catalog.upgrades.find(u=>u.name==='Greedy Goblin')),false);assert.equal(rich.dom.$('cards').children.length,4);assert.deepEqual([rich.state.stats.maxInk,rich.state.stats.wallHp,rich.state.player.maxHp,rich.state.stats.rockDamage,rich.state.stats.rockRate,rich.state.rerolls,rich.state.stats.luck],[260,145,107,6,1.3,2,8]);
 rich.api.chooseUpgrade(rich.catalog.upgrades.find(u=>u.name==='Pocket Rocks'));assert.equal(rich.state.stats.rockRate,1.3,'rock unlock preserves faster starter throws');assert.equal(rich.state.stats.rockDamage,7.55);
 const dirty=load(true,{storage:{getItem:k=>k===key?JSON.stringify({version:1,scraps:-5,lifetimeScraps:'oops',levels:{inkTank:999,health:-2,rocks:1.5,luck:'4'}}):null,setItem(){}}}).sandbox.testGame;
 assert.equal(dirty.api.notebookSnapshot().scraps,0);dirty.api.resetRun();assert.equal(dirty.state.stats.maxInk,260);assert.equal(dirty.state.player.maxHp,75);assert.equal(dirty.state.stats.rockDamage,0);assert.equal(dirty.state.stats.luck,0);
@@ -1702,7 +1702,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  assert.equal(env.node('upgradeDetails').hidden,true);card.onclick();assert.equal(env.node('upgradeDetails').hidden,true,'removed offers cannot reopen inspection');g.api.takeInspectedReward();assert.equal(JSON.stringify(g.state),before,'changed dev choice invalidates old confirmation');
  env.sandbox.Math.random=random;
  env.node('cards').children[0].onclick();env.node('takeUpgradeBtn').onclick();assert.equal(g.state.inks.frost,3);assert.equal(g.state.inks.fire,0);const wave=g.state.wave;g.api.takeInspectedReward();assert.equal(g.state.wave,wave,'confirmation cannot advance twice');
- const cells=g.catalog.upgrades.map(u=>{const a=g.api.upgradeArtworkInfo(u);assert.ok(a&&a.x<a.grid&&a.y<a.grid);return a.file+':'+a.x+':'+a.y;});assert.equal(new Set(cells).size,39);
+ const cells=g.catalog.upgrades.map(u=>{const a=g.api.upgradeArtworkInfo(u);assert.ok(a&&a.x<a.grid&&a.y<a.grid);return a.file+':'+a.x+':'+a.y;});assert.equal(new Set(cells).size,38);
  console.log('PASS: reward inspection/close are read-only without RNG; stale dev choices cannot reopen/commit; explicit confirmation applies once and every upgrade has distinct artwork.');
 }
 
@@ -2645,3 +2645,5 @@ require('./paper-press.cjs')(load);
 require('./eraser-motion.cjs')(load);
 
 require('./bootstomp-boss.cjs')(load);
+
+require('./head-start-and-turrets.cjs')(load);

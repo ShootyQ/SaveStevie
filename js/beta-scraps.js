@@ -28,6 +28,7 @@ DoodleDefender.systems.betaScraps=function(game){
   {id:'rerolls',perk:'rerolls',name:'Lunch Money',parent:'rocks',branch:'paper',x:140,y:1236,w:300},
   {id:'inkTank',perk:'inkTank',name:'Bigger Ink Well',parent:'start',branch:'ink',x:720,y:386,w:300},
   {id:'inkRegen',perk:'inkRegen',name:'Refill Practice',parent:'inkTank',branch:'ink',x:500,y:96,w:300},
+  {id:'startingUpgrade',perk:'startingUpgrade',name:'Head Start',parent:'inkTank',branch:'ink',x:1150,y:226,w:300},
   {id:'extraChoice',perk:'extraChoice',name:'Extra Credit',parent:'inkTank',branch:'ink',x:890,y:96,w:300},
   {id:'tool',perk:'tool',name:'Pencil Case',parent:'start',branch:'fort',x:1430,y:396,w:300},
   {id:'health',perk:'health',name:'Lunchbox Band-Aids',parent:'start',branch:'survival',x:1610,y:1006,w:300},

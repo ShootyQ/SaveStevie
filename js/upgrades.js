@@ -19,7 +19,7 @@ game.catalog.synergyDefs = [
   {name:'Demolition Grid', req:()=>game.state.stacks['Architect']&&game.state.inks.blast, desc:'Intersections make wall explosions larger and stronger.'},
   {name:'Blood Patch', req:()=>game.state.stacks['Patchwork']&&game.state.inks.vampire, desc:'Repairing walls also heals Stevie.'},
   {name:'Needlepoint', req:()=>game.state.stacks['Fine Tip']&&game.state.inks.poison, desc:'Cheap thin lines stack poison much faster.'},
-  {name:'Heavy Artillery', req:()=>game.state.stacks['Fat Marker']&&game.state.inks.blast, desc:'Thicker walls create larger explosions.'},
+  {name:'Heavy Artillery', req:()=>game.state.stacks['Thick Ink']&&game.state.inks.blast, desc:'Thick Ink makes Blast wall explosions larger.'},
   {name:'Hot Rocks', req:()=>game.state.stacks['Pocket Rocks']&&game.state.inks.fire, desc:'Stevie\'s rocks ignite enemies.'},
   {name:'Snowball Fight', req:()=>game.state.stacks['Pocket Rocks']&&game.state.inks.frost, desc:'Stevie\'s rocks chill and sometimes freeze enemies.'},
   {name:'Thunderstones', req:()=>game.state.stacks['Pocket Rocks']&&game.state.inks.electric, desc:'Stevie\'s rocks chain lightning and burst sparks from Electric Ink walls.'},
@@ -108,7 +108,6 @@ function upgradePreview(u){
     'Thick Ink':()=>pair('Base wall durability',s.wallHp,s.wallHp+20*levels,' HP'),
     'First Aid':()=>pair('Stevie maximum health',p.maxHp,p.maxHp+18*levels,' HP'),
     'Fine Tip':()=>pair('Stroke cost',s.lineCost,s.lineCost*Math.pow(.88,levels),' ink/px'),
-    'Fat Marker':()=>pair('Line width',s.lineWidth,s.lineWidth+2*levels,' px'),
     'Lucky Scribble':()=>pair('Luck',s.luck,s.luck+8*levels),
     'Clean Erasing':()=>pair('Erase recovery',Math.round(s.eraseRefund*100),Math.round(Math.min(.6,s.eraseRefund+.1*levels)*100),'%'),
     'Recycling':()=>pair('Ink per kill',s.refund,s.refund+5*levels),
@@ -135,7 +134,6 @@ function upgradePreview(u){
   result.afterDetail??=game.api.upgradeEffect(u.name,n+levels);
   if(u.name==='First Aid')result.afterDetail+=' Current health: '+f(p.hp)+' → '+f(Math.min(p.maxHp+18*levels,p.hp+18*levels))+' HP.';
   if(u.name==='Fine Tip')result.afterDetail+=' Paid strokes still cost at least 6 ink.';
-  if(u.name==='Fat Marker')result.afterDetail+=' Base wall HP: '+f(s.wallHp)+' → '+f(s.wallHp+15*levels)+'.';
   if(u.name==='Bottomless Pen')result.afterDetail+=' Ink regeneration: '+f(s.inkRegen)+' → '+f(s.inkRegen+regen(u.name))+'/s.';
   return result;
 }
@@ -171,13 +169,15 @@ function checkSynergies(){
   }else game.dom.synergyNote.innerHTML='';
 }
 
-function openUpgrade(){
+function openUpgrade(options={}){
+  game.state.startingUpgrade=options.starting===true;
+  game.state.startingUpgradeSkipIntro=options.skipIntro===true;
   const alreadyOpen=game.state.inUpgrade;
   game.state.inUpgrade=true;game.state.betweenWaves=false;game.state.awaitingSpec=false;
-  if(!alreadyOpen)game.state.rerolls=Math.max(game.state.rerolls,Math.min(3,game.state.rerolls+1));
+  if(!alreadyOpen&&!game.state.startingUpgrade)game.state.rerolls=Math.max(game.state.rerolls,Math.min(3,game.state.rerolls+1));
   game.dom.upgradeOverlay.style.display='grid';
   const boss=game.state.wave%5===0;
-  game.dom.$('rewardTitle').textContent='Upgrade your '+game.state.tool.name.toLowerCase();
+  game.dom.$('rewardTitle').textContent=game.state.startingUpgrade?'Head Start · choose your first upgrade':'Upgrade your '+game.state.tool.name.toLowerCase();
   game.dom.rewardText.textContent=boss?'Boss reward: four choices, Rare +3 levels or better.':'Common +1 · Uncommon +2 · Rare +3 · Legendary +4. Unlocks are one-time.';
   game.api.rollCards(boss);
   game.api.updateUI();game.api.prepareDesktopPages?.('upgrade');
@@ -200,7 +200,6 @@ game.catalog.upgrades = [
   {name:'Thick Ink',cat:'defense',desc:'+20 base wall durability. Long strokes multiply this further.',apply:()=>game.state.stats.wallHp+=20},
   {name:'First Aid',cat:'stevie',desc:'+18 max HP and heal 18.',apply:()=>{game.state.player.maxHp+=18;game.state.player.hp+=18}},
   {name:'Fine Tip',cat:'draw',desc:'Lines cost 12% less ink.',apply:()=>game.state.stats.lineCost*=.88},
-  {name:'Fat Marker',cat:'defense',desc:'+2 line width and +15 wall HP.',apply:()=>{game.state.stats.lineWidth+=2;game.state.stats.wallHp+=15}},
   {name:'Lucky Scribble',cat:'economy',desc:'+8 Luck: improves rarity odds for future upgrades and rerolls.',apply:()=>game.state.stats.luck+=8},
   {name:'Clean Erasing',cat:'economy',desc:'Recover 10 percentage points more paid ink from healthy erased walls per level, up to 60%. Damaged walls return less; free lines and copies return nothing.',apply:()=>game.state.stats.eraseRefund=Math.min(.6,game.state.stats.eraseRefund+.1)},
   {name:'Recycling',cat:'economy',desc:'Kills refund 5 ink, sharing an 8 ink/s refill budget.',apply:()=>game.state.stats.refund+=5},
@@ -282,7 +281,7 @@ function getUpgrade(forceRare=false){
 
 const upgradeArtGroups=[
  ['Fire Ink','Frost Ink','Poison Ink','Repulsion Ink','Electric Ink','Blast Ink','Vampire Ink','Gravity Ink','Void Ink','Chaos Ink','Death Ink','Bigger Ink Tank','Quick Refill','Thick Ink','First Aid','Fine Tip'],
- ['Fat Marker','Lucky Scribble','Recycling','Closed Loop','Architect','Patchwork',null,'Doodle Stitch','Patch Job','Freehand','Living Fountain Pen',null,'Bottomless Pen','Fortress Geometry','Bandages','Helmet'],
+ [null,'Lucky Scribble','Recycling','Closed Loop','Architect','Patchwork',null,'Doodle Stitch','Patch Job','Freehand','Living Fountain Pen',null,'Bottomless Pen','Fortress Geometry','Bandages','Helmet'],
  ['Pocket Rocks','Better Rocks','Emergency Medicine','Really Good Rocks','Stevie Has Had Enough','Loaded Deck','Reroll Coupon','Collector','Greedy Goblin']
 ];
 function upgradeArtworkInfo(u){
@@ -370,7 +369,7 @@ function luckExplanation(){
 }
 function rollCards(forceRare=false){
   const dev=game.api.devModeEnabled();
-  game.dom.$('devRewardPicker').hidden=!dev;game.dom.$('rerollBtn').hidden=dev;game.dom.$('rewardLuck').hidden=dev;game.dom.$('rewardLuckGuide').hidden=dev;
+  game.dom.$('devRewardPicker').hidden=!dev;game.dom.$('rerollBtn').hidden=dev;game.dom.$('rewardLuck').hidden=dev||game.state.startingUpgrade;game.dom.$('rewardLuckGuide').hidden=dev||game.state.startingUpgrade;
   if(dev){renderDevReward();return;}
   game.dom.rewardText.textContent=forceRare?(game.api.desktopUiEnabled?.()?'Boss reward · Rare or better. Click or press 1–4 to inspect.':'Boss reward · Rare or better. Tap a card to inspect.'):game.api.desktopUiEnabled?.()?'Click a card to inspect, then choose your upgrade.':'Hover or tap a card, then choose your upgrade.';
   game.dom.$('rewardLuck').textContent='Luck '+game.state.stats.luck+' · Higher Luck makes rarer upgrades more likely.';
@@ -381,17 +380,17 @@ function rollCards(forceRare=false){
   const count=forceRare?4:(game.state.stats.extraChoice?4:3);
   game.dom.cardsEl.className='cards '+(count===4?'four':'');
   const picks=[];
-  if(game.state.legendaryWave===game.state.wave&&!game.state.legendaryOffered){
+  if(!game.state.startingUpgrade&&game.state.legendaryWave===game.state.wave&&!game.state.legendaryOffered){
     const pool=game.catalog.upgrades.filter(u=>(!oneTimeUpgrades.has(u.name)||u.exclusiveRarity==='legendary')&&game.api.upgradeAvailable(u));
     if(pool.length){picks.push({...game.api.weightedPick(pool),rarity:'legendary'});game.state.legendaryOffered=true;}
   }
   let attempts=0;
   while(picks.length<count&&attempts++<200){
-    const u=game.api.getUpgrade(forceRare);
+    const u=game.state.startingUpgrade?{...game.api.weightedPick(game.catalog.upgrades.filter(u=>!u.exclusiveRarity&&game.api.upgradeAvailable(u))),rarity:'common'}:game.api.getUpgrade(forceRare);
     if(u&&!picks.some(p=>p.name===u.name))picks.push(u);
   }
   if(picks.length<count){
-    for(const u of game.catalog.upgrades.filter(u=>!u.exclusiveRarity&&game.api.upgradeAvailable(u)))if(!picks.some(p=>p.name===u.name)&&picks.length<count)picks.push({...u,rarity:forceRare?'rare':game.api.rarityRoll()});
+    for(const u of game.catalog.upgrades.filter(u=>!u.exclusiveRarity&&game.api.upgradeAvailable(u)))if(!picks.some(p=>p.name===u.name)&&picks.length<count)picks.push({...u,rarity:game.state.startingUpgrade?'common':forceRare?'rare':game.api.rarityRoll()});
   }
   // Keep the first reward useful for drawing, even when all random picks are
   // utilities. Preserve the slot's rarity and any reserved Legendary offer.
@@ -400,6 +399,7 @@ function rollCards(forceRare=false){
     const effect=game.api.weightedPick(pool);
     if(effect){const slot=picks.length-1;picks[slot]={...effect,rarity:picks[slot].rarity};}
   }
+  if(game.state.startingUpgrade)game.dom.rewardText.textContent='Choose one Common upgrade before wave 1. This is an extra choice from Head Start.';
   renderUpgradeCards(picks,count);
 }
 
@@ -453,9 +453,11 @@ function applyUpgrade(u,replaceName){
 }
 function chooseUpgrade(u,replaceName){
   if(!applyUpgrade(u,replaceName))return;
-  game.state.wave++;
-  if(!game.api.devRunActive()&&game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
-  game.state.inUpgrade=false;game.dom.upgradeOverlay.style.display='none';game.api.startWave();game.api.updateUI();
+  const starting=game.state.startingUpgrade,skipIntro=game.state.startingUpgradeSkipIntro;
+  game.state.startingUpgrade=false;game.state.startingUpgradeSkipIntro=false;
+  if(!starting)game.state.wave++;
+  if(!starting&&!game.api.devRunActive()&&game.state.wave>game.state.best){game.state.best=game.state.wave;localStorage.setItem('doodleDefenderBestV4',game.state.best)}
+  game.state.inUpgrade=false;game.dom.upgradeOverlay.style.display='none';game.api.startWave({skipIntro:starting&&skipIntro});game.api.updateUI();
   game.api.setMsg(u.name+' ×'+game.state.stacks[u.name]+' — '+game.api.upgradeEffect(u.name,game.state.stacks[u.name]))
 }
 

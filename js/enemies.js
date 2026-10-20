@@ -649,7 +649,7 @@ function updateScrubber(e,dt){
  if(e.hp<=0||e.freeze>0||e.stun>0)return;
  e.scrubCd=Math.max(0,(e.scrubCd||0)-dt);
  let target=null,distance=Infinity;
- for(const wall of game.state.walls){
+ for(const wall of [...game.state.walls,...game.api.shapeBarrierWalls()]){
   if(wall.hp<=0||wall.life<=0)continue;const point=game.api.nearestPointOnWall(e,wall);if(!point)continue;
   const d=Math.hypot(point.x-e.x,point.y-e.y);if(d<distance){distance=d;target={wall,point};}
  }
@@ -658,7 +658,7 @@ function updateScrubber(e,dt){
   if(e.hp<=0||e.freeze>0||e.stun>0)return;
   if(e.scrubCd===0){
    game.api.animateEnemyAction(e,'strike',target.point);e.scrubCd=.32;
-   game.api.eraseWallPath(target.point,target.point,18,{enemy:true});game.api.burst(target.point.x,target.point.y,'#efb6c3',4);
+   if(target.wall.shapeTurret)game.api.eraseCircleTurret(target.wall);else game.api.eraseWallPath(target.point,target.point,18,{enemy:true});game.api.burst(target.point.x,target.point.y,'#efb6c3',4);
   }
   return;
  }

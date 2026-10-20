@@ -22,9 +22,9 @@ function validateSaveBackup(text){
  for(const perk of perks){const rank=n.levels[perk.id]??0;if(!integer(rank,perk.max))throw Error('Invalid upgrade rank: '+perk.name+'. Nothing was restored.');levels[perk.id]=rank;}
  if(!object(p.lessons)||['draw','erase'].some(k=>typeof p.lessons[k]!=='boolean'))throw Error('The backup has invalid tutorial progress.');
  if(!Array.isArray(p.discoveries)||p.discoveries.length>game.catalog.monsters.length||p.discoveries.some(type=>!game.catalog.monsters.some(m=>m.type===type)))throw Error('The backup has invalid monster discoveries.');
- const abilityIds=new Set(game.api.abilityDiscoveryCatalogue().map(d=>d.id));
- if(p.abilityDiscoveries!==undefined&&(!Array.isArray(p.abilityDiscoveries)||p.abilityDiscoveries.length>abilityIds.size||p.abilityDiscoveries.some(id=>!abilityIds.has(id))))throw Error('The backup has invalid ability discoveries.');
- return {notebook:{version:2,scraps:n.scraps,lifetimeScraps:n.lifetimeScraps,scrapTutorialDone:n.scrapTutorialDone,betaPencilClaimed:n.betaPencilClaimed===true,wobbleDefeated:n.wobbleDefeated===true,levels},bestWave:p.bestWave,bestScore:p.bestScore??null,lessons:{draw:p.lessons.draw,erase:p.lessons.erase},abilityDiscoveries:p.abilityDiscoveries===undefined?null:[...new Set(p.abilityDiscoveries)],discoveries:[...new Set(p.discoveries)]};
+ const abilityIds=new Set(game.api.abilityDiscoveryCatalogue().map(d=>d.id)),retiredAbilityIds=new Set(['upgrade:Fat Marker']);
+ if(p.abilityDiscoveries!==undefined&&(!Array.isArray(p.abilityDiscoveries)||p.abilityDiscoveries.length>abilityIds.size+retiredAbilityIds.size||p.abilityDiscoveries.some(id=>!abilityIds.has(id)&&!retiredAbilityIds.has(id))))throw Error('The backup has invalid ability discoveries.');
+ return {notebook:{version:2,scraps:n.scraps,lifetimeScraps:n.lifetimeScraps,scrapTutorialDone:n.scrapTutorialDone,betaPencilClaimed:n.betaPencilClaimed===true,wobbleDefeated:n.wobbleDefeated===true,levels},bestWave:p.bestWave,bestScore:p.bestScore??null,lessons:{draw:p.lessons.draw,erase:p.lessons.erase},abilityDiscoveries:p.abilityDiscoveries===undefined?null:[...new Set(p.abilityDiscoveries.filter(id=>abilityIds.has(id)))],discoveries:[...new Set(p.discoveries)]};
 }
 function clearBackupReview(){pending=null;game.dom.$('backupReview').hidden=true;}
 function renderSaveBackup(){
