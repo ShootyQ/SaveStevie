@@ -1,6 +1,6 @@
 const assert=require('assert');
 module.exports=load=>{
- function setup(W=800,H=700,storage){const env=load(true,{images:true,storage}),g=env.sandbox.testGame,a=g.api;a.setFirstLessonsEnabled(false);a.resetRun({skipIntro:true});g.state.wave=10;a.startWave();g.state.W=W;g.state.H=H;g.state.player.x=W/2;g.state.player.y=H/2;g.state.player.hp=g.state.player.maxHp=10000;g.state.timeLeft=0;g.state.enemies=[];g.state.walls=[];g.state.stats.rockRate=0;g.state.stats.playerArmor=0;const e=a.spawnEnemy(true,100,180);a.updateBootstomp(e,3.85);a.updateBootstomp(e,.81);assert.equal(a.bootstompSnapshot(e).phase,'windup');return {env,g,a,e};}
+ function setup(W=800,H=700,storage){const env=load(true,{images:true,storage}),g=env.sandbox.testGame,a=g.api;a.setFirstLessonsEnabled(false);a.resetRun({skipIntro:true});g.state.wave=10;a.startWave();g.state.W=W;g.state.H=H;g.state.player.x=W/2;g.state.player.y=H/2;g.state.player.hp=g.state.player.maxHp=10000;g.state.timeLeft=0;g.state.enemies=[];g.state.walls=[];g.state.stats.rockRate=0;g.state.stats.playerArmor=0;const e=a.spawnEnemy(true,100,180);a.updateBootstomp(e,a.bootstompSnapshot(e).introDuration+1.45);a.updateBootstomp(e,.81);assert.equal(a.bootstompSnapshot(e).phase,'windup');return {env,g,a,e};}
  function step(r,seconds,hold=false){for(let t=0;t<seconds-.000001;t+=.05){const dt=Math.min(.05,seconds-t);if(hold)r.a.updatePaperPress(dt);r.a.updateBootstomp(r.e,dt);}}
  function down(r){let s=r.a.bootstompSnapshot(r.e);for(let i=0;s.phase!=='windup'&&i<1000;i++){step(r,.05);s=r.a.bootstompSnapshot(r.e);}assert.equal(s.phase,'windup');assert(r.a.beginPaperPress(s.target));step(r,3.3,true);assert.equal(r.a.bootstompSnapshot(r.e).phase,'stumble');step(r,1.3);assert.equal(r.a.bootstompSnapshot(r.e).phase,'down');}
  const wall=(x,y)=>({pts:[{x:x-100,y},{x:x+100,y}],hp:100,maxHp:100,life:100,thick:8});
@@ -37,12 +37,15 @@ module.exports=load=>{
   for(let i=0;i<1600;i++){const before=a.bootstompSnapshot(e),x=e.x,y=e.y;step(r,.025);const after=a.bootstompSnapshot(e);if(before.phase!=='intro')minDistance=Math.min(minDistance,Math.hypot(e.x-g.state.player.x,e.y-g.state.player.y));if(before.phase==='walk'){const distance=Math.hypot(e.x-x,e.y-y);assert(distance<=110*.025+1e-7,'walk retains its 110px/s combat pace');walked+=distance;}}
   assert(walked>150,'boss still relocates between attacks');assert(minDistance>220,'PC route stays well clear of Stevie');assert.equal(e.speed,110);
  }
- // Entrance travel is slower, independently of restored battle movement.
- {const {a,e,g}=setup();a.resetRun({skipIntro:true});g.state.wave=10;a.startWave();g.state.enemies=[];const boss=a.spawnEnemy(true,100,180),start=boss.x;
-  a.updateBootstomp(boss,.6);const quarter=boss.x;a.updateBootstomp(boss,.6);const half=boss.x;a.updateBootstomp(boss,1.2);const end=boss.x;
-  assert(Math.abs(quarter-(start+(end-start)*.25))<1e-7);assert(Math.abs(half-(start+(end-start)*.5))<1e-7,'old full-entry time now reaches only halfway');
-  assert.equal(a.bootstompSnapshot(boss).phase,'intro','challenge follows travel');a.updateBootstomp(boss,1.45);assert.equal(a.bootstompSnapshot(boss).phase,'idle');assert.equal(boss.speed,110);
+ // Entrance uses the nearest horizontal edge and is bounded by walking speed.
+ for(const [W,H] of [[1280,800],[393,700]]){const {a,g}=setup(W,H);a.resetRun({skipIntro:true});g.state.W=W;g.state.H=H;g.state.player.x=W/2;g.state.player.y=H/2;g.state.wave=10;a.startWave();g.state.enemies=[];const boss=a.spawnEnemy(true,100,180),s=a.bootstompSnapshot(boss),start=boss.x;
+  assert((s.introGoal.x<W/2&&start<0)||(s.introGoal.x>=W/2&&start>W),'nearest entry side');
+  assert(s.introDuration>=Math.abs(s.introGoal.x-start)/88,'duration respects capped speed');
+  for(let i=0;i<10;i++){const old=boss.x;a.updateBootstomp(boss,.1);assert(Math.abs(boss.x-old)<=8.8+1e-7,'entrance cannot race across a wide screen');}
+  a.updateBootstomp(boss,s.introDuration-1+.01);assert(Math.abs(boss.x-s.introGoal.x)<1e-7);assert.equal(a.bootstompSnapshot(boss).phase,'intro');a.updateBootstomp(boss,1.45);assert.equal(a.bootstompSnapshot(boss).phase,'idle');assert.equal(boss.speed,110);
  }
+ // A prompt hold still succeeds (tested above); a late hold now misses the stomp.
+ {const r=setup(),{a,e}=r;step(r,.65);assert(a.beginPaperPress(a.bootstompSnapshot(e).target));step(r,2.4,true);assert.equal(a.bootstompSnapshot(e).phase,'impact','late dent is too shallow at the earlier landing');}
  // Helpers keep the same cap, but actual arrivals are spaced farther apart.
  {const r=setup(),{a,e,g}=r,count=()=>g.state.enemies.filter(n=>n.bossOwner===e).length;assert.equal(count(),0);step(r,.2);assert.equal(count(),1);step(r,2);assert.equal(count(),1,'no second helper at the old arrival cadence');step(r,.5);assert.equal(count(),2,'reduced stream continues spawning helpers');}
  console.log('PASS: Bootstomp held-foot counter, 15 persistent real swipes, immunity, one-time ripple mitigation, paid lace counter, full defeat, pause/pure draw and three arena sizes.');
