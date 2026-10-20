@@ -1,0 +1,27 @@
+const assert=require('assert');
+module.exports=load=>{
+ const key='saveStevieNotebookV1',saved=new Map([[key,JSON.stringify({version:2,scraps:200,lifetimeScraps:200,betaPencilClaimed:true,levels:{starterEraser:1}})],['doodleDefenderBestV4','11']]),storage={getItem:k=>saved.get(k)??null,setItem:(k,v)=>saved.set(k,String(v))};
+ let env=load(true,{storage}),g=env.sandbox.testGame,a=g.api;
+ assert.equal(a.notebookPerkPrice('startingUpgrade'),45);assert(!a.buyBetaNode('startingUpgrade'));assert(a.buyBetaNode('inkTank'));assert(a.buyBetaNode('startingUpgrade'));assert.equal(a.notebookSnapshot().scraps,150);assert(!a.buyNotebookPerk('startingUpgrade'));
+ assert.equal(a.validateSaveBackup(a.saveBackupText()).notebook.levels.startingUpgrade,1);
+ const old=JSON.parse(a.saveBackupText());old.progress.abilityDiscoveries=['upgrade:Fat Marker','upgrade:Thick Ink'];delete old.progress.notebook.levels.startingUpgrade;const migrated=a.validateSaveBackup(JSON.stringify(old));assert.equal(migrated.notebook.levels.startingUpgrade,0);assert.deepEqual(Array.from(migrated.abilityDiscoveries),['upgrade:Thick Ink']);
+ env=load(true,{storage});g=env.sandbox.testGame;a=g.api;a.setFirstLessonsEnabled(false);a.resetRun({skipIntro:true});
+ assert(g.state.startingUpgrade&&g.state.inUpgrade);assert.equal(g.state.wave,1);assert.equal(g.state.rerolls,0);assert.equal(g.state.enemies.length,0);assert.equal(g.dom.cardsEl.children.length,3);assert(g.dom.cardsEl.children.every(c=>/common/.test(c.className)));const clock=g.state.timeLeft;a.update(2);assert.equal(g.state.timeLeft,clock);assert.equal(g.state.enemies.length,0);a.reroll();assert.equal(g.state.rerolls,0);
+ g.state.legendaryWave=1;g.state.legendaryOffered=false;a.rollCards();assert.equal(g.state.legendaryOffered,false,'opening choices do not consume reserved Legendary');
+ const before=a.notebookSnapshot().scraps,offer={...g.catalog.upgrades.find(u=>u.name==='Thick Ink'),rarity:'common'},width=g.state.stats.lineWidth;a.chooseUpgrade(offer);assert.equal(g.state.wave,1);assert.equal(g.state.inUpgrade,false);assert.equal(g.state.stats.wallHp,85);assert.equal(g.state.stats.lineWidth,width);assert.equal(g.state.best,11);assert.equal(a.notebookSnapshot().scraps,before);assert(!g.catalog.upgrades.some(u=>u.name==='Fat Marker'));
+ g.state.inks.blast=1;a.checkSynergies();assert(g.state.synergies.has('Heavy Artillery'));
+ g.state.betweenWaves=true;a.openUpgrade();assert.equal(g.state.rerolls,1,'actual wave reward grants its free reroll');assert.equal(g.state.legendaryOffered,true);a.chooseUpgrade(offer);assert.equal(g.state.wave,2,'regular choices still advance the wave');
+ a.resetRun({skipIntro:true});assert(g.state.startingUpgrade);assert.equal(g.state.stacks['Thick Ink'],undefined);a.resetRun({skipNotebook:true,skipIntro:true});assert(!g.state.inUpgrade,'bare test runs skip opening perks');
+ // Extra Credit and purchased starting rerolls apply to the opening choice.
+ g.state.running=false;assert(a.buyNotebookPerk('extraChoice'));assert(a.buyNotebookPerk('rerolls'));g.dom.cardsEl.children.length=0;a.resetRun({skipIntro:true});assert.equal(g.dom.cardsEl.children.length,4);assert.equal(g.state.rerolls,1);a.reroll();assert.equal(g.state.rerolls,0);assert(g.dom.cardsEl.children.every(c=>/common/.test(c.className)));
+ // Rubble Ruff can reach and gradually erase a turret through the real game loop.
+ const turretSave=new Map([[key,JSON.stringify({version:2,scraps:0,lifetimeScraps:20,levels:{starterEraser:1,circles:1,turretDuration:3}})]]);
+ const t=load(true,{storage:{getItem:k=>turretSave.get(k)??null,setItem:(k,v)=>turretSave.set(k,String(v))}}).sandbox.testGame,b=t.api;b.setFirstLessonsEnabled(false);b.resetRun({skipIntro:true});t.state.spawnTimer=999;t.state.stats.wallDamage=0;t.state.stats.rockRate=0;
+ const points=Array.from({length:25},(_,i)=>({x:150+Math.cos(i/24*Math.PI*2)*25,y:200+Math.sin(i/24*Math.PI*2)*25}));b.createWall(points);assert(b.resolveCircleChoice(true));const wall=b.shapeBarrierWalls()[0];assert(wall.maxHp>=360);const r=b.spawnEnemy(false,150+25+15+5,200,'scrubber');r.hp=r.maxHp=100000;const ink=t.state.stats.ink,health=wall.hp;
+ const cfg=b.circleShapesSnapshot().turret;b.update(.05);assert(wall.hp<health,'Ruff actually reaches and rubs the turret');assert.equal(b.circleShapesSnapshot().turrets.length,1,'one rub does not erase a reinforced turret');assert.equal(t.state.stats.ink,ink+.05*t.state.stats.inkRegen,'enemy erasing gives no ink refund');
+ assert.equal(b.avoidCircleTurret(r,.1),false,'eraser targets the turret instead of walking around it');const after=b.circleShapesSnapshot().turret;assert.equal(after.range,cfg.range);assert.equal(after.interval,cfg.interval);
+ const target=b.spawnEnemy(false,250,200,'grunt');target.hp=100000;b.updateCircleShapes(.3);assert(t.state.projectiles.some(p=>p.turretShot),'damaged turret still shoots');
+ r.freeze=1;const hp=wall.hp;b.updateScrubber(r,.5);assert.equal(wall.hp,hp);r.freeze=0;
+ for(let i=0;i<20&&b.shapeBarrierWalls().length;i++){r.x=150+25+r.r+5;r.y=200;b.updateScrubber(r,.33);}assert.equal(b.shapeBarrierWalls().length,0);assert.equal(b.circleShapesSnapshot().turrets.length,0);
+ console.log('PASS: 45-scrap saved opening choice, old/new backups, frozen wave-one choices/Common rarity/reroll limits, reserved Legendary preservation, regular progression, Fat Marker retirement/Thick Ink synergy and reachable reinforced full-power turret erasure.');
+};

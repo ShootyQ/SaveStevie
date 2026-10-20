@@ -117,7 +117,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${f(game.api.regenStackEffect('Quick Refill',n))} ink/s; diminishing returns`,
     'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 per level`,
     'Fine Tip':()=>`${f((1-Math.pow(.88,n))*100)}% cheaper strokes (multiplicative)`,
-    'Fat Marker':()=>`+${2*n}px width; +${15*n} base wall HP`, 'Lucky Scribble':()=>`+${8*n} Luck — better rarity odds on rewards and rerolls`,
+    'Lucky Scribble':()=>`+${8*n} Luck — better rarity odds on rewards and rerolls`,
     'Clean Erasing':()=>`+${10*n} percentage points to erasing recovery; 60% cap, reduced by wall damage`,
     'Recycling':()=>`+${5*n} ink per kill; shared 8 ink/s budget`, 'Closed Loop':()=>`+${40*n}% closed-wall durability; `+loopDetails(n,'Fortress Geometry'),
     'Architect':()=>`+${15*n}% durability per intersection`, 'Patchwork':()=>`+${18*n} HP per repaired wall`,

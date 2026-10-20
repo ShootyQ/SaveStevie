@@ -1,5 +1,5 @@
 {
-  "version": "0.1.100",
+  "version": "0.1.116",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -46,7 +46,9 @@
       "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
       "stacking": "Repeatable; caps/diminishing returns may apply",
       "limits": "See effect description and game code for per-level combat tuning.",
-      "synergies": [],
+      "synergies": [
+        "Heavy Artillery"
+      ],
       "source": "js/upgrades.js"
     },
     {
@@ -72,20 +74,6 @@
       "limits": "Each level multiplies ink cost by 0.88; a paid stroke still costs at least 6 ink.",
       "synergies": [
         "Needlepoint"
-      ],
-      "source": "js/upgrades.js"
-    },
-    {
-      "id": "Fat Marker",
-      "name": "Fat Marker",
-      "category": "Walls / shapes",
-      "effect": "+2 line width and +15 wall HP.",
-      "rarities": "Common / Uncommon / Rare / Legendary",
-      "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
-      "stacking": "Repeatable; caps/diminishing returns may apply",
-      "limits": "See effect description and game code for per-level combat tuning.",
-      "synergies": [
-        "Heavy Artillery"
       ],
       "source": "js/upgrades.js"
     },
@@ -738,9 +726,9 @@
       "kind": "Two-part synergy",
       "requires": [
         "Blast Ink",
-        "Fat Marker"
+        "Thick Ink"
       ],
-      "effect": "Thicker walls create larger explosions."
+      "effect": "Thick Ink makes Blast wall explosions larger."
     },
     {
       "name": "Hot Paper",
@@ -841,7 +829,7 @@
   "notebook": [
     {
       "name": "Circle Studies",
-      "effect": "After defeating wave 10 Wobblechomp, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. The turret branch improves range, duration, capacity, firing rate and build time. A new turret replaces the oldest when your capacity is full. Turrets work during the timed wave and disappear when its boss enters.",
+      "effect": "After defeating the wave 10 boss, unlock 30–140px circles. Enclose enemies for 50% stronger wall contact throughout the circle, or turn an empty circle outside the fort into one paper-ball turret for 10 seconds. Turrets deal 50% more paper damage with fixed range and firing rate. Rubble Ruff can gradually erase their reinforced paper; fading turrets keep full firing power until erased. The turret branch improves range, duration, capacity, firing rate and build time. A new turret replaces the oldest when your capacity is full. Turrets work during the timed wave and disappear when its boss enters.",
       "maxRanks": 1,
       "costs": [
         25
@@ -981,6 +969,17 @@
       ],
       "rankOne": "+1 starting ink/s",
       "atMax": "+3 starting ink/s",
+      "source": "js/notebook.js"
+    },
+    {
+      "name": "Head Start",
+      "effect": "Choose one Common upgrade before wave 1 of every new run. Uses your normal reward-choice count and starting rerolls. Does not consume a wave reward or a reserved Legendary offer.",
+      "maxRanks": 1,
+      "costs": [
+        45
+      ],
+      "rankOne": "Choose a Common upgrade before every run",
+      "atMax": "Choose a Common upgrade before every run",
       "source": "js/notebook.js"
     },
     {
@@ -1328,19 +1327,6 @@
       "name": "Fine Tip",
       "category": "Drawing / ink economy",
       "effect": "Lines cost 12% less ink.",
-      "evidence": "Not rated",
-      "priority": "Unrated",
-      "idea": "",
-      "playerRating": "",
-      "playerNotes": "",
-      "decision": "",
-      "nextTest": ""
-    },
-    {
-      "id": "Fat Marker",
-      "name": "Fat Marker",
-      "category": "Walls / shapes",
-      "effect": "+2 line width and +15 wall HP.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",
