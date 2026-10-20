@@ -10,7 +10,7 @@ function beginWaveFinale(enemy){
  const clear=game.state.wave%5===0?enemy.waveBoss&&game.api.bossFightResolved():game.state.timeLeft===0&&game.state.enemies.length===0;
  if(!clear)return false;
  const reduced=game.api.enemyMotionReduced(),boss=!!enemy.waveBoss;
- finale={age:0,duration:boss?(reduced?1.4:4.15):(reduced?.6:1.65),boss,reduced,enemy:{whiteBrother:enemy.whiteBrother,whiteKind:enemy.whiteKind,type:enemy.type,r:enemy.r,color:enemy.color,x:game.api.clamp(enemy.x,enemy.r,game.state.W-enemy.r),y:game.api.clamp(enemy.y,enemy.r,game.state.H-enemy.r),hp:1,maxHp:1,freeze:0,stun:0,burn:0,poison:0,gravitySlow:0,charged:0},popped:false};
+ finale={age:0,duration:boss?(reduced?1.4:4.15):(reduced?.6:1.65),boss,reduced,enemy:{deskSwallowed:enemy.deskSwallowed===true,whiteBrother:enemy.whiteBrother,whiteKind:enemy.whiteKind,type:enemy.type,r:enemy.r,color:enemy.color,x:game.api.clamp(enemy.x,enemy.r,game.state.W-enemy.r),y:game.api.clamp(enemy.y,enemy.r,game.state.H-enemy.r),hp:1,maxHp:1,freeze:0,stun:0,burn:0,poison:0,gravitySlow:0,charged:0},popped:false};
  game.state.drawing=false;game.state.currentWall=null;game.api.stopSoundEffects();game.api.setMsg(boss?'You did it! Stevie is safe!':'One last doodle…');return true;
 }
 function updateWaveFinale(dt){
@@ -47,6 +47,7 @@ function drawWaveFinale(drawEnemy){
  if(!finale)return;
  const f=finale,e=f.enemy,ctx=game.dom.ctx,popAt=f.reduced?.22:1.02;
  ctx.save();ctx.translate(e.x,e.y);
+ if(e.deskSwallowed){ctx.fillStyle='#795183';ctx.font='bold 21px "Stevie Pencil", cursive';ctx.textAlign='center';ctx.fillText(f.age<popAt?'…GULP.':'PAGE SAVED!',0,-e.r-24);ctx.restore();return;}
  if(e.type==='bootstomp'){ctx.restore();return;}
  if(f.age<popAt){
   const t=f.age/popAt,shake=f.reduced?0:Math.sin(f.age*55)*t*3;

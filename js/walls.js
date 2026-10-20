@@ -51,7 +51,8 @@ function eraseWallPath(a,b,r=20,options={}){
  const lesson=options.lesson===true&&game.api.lessonCanPaint?.('erase');
  if(!game.state.running||(game.state.paused&&!lesson)||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
  if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
- if(!options.enemy&&!lesson){const bossErase=game.api.eraseBootstompPath?.(a,b,r);if(game.api.bootstompEraseHandled?.())return !!bossErase;const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;}
+ game.api.resetUtilityEraseHandled?.();game.api.resetUnderDeskEraseHandled?.();
+ if(!options.enemy&&!lesson){const bossErase=game.api.eraseBootstompPath?.(a,b,r);if(game.api.bootstompEraseHandled?.())return !!bossErase;const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;if(game.api.utilityErase?.(a,b,r))return true;if(game.api.underDeskErase?.(a,b,r))return true;}
  let changed=false,recovered=0;const result=[];
  for(const wall of game.state.walls){
   if(options.onlyWall&&wall!==options.onlyWall){result.push(wall);continue;}
@@ -148,7 +149,7 @@ function landingPoint(e,x,y,inferno){
  return best;
 }
 function launchEnemy(e,x,y,inferno=false){
- if(e.hp<=0||e.flight||game.api.underPaper(e))return false;
+ if(e.hp<=0||e.flight||game.api.underPaper(e)||game.api.heldUnderDesk?.(e))return false;
  if(isInkBoss(e)){game.api.animateEnemyAction(e,'slam');return false}
  const target=landingPoint(e,x,y,inferno);if(!target)return false;
  e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:inferno?1.05:.85,
@@ -157,7 +158,7 @@ function launchEnemy(e,x,y,inferno=false){
  game.api.floatText(e.x,e.y,'WHOOSH!','#36786b');return true;
 }
 function flingBossFriend(e,target){
- if(e.hp<=0||e.flight||isInkBoss(e))return false;
+ if(e.hp<=0||e.flight||isInkBoss(e)||game.api.heldUnderDesk?.(e))return false;
  e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:.65,
   height:Math.min(90,Math.max(16,Math.min(e.y,target.y)-e.r*2-50)),spin:target.x<e.x?-1:1,damage:0,stun:0,bossThrown:true};
  game.api.floatText(e.x,e.y,'WHEEEE!','#a55b39');return true;
@@ -419,7 +420,7 @@ function createWall(points,options={}){
   if(infinite){const bumpers=game.state.walls.filter(w=>w.wobbleBumper);if(bumpers.length>40){const remove=new Set(bumpers.slice(0,bumpers.length-40));game.state.walls=game.state.walls.filter(w=>!remove.has(w))}}
   const t={base,copies,inkScale,free:firstStrokeFree,infinite,cost,paid:actualPaid,length,strokePts:base.pts,prefix:null,oldMaxHp:0,oldIntersections:0,newIntersections:intersections,factor:1};
   if(start)joinStitchStart(t,start);
-  if(!options.live){finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,copies,t.strokePts);game.api.collectDoodleScrap(t.strokePts,t.paid);}
+  if(!options.live){finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,copies,t.strokePts);game.api.collectDoodleScrap(t.strokePts,t.paid);game.api.utilityFinishWall?.(t.base,t.paid,!!t.prefix);}
   game.api.updateUI();return t;
 }
 function chargeFreehand(actualPaid){
@@ -476,7 +477,7 @@ function finishLiveWall(){
  const t=liveStroke;liveStroke=null;if(!t)return false;
  if(t.crayonDraft){game.api.updateUI();return true;}
  const w=t.base;if(game.state.walls.includes(w)&&w.hp>0){
-  finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,t.copies,t.strokePts);game.api.collectDoodleScrap(t.strokePts,t.paid);game.api.updateUI();
+  finishStitch(t);closeCreatedWall(t);finishWallEffects(t.base,t.paid,t.copies,t.strokePts);game.api.collectDoodleScrap(t.strokePts,t.paid);game.api.utilityFinishWall?.(t.base,t.paid,!!t.prefix);game.api.updateUI();
  }else{chargeFreehand(t.paid);game.api.connectCrayonReturn(t.strokePts,t.paid);game.api.cutWobbleStroke(t.strokePts);}
  return true;
 }

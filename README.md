@@ -4,6 +4,8 @@ Refactored from doodle_defender_v8.html. Open index.html directly in a modern br
 
 ## Upgrade reference
 
+The [drawing utility guide](docs/UTILITY_TOYS.md) covers hinged gates, ink boulders, turret deliveries, recruited monsters and the Under the Desk summon, including PC/touch controls and limits.
+
 Browse the [complete upgrade and ability list](docs/UPGRADE_REFERENCE.md), or download the [Excel reference and retuning checklist](docs/SaveStevie-Upgrade-Reference.xlsx). The workbook includes run upgrades, synergies, permanent perks, mechanics and editable review notes. Regenerate it with `node scripts/build-upgrade-reference.cjs` followed by `python3 scripts/build-upgrade-workbook.py` (requires `openpyxl`).
 
 ## Future design ideas

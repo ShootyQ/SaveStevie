@@ -9,8 +9,8 @@ function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:t
 const artworkVersion=document.documentElement?.dataset?.build;
 // Per-column gutters keep neighboring crowns, hair and feet out of each full pose.
 const kingEntranceRows=[[0,256,501,751,1024],[0,256,500,751,1024],[0,256,501,750,1024],[0,256,502,754,1024]],stevieVictoryRows=[[0,304,615,905,1215],[0,304,614,909,1215],[0,304,608,906,1215],[0,304,615,905,1215]];
-const doodleNames=['bootstomp','bootstomp/arrival','bootstomp/stomp','bootstomp/fall','bootstomp/special','bootstomp/reaction','bootstomp/erasure','king-entrance','stevie-victory','gnawer-animations','ash-impostor-animations','ash-impostor','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
-const coreArtwork=new Set(['bootstomp','bootstomp/arrival','bootstomp/stomp','bootstomp/fall','bootstomp/special','bootstomp/reaction','bootstomp/erasure','king-entrance','stevie-victory','gnawer-animations','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
+const doodleNames=['under-desk','bootstomp','bootstomp/arrival','bootstomp/stomp','bootstomp/fall','bootstomp/special','bootstomp/reaction','bootstomp/erasure','king-entrance','stevie-victory','gnawer-animations','ash-impostor-animations','ash-impostor','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const coreArtwork=new Set(['under-desk','bootstomp','bootstomp/arrival','bootstomp/stomp','bootstomp/fall','bootstomp/special','bootstomp/reaction','bootstomp/erasure','king-entrance','stevie-victory','gnawer-animations','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
 const artworkLoads=new Map(),artworkSupported=typeof Image!=='undefined';
 function artworkStatus(){const loaded=[...coreArtwork].filter(name=>!!doodles[name]).length;return {ready:!artworkSupported||loaded===coreArtwork.size,loaded,total:coreArtwork.size,failed:[...artworkLoads].filter(([,r])=>r.failed).map(([name])=>name),loading:[...artworkLoads].filter(([,r])=>r.loading).map(([name])=>name)};}
 function syncArtworkUI(){
@@ -224,6 +224,7 @@ function updateEnemyAnimations(dt){
   motionTime+=dt;
   if(motionReduced)splitEchoes=[];
   for(const e of game.state.enemies){
+    if(game.api.heldUnderDesk?.(e))continue;
     const m=motionFor(e),distance=Math.hypot(e.x-m.x,e.y-m.y),heavy=m.heavy;
     if(e.freeze<=0&&e.stun<=0&&Math.abs(e.x-m.x)>.05)m.facing=e.x<m.x?-1:1;
     m.x=e.x;m.y=e.y;m.hitAge+=dt;m.birthAge+=dt;m.actionAge+=dt;
@@ -541,7 +542,7 @@ function resize(){
     for(const wall of game.state.walls){wall.pts=wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));if(wall.rockCharge&&!movedCharges.has(wall.rockCharge)){movedCharges.add(wall.rockCharge);wall.rockCharge.x+=dx;wall.rockCharge.y+=dy;}if(wall.stitchPoints)wall.stitchPoints=wall.stitchPoints.map(p=>({x:p.x+dx,y:p.y+dy}));}
     if(game.state.currentWall)game.state.currentWall=game.state.currentWall.map(p=>({x:p.x+dx,y:p.y+dy}));
     for(const collection of [game.state.enemies,game.state.projectiles,game.state.enemyShots,game.state.particles,game.state.floaters])for(const item of collection)move(item);
-    game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.moveChompzilla?.(dx,dy);game.api.moveBlackIce(dx,dy);game.api.moveThermalShock(dx,dy);game.api.moveBackdraft(dx,dy);game.api.moveTesla(dx,dy);game.api.movePaper(dx,dy);game.api.moveCircleShapes(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveCatapults(dx,dy);game.api.moveDoodleScraps(dx,dy);
+    game.api.moveUnderDesk(dx,dy);game.api.moveUtilityToys(dx,dy);game.api.moveLaunchEffects(dx,dy);game.api.moveEnemyTactics(dx,dy);game.api.moveChompzilla?.(dx,dy);game.api.moveBlackIce(dx,dy);game.api.moveThermalShock(dx,dy);game.api.moveBackdraft(dx,dy);game.api.moveTesla(dx,dy);game.api.movePaper(dx,dy);game.api.moveCircleShapes(dx,dy);game.api.moveHardhatCrew(dx,dy);game.api.moveCatapults(dx,dy);game.api.moveDoodleScraps(dx,dy);
     for(const e of game.state.enemies){const m=enemyMotion.get(e);if(m){m.x+=dx;m.y+=dy}}
     for(const echo of splitEchoes)move(echo);
     game.api.moveAbilityEffects(dx,dy);
@@ -781,10 +782,11 @@ function draw(){
 
   game.api.drawIcebergWalls();game.api.drawBackdraftWalls();game.api.drawTeslaWalls();
   // Ranged threats are readable before and after firing.
-  game.api.drawCircleShapes();game.api.drawSparkGaps();game.api.drawHardhatCrew();game.api.drawCatapults();game.api.drawSneakyRoutes();
+  game.api.drawUnderDeskGround();game.api.drawCircleShapes();game.api.drawSparkGaps();game.api.drawHardhatCrew();game.api.drawCatapults();game.api.drawSneakyRoutes();
   game.api.drawWallExplosions();
   drawSplitAnimations();
   for(const e of game.state.enemies){
+    if(game.api.heldUnderDesk?.(e))continue;
     if(game.api.underPaper(e)||e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0)continue;
     const erase=e.sniperErase,regular=!erase&&e.shootCd<=.6&&(e.sniperFollowUp>0||game.api.sniperCanAim(e));if(!erase&&!regular)continue;
     const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle=erase?'#a54e78':'#3562be';ctx.lineWidth=2;ctx.globalAlpha=.65;
@@ -851,6 +853,7 @@ function draw(){
   game.dom.ctx.restore();
 
   for(const e of game.state.enemies){
+    if(game.api.heldUnderDesk?.(e))continue;
     if(game.api.underPaper(e)){game.api.drawPaperBump(e);continue;}
     if(e.bossWindup>0){
       game.dom.ctx.save();game.dom.ctx.strokeStyle=e.type==='stapler'?'#a56a16':'#9354b9';game.dom.ctx.lineWidth=3;
@@ -958,6 +961,7 @@ function draw(){
     const ctx=game.dom.ctx,colors={fire:'#c25a30',electric:'#386ac3',poison:'#528237',frost:'#387f98',eraser:'#ae537a',ink:'#25283b'},owned=Object.keys(p.doodlePayload||{}).filter(k=>colors[k]),color=colors[p.paperElement]||({cling:colors.electric,ash:colors.fire,influence:colors.fire,bubble:colors.poison,dots:'#a758a3',underline:'#40856a'}[p.paperElement]);
     ctx.save();ctx.translate(p.x,p.y);if(p.scale)ctx.scale(p.scale,p.scale);if(p.paperMode==='perch'){ctx.strokeStyle='#438e5e';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,2);ctx.lineTo(0,11);ctx.moveTo(0,7);ctx.lineTo(-5,4);ctx.stroke();}if(owned.length>1){owned.forEach((k,i)=>{ctx.strokeStyle=colors[k];ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,8,i/owned.length*Math.PI*2,(i+.8)/owned.length*Math.PI*2);ctx.stroke();});}if(p.rail){ctx.strokeStyle='#40856a';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-p.vx/p.speed*13,-p.vy/p.speed*13);ctx.lineTo(0,0);ctx.stroke();}ctx.fillStyle=p.doodlePayload?.ink?'#25283b':'#fffaf0';ctx.strokeStyle=color||'#6d655b';ctx.lineWidth=color?2:1.5;ctx.beginPath();ctx.moveTo(-5,-2);ctx.lineTo(-2,-5);ctx.lineTo(3,-4);ctx.lineTo(5,0);ctx.lineTo(2,5);ctx.lineTo(-4,3);ctx.closePath();ctx.fill();ctx.stroke();ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-3,-2);ctx.lineTo(1,1);ctx.lineTo(3,-2);ctx.moveTo(1,1);ctx.lineTo(0,4);ctx.stroke();ctx.restore();
   }
+  game.api.drawUtilityToys();game.api.drawUnderDeskActors();
   for(const p of game.state.particles){
     game.dom.ctx.globalAlpha=game.api.clamp(p.life*1.8,0,1);game.dom.ctx.fillStyle=p.color;game.dom.ctx.fillRect(p.x,p.y,3,3);game.dom.ctx.globalAlpha=1
   }
