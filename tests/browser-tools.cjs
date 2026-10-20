@@ -63,8 +63,8 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
    }
   });
   assert.equal(await page.textContent('#victoryRunScraps'),'61');assert.equal(await page.textContent('#victoryBankScraps'),'61');
-  await page.click('#victoryNotebookBtn');for(let i=0;i<3;i++)await page.click('#notebookBuy-tool');
-  assert.match(await page.textContent('#notebookLoadout'),/Mechanical Pencil/);assert.equal(await page.textContent('#notebookBank'),'36');
+  await page.click('#victoryMenuBtn');await page.click('#splashHubBtn');await page.click('#hubNotebookBtn');await page.click('#beta-node-start');await page.click('#betaBuyNode');await page.click('#closeBetaScrapsBtn');await page.click('#hubNotebookBtn');await page.evaluate(()=>testGame.api.selectBetaNode('tool'));for(let i=0;i<3;i++)await page.click('#betaBuyNode');
+  assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().levels.tool),3);assert.equal(await page.textContent('#betaTreeBank'),'36');
   await page.reload();assert.equal(await page.textContent('#splashScraps'),'36');await page.click('#startBtn');
   assert.equal(await page.evaluate(()=>testGame.state.tool.name),'Mechanical Pencil');
   await page.evaluate(()=>{testGame.api.gameOver();const key='saveStevieNotebookV1',p=JSON.parse(localStorage.getItem(key));p.levels.tool=10;localStorage.setItem(key,JSON.stringify(p));});

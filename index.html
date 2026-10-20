@@ -83,7 +83,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button><button class="paper-slip desktop-quit-entry" id="splashQuitBtn" hidden>Quit to desktop</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.116</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.117</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -195,10 +195,7 @@
   <div class="coach-actions"><button id="lessonBack" class="secondary" hidden>← Back</button><button id="lessonRetry" class="secondary" hidden>Try again</button><button id="lessonNext">Next →</button><button id="lessonSkip" class="coach-skip">Skip lesson</button></div>
  </div>
 </div>
-<div id="scrapCoach" class="stevie-coach" style="display:none" role="dialog" aria-modal="false" aria-labelledby="scrapCoachTitle">
- <svg class="coach-lines" aria-hidden="true"><path id="scrapCoachShade" class="coach-shade" fill-rule="evenodd"/><path id="scrapCoachFocus" class="coach-focus"/><path id="scrapCoachArrow" class="coach-arrow"/></svg>
- <div id="scrapCoachCard" class="coach-card"><div class="coach-heading"><img src="assets/art/stevie-cheer-a.png" alt="Stevie pointing to the highlighted button" width="56" height="60"><div><span id="scrapCoachProgress" class="section-kicker"></span><h2 id="scrapCoachTitle"></h2></div></div><p id="scrapCoachText"></p><p class="coach-action-hint">Tap the highlighted button to continue →</p></div>
-</div>
+
   </div>
 
   <nav class="bottom" aria-label="Game controls">
@@ -206,6 +203,10 @@
     <button id="pauseBtn">Pause</button>
     <button class="secondary" id="eraserBtn" aria-pressed="false" aria-label="Erase walls">Erase</button>
   </nav>
+</div>
+<div id="scrapCoach" class="stevie-coach" style="display:none" role="dialog" aria-modal="false" aria-labelledby="scrapCoachTitle">
+ <svg class="coach-lines" aria-hidden="true"><path id="scrapCoachShade" class="coach-shade" fill-rule="evenodd"/><path id="scrapCoachFocus" class="coach-focus"/><path id="scrapCoachArrow" class="coach-arrow"/></svg>
+ <div id="scrapCoachCard" class="coach-card"><div class="coach-heading"><img src="assets/art/stevie-cheer-a.png" alt="Stevie pointing to the highlighted button" width="56" height="60"><div><span id="scrapCoachProgress" class="section-kicker"></span><h2 id="scrapCoachTitle"></h2></div></div><p id="scrapCoachText"></p><p class="coach-action-hint">Tap the highlighted button to continue →</p></div>
 </div>
 <div id="message" hidden></div>
 <audio id="gameMusic" src="assets/audio/save-stevie-splash.mp3" preload="none" loop></audio>
@@ -231,8 +232,7 @@
     <nav class="hub-pages" aria-label="Notebook pages">
       <button class="paper-slip" id="hubMonstersBtn">Monster notes</button>
       <button class="paper-slip" id="hubToolBtn">My pencil</button>
-      <button class="paper-slip" id="hubNotebookBtn">Spend scraps</button>
-      <button class="paper-slip" id="hubBetaScrapsBtn">BETA Scraps</button>
+      <button class="paper-slip" id="hubNotebookBtn">Scrap Tree</button>
       <button class="paper-slip" id="hubSettingsBtn">Settings</button>
       <button class="paper-slip" id="hubStatsBtn">My scores</button>
       <button class="paper-slip" id="hubChangelogBtn">New stuff</button>
@@ -319,7 +319,7 @@
       <p class="option-help">Adjust pencil scribbles, impacts and electric zaps. Set this to zero to mute effects without muting music.</p>
     </section>
     <section class="option-section"><h3>How you play</h3><div class="desktop-bindings"><h4>Your controls</h4><div class="binding-grid"><label>Draw<select id="bind-draw"><option value="0">Left mouse</option><option value="1">Middle mouse</option><option value="2">Right mouse</option></select></label><label>Erase<select id="bind-erase"><option value="0">Left mouse</option><option value="1">Middle mouse</option><option value="2">Right mouse</option></select></label><label>Aim up<button type="button" id="bind-up" aria-label="Change aim up key"></button></label><label>Aim left<button type="button" id="bind-left" aria-label="Change aim left key"></button></label><label>Aim down<button type="button" id="bind-down" aria-label="Change aim down key"></button></label><label>Aim right<button type="button" id="bind-right" aria-label="Change aim right key"></button></label><label>Pause<button type="button" id="bind-pause" aria-label="Change pause key"></button></label></div><button class="secondary" id="resetBindingsBtn">Reset controls</button><p id="bindingStatus" role="status" class="option-help"></p></div><label class="monster-setting"><input id="eraserToggle" type="checkbox"> Tap to toggle the eraser instead of holding</label><label class="monster-setting"><input id="eraserLeft" type="checkbox"> Put the eraser button on the left (handy for a right drawing hand)</label><label class="option-help eraser-size-setting" for="eraserSize">Eraser button size <select id="eraserSize"><option value="normal">Normal</option><option value="large">Large</option><option value="extra-large">Extra Large</option></select></label><p class="option-help"><span class="touch-control-help">Hold Erase with one thumb and rub a wall with your other finger. Release to draw again. </span><span class="pc-control-help"></span> Erasing costs no ink and recovers a portion of the paid ink in healthy walls.</p><label class="monster-setting"><input id="optionsIntros" type="checkbox" checked> Introduce new monsters before a wave</label><p class="option-help">Motion follows your device’s reduced-motion setting. Open Tool any time to pause and inspect your pencil, effects, and synergies.</p></section>
-    <section class="option-section"><span class="settings-margin-note" aria-hidden="true"><span class="scribble-word"><span class="scribble-letter">g</span><span class="scribble-letter">o</span><span class="scribble-letter">o</span><span class="scribble-letter">d</span></span> <span class="scribble-word"><span class="scribble-letter">i</span><span class="scribble-letter">d</span><span class="scribble-letter">e</span><span class="scribble-letter">a</span><span class="scribble-letter">s</span></span> <span class="scribble-word"><span class="scribble-letter">g</span><span class="scribble-letter">o</span></span> <span class="scribble-word"><span class="scribble-letter">h</span><span class="scribble-letter">e</span><span class="scribble-letter">r</span><span class="scribble-letter">e</span></span> <span class="scribble-word"><span class="scribble-letter">↗</span></span></span><h3>Scrap projects</h3><div class="cardactions"><button class="secondary" id="optionsScrapsBtn">Spend scraps</button><button class="secondary" id="optionsBetaScrapsBtn">BETA Scraps</button><button class="secondary" id="optionsDiscoveriesBtn">Discoveries</button></div><p class="option-help">Try Stevie’s zoomable tree. Both pages share your saved ranks and scrap bank; the original shop still works as usual.</p></section>
+    <section class="option-section"><span class="settings-margin-note" aria-hidden="true"><span class="scribble-word"><span class="scribble-letter">g</span><span class="scribble-letter">o</span><span class="scribble-letter">o</span><span class="scribble-letter">d</span></span> <span class="scribble-word"><span class="scribble-letter">i</span><span class="scribble-letter">d</span><span class="scribble-letter">e</span><span class="scribble-letter">a</span><span class="scribble-letter">s</span></span> <span class="scribble-word"><span class="scribble-letter">g</span><span class="scribble-letter">o</span></span> <span class="scribble-word"><span class="scribble-letter">h</span><span class="scribble-letter">e</span><span class="scribble-letter">r</span><span class="scribble-letter">e</span></span> <span class="scribble-word"><span class="scribble-letter">↗</span></span></span><h3>Scrap projects</h3><div class="cardactions"><button class="secondary" id="optionsScrapsBtn">Scrap Tree</button><button class="secondary" id="optionsDiscoveriesBtn">Discoveries</button></div><p class="option-help">Spend saved scraps on permanent upgrades in Stevie’s tree. Drag to explore, open a scrap to inspect it, then choose whether to buy. Existing purchases stay yours.</p><button class="secondary" id="resetNotebookBtn">Reset game progress</button><p class="option-help">Reset scraps, permanent upgrades and records on this browser. You will be asked to confirm.</p></section>
     <div class="options-links"><button class="secondary" id="optionsStatsBtn">Notebook stats</button><button class="secondary" id="changelogBtn">What’s new</button><button class="secondary" id="reportProblemBtn">Report a problem</button><button class="secondary desktop-quit-entry" id="settingsQuitBtn" hidden>Quit to desktop</button></div>
     <section class="dev-mode-section"><button class="secondary dev-mode-button" id="devModeBtn" aria-pressed="false">DEV MODE</button><p id="devModeNote" class="option-help"></p><button class="secondary" id="testLabBtn" aria-expanded="false" aria-controls="testLabPanel">Test a wave / boss</button>
       <section id="testLabPanel" class="test-lab" hidden aria-labelledby="testLabTitle">
@@ -387,7 +387,7 @@
    <p class="beta-margin-note beta-new-note" style="left:1660px;top:1870px;--tilt:-12deg">a very normal school project</p>
    <p class="beta-margin-note beta-new-note" style="left:230px;top:620px;--tilt:-8deg">needs more bounce?</p>
   </div><svg id="betaTreePaths" viewBox="0 0 2400 2600" aria-hidden="true"></svg><img class="beta-tree-stevie" src="assets/art/stevie.png" alt="Stevie" draggable="false"><div id="betaHeldTool" aria-hidden="true"></div><div id="betaTreeNodes"></div></div>
-  <h2 id="betaTreeTitle" class="beta-map-title">my scrap tree <small>beta!</small></h2>
+  <h2 id="betaTreeTitle" class="beta-map-title">Scrap Tree</h2>
   <button id="closeBetaScrapsBtn" class="beta-map-note beta-map-back">← Back</button>
   <p class="beta-map-wallet"><span id="betaTreeBank">0</span> scraps saved</p>
   <p class="beta-map-hint">open outlined scraps to see upgrades<br>drag paper · pinch / scroll to zoom</p>
@@ -396,18 +396,6 @@
   <section id="betaNodeNote" class="beta-node-note" aria-labelledby="betaNodeTitle" hidden>
    <span id="betaNodeTier" class="beta-note-kicker"></span><h3 id="betaNodeTitle"></h3><div id="betaNodeArt"></div><p id="betaNodeDescription"></p><p id="betaNodeEffect"></p><p id="betaNodeRequirement"></p><button id="betaBuyNode" class="beta-paper-action"></button><p id="betaTreeStatus" role="status" aria-live="polite"></p><button id="betaFoldNote" class="beta-fold-note">fold this back ↶</button>
   </section>
-</div>
-<div class="overlay build-overlay" id="notebookOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="notebookTitle">
-  <div class="cardbox build-box notebook-book">
-    <div class="build-heading"><h2 id="notebookTitle">Back of the Notebook</h2><button id="closeNotebookBtn">Close</button></div>
-    <div class="notebook-wallet"><img class="notebook-scrap" src="assets/art/ui/scraps.png" alt="" width="84" height="84"><div><strong id="notebookBank">0</strong> <b>Notebook Scraps</b><small>Saved on this browser · Kept after defeat</small></div></div>
-    <p id="notebookNotice" role="status"></p>
-    <div class="notebook-earn"><b>How to collect scraps</b><span>1 per 25 kills (up to 8 per run) · 1 per cleared wave · Chapter-clear bonuses: 6 / 8 / 10 / 12 · 5 extra for winning wave 20. A defeat with no earnings keeps 1 consolation scrap.</span></div>
-    <h3>Your next starting kit</h3><p id="notebookLoadout"></p>
-    <div id="notebookPerks" class="notebook-grid"></div>
-    <div class="notebook-earn"><b>Start a fresh notebook</b><p>Reset all scraps, permanent perks, your best-wave record, and the current run on this browser. You will be asked to confirm.</p><button class="secondary" id="resetNotebookBtn">Reset game progress</button></div>
-    <p class="notebook-footnote">Permanent perks apply when you start a new run. Your in-run upgrade stacks reset each attempt. Scrap earnings are saved as they happen, so quitting keeps what you already earned.</p>
-  </div>
 </div>
 <div class="overlay build-overlay" id="compendiumOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="compendiumTitle">
   <div class="cardbox build-box monster-book">
@@ -437,6 +425,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.117 · Scrap Tree takes root</h3><p>Scrap Tree replaces the original scrap shop. Your saved scraps and purchased upgrades carry over. After your first adventure, return to the menu and follow Stevie to the tree: open a scrap, claim the free Fresh Pencil, and learn how connected permanent upgrades work. Later runs keep the quick replay option.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.116 · A head start and tougher paper cannons</h3><p>Unlock Head Start for 45 scraps to choose a Common upgrade before each new run. Fat Marker is retired; Thick Ink remains the wall-durability upgrade and now pairs with Blast for Heavy Artillery. Rubble Ruff can gradually erase reinforced paper turrets: they fade as their HP drops, but keep their full firing power until erased.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.115 · Bootstomp brings backup</h3><p>Bootstomp mixes his footprint counters with double shockwaves: draw walls to catch each wave before it reaches Stevie. While relocating, he winds up and kicks nearby helpers over walls toward alternating sides of the fort, with marked landings and airborne arcs. His original stomp timing and fallen erasing windows are restored. The slower entrance, reduced helper stream and faint erased patches remain.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.114 · An entrance with less rush</h3><p>Bootstomp’s combat walking and tantrum speed are restored. His entrance travel now takes 2.4 seconds, half the original arrival speed, and his helper arrival rate is 30% lower. Wider PC positioning and faint erased patches remain.</p></article>

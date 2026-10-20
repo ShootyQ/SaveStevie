@@ -47,7 +47,7 @@ function saveNotebook(){
 function adoptNotebookBackup(saved){progress={...saved,levels:{...saved.levels}};storageIssue=false;migrationRefund=0;runScraps=0;killScraps=0;runActive=false;updateScrapCounters();}
 function notebookSnapshot(){return {...progress,levels:{...progress.levels},runScraps,runActive,storageIssue}}
 function updateScrapCounters(){
-  for(const id of ['splashScraps','buildScraps','deathBankScraps','victoryBankScraps','notebookBank'])game.dom.$(id).textContent=progress.scraps;
+  for(const id of ['splashScraps','buildScraps','deathBankScraps','victoryBankScraps','betaTreeBank'])game.dom.$(id).textContent=progress.scraps;
   for(const id of ['waveRunScraps','deathRunScraps','victoryRunScraps'])game.dom.$(id).textContent=runScraps;
 }
 function awardScraps(amount){
@@ -92,11 +92,9 @@ function buyNotebookPerk(id){
   if(perk.requires&&!progress.levels[perk.requires])return false;
   if(rank>=perk.max||progress.scraps<price||id==='starterEraser'&&progress.lifetimeScraps===0)return false;
   progress.scraps-=price;progress.levels[id]++;if(id==='starterEraser')progress.scrapTutorialDone=true;saveNotebook();updateScrapCounters();renderNotebook();syncScrapTutorial();
-  game.dom.$('notebookNotice').textContent=(id==='starterEraser'?'Stevie: You did it! That purchase stays with us. Your next run recovers 30% of paid ink from healthy erased walls. ':'')+perk.name+' is now rank '+progress.levels[id]+'. Ready for your next run!'+(storageIssue?' This browser is not saving progress; this purchase lasts for this visit.':'');
-  const bought=game.dom.$('notebookBuy-'+id);
-  (bought.disabled?game.dom.$('closeNotebookBtn'):bought).focus?.({preventScroll:true});return true;
+  return true;
 }
-// The beta view shares ranks and transactions; its free starting node grants no duplicate stats.
+// The free starting node opens the tree without granting duplicate stats.
 function claimBetaPencil(){
   if(!canSpendScraps()||progress.betaPencilClaimed)return false;
   progress.betaPencilClaimed=true;saveNotebook();return true;
@@ -112,7 +110,7 @@ function resetNotebookProgress(){
     localStorage.setItem(key,JSON.stringify(fresh));
   }catch{
     try{if(oldBest!==null)localStorage.setItem('doodleDefenderBestV4',oldBest)}catch{}
-    game.dom.$('notebookNotice').textContent='Could not reset saved progress. Check this browser’s storage settings and try again.';
+    game.dom.$('optionsStorageNote').textContent='Could not reset saved progress. Check this browser’s storage settings and try again.';
     return false;
   }
   progress=fresh;migrationRefund=0;storageIssue=false;game.api.resetFirstLessons?.();
@@ -122,39 +120,25 @@ function resetNotebookProgress(){
   game.dom.startOverlay.style.display='grid';updateScrapCounters();game.api.updateUI();
   game.dom.$('startBtn').focus?.();return true;
 }
+// Compatibility entry point for internal callers; the old shop has been retired.
 function renderNotebook(){
-  updateScrapCounters();const locked=!canSpendScraps(),version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
-  game.dom.$('notebookNotice').textContent=storageIssue?'This browser is not saving progress. Scraps and purchases are kept for this visit.':locked?'Your run is paused. Purchases unlock after it ends and apply to the next run.':'Spend scraps on your next attempt. Permanent perks stack with the upgrades you earn during a run.';
-  if(migrationRefund)game.dom.$('notebookNotice').textContent+=' Fresh Pencil was retired: '+migrationRefund+' scraps returned for your drawing tool.';
-  const l=progress.levels;
-  game.dom.$('notebookLoadout').textContent='Next run: '+toolForRank(l.tool).name+' · '+toolForRank(l.tool).slots+' effect slots · '+(160+l.inkTank*20)+' ink · '+(6+l.inkRegen)+' ink/s · '+(65+l.tool*8)+' wall HP · 8 wall damage/s · '+(75+l.health*8)+' Stevie HP · '+l.rerolls+' starting rerolls · '+(l.extraChoice?4:3)+' reward choices · '+(l.luck*2)+' Luck'+(l.rocks?' · '+l.rocks*2+' paper-ball damage':'')+' · '+Math.round((.25+.05*l.starterEraser)*100)+'% erase recovery';
-  const list=game.dom.$('notebookPerks');list.innerHTML='';
-  for(const perk of perks){
-    const rank=l[perk.id],maxed=rank===perk.max,price=perkPrice(perk,rank),card=document.createElement('article');card.className='notebook-perk'+(perk.id==='starterEraser'&&scrapLessonPending()?' scrap-guide-target':'');
-    const art='assets/art/upgrades/'+perk.art+'.svg';
-    const toolArt=perk.id==='tool'?`<div class="tool-rank-comparison"><div><span>Current · rank ${rank}</span>${game.api.toolIllustration(rank)}</div>${maxed?'':`<div><span>Next · rank ${rank+1}</span>${game.api.toolIllustration(rank+1)}</div>`}</div>`:'';
-    card.innerHTML=`${toolArt}<div class="notebook-perk-heading">${perk.id==='tool'?'':`<img src="${art}${query}" alt="" width="48" height="48">`}<div><h3>${perk.name}</h3><span>Rank ${rank} / ${perk.max}</span></div></div><p>${perk.desc}</p><p class="notebook-effect">${perk.effect(rank)}</p><p class="notebook-next">${maxed?'All ranks unlocked.':'Next rank: '+perk.effect(rank+1)}</p>`;
-    const button=document.createElement('button');button.id='notebookBuy-'+perk.id;
-    button.disabled=!!(perk.requires&&!l[perk.requires])||maxed||locked||progress.scraps<price||perk.id==='circles'&&!shapeStudiesAvailable()||perk.id==='starterEraser'&&progress.lifetimeScraps===0;
-    button.textContent=perk.requires&&!l[perk.requires]?'First buy '+perks.find(p=>p.id===perk.requires).name:perk.id==='circles'&&!shapeStudiesAvailable()?'Beat wave 10 to unlock Shapes':perk.id==='starterEraser'&&progress.lifetimeScraps===0?'Unlocks after your first adventure':maxed?'Fully upgraded':locked?'Available after this run':'Buy rank '+(rank+1)+' · '+price+' scraps';
-    button.onclick=()=>buyNotebookPerk(perk.id);card.appendChild(button);list.appendChild(card);
-  }
-  game.api.prepareDesktopPages?.('notebook');
+  updateScrapCounters();game.api.renderBetaTree?.();
+  if(migrationRefund)game.dom.$('betaTreeStatus').textContent+=' '+migrationRefund+' scraps returned from the retired Fresh Pencil upgrade.';
 }
-function scrapLessonPending(){return progress.lifetimeScraps>0&&!progress.levels.starterEraser&&!game.api.devModeEnabled();}
+function scrapLessonPending(){return progress.lifetimeScraps>0&&!progress.scrapTutorialDone&&!progress.levels.starterEraser&&!game.api.devModeEnabled();}
 // Wait until a later menu visit; never interrupt earning scraps or a live run.
 function syncScrapTutorial(){
  const eligible=scrapLessonPending()&&!game.state.running;
- const shop=eligible&&game.dom.$('notebookOverlay').style.display==='grid';
+ const tree=eligible&&game.dom.$('betaScrapsOverlay').style.display==='grid';
  const hub=eligible&&game.dom.$('hubOverlay').style.display==='grid';
  const cover=eligible&&!game.api.infoOpen()&&game.dom.startOverlay.style.display!=='none';
  game.dom.$('startBtn').disabled=eligible||game.api.artworkStatus?.().ready===false;
  game.dom.$('splashHubBtn').classList?.toggle('scrap-guide-target',cover);
  game.dom.$('hubNotebookBtn').classList?.toggle('scrap-guide-target',hub);
- game.api.showScrapCoach?.(shop?'shop':hub?'hub':cover?'cover':null);
+ game.api.showScrapCoach?.(tree?game.api.scrapTreeLessonStage():hub?'hub':cover?'cover':null);
 }
-function finishScrapTutorial(){if(!progress.levels.starterEraser)return false;progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial();return true;}
-function openNotebook(){game.api.openInfo('notebook')}
+function finishScrapTutorial(){if(!progress.betaPencilClaimed&&!progress.levels.starterEraser)return false;progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial();return true;}
+function openNotebook(){game.api.openInfo('betaScraps')}
 function closeNotebook(){game.api.closeInfo()}
 const api={shapeStudiesAvailable,recordShapeVictory,claimBetaPencil,notebookPerkPrice,adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;

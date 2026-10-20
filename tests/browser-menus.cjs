@@ -32,7 +32,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..')),native=proce
   assert.deepEqual(await page.locator('#startOverlay button:visible').allTextContents(),['Play →','Notebook','Settings']);
   for(const id of ['startBtn','splashHubBtn','splashOptionsBtn']){const b=await page.locator('#'+id).boundingBox();assert.ok(b.height>=44&&b.x>=0&&b.y>=0&&b.x+b.width<=viewport.width+1&&b.y+b.height<=viewport.height+1,'cover action fits '+id)}
   await page.click('#splashHubBtn');assert.equal(await page.locator('#hubOverlay').isVisible(),true);
-  for(const [button,overlay,close] of [['hubMonstersBtn','compendiumOverlay','closeCompendiumBtn'],['hubToolBtn','buildOverlay','closeBuildBtn'],['hubNotebookBtn','notebookOverlay','closeNotebookBtn'],['hubSettingsBtn','optionsOverlay','closeOptionsBtn'],['hubStatsBtn','statisticsOverlay','closeStatisticsBtn'],['hubChangelogBtn','changelogOverlay','closeChangelogBtn']]){
+  for(const [button,overlay,close] of [['hubMonstersBtn','compendiumOverlay','closeCompendiumBtn'],['hubToolBtn','buildOverlay','closeBuildBtn'],['hubNotebookBtn','betaScrapsOverlay','closeBetaScrapsBtn'],['hubSettingsBtn','optionsOverlay','closeOptionsBtn'],['hubStatsBtn','statisticsOverlay','closeStatisticsBtn'],['hubChangelogBtn','changelogOverlay','closeChangelogBtn']]){
    await page.click('#'+button);assert.equal(await page.locator('#'+overlay).isVisible(),true);assert.equal(await page.locator('#hubOverlay').isVisible(),false);await page.click('#'+close);assert.equal(await page.locator('#hubOverlay').isVisible(),true);
   }
   await page.screenshot({path:'/tmp/notebook-hub-'+viewport.width+'.png'});
@@ -58,7 +58,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..')),native=proce
   await page.evaluate(()=>testGame.api.awardScraps(3));const scraps=await page.evaluate(()=>testGame.api.notebookSnapshot().scraps);
   await page.click('#pauseBtn');await page.click('#returnMenuBtn');await page.click('#confirmQuitBtn');
   assert.equal(await page.locator('#startOverlay').isVisible(),true);assert.equal(await page.evaluate(()=>testGame.state.running),false);assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),scraps);
-  await page.click('#splashHubBtn');await page.click('#hubNotebookBtn');assert.equal(await page.locator('#notebookOverlay').isVisible(),true);await page.click('#closeNotebookBtn');await page.click('#closeHubBtn');
+  await page.click('#splashHubBtn');await page.click('#hubNotebookBtn');assert.equal(await page.locator('#betaScrapsOverlay').isVisible(),true);await page.click('#closeBetaScrapsBtn');await page.click('#closeHubBtn');
   await page.evaluate(()=>testGame.api.buyNotebookPerk('starterEraser'));await page.click('#startBtn');assert.equal(await page.evaluate(()=>testGame.state.wave),1);
   await page.click('#pauseBtn');await page.click('#returnMenuBtn');await page.click('#confirmQuitBtn');assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),scraps,'empty quit does not farm scraps');
   await page.reload();assert.equal(await page.textContent('#splashScraps'),String(scraps));

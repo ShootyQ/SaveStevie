@@ -64,7 +64,7 @@ function enterScreen(){
 }
 function startRun(options={}){
   if(game.api.artworkStatus().ready===false){game.api.setMsg('Notebook artwork is still loading. Try again when it is ready.');return;}
-  if(options.fromEnd!==true&&game.api.scrapLessonPending()){game.api.openInfo('hub');return;}
+  if(game.api.scrapLessonPending()){if(options.fromEnd===true)game.api.returnToMenu();else game.api.openInfo('hub');return;}
   game.api.startMusic('margin-mischief');
   if(window.matchMedia?.('(pointer: coarse)').matches)enterScreen();
   game.api.resetRun();
@@ -104,7 +104,6 @@ game.dom.$('monsterIntrosEnabled').onchange=e=>game.api.setMonsterIntrosEnabled(
 game.dom.$('continueMonsterIntroBtn').onclick=game.api.continueMonsterIntro;
 game.dom.$('continueSynergyBtn').onclick=game.api.continueSynergyReveal;
 game.dom.$('victoryMenuBtn').onclick=game.api.returnToMenu;
-game.dom.$('closeNotebookBtn').onclick=game.api.closeNotebook;
 game.dom.$('resetNotebookBtn').onclick=game.api.resetNotebookProgress;
 window.addEventListener('keydown',game.api.handleInfoKey);
 const aimCode=e=>['up','left','down','right'].find(action=>game.api.controlKey(action,e));
@@ -169,6 +168,7 @@ game.dom.$('newRunBtn').onclick=()=>startRun({fromEnd:true});
 game.dom.$('continueBtn').onclick=game.api.proceedAfterWave;
 game.dom.$('rerollBtn').onclick=game.api.reroll;
 game.dom.$('endlessBtn').onclick=()=>{
+  if(game.api.scrapLessonPending()){game.api.returnToMenu();return;}
   game.api.resumeScrapRun();
   game.state.endless=true;game.state.running=true;game.dom.victoryOverlay.style.display='none';
   game.state.wave=21;game.state.betweenWaves=false;game.state.inUpgrade=false;game.state.awaitingSpec=false;game.api.startWave();game.api.updateUI()

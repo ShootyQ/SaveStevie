@@ -28,12 +28,12 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   assert.equal(await page.locator('#buildNotebookBtn').count(),0);assert.equal(await page.locator('#deathNotebookBtn').count(),0);assert.equal(await page.locator('#victoryNotebookBtn').count(),0);
   await page.click('#closeReportBtn');assert.equal(await page.locator('#pauseOverlay').isVisible(),true);assert.equal(await page.evaluate(()=>testGame.state.paused),true);await page.click('#resumeBtn');assert.equal(await page.evaluate(()=>testGame.state.paused),false);
   await page.evaluate(()=>{const g=testGame;g.api.awardScraps(5);g.state.player.hp=0;g.api.gameOver();g.api.updateUI()});
-  assert.deepEqual(await page.locator('#gameOverOverlay .cardactions button').allTextContents(),['Return to main menu','Start a new run']);
-  const bank=await page.evaluate(()=>testGame.api.notebookSnapshot().scraps);
-  await page.click('#deathNewRunBtn');assert.equal(await page.evaluate(()=>testGame.state.running&&testGame.state.wave===1&&testGame.state.player.hp>0),true,'starts gameplay directly even with first scraps');assert.equal(await page.locator('#gameOverOverlay').isVisible(),false);assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),bank);
-  const finalBank=await page.evaluate(()=>{testGame.state.player.hp=0;testGame.api.gameOver();return testGame.api.notebookSnapshot().scraps});await page.click('#againBtn');assert.equal(await page.locator('#startOverlay').isVisible(),true);assert.equal(await page.evaluate(()=>testGame.state.running),false);
-  await page.click('#splashHubBtn');await page.click('#hubNotebookBtn');assert.equal(await page.locator('#notebookOverlay').isVisible(),true);assert.equal(await page.locator('#notebookBuy-starterEraser').isEnabled(),true);assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),finalBank);assert.deepEqual(errors,[]);
-  console.log('PASS: report metadata, GitHub draft URL, copy/fallback/download, pause restoration, direct fresh run and home scrap shop at',viewport.width);await page.close();
+  assert.equal(await page.locator('#deathNewRunBtn').isVisible(),false,'first run must return to menu');
+  const finalBank=await page.evaluate(()=>testGame.api.notebookSnapshot().scraps);
+  await page.click('#againBtn');assert(await page.locator('#startOverlay').isVisible());
+  await page.click('#splashHubBtn');await page.click('#hubNotebookBtn');assert(await page.locator('#betaScrapsOverlay').isVisible());
+  await page.click('#beta-node-start');await page.click('#betaBuyNode');await page.click('#closeBetaScrapsBtn');assert(await page.locator('#scrapCoach').isHidden());assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),finalBank);assert.deepEqual(errors,[]);
+  console.log('PASS: report metadata, GitHub draft URL, copy/fallback/download, pause restoration, first-run menu and Scrap Tree at',viewport.width);await page.close();
  }
  }finally{await browser.close()}
 })().catch(error=>{console.error(error);process.exitCode=1});
