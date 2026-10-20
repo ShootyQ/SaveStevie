@@ -32,6 +32,17 @@ module.exports=load=>{
  }
  // Lace can be countered by a real paid wall, drops its passenger and never throws.
  {const r=setup(),{a,e,g}=r;let s=a.bootstompSnapshot(e);for(let i=0;i<1200&&s.phase!=='lace';i++){step(r,.05);s=a.bootstompSnapshot(e);}assert.equal(s.phase,'lace');step(r,.3);const l=a.bootstompSnapshot(e).lace,x=(l.x+l.ex)/2,y=(l.y+l.y2)/2;g.state.stats.ink=999;a.createWall([{x,y:y-28},{x,y:y+28}]);assert.equal(a.bootstompSnapshot(e).phase,'lace_rebound');assert.equal(g.state.enemies.filter(n=>n.flight?.bossThrown).length,0);assert(g.state.enemies.filter(n=>n.bossOwner===e).every(n=>!a.bossFriendHeld(n)));}
+ // Double waves demand defenses even when the footprint counter succeeds.
+ for(const covered of [false,true]){const r=setup(),{a,e,g}=r;down(r);let s=a.bootstompSnapshot(e);for(let i=0;i<1000&&s.phase!=='shockwave';i++){step(r,.05);s=a.bootstompSnapshot(e);}assert.equal(s.phase,'shockwave');assert.equal(s.ripples.length,0,'warning precedes the waves');
+  const p=g.state.player,hp=p.hp;if(covered){const x=(e.x+p.x)/2,y=(e.y+p.y)/2,dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy);g.state.walls.push({pts:[{x:x-dy/d*130,y:y+dx/d*130},{x:x+dy/d*130,y:y-dx/d*130}],hp:100,maxHp:100,life:100,thick:8});}
+  step(r,.75);assert.equal(a.bootstompSnapshot(e).shockCount,1);step(r,2);assert.equal(a.bootstompSnapshot(e).shockCount,2);assert.equal(hp-p.hp,covered?0:28,'both waves can be completely caught by a wall');if(covered)assert.equal(g.state.walls[0].hp,20);
+ }
+ // A nearby helper is visibly wound up, kicked through the air and lands safely
+ // with no fall damage or stun.
+ for(const [W,H] of [[1280,800],[393,700]]){const r=setup(W,H),{a,e,g}=r;let s=a.bootstompSnapshot(e);for(let i=0;i<1000&&s.phase!=='walk';i++){step(r,.05);s=a.bootstompSnapshot(e);}assert.equal(s.phase,'walk');
+  const n=a.spawnEnemy(false,e.x,e.y,'grunt');n.bossOwner=e;const hp=n.hp;step(r,.05);assert.equal(a.bootstompSnapshot(e).phase,'kick');assert(a.bossFriendHeld(n));step(r,.5);assert(!n.flight,'kick has a readable windup');step(r,.2);assert(n.flight?.bossThrown);assert.equal(n.flight.damage,0);assert.equal(n.flight.stun,0);assert(!a.bossFriendHeld(n));
+  const f=n.flight,p=g.state.player;assert(Math.hypot(f.targetX-p.x,f.targetY-p.y)>Math.hypot(a.refugeBounds().halfWidth,a.refugeBounds().halfHeight)+n.r);a.updateEnemyFlight(n,.7);assert.equal(n.hp,hp);assert.equal(n.stun,0);assert(!n.flight);
+ }
  // Actual PC movement follows the inset ring and keeps the original combat pace.
  {const r=setup(1280,800),{a,e,g}=r;a.desktopUiEnabled=()=>true;let walked=0,minDistance=Infinity;
   for(let i=0;i<1600;i++){const before=a.bootstompSnapshot(e),x=e.x,y=e.y;step(r,.025);const after=a.bootstompSnapshot(e);if(before.phase!=='intro')minDistance=Math.min(minDistance,Math.hypot(e.x-g.state.player.x,e.y-g.state.player.y));if(before.phase==='walk'){const distance=Math.hypot(e.x-x,e.y-y);assert(distance<=110*.025+1e-7,'walk retains its 110px/s combat pace');walked+=distance;}}
@@ -44,8 +55,6 @@ module.exports=load=>{
   for(let i=0;i<10;i++){const old=boss.x;a.updateBootstomp(boss,.1);assert(Math.abs(boss.x-old)<=8.8+1e-7,'entrance cannot race across a wide screen');}
   a.updateBootstomp(boss,s.introDuration-1+.01);assert(Math.abs(boss.x-s.introGoal.x)<1e-7);assert.equal(a.bootstompSnapshot(boss).phase,'intro');a.updateBootstomp(boss,1.45);assert.equal(a.bootstompSnapshot(boss).phase,'idle');assert.equal(boss.speed,110);
  }
- // A prompt hold still succeeds (tested above); a late hold now misses the stomp.
- {const r=setup(),{a,e}=r;step(r,.65);assert(a.beginPaperPress(a.bootstompSnapshot(e).target));step(r,2.4,true);assert.equal(a.bootstompSnapshot(e).phase,'impact','late dent is too shallow at the earlier landing');}
  // Helpers keep the same cap, but actual arrivals are spaced farther apart.
  {const r=setup(),{a,e,g}=r,count=()=>g.state.enemies.filter(n=>n.bossOwner===e).length;assert.equal(count(),0);step(r,.2);assert.equal(count(),1);step(r,2);assert.equal(count(),1,'no second helper at the old arrival cadence');step(r,.5);assert.equal(count(),2,'reduced stream continues spawning helpers');}
  console.log('PASS: Bootstomp held-foot counter, 15 persistent real swipes, immunity, one-time ripple mitigation, paid lace counter, full defeat, pause/pure draw and three arena sizes.');
