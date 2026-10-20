@@ -115,6 +115,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
   const f=v=>Number(v.toFixed(2)),s=game.state.stats,t=game.api.supportInkTuning(n),r=game.api.remainingInkTuning(n);
   const effects={
     'Bigger Ink Tank':()=>`+${35*n} max ink`, 'Quick Refill':()=>`+${f(game.api.regenStackEffect('Quick Refill',n))} ink/s; diminishing returns`,
+    'Under the Desk':()=>game.catalog.upgrades.find(u=>u.name==='Under the Desk').desc,
     'Margin of Error':()=>game.catalog.upgrades.find(u=>u.name==='Margin of Error').desc,
     "Stevie's Terrible Idea":()=>game.catalog.upgrades.find(u=>u.name==="Stevie's Terrible Idea").desc,
     'Spitball Express':()=>game.catalog.upgrades.find(u=>u.name==='Spitball Express').desc,

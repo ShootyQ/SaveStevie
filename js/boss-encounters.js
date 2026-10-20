@@ -79,6 +79,7 @@ function pickupPathClear(e,n){const p=game.state.player,r=game.api.refugeBounds(
 
 function bossChaseScale(e){return isFirstBoss(e)&&bossBrain(e).pickup?firstBossTuning(e).chaseScale:1}
 function bossFriendHeld(n){
+ if(game.api.heldUnderDesk?.(n))return true;
  if(game.api.bootstompFriendHeld?.(n))return true;
  const e=n.bossOwner;if(!e||!isFirstBoss(e)||e.hp<=0||e.freeze>0||e.stun>0||!game.state.enemies.includes(e))return false;
  const c=bossBrain(e).cast;return c?.kind==='friend-fling'&&c.friend===n&&c.left>0&&n.hp>0&&n.freeze<=0&&n.stun<=0;

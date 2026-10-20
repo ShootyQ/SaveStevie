@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.117
+# Save Stevie upgrade reference — Alpha 0.1.118
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -44,6 +44,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Stevie's Terrible Idea | Drawing / ink economy | Finish a paid, open 55–260px stroke, hold its tip still for 1 second, then release. Spend 12 extra ink to crumple it into a rolling boulder carrying your ink effects. Rolls along the stroke direction, then unfolds at half its remaining HP if room permits. 8-second cooldown; no ink refunds or repeat crumpling. Bosses resist the roll. | One-time unlock; See effect description and game code for per-level combat tuning. |
 | Spitball Express | Stevie / paper balls / survival | Requires permanent paper balls and Circle Studies. Allows at least two active turrets. Draw a paid line from one turret to another: the first sends its shots along it, charging them for 75% extra damage before the far turret fires. Break the line or lose either turret and the delivery stops. Draw direction sets the route. | One-time unlock; See effect description and game code for per-level combat tuning. |
 | Red Pen Corrections | Stevie / paper balls / survival | A red correction mark appears over an ordinary monster. Rub the mark to recruit it for 8 seconds: it throws paper balls at enemies, then runs away. One friend at a time; a new mark becomes available after 12 seconds. Bosses and specialist monsters cannot be recruited. | One-time unlock; See effect description and game code for per-level combat tuning. |
+| Under the Desk | Walls / shapes | Draw a paid closed shape 64–160px across, safely away from Stevie. Erase two diagonal strokes to make an X inside it. Spend 35 extra ink: a creature punches through the school desk and grabs up to three ordinary monsters within about 100px. Lasts 12 seconds; 24-second cooldown. Bosses, shielded monsters and passengers resist swallowing. The cracked wooden scar stays for the chapter. A box avoids the Circle Studies turret offer. | One-time unlock; See effect description and game code for per-level combat tuning. |
 | Loaded Deck | Rewards / recovery | Future normal rewards cannot roll below Uncommon. | One-time unlock; One-time unlock; ordinary rewards only, no extra Legendary chances. |
 | Reroll Coupon | Rewards / recovery | +2 rerolls immediately. | Repeatable; caps/diminishing returns may apply; Stored rerolls capped at 5; awarded levels respect remaining cap. |
 | Collector | Rewards / recovery | Slightly favors upgrades you have not taken yet. | One-time unlock; One-time unlock; unowned card weights multiplied by 1.8. |

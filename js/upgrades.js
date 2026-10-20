@@ -228,6 +228,8 @@ game.catalog.upgrades = [
   {name:'Spitball Express',exclusiveRarity:'rare',cat:'stevie',desc:'Requires permanent paper balls and Circle Studies. Allows at least two active turrets. Draw a paid line from one turret to another: the first sends its shots along it, charging them for 75% extra damage before the far turret fires. Break the line or lose either turret and the delivery stops. Draw direction sets the route.',apply:()=>{}},
   {name:'Red Pen Corrections',exclusiveRarity:'legendary',cat:'stevie',desc:'A red correction mark appears over an ordinary monster. Rub the mark to recruit it for 8 seconds: it throws paper balls at enemies, then runs away. One friend at a time; a new mark becomes available after 12 seconds. Bosses and specialist monsters cannot be recruited.',apply:()=>{}},
 
+  {name:'Under the Desk',exclusiveRarity:'legendary',cat:'defense',desc:'Draw a paid closed shape 64–160px across, safely away from Stevie. Erase two diagonal strokes to make an X inside it. Spend 35 extra ink: a creature punches through the school desk and grabs up to three ordinary monsters within about 100px. Lasts 12 seconds; 24-second cooldown. Bosses, shielded monsters and passengers resist swallowing. The cracked wooden scar stays for the chapter. A box avoids the Circle Studies turret offer.',apply:()=>{}},
+
   // Economy / luck
   {name:'Loaded Deck',cat:'economy',desc:'Future normal rewards cannot roll below Uncommon.',apply:()=>game.state.stats.uncommonFloor=true},
   {name:'Reroll Coupon',cat:'economy',desc:'+2 rerolls immediately.',apply:()=>game.state.rerolls=Math.min(5,game.state.rerolls+2)},
@@ -248,7 +250,7 @@ game.catalog.upgrades = [
   {name:'Death Ink',cat:'ink',desc:'Per level: +5 base wall damage per second. Physical hits deal bonus damage against enemies at half health or lower.',apply:()=>game.state.stats.wallDamage+=5},
 ];
 
-const oneTimeUpgrades = new Set(['Margin of Error',"Stevie's Terrible Idea",'Spitball Express','Red Pen Corrections','Doodle Stitch','Loaded Deck','Collector','Greedy Goblin']);
+const oneTimeUpgrades = new Set(['Under the Desk','Margin of Error',"Stevie's Terrible Idea",'Spitball Express','Red Pen Corrections','Doodle Stitch','Loaded Deck','Collector','Greedy Goblin']);
 function upgradeAvailable(u){
   if(u.name==='Spitball Express'&&!game.api.devRunActive()){const l=game.api.notebookSnapshot().levels;if(!l.rocks||!l.circles)return false;}
   if(u.name==='Electric Rocks'&&game.state.stats.electricRocks>=6)return false;
@@ -292,6 +294,7 @@ const upgradeArtGroups=[
  ['Pocket Rocks','Better Rocks','Emergency Medicine','Really Good Rocks','Stevie Has Had Enough','Loaded Deck','Reroll Coupon','Collector','Greedy Goblin']
 ];
 function upgradeArtworkInfo(u){
+ if(u.name==='Under the Desk')return {file:'assets/art/under-desk.png',grid:3,rows:2,x:2,y:0};
  const toys=['Margin of Error',"Stevie's Terrible Idea",'Spitball Express','Red Pen Corrections'],toy=toys.indexOf(u.name);if(toy>=0)return {file:'assets/art/upgrades/utility-toys.png',grid:2,x:toy%2,y:Math.floor(toy/2)};
  if(u.name==='Electric Ink'&&u.rarity==='legendary')return {file:'assets/art/upgrades/tesla.svg',grid:1,x:0,y:0};
  if(u.name==='Frost Ink'&&u.rarity==='legendary')return {file:'assets/art/upgrades/iceberg.svg',grid:1,x:0,y:0};
@@ -303,7 +306,7 @@ function upgradeArtworkInfo(u){
  return null;
 }
 function legacyUpgradeArtwork(u){
- if(['Margin of Error',"Stevie's Terrible Idea",'Spitball Express','Red Pen Corrections'].includes(u.name))return 'assets/art/upgrades/loaded-deck.svg';
+ if(['Under the Desk','Margin of Error',"Stevie's Terrible Idea",'Spitball Express','Red Pen Corrections'].includes(u.name))return 'assets/art/upgrades/loaded-deck.svg';
  if(u.name==='Electric Rocks')return 'assets/art/electric.png';
  if(u.name==='Clean Erasing')return 'assets/art/upgrades/recycling.svg';
  const existing={'Fire Ink':'fire','Frost Ink':'frost','Poison Ink':'poison','Electric Ink':'electric','Blast Ink':'blast','Vampire Ink':'vampire','Gravity Ink':'gravity','Repulsion Ink':'repulsion','Void Ink':'void','Chaos Ink':'chaos','Fine Tip':'pencil','Stevie Has Had Enough':'pencil'};
@@ -312,7 +315,7 @@ function legacyUpgradeArtwork(u){
 function upgradeArtwork(u){return upgradeArtworkInfo(u)?.file||legacyUpgradeArtwork(u)}
 function upgradeArtworkMarkup(u,size=64){
  const a=upgradeArtworkInfo(u),version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
- const style=a?`width:${a.grid*100}%;height:${a.grid*100}%;left:${-a.x*100}%;top:${-a.y*100}%;`:'width:100%;height:100%;left:0;top:0;';
+ const style=a?`width:${a.grid*100}%;height:${(a.rows||a.grid)*100}%;left:${-a.x*100}%;top:${-a.y*100}%;`:'width:100%;height:100%;left:0;top:0;';
  return `<span class="upgrade-illustration" style="--illustration-size:${size}px" aria-hidden="true"><img class="upgrade-art" src="${upgradeArtwork(u)}${query}" data-art-fallback="${legacyUpgradeArtwork(u)}${query}" alt="" width="${size}" height="${size}" style="${style}"></span>`;
 }
 function bindArtworkFallback(container){

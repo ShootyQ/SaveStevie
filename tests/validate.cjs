@@ -1703,7 +1703,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
  assert.equal(env.node('upgradeDetails').hidden,true);card.onclick();assert.equal(env.node('upgradeDetails').hidden,true,'removed offers cannot reopen inspection');g.api.takeInspectedReward();assert.equal(JSON.stringify(g.state),before,'changed dev choice invalidates old confirmation');
  env.sandbox.Math.random=random;
  env.node('cards').children[0].onclick();env.node('takeUpgradeBtn').onclick();assert.equal(g.state.inks.frost,3);assert.equal(g.state.inks.fire,0);const wave=g.state.wave;g.api.takeInspectedReward();assert.equal(g.state.wave,wave,'confirmation cannot advance twice');
- const cells=g.catalog.upgrades.map(u=>{const a=g.api.upgradeArtworkInfo(u);assert.ok(a&&a.x<a.grid&&a.y<a.grid);return a.file+':'+a.x+':'+a.y;});assert.equal(new Set(cells).size,42);
+ const cells=g.catalog.upgrades.map(u=>{const a=g.api.upgradeArtworkInfo(u);assert.ok(a&&a.x<a.grid&&a.y<a.grid);return a.file+':'+a.x+':'+a.y;});assert.equal(new Set(cells).size,43);
  console.log('PASS: reward inspection/close are read-only without RNG; stale dev choices cannot reopen/commit; explicit confirmation applies once and every upgrade has distinct artwork.');
 }
 
@@ -2650,3 +2650,5 @@ require('./bootstomp-boss.cjs')(load);
 require('./head-start-and-turrets.cjs')(load);
 
 require("./utility-toys.cjs")(load);
+
+require("./under-desk.cjs")(load);

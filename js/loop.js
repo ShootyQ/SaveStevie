@@ -6,7 +6,7 @@ function update(dt){
   game.api.updateStevieGuides();
   game.api.syncSoundEffects();game.api.updateMenuPencil(dt);
   if(game.api.wobbleRepairActive()){game.api.updateWobbleRepair(dt);return;}
-  if(game.api.waveFinaleActive()){if(game.state.player.hp<=0){game.api.resetWaveFinale();game.api.gameOver();return}game.api.updateWaveFinale(dt);game.api.updateUI();return;}
+  if(game.api.waveFinaleActive()){game.api.updateUnderDeskPresentation(dt);if(game.state.player.hp<=0){game.api.resetWaveFinale();game.api.gameOver();return}game.api.updateWaveFinale(dt);game.api.updateUI();return;}
   // The wave-clear portrait celebrates while combat is stopped, but respects
   // manual pause and the build/upgrade/specialization screens.
   if(game.state.betweenWaves&&!game.state.paused&&!game.state.inUpgrade&&!game.state.awaitingSpec)game.api.updateStevieCelebration(dt);
@@ -43,7 +43,7 @@ function update(dt){
     if(w.life<=0)game.state.walls=game.state.walls.filter(x=>x!==w);
   }
 
-  game.api.updateUtilityToys(dt);
+  game.api.updateUnderDesk(dt);game.api.updateUtilityToys(dt);
   game.api.updateCircleShapes(dt);
   game.api.updateStevie(dt);game.api.updateProjectiles(dt);game.api.updateEnemyShots(dt);
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
@@ -119,6 +119,7 @@ function update(dt){
     }
     if(game.api.waveFinaleActive())break;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
+    if(game.api.heldUnderDesk(e))continue;
     if(game.api.updateEnemyFlight(e,dt))continue;
     if(game.api.paperPressCaptures(e)){const hit=game.api.nearestWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
     if(game.api.heldByCatapulter(e))continue;

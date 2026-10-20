@@ -14,6 +14,7 @@ function syncDrawingControls(){
  game.dom.canvas.style.cursor=active?'none':'crosshair';game.api.syncDesktopCursor?.();
 }
 function finishStroke(commit=true){
+ game.api.endUnderDeskGesture?.(commit);
  if(commit&&canPaint())game.api.releasePaperPress();else game.api.cancelPaperPress();
  const lift=commit&&game.state.drawing&&!eraserActive()&&game.state.currentWall?.length>1;
  game.api.resetWhiteToolsStroke?.();game.api.resetBootstompRub?.();game.api.resetCrayonEraseStroke();game.api.resetCatapultEraseStroke();
@@ -150,7 +151,7 @@ game.dom.canvas.addEventListener('pointermove',e=>{
   if(!erasePoint)erasePoint={...lastPoint};
   if(!pressing&&game.api.dist(erasePoint.x,erasePoint.y,p.x,p.y)>=6){
    game.api.sustainSound('erase');game.api.eraseWallPath(erasePoint,p,20);
-   if(!game.api.whiteToolsEraseHandled?.()&&!game.api.bootstompEraseHandled?.()&&!game.api.utilityEraseHandled?.())game.api.queuePaperRub(erasePoint,p,20);
+   if(!game.api.whiteToolsEraseHandled?.()&&!game.api.bootstompEraseHandled?.()&&!game.api.utilityEraseHandled?.()&&!game.api.underDeskEraseHandled?.())game.api.queuePaperRub(erasePoint,p,20);
    erasePoint={...p};
   }
   cursor={...p,r:20};

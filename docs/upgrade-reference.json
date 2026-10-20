@@ -1,5 +1,5 @@
 {
-  "version": "0.1.117",
+  "version": "0.1.118",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -361,6 +361,18 @@
       "name": "Red Pen Corrections",
       "category": "Stevie / paper balls / survival",
       "effect": "A red correction mark appears over an ordinary monster. Rub the mark to recruit it for 8 seconds: it throws paper balls at enemies, then runs away. One friend at a time; a new mark becomes available after 12 seconds. Bosses and specialist monsters cannot be recruited.",
+      "rarities": "legendary",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "id": "Under the Desk",
+      "name": "Under the Desk",
+      "category": "Walls / shapes",
+      "effect": "Draw a paid closed shape 64–160px across, safely away from Stevie. Erase two diagonal strokes to make an X inside it. Spend 35 extra ink: a creature punches through the school desk and grabs up to three ordinary monsters within about 100px. Lasts 12 seconds; 24-second cooldown. Bosses, shielded monsters and passengers resist swallowing. The cracked wooden scar stays for the chapter. A box avoids the Circle Studies turret offer.",
       "rarities": "legendary",
       "levels": "One-time: +1 unlock",
       "stacking": "One-time unlock",
@@ -1674,6 +1686,19 @@
       "name": "Red Pen Corrections",
       "category": "Stevie / paper balls / survival",
       "effect": "A red correction mark appears over an ordinary monster. Rub the mark to recruit it for 8 seconds: it throws paper balls at enemies, then runs away. One friend at a time; a new mark becomes available after 12 seconds. Bosses and specialist monsters cannot be recruited.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "id": "Under the Desk",
+      "name": "Under the Desk",
+      "category": "Walls / shapes",
+      "effect": "Draw a paid closed shape 64–160px across, safely away from Stevie. Erase two diagonal strokes to make an X inside it. Spend 35 extra ink: a creature punches through the school desk and grabs up to three ordinary monsters within about 100px. Lasts 12 seconds; 24-second cooldown. Bosses, shielded monsters and passengers resist swallowing. The cracked wooden scar stays for the chapter. A box avoids the Circle Studies turret offer.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",

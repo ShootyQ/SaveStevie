@@ -51,8 +51,8 @@ function eraseWallPath(a,b,r=20,options={}){
  const lesson=options.lesson===true&&game.api.lessonCanPaint?.('erase');
  if(!game.state.running||(game.state.paused&&!lesson)||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
  if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
- game.api.resetUtilityEraseHandled?.();
- if(!options.enemy&&!lesson){const bossErase=game.api.eraseBootstompPath?.(a,b,r);if(game.api.bootstompEraseHandled?.())return !!bossErase;const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;if(game.api.utilityErase?.(a,b,r))return true;}
+ game.api.resetUtilityEraseHandled?.();game.api.resetUnderDeskEraseHandled?.();
+ if(!options.enemy&&!lesson){const bossErase=game.api.eraseBootstompPath?.(a,b,r);if(game.api.bootstompEraseHandled?.())return !!bossErase;const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;if(game.api.utilityErase?.(a,b,r))return true;if(game.api.underDeskErase?.(a,b,r))return true;}
  let changed=false,recovered=0;const result=[];
  for(const wall of game.state.walls){
   if(options.onlyWall&&wall!==options.onlyWall){result.push(wall);continue;}
@@ -149,7 +149,7 @@ function landingPoint(e,x,y,inferno){
  return best;
 }
 function launchEnemy(e,x,y,inferno=false){
- if(e.hp<=0||e.flight||game.api.underPaper(e))return false;
+ if(e.hp<=0||e.flight||game.api.underPaper(e)||game.api.heldUnderDesk?.(e))return false;
  if(isInkBoss(e)){game.api.animateEnemyAction(e,'slam');return false}
  const target=landingPoint(e,x,y,inferno);if(!target)return false;
  e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:inferno?1.05:.85,
@@ -158,7 +158,7 @@ function launchEnemy(e,x,y,inferno=false){
  game.api.floatText(e.x,e.y,'WHOOSH!','#36786b');return true;
 }
 function flingBossFriend(e,target){
- if(e.hp<=0||e.flight||isInkBoss(e))return false;
+ if(e.hp<=0||e.flight||isInkBoss(e)||game.api.heldUnderDesk?.(e))return false;
  e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:.65,
   height:Math.min(90,Math.max(16,Math.min(e.y,target.y)-e.r*2-50)),spin:target.x<e.x?-1:1,damage:0,stun:0,bossThrown:true};
  game.api.floatText(e.x,e.y,'WHEEEE!','#a55b39');return true;
