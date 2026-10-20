@@ -8,7 +8,8 @@ DoodleDefender.systems.bootstompBoss=function(game){
  const isBootstomp=e=>!!e&&e.type==='bootstomp';
  const hosts=()=>game.state.enemies.filter(e=>isBootstomp(e)&&e.hp>0);
  const playable=()=>game.state.running&&!game.state.paused&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec&&!document.hidden&&!a.waveFinaleActive()&&!a.synergyRevealActive()&&!a.infoOpen();
- const size=()=>Math.min(.76,Math.max(.44,Math.min(game.state.W/440,game.state.H/540)*.76));
+ // Half the original artwork scale; keep the existing generous rub/footprint tolerance.
+ const size=()=>Math.min(.38,Math.max(.22,Math.min(game.state.W/440,game.state.H/540)*.38));
  const ground=()=>62*size()/.76;
  function safePoint(angle=0){
   const {W,H,player:p}=game.state,mx=Math.min(115,W*.28),top=Math.min(145,H*.32),bottom=Math.max(top,H-95);
@@ -19,7 +20,7 @@ DoodleDefender.systems.bootstompBoss=function(game){
  }
  function initBootstomp(e){
   if(brains.has(e))return brains.get(e);
-  const p=safePoint(-Math.PI/2);e.x=p.x;e.y=p.y;e.r=42;e.speed=110;e.hp=e.maxHp=150;e.waveBoss=true;
+  const p=safePoint(-Math.PI/2);e.x=p.x;e.y=p.y;e.r=30;e.speed=110;e.hp=e.maxHp=150;e.waveBoss=true;
   const b={phase:'intro',age:0,time:0,wear:Object.fromEntries(names.map(n=>[n,0])),turn:0,attack:0,side:'right',target:null,goal:null,helperCd:1,helperSerial:0,swipeCd:0,rubs:{},reaction:0,passenger:null,finished:false,introGoal:{x:p.x,y:p.y},introStart:{x:game.state.player.x>=game.state.W/2?-120:game.state.W+120,y:p.y}};e.x=b.introStart.x;brains.set(e,b);
   a.resetCircleShapes();a.setMsg('Bootstomp! Hold the eraser in his footprint until he lands. When he falls, rub out his five patches!');return b;
  }
