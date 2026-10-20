@@ -541,7 +541,7 @@ function applyInkContact(e,dt,wall=null){
 }
 
 const contactCharges=new WeakMap();
-function remainingInkTuning(n){return {repulsionDamage:8+4*n,repulsionPush:35+5*n,repulsionInterval:.8,voidDps:4+2*n,voidExecute:Math.min(.3,.12+.025*n),chaosInterval:Math.max(.45,1.4/(1+.18*(n-1))),chaosDamage:2+n}}
+function remainingInkTuning(n){return {repulsionDamage:8+4*n,repulsionPush:30+10*n,repulsionInterval:.8,voidDps:4+2*n,voidExecute:Math.min(.3,.12+.025*n),chaosInterval:Math.max(.45,1.4/(1+.18*(n-1))),chaosDamage:2+n}}
 function isInkBoss(e){return e.type==='boss'||e.type==='eraser'||game.catalog.enemyDefs[e.type]?.boss}
 function contactPulses(e,kind,dt,interval){
   let data=contactCharges.get(e);if(!data){data={};contactCharges.set(e,data)}

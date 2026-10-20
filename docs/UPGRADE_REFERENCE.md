@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.118
+# Save Stevie upgrade reference — Alpha 0.1.119
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -52,7 +52,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Fire Ink | Ink effects | Wall contact ignites enemies for damage over time. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Frost Ink | Ink effects | Slows on contact from level one. Sustained contact builds a guaranteed freeze; bosses freeze for half as long. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Poison Ink | Ink effects | Enemies build stacking poison while touching walls. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
-| Repulsion Ink | Ink effects | Timed contact pulses deal impact damage, shove enemies safely away from Stevie and briefly stagger them. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
+| Repulsion Ink | Ink effects | Timed contact pulses deal impact damage, shove enemies safely away from Stevie and briefly stagger them. Each rank pushes 10px farther. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Electric Ink | Ink effects | Wall contact sparks a fading chain with brief shock. Shared recovery prevents overlapping zaps; every three levels add a jump, with capped reach and targets. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Blast Ink | Ink effects | Destroyed walls explode and damage nearby enemies. | Repeatable; caps/diminishing returns may apply; See effect description and game code for per-level combat tuning. |
 | Vampire Ink | Ink effects | Deals life-drain damage on contact; heals up to 1.4 HP/s at rank one, plus 0.375 HP/s per additional rank, from actual damage dealt. Shares the 6 HP/s healing budget. | Repeatable; caps/diminishing returns may apply; Shared combat-healing budget: 6 HP/s; no healing at full health. |

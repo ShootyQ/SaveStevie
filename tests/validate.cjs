@@ -1210,6 +1210,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  const a=setup(),b=setup();a.g.state.inks.repulsion=b.g.state.inks.repulsion=1;
  for(let i=0;i<80;i++)a.g.api.applyRepulsionContact(a.e,.01);b.g.api.applyRepulsionContact(b.e,.8);
  assert.equal(a.e.hp,9988);assert.equal(b.e.hp,a.e.hp);assert.ok(Math.abs(a.e.x-b.e.x)<1e-8);assert.equal(a.e.stun,.12);
+ for(const rank of [1,2,5]){const {g,e}=setup();g.state.player.x=100;g.state.player.y=e.y;g.state.inks.repulsion=rank;const x=e.x;g.api.applyRepulsionContact(e,.8);assert.ok(Math.abs(e.x-x-(30+10*rank))<1e-8,'each Repulsion rank increases actual unobstructed shove');}
  const wall={pts:[{x:260,y:100},{x:260,y:300}],thick:8,hp:100,maxHp:100};a.g.state.walls=[wall];a.e.x=220;a.e.y=200;a.g.state.player.x=100;a.g.api.applyRepulsionContact(a.e,.8);assert.ok(a.e.x<260-a.e.r-4,'shove cannot tunnel through intact wall');
  const v=setup();v.g.state.inks.void=1;v.e.hp=1450;v.g.api.applyInkContact(v.e,.1);assert.ok(v.e.hp<=0,'Void executes below 14.5%');v.e.hp=1450;v.e.immunity='void';v.g.api.applyInkContact(v.e,.1);assert.equal(v.e.hp,1450,'immunity blocks execute and steady damage');v.e.immunity='';v.e.type='boss';v.g.api.applyInkContact(v.e,.1);assert.ok(Math.abs(v.e.hp-1449.4)<1e-8,'boss receives steady damage without execute');
  const results={};for(const kind of ['fire','frost','electric','poison','blast','vampire','gravity','repulsion','void']){

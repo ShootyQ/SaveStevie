@@ -1,5 +1,5 @@
 {
-  "version": "0.1.118",
+  "version": "0.1.119",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -488,7 +488,7 @@
       "id": "Repulsion Ink",
       "name": "Repulsion Ink",
       "category": "Ink effects",
-      "effect": "Timed contact pulses deal impact damage, shove enemies safely away from Stevie and briefly stagger them.",
+      "effect": "Timed contact pulses deal impact damage, shove enemies safely away from Stevie and briefly stagger them. Each rank pushes 10px farther.",
       "rarities": "Common / Uncommon / Rare / Legendary",
       "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
       "stacking": "Repeatable; caps/diminishing returns may apply",
@@ -1802,7 +1802,7 @@
       "id": "Repulsion Ink",
       "name": "Repulsion Ink",
       "category": "Ink effects",
-      "effect": "Timed contact pulses deal impact damage, shove enemies safely away from Stevie and briefly stagger them.",
+      "effect": "Timed contact pulses deal impact damage, shove enemies safely away from Stevie and briefly stagger them. Each rank pushes 10px farther.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",
