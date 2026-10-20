@@ -325,7 +325,7 @@
       <section id="testLabPanel" class="test-lab" hidden aria-labelledby="testLabTitle">
         <h3 id="testLabTitle">The scratch page</h3>
         <button type="button" class="secondary" id="openWobblePreviewBtn">Wobblechomp · Animation preview</button><button type="button" class="secondary" id="openWhiteBrothersBtn">White Brothers · Animation studio</button><p class="option-help">Jump straight into a fight with your own build. Test runs save no scraps or records. Starting a test replaces your current run; already banked scraps stay saved.</p>
-        <div class="test-presets" aria-label="Boss shortcuts"><button type="button" data-test-wave="5">King · 5</button><button type="button" data-test-wave="10">Wobblechomp · 10</button><button type="button" data-test-wave="15">Crayon · 15</button><button type="button" data-test-wave="20">Eraser · 20</button></div>
+        <div class="test-presets" aria-label="Boss shortcuts"><button type="button" data-test-wave="5">King · 5</button><button type="button" data-test-wave="10">Bootstomp · 10</button><button type="button" data-test-wave="15">Crayon · 15</button><button type="button" data-test-wave="20">Eraser · 20</button></div>
         <div class="test-fields"><label>Wave<input id="testWave" type="number" min="1" max="200" step="1" value="5"></label><label>Start at<select id="testPhase"><option value="wave">Full wave</option><option value="boss">Boss only</option></select></label><label>Drawing tool<select id="testTool"><option value="0">Pencil · 2 slots</option><option value="3">Mechanical pencil · 2 slots</option><option value="6">Simple pen · 3 slots</option><option value="10">Scented Sharpie · 4 slots</option></select></label></div>
         <label class="monster-setting"><input id="testNotebook" type="checkbox"> Include my permanent Notebook stat bonuses</label>
         <h4>Starting upgrades</h4><p class="option-help">Add an upgrade, choose its rarity, and set how many copies to take. Slot limits, caps and one-time unlocks apply.</p>
@@ -437,7 +437,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
-      <article class="build-entry"><h3>Alpha 0.1.111 · Rub, don’t click</h3><p>Erasing now requires brush movement. Repeated clicks or taps in one spot no longer count as fresh erasing swipes. Slow rubbing still works, and holding still on bare paper still charges a bounce.</p></article>
+      <article class="build-entry"><h3>Alpha 0.1.111 · Bootstomp takes the floor</h3><p>Bootstomp replaces Wobblechomp at wave 10. Hold the eraser in his footprint until the landing to trip him, then rub out five persistent three-swipe patches. Walls halve a missed stomp’s ripple damage once. Watch his shoe scrape and draw across his stretched lace to stop a monster fling. His helper stream is twice Doodle-Doom’s current rate. Wobblechomp is saved for later. Erasing now requires brush movement. Repeated clicks or taps in one spot no longer count as fresh erasing swipes. Slow rubbing still works, and holding still on bare paper still charges a bounce.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.110 · A bounded desktop battlefield</h3><p>The desktop playfield now stops at 1280 × 800 game pixels. Zooming the browser out or using a huge window can no longer keep pushing enemy spawns farther from Stevie. Smaller windows still fit the available space.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.109 · Clearer scraps to open</h3><p>The beta scrap tree keeps its artwork and branches, with stronger pencil outlines and Open, View or locked Inspect tabs on upgrades. Selected scraps have a blue outline, branch shortcuts are visibly clickable, and purchases use a clear button inside the opened note.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.108 · Paper tension and pencil returns</h3><p>Stevie has a dedicated hit sound. Pew Pew’s pencil shots and successful deflections have distinct cues, and Sneaky scratches out his plans. Holding the eraser still plays paper tension once the page depresses; releasing it plays the spring-back sound. Cancelling or moving away stops tension quietly.</p></article>
@@ -778,6 +778,8 @@
 <script src="js/ability-effects.js"></script>
 <script src="js/plaguefire.js"></script>
 <script src="js/support-inks.js"></script>
+<script src="js/bootstomp-art.js"></script>
+<script src="js/bootstomp-boss.js"></script>
 <script src="js/boss-encounters.js"></script>
 <script src="js/staple-boss.js"></script>
 <script src="js/upgrades.js"></script>

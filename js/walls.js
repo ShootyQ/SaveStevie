@@ -51,7 +51,7 @@ function eraseWallPath(a,b,r=20,options={}){
  const lesson=options.lesson===true&&game.api.lessonCanPaint?.('erase');
  if(!game.state.running||(game.state.paused&&!lesson)||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
  if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
- if(!options.enemy&&!lesson){const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;}
+ if(!options.enemy&&!lesson){const bossErase=game.api.eraseBootstompPath?.(a,b,r);if(game.api.bootstompEraseHandled?.())return !!bossErase;const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;}
  let changed=false,recovered=0;const result=[];
  for(const wall of game.state.walls){
   if(options.onlyWall&&wall!==options.onlyWall){result.push(wall);continue;}
@@ -440,6 +440,7 @@ function finishWallEffects(base,actualPaid,copies=[],points=base.pts){if(base.wo
 
   game.api.connectCrayonReturn(points,actualPaid);
   game.api.cutWobbleStroke(points);
+  game.api.counterBootstompStroke?.(points);
   game.api.cutTwiceyStroke(points);
   game.api.connectDoodleDots(points);
   if(base.closed)rewardClosedLoop(base,actualPaid);
@@ -469,7 +470,7 @@ function updateLiveWall(points){
   copy.pts=clipped.map((p,i)=>{const a=i<clipped.length-1?p:clipped[i-1],b=i<clipped.length-1?clipped[i+1]:p,dx=b.x-a.x,dy=b.y-a.y,m=Math.hypot(dx,dy)||1;return {x:p.x+dy/m*12*(c+1),y:p.y-dx/m*12*(c+1)}});
 
  }
- game.api.updateUI();return t.strokePts;
+ game.api.counterBootstompStroke?.(t.strokePts);game.api.updateUI();return t.strokePts;
 }
 function finishLiveWall(){
  const t=liveStroke;liveStroke=null;if(!t)return false;

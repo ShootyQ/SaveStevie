@@ -1,9 +1,8 @@
 # Bootstomp — animation art package
 
-This package is an animation study, not an active boss encounter. It does not
-replace Wobblechomp, change wave spawning, add boss damage, or load additional
-artwork into the game. No release/version increment is needed for this
-unexposed preparation. The existing eraser input fix remains Alpha 0.1.111.
+Bootstomp is the active wave-10 encounter in Alpha 0.1.111. Wobblechomp stays
+archived with his code and artwork intact. `js/bootstomp-boss.js` owns the fight;
+`js/bootstomp-art.js` supplies the generated atlas catalogue without a fetch.
 
 ## Inspecting the art
 
@@ -57,7 +56,7 @@ sprawl and recovery sequence together, preserving their direction.
   the authoring preview may restart a sequence for inspection.
 - Toe taps, knuckle crack, footsteps, windup, slip, faceplant, scrape, lace
   twang/rebound, erasing hits, patch completion and defeat have named cue
-  positions. Actual sound files are intentionally not invented or wired here.
+  positions. The active encounter currently reuses existing sound effects; dedicated recordings are still pending.
 
 The environmental preview reuses the existing paper-press visual language:
 pinched crease lines, a prepared footprint, a travelling folded ridge and
@@ -72,19 +71,16 @@ edges; the star fades back into blue pencil underneath. Leaving the face and
 belt readable helps the character remain recognizable as parts disappear.
 
 These are **independent illustrated part states**, not all 32 combinations of
-five removed parts. They are also not attackable areas in the game yet. During
-fight integration, retain each part's wear independently and register its
-erasure mask to every full-character pose. Switching animations or standing up
-must never restore a completed part or reset its progress. Do not swap the
-entire actor to a one-part reference and accidentally resurrect the others.
-Generous touch hit regions should follow those visible parts, without drawing
-five distracting UI targets over the artwork.
+five removed parts. The fight tracks each part separately and applies irregular
+erasure masks registered to every whole-character pose. Standing up and changing
+clips retain that wear. Thin arcs identify the exposed targets during the fallen
+window. No limbs, faces or mouths are animated as separate puppet pieces.
 
 ## Rebuilding and checking
 
 `python3 scripts/catalogue-bootstomp.py` rebuilds the JSON catalogue from the
 existing source PNGs using Pillow as an authoring-only dependency. It reads the
-drawn images and calculates rectangles/pivots; it does not repaint them.
+drawn images and calculates rectangles/pivots and authored per-frame erase regions; it does not repaint them.
 
 `node tests/browser-bootstomp-study.cjs` checks desktop and phone rendering,
 every clip's first/last pose, left-fall direction, the pre-release lace branch,

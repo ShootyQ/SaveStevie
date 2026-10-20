@@ -16,7 +16,7 @@ function syncDrawingControls(){
 function finishStroke(commit=true){
  if(commit&&canPaint())game.api.releasePaperPress();else game.api.cancelPaperPress();
  const lift=commit&&game.state.drawing&&!eraserActive()&&game.state.currentWall?.length>1;
- game.api.resetWhiteToolsStroke?.();game.api.resetCrayonEraseStroke();game.api.resetCatapultEraseStroke();
+ game.api.resetWhiteToolsStroke?.();game.api.resetBootstompRub?.();game.api.resetCrayonEraseStroke();game.api.resetCatapultEraseStroke();
  game.api.cancelPaperRub();game.api.cancelChonksRub();game.api.resetScrubberRub();
  if(commit){if(!game.api.finishLiveWall()&&game.state.drawing&&game.state.currentWall)game.api.createWall(game.state.currentWall);}else game.api.cancelLiveWall();
  game.state.drawing=false;game.state.currentWall=null;game.api.stopSoundEffects('scribble');game.api.stopSoundEffects('draw');game.api.stopSoundEffects('erase');if(lift)game.api.playSound('pencilLift');
@@ -33,7 +33,7 @@ function endDraw(){
 }
 function changeEraserMode(change){
  const before=eraserActive();change();const after=eraserActive();
- if(before!==after){erasePoint=lastPoint?{...lastPoint}:null;if(before&&canPaint())game.api.releasePaperPress();else game.api.cancelPaperPress();game.api.resetWhiteToolsStroke?.();game.api.stopSoundEffects('draw');game.api.stopSoundEffects('erase');game.api.resetCrayonEraseStroke();game.api.resetCatapultEraseStroke();game.api.cancelPaperRub();game.api.cancelChonksRub();game.api.resetScrubberRub();}
+ if(before!==after){erasePoint=lastPoint?{...lastPoint}:null;if(before&&canPaint())game.api.releasePaperPress();else game.api.cancelPaperPress();game.api.resetWhiteToolsStroke?.();game.api.resetBootstompRub?.();game.api.stopSoundEffects('draw');game.api.stopSoundEffects('erase');game.api.resetCrayonEraseStroke();game.api.resetCatapultEraseStroke();game.api.cancelPaperRub();game.api.cancelChonksRub();game.api.resetScrubberRub();}
  if(before!==after&&strokePointer!==null&&canPaint()){
   if(after){game.api.beginPaperPress(lastPoint);if(!game.api.finishLiveWall()&&game.state.currentWall)game.api.createWall(game.state.currentWall);game.state.currentWall=null;game.api.stopSoundEffects('scribble');cursor={...lastPoint,r:20};erasePoint={...lastPoint};}
   else{cursor=null;game.state.currentWall=game.api.canStartStroke(lastPoint)?[{...lastPoint}]:null;}
@@ -148,7 +148,7 @@ game.dom.canvas.addEventListener('pointermove',e=>{
   if(!erasePoint)erasePoint={...lastPoint};
   if(!pressing&&game.api.dist(erasePoint.x,erasePoint.y,p.x,p.y)>=6){
    game.api.sustainSound('erase');game.api.eraseWallPath(erasePoint,p,20);
-   if(!game.api.whiteToolsEraseHandled?.())game.api.queuePaperRub(erasePoint,p,20);
+   if(!game.api.whiteToolsEraseHandled?.()&&!game.api.bootstompEraseHandled?.())game.api.queuePaperRub(erasePoint,p,20);
    erasePoint={...p};
   }
   cursor={...p,r:20};

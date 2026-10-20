@@ -4,6 +4,7 @@ function environment(){const nodes=new Map(),calls=[];let seed=123456;const math
 function load(refactored,options={}){const env=environment();if(options.storage)env.sandbox.localStorage=options.storage;if(options.audio)Object.assign(env.node('gameMusic'),options.audio);if(options.documentEvents)env.sandbox.document.addEventListener=(key,fn)=>{const previous=options.documentEvents[key];options.documentEvents[key]=(...args)=>{previous?.(...args);fn(...args)}};const pendingImages=[];if(options.images)env.sandbox.Image=class{constructor(){this.naturalWidth=200;this.naturalHeight=180}set src(value){this.url=value;pendingImages.push(()=>this.onload?.())}get src(){return this.url}};if(options.reduced)env.sandbox.matchMedia=()=>({matches:true,addEventListener(){}});if(refactored){const html=fs.readFileSync(path.join(root,'index.html'),'utf8');for(const m of html.matchAll(/<script src="([^"]+)"/g)){let s=fs.readFileSync(path.join(root,m[1]),'utf8');if(m[1]==='game.js')s=s.replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame(); window.testGame = game;');vm.runInContext(s,env.sandbox,{filename:m[1]});}for(const ready of pendingImages)ready();if(!options.finale)env.sandbox.testGame.api.setWaveFinaleEnabled(false);if(!options.synergyReveal)env.sandbox.testGame.api.setSynergyRevealsEnabled(false);if(!options.intros)env.sandbox.testGame.api.setMonsterIntrosEnabled(false);if(!options.lessons)env.sandbox.testGame.api.setFirstLessonsEnabled(false);env.snapshot=()=>JSON.stringify(env.sandbox.testGame.state);}else{let s=fs.readFileSync(path.join(root,'tests/fixtures/v8.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];s=s.replace('})();','window.snapshot = () => ({W,H,dpr,last,spawnTimer,running,paused,inUpgrade,betweenWaves,endless,awaitingSpec,wave,kills,score,waveKills,waveTime,timeLeft,best,walls,enemies,particles,floaters,projectiles,drawing,currentWall,rerolls,specialization,pendingNextWave,finalOvertime,finalBossDefeated,player,stats,inks,synergies,discoveredSynergies,synergySplashTimer,stacks});})();');s=s.replace('window.snapshot =', 'window.testAPI = {createWall, checkSynergies, spawnEnemy, applyInkContact}; window.snapshot =');vm.runInContext(s,env.sandbox);env.snapshot=()=>JSON.stringify(env.sandbox.snapshot());}return env;}
 // Retain explicit regression fixtures for the retired stapler's combat system.
 function loadLegacyStaple(options={}){const env=load(true,options),g=env.sandbox.testGame,original=g.api.bossTypeForWave;g.api.wallHpForLength=(length,closed=false,intersections=0)=>g.state.stats.wallHp*g.api.clamp(length/180,.35,2.4)*(closed?g.state.stats.closedBonus:1)*(1+intersections*g.state.stats.intersectBonus);g.api.bossTypeForWave=(wave=g.state.wave)=>wave===10?'stapler':original(wave);g.api.isWhiteBrother=()=>false;return env;}
+function loadRetiredWobble(updated=true,options={}){const env=load(updated,options),g=env.sandbox.testGame,original=g.api.bossTypeForWave;g.api.bossTypeForWave=(wave=g.state.wave)=>wave===10?'wobblechomp':original(wave);return env;}
 const a=load(false),b=load(true);let checks=0;
 // Keep the old starting kit only in the legacy parity fixture. New-run balance
 // and permanent perks are checked separately below.
@@ -533,9 +534,9 @@ const storage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>{saved.set
 const env=load(true,{intros:true,storage}),g=env.sandbox.testGame;
 assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
-assert.equal(g.catalog.monsters.length,30);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,30);
+assert.equal(g.catalog.monsters.length,31);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,31);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],2:['scrubber'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['sniper'],10:['wobblechomp','wobble-tooth','brood'],11:['catapulter','wallpuller','papertearer','bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['mr-glue','eraser']};
+const expected={1:['grunt'],2:['scrubber'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['sniper'],10:['bootstomp','brood'],11:['catapulter','wallpuller','papertearer','bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['mr-glue','eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -626,7 +627,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 
 // Wobblechomp sweeps carried cover during the roar without upgrade destruction procs.
 {
- const g=load(true).sandbox.testGame;g.api.resetRun({skipIntro:true});g.api.setSynergyRevealsEnabled(false);g.state.wave=10;g.api.startWave({skipIntro:true});g.state.enemies=[];
+ const g=loadRetiredWobble().sandbox.testGame;g.api.resetRun({skipIntro:true});g.api.setSynergyRevealsEnabled(false);g.state.wave=10;g.api.startWave({skipIntro:true});g.state.enemies=[];
  g.state.stats.doubleLine=true;g.state.inks.fire=2;g.state.inks.blast=2;g.state.synergies.add('INFERNO');g.api.createWall([{x:100,y:180},{x:280,y:180}]);assert.equal(g.state.walls.length,1);
  g.state.stats.ink=37;g.state.timeLeft=0;const hp=g.state.player.hp,kills=g.state.kills;
  g.api.update(.01);assert(g.api.bossEntranceActive());g.api.update(3.374);assert.equal(g.state.walls.length,1,'walls survive stomp so the roar visibly sweeps them');
@@ -659,7 +660,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 // A mixed-status crowd must reuse its tinted sprites instead of allocating each frame.
 {
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
-const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['catapulter','basil','scrubber','flanker','wallpuller','papertearer','wobblechomp','wobble-tooth','eraser','mr-glue','gnawer'].includes(type));
+const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['catapulter','basil','scrubber','flanker','wallpuller','papertearer','bootstomp','wobblechomp','wobble-tooth','eraser','mr-glue','gnawer'].includes(type));
 for(let i=0;i<76;i++){
  const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][Math.floor(i/types.length)%4];
  e.burn=mask&1?2:0;e.poison=mask&2?2:0;e.freeze=mask&4?2:0;e.charged=mask&8?2:0;e.gravitySlow=mask&16?.4:0;
@@ -717,7 +718,7 @@ console.log('PASS: Notebook earnings, immediate banking, duplicate/contact prote
 
 {
 const env=load(true),g=env.sandbox.testGame;g.api.resetRun();
-for(const [wave,type] of [[5,'boss'],[10,'wobblechomp'],[15,'crayon'],[20,'eraser']]){g.state.wave=wave;g.api.startWave();const e=g.api.spawnEnemy(true,100,200);assert.equal(e.type,type);}
+for(const [wave,type] of [[5,'boss'],[10,'bootstomp'],[15,'crayon'],[20,'eraser']]){g.state.wave=wave;g.api.startWave();const e=g.api.spawnEnemy(true,100,200);assert.equal(e.type,type);}
 g.state.endless=true;assert.equal(g.api.bossTypeForWave(20),'boss');g.state.endless=false;
 g.state.wave=10;g.api.startWave();const s=g.api.spawnEnemy(false,100,200,'stapler'),wall={pts:[{x:150,y:50},{x:150,y:350}],hp:100,maxHp:100,thick:8};g.state.walls=[wall];s.waveBoss=false;s.bossCd=0; // Original non-encounter action compatibility.
 assert.deepEqual(g.api.nearestPointOnWall(s,wall),{x:150,y:200},'target actual segment, not distant endpoints');
@@ -777,7 +778,7 @@ for(const [wave,members] of [[6,['tank','grunt']],[9,['sniper','grunt']],[11,['t
 }
 for(const wave of [5,10,15]){
  const e=load(true),g=e.sandbox.testGame;g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,100,100);boss.freeze=999;
- g.state.timeLeft=.01;g.api.update(.02);assert.equal(g.state.timeLeft,.01,'boss countdown never advances');assert.equal(e.node('waveCountdown').style.display,'none');assert.equal(g.state.finalOvertime,false);assert.equal(g.state.betweenWaves,false);assert.equal(e.node('bossOvertime').style.display,wave===10?'none':'block','Wobble uses his own progress meter; other bosses keep their label');assert.match(e.node('bossOvertime').textContent,new RegExp(g.api.monsterName(boss.type)));
+ g.state.timeLeft=.01;g.api.update(.02);assert.equal(g.state.timeLeft,.01,'boss countdown never advances');assert.equal(e.node('waveCountdown').style.display,'none');assert.equal(g.state.finalOvertime,false);assert.equal(g.state.betweenWaves,false);assert.equal(e.node('bossOvertime').style.display,'block','active bosses keep their encounter label');assert.match(e.node('bossOvertime').textContent,new RegExp(g.api.monsterName(boss.type)));
  const count=g.state.enemies.length;g.api.update(.2);assert.equal(g.state.enemies.length,count,'boss fight has no normal arrivals');g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,0,'cannot bypass living boss');
  g.api.killEnemy(boss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);assert.equal(e.node('bossOvertime').style.display,'none');assert.equal(g.api.notebookSnapshot().scraps,1+g.catalog.balance.chapterScraps[wave/5-1]);g.api.waveComplete();assert.equal(g.api.notebookSnapshot().scraps,1+g.catalog.balance.chapterScraps[wave/5-1],'milestone pays once');
 }
@@ -1360,7 +1361,7 @@ console.log('PASS: zero-time cleanup, stopped arrivals, split children, pause, d
 
 {
 const env=load(true),g=env.sandbox.testGame;
-for(const [wave,hp,speed] of [[5,1242,144.612],[10,1299.6,254.4],[15,1512,18.53],[20,1000,25.76]]){
+for(const [wave,hp,speed] of [[5,1242,144.612],[10,150,110],[15,1512,18.53],[20,1000,25.76]]){
  g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,250,250);
  assert.ok(Math.abs(boss.maxHp-hp)<1e-8,'boss HP '+wave);assert.ok(Math.abs(boss.speed-speed)<1e-8,'boss speed '+wave);
  const ordinary=g.api.spawnEnemy(false,100,100,'grunt');assert.equal(ordinary.maxHp,20*g.api.enemyHpScale());
@@ -2078,7 +2079,7 @@ console.log('PASS: notebook hub opens monster pages and returns correctly; pause
 }
 
 // The retired six-cut/rail puzzle is replaced by the damage-and-ricochet encounter.
-require('./wobblechomp-overhaul.cjs')(load);
+require('./wobblechomp-overhaul.cjs')(loadRetiredWobble);
 
 // Each wave has a real introduction; normal newcomers cannot be missed by RNG.
 {
@@ -2087,7 +2088,7 @@ require('./wobblechomp-overhaul.cjs')(load);
   g.api.resetRun();g.state.wave=wave;g.api.startWave();g.api.closeInfo();g.state.paused=false;
   const entries=g.catalog.monsters.filter(m=>!m.pausedFromWaves&&m.wave===wave&&!['mini','stapler','jamling','wobble-tooth'].includes(m.type));
   assert.ok(entries.length,'new monster on wave '+wave);
-  const normal=entries.filter(m=>!['boss','wobblechomp'].includes(m.type));
+  const normal=entries.filter(m=>!['boss','bootstomp','wobblechomp'].includes(m.type));
   for(const m of normal){g.state.spawnTimer=0;g.api.spawnWaveEnemies(0);assert.ok(g.state.enemies.some(e=>e.type===m.type),'guaranteed '+m.type);}
  }
  g.api.resetRun();g.state.wave=9;g.api.startWave();g.api.closeInfo();g.state.paused=false;
@@ -2642,3 +2643,5 @@ require('./crew-patrol.cjs')(load);
 require('./paper-press.cjs')(load);
 
 require('./eraser-motion.cjs')(load);
+
+require('./bootstomp-boss.cjs')(load);

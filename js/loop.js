@@ -103,6 +103,7 @@ function update(dt){
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.abilityImmune(e)){for(const k of ['burn','burnDps','poison','poisonDps','freeze','stun','charged','gravitySlow'])e[k]=0;}
     game.api.clearWobbleControl(e);game.api.clearCrayonControl(e);
+    if(game.api.isBootstomp?.(e)){game.api.updateBootstomp(e,dt);continue;}
     if(game.api.isWhiteBrother?.(e)){game.api.updateWhiteBrothers(e,dt);continue;}
     if(game.api.updatePaperEnemy(e,dt))continue;
     if(e.shockRest>0)e.shockRest=Math.max(0,e.shockRest-dt);e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);

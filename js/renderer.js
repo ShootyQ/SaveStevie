@@ -9,8 +9,8 @@ function rendererCacheStats(){return {tintEntries:tintedDoodles.size,tintBytes:t
 const artworkVersion=document.documentElement?.dataset?.build;
 // Per-column gutters keep neighboring crowns, hair and feet out of each full pose.
 const kingEntranceRows=[[0,256,501,751,1024],[0,256,500,751,1024],[0,256,501,750,1024],[0,256,502,754,1024]],stevieVictoryRows=[[0,304,615,905,1215],[0,304,614,909,1215],[0,304,608,906,1215],[0,304,615,905,1215]];
-const doodleNames=['king-entrance','stevie-victory','gnawer-animations','ash-impostor-animations','ash-impostor','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
-const coreArtwork=new Set(['king-entrance','stevie-victory','gnawer-animations','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
+const doodleNames=['bootstomp','bootstomp/arrival','bootstomp/stomp','bootstomp/fall','bootstomp/special','bootstomp/reaction','bootstomp/erasure','king-entrance','stevie-victory','gnawer-animations','ash-impostor-animations','ash-impostor','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','sprinter-animations','doodle-scraps-extra','doodle-scraps','boss-animations','scrubber','basil','jamling','paper-fort','stevie','stevie-animations','grunt','grunt-animations','fast-animations','sniper','sniper-animations','splitter','tank','chonks-shield','pencil','fire','frost','poison','arrow','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini','electric','blast','vampire','gravity','repulsion','void','chaos','sniper-ready','sniper-fire','sapper-ready','sapper-strike','medic-ready','medic-heal','stevie-flinch','stevie-cheer-a','stevie-cheer-b','stevie-threats'];
+const coreArtwork=new Set(['bootstomp','bootstomp/arrival','bootstomp/stomp','bootstomp/fall','bootstomp/special','bootstomp/reaction','bootstomp/erasure','king-entrance','stevie-victory','gnawer-animations','paper-turret','catapulter-animations','catapult-animations','catapulter','school-catapult','crayon-crawl','crayon-wax-splotches','crayon-minions','wallpuller','papertearer','paper-fort','stevie','scrubber','basil','jamling','grunt','sniper','splitter','tank','chonks-shield','bouncer','flanker','wardling','sprinter','brood','bulwark','medic','sapper','gnawer','boss','stapler','crayon','eraser','fast','brute','elite','mini']);
 const artworkLoads=new Map(),artworkSupported=typeof Image!=='undefined';
 function artworkStatus(){const loaded=[...coreArtwork].filter(name=>!!doodles[name]).length;return {ready:!artworkSupported||loaded===coreArtwork.size,loaded,total:coreArtwork.size,failed:[...artworkLoads].filter(([,r])=>r.failed).map(([name])=>name),loading:[...artworkLoads].filter(([,r])=>r.loading).map(([name])=>name)};}
 function syncArtworkUI(){
@@ -549,7 +549,7 @@ function resize(){
     game.api.moveRefuge(dx,dy);game.api.moveSupportInkVisuals(dx,dy);game.api.moveBossFields(dx,dy);game.api.moveWhiteBrothers?.(dx,dy);
   }
   game.state.W=r.width;game.state.H=r.height;game.dom.ctx.setTransform(game.state.dpr,0,0,game.state.dpr,0,0);
-  game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;game.api.refreshBossArrival();game.api.moveFirstLesson?.(dx,dy);
+  game.state.player.x=game.state.W/2;game.state.player.y=game.state.H/2;game.api.refreshBossArrival();game.api.resizeBootstomp?.();game.api.moveFirstLesson?.(dx,dy);
 }
 
 
@@ -792,7 +792,7 @@ function draw(){
     ctx.beginPath();ctx.arc(e.x,e.y,e.r+5,0,Math.PI*2);ctx.stroke();
     if(erase){ctx.fillStyle='#a54e78';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText('ERASER FIRST',e.x,e.y-e.r-12);}ctx.restore();
   }
-  game.api.drawBossEncounters();game.api.drawWobbleFields();game.api.drawCrayonBossFields();game.api.drawWhiteBrothersFields?.();game.api.drawChompzillaMarks?.();
+  game.api.drawBootstompFields?.();game.api.drawBossEncounters();game.api.drawWobbleFields();game.api.drawCrayonBossFields();game.api.drawWhiteBrothersFields?.();game.api.drawChompzillaMarks?.();
   for(const n of game.state.enemies)if(n.type==='jamling'&&n.jamWarning>0){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b34936';ctx.lineWidth=2;ctx.beginPath();ctx.arc(n.x,n.y,n.r+5,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.jamWarning/1.3));ctx.stroke();ctx.restore()}
   for(const shot of game.state.enemyShots){
     if(shot.wobbleOwner){const ctx=game.dom.ctx;ctx.save();ctx.translate(shot.x,shot.y);ctx.rotate(Math.atan2(shot.vy,shot.vx));if(!motionReduced){ctx.strokeStyle='rgba(173,110,40,.35)';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-14,0);ctx.lineTo(-5,0);ctx.stroke()}ctx.fillStyle='#edb538';ctx.strokeStyle='#3b3024';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-13,-4);ctx.lineTo(-11,0);ctx.lineTo(-13,4);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();continue}
@@ -871,6 +871,7 @@ function draw(){
     if(e.flight&&!motionReduced){const t=e.flight.age/e.flight.duration;game.dom.ctx.rotate(e.flight.spin*Math.sin(t*Math.PI)*.8);const scale=1+Math.sin(t*Math.PI)*.16;game.dom.ctx.scale(scale,scale);}
 
     if(game.api.drawWhiteBrotherBody?.(e)){}
+    else if(game.api.drawBootstomp?.(e)){}
     else if(e.type==='wobblechomp'){game.api.drawWobbleEnemy(e);drawEnemyHealthBar(e,hpRatio);}
     else if(e.type==='wobble-tooth'){game.api.drawWobbleTooth(e);drawEnemyHealthBar(e,hpRatio);}
     else if(e.type==='eraser'){
