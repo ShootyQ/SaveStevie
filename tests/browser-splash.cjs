@@ -60,7 +60,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.click('#splashOptionsBtn');if(await page.evaluate(()=>testGame.api.musicStatus().muted))await page.click('#splashMusicBtn');await page.waitForFunction(()=>!document.querySelector('#gameMusic').paused,null,{polling:50});
   await page.click('#closeOptionsBtn');await page.click('#startBtn');assert.equal(await page.locator('#startOverlay').isVisible(),false);
   assert.equal(await page.locator('.splash-stevie-frames').evaluate(e=>getComputedStyle(e).animationPlayState),'paused');
-  await page.evaluate(()=>{testGame.api.gameOver();testGame.api.openNotebook()});
+  await page.evaluate(()=>{testGame.api.gameOver();testGame.api.openOptions();testGame.api.revealDesktopTarget(testGame.dom.$('resetNotebookBtn'))});
   page.once('dialog',d=>d.accept());await page.click('#resetNotebookBtn');
   assert.equal(await page.locator('#startOverlay').isVisible(),true);
   assert.equal(await page.locator('.splash-stevie-frames').evaluate(e=>getComputedStyle(e).animationPlayState),'running');

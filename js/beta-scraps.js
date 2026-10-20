@@ -1,4 +1,4 @@
-/* An experimental view of the existing Notebook, not a second stat economy. */
+/* The permanent Scrap Tree uses the existing saved Notebook economy. */
 DoodleDefender.systems.betaScraps=function(game){
  const $=game.dom.$,width=2400,height=2600,hub={x:1200,y:1000};
  // Keep the real label accessible while giving each written word a pencil baseline.
@@ -64,7 +64,7 @@ DoodleDefender.systems.betaScraps=function(game){
  function buyBetaNode(id){
   const state=betaNodeState(id);if(!state?.canBuy)return false;
   const bought=id==='start'?game.api.claimBetaPencil():game.api.buyNotebookPerk(state.perk.id);
-  if(bought){selected=id;renderBetaTree();$('betaTreeStatus').textContent=(id==='start'?'Pencil acquired! Choose a branch.':state.perk.name+' is ready for your next run.')+(game.api.notebookSnapshot().storageIssue?' Saving is unavailable; this lasts for this visit.':'');($('betaBuyNode').disabled?$('betaFoldNote'):$('betaBuyNode')).focus?.({preventScroll:true});}
+  if(bought){selected=id;renderBetaTree();$('betaTreeStatus').textContent=(id==='start'?'Pencil acquired! Choose a branch.':state.perk.name+' is ready for your next run.')+(game.api.notebookSnapshot().storageIssue?' Saving is unavailable; this lasts for this visit.':'');($('betaBuyNode').disabled?$('betaFoldNote'):$('betaBuyNode')).focus?.({preventScroll:true});game.api.syncScrapTutorial();}
   return bought;
  }
  function pencilCollection(rank){
@@ -92,14 +92,16 @@ DoodleDefender.systems.betaScraps=function(game){
   const below=y+88*view.scale+16,above=y-h-20;
   note.style.top=Math.max(85,Math.min(b.h-h-75,below+h<b.h-75?below:above>=85?above:below))+'px';
  }
- function foldBetaNote(){noteOpen=false;$('betaNodeNote').hidden=true;for(const n of definitions)$('beta-node-'+n.id)?.setAttribute?.('aria-pressed','false');}
+ function foldBetaNote(){noteOpen=false;$('betaNodeNote').hidden=true;for(const n of definitions)$('beta-node-'+n.id)?.setAttribute?.('aria-pressed','false');game.api.syncScrapTutorial();}
  function selectBetaNode(id,center=true){
   if(!nodes.has(id))return;selected=id;noteOpen=true;$('betaNodeNote').hidden=false;
   for(const n of definitions)$('beta-node-'+n.id)?.setAttribute?.('aria-pressed',String(n.id===selected));
-  renderDetails();$('betaTreeStatus').textContent='';if(center)centerAt(nodes.get(id));positionNote();
+  renderDetails();$('betaTreeStatus').textContent='';if(center)centerAt(nodes.get(id));positionNote();game.api.syncScrapTutorial();
  }
+ function scrapTreeLessonStage(){return game.api.notebookSnapshot().betaPencilClaimed?'treeDone':noteOpen&&selected==='start'?'treeBuy':'treeOpen';}
  function openBetaTreeView(){
   foldBetaNote();const b=bounds();
+  if(game.api.scrapLessonPending()&&!game.api.notebookSnapshot().betaPencilClaimed){centerAt(nodes.get('start'));return;}
   if(b.w>=700){fitBetaTree();return;}
   view.scale=Math.min(1.4,Math.max(.95,b.h/height*1.2));view.x=b.w/2-hub.x*view.scale;view.y=b.h/2-hub.y*view.scale;applyView();
  }
@@ -117,7 +119,7 @@ DoodleDefender.systems.betaScraps=function(game){
    const title=document.createElement('strong'),label=document.createElement('span');title.textContent=n.name;label.textContent=n.perk==='circles'&&!game.api.shapeStudiesAvailable()?'Beat wave 10 · Shapes locked':n.later?'later…':n.id==='start'?(state.owned?'✓ Start complete':'0 scraps · start here'):state.owned?'✓ Complete':!state.unlocked&&state.rank===0?'After '+nodes.get(n.parent).name:state.rank+' / '+state.max+' · '+state.price+' scraps';button.appendChild(title);label.className='beta-node-state';button.appendChild(label);const cue=document.createElement('span');cue.className='beta-node-action';cue.textContent=n.later?'Preview →':state.owned?'✓ View →':!state.unlocked?'🔒 Inspect →':'Open →';button.appendChild(cue);button.setAttribute?.('aria-label',n.name+'. '+label.textContent+'. Open to inspect.'+(state.reason?' '+state.reason:''));button.onclick=()=>selectBetaNode(n.id);list.appendChild(button);
   }
   for(const element of list.querySelectorAll?.('.beta-branch-title,strong,.beta-tree-node > span')||[])handwrite(element);
-  renderPaths();renderDetails();positionNote();$('betaTreeStatus').textContent=p.storageIssue?'Saving is unavailable; purchases last for this visit.':'Both scrap pages share your purchases. No bonuses are counted twice.';
+  renderPaths();renderDetails();positionNote();$('betaTreeStatus').textContent=p.storageIssue?'Saving is unavailable; purchases last for this visit.':'Permanent upgrades apply to your next run. Follow the lines to open connected scraps.';
  }
  function renderPaths(){
   const p=game.api.notebookSnapshot(),parts=['<defs><marker id="betaArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="m1 1 7 4-7 4" fill="none" stroke="context-stroke" stroke-width="1.5"/></marker></defs>'];
@@ -140,7 +142,7 @@ DoodleDefender.systems.betaScraps=function(game){
   lastViewport={w:b.w,h:b.h};
   // Native focus scrolling must not become a second camera on older browsers.
   $('betaTreeViewport').scrollLeft=0;$('betaTreeViewport').scrollTop=0;
-  $('betaTreeBoard').style.transform='translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';positionNote();
+  $('betaTreeBoard').style.transform='translate('+view.x+'px,'+view.y+'px) scale('+view.scale+')';positionNote();game.api.updateStevieGuides?.();
  }
  function fitBetaTree(){foldBetaNote();const b=bounds();view.scale=Math.min(1,Math.max(.12,Math.min((b.w-12)/width,(b.h-12)/height)));view.x=(b.w-width*view.scale)/2;view.y=(b.h-height*view.scale)/2;applyView();}
  function zoomBetaTree(factor,point=null){const b=bounds(),anchor=point||{x:b.w/2,y:b.h/2},old=view.scale;view.scale=Math.min(2.5,Math.max(.12,old*factor));view.x=anchor.x-(anchor.x-view.x)*view.scale/old;view.y=anchor.y-(anchor.y-view.y)*view.scale/old;applyView();}
@@ -177,7 +179,7 @@ DoodleDefender.systems.betaScraps=function(game){
  viewport.addEventListener('focusin',e=>{if(pointers.size||!e.target.matches?.(':focus-visible'))return;const branch=branches.find(b=>'beta-branch-'+b.id===e.target.id);if(branch){centerAt(branch);return;}const n=definitions.find(n=>'beta-node-'+n.id===e.target.id);if(!n)return;const b=bounds(),x=view.x+n.x*view.scale,y=view.y+n.y*view.scale;if(x<0||y<0||x+n.w*view.scale>b.w||y+88*view.scale>b.h)centerAt(n);});
  $('betaFit').onclick=fitBetaTree;$('betaFoldNote').onclick=()=>{foldBetaNote();$('beta-node-'+selected)?.focus?.({preventScroll:true});};
  viewport.addEventListener('click',e=>{if(e.target===viewport||e.target===$('betaTreeBoard'))foldBetaNote();});
- $('hubBetaScrapsBtn').onclick=$('optionsBetaScrapsBtn').onclick=()=>game.api.openInfo('betaScraps');$('optionsScrapsBtn').onclick=()=>game.api.openInfo('notebook');$('closeBetaScrapsBtn').onclick=()=>game.api.closeInfo();
+ $('hubNotebookBtn').onclick=$('optionsScrapsBtn').onclick=()=>game.api.openInfo('betaScraps');$('closeBetaScrapsBtn').onclick=()=>game.api.closeInfo();
  window.addEventListener('resize',()=>{
   if($('betaScrapsOverlay').style.display!=='grid'||!lastViewport)return;
   const b=bounds(),cx=(lastViewport.w/2-view.x)/view.scale,cy=(lastViewport.h/2-view.y)/view.scale;
@@ -185,5 +187,5 @@ DoodleDefender.systems.betaScraps=function(game){
  });
  window.addEventListener('blur',cancelBetaGesture);
  for(const element of document.querySelectorAll?.('.beta-new-note,.beta-new-doodle figcaption')||[])handwrite(element);
- const api={betaTreeSnapshot,openBetaTreeView,foldBetaNote,handleBetaTreeKey,betaNodeState,buyBetaNode,renderBetaTree,selectBetaNode,fitBetaTree,zoomBetaTree,betaViewSnapshot,cancelBetaGesture};Object.assign(game.api,api);return api;
+ const api={scrapTreeLessonStage,betaTreeSnapshot,openBetaTreeView,foldBetaNote,handleBetaTreeKey,betaNodeState,buyBetaNode,renderBetaTree,selectBetaNode,fitBetaTree,zoomBetaTree,betaViewSnapshot,cancelBetaGesture};Object.assign(game.api,api);return api;
 };

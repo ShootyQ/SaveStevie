@@ -174,9 +174,10 @@ function renderBuild(){
     `<article class="build-entry"><h4>${def.major?'★ ':''}${game.api.paperLabel(def.name)}</h4><p>${def.desc}</p></article>`).join('')||'<p>No active synergies yet. Combine ink families and upgrades to unlock them.</p>';
   game.dom.$('buildDoodleScraps').innerHTML=game.api.doodleCatalogue().filter(n=>game.api.noteLevel(n.id)>0).map(n=>'<article class="build-entry"><h4>'+n.name+' ×'+game.api.noteLevel(n.id)+'</h4><p>'+n.rarity+' · '+n.desc+'</p></article>').join('')||'<p>No Doodle Scraps collected yet. Find them during a run after unlocking their Notebook project.</p>';
 }
-const infoButtons={desktopQuit:'desktopQuitCancel',whiteBrothers:'closeWhiteBrothersBtn',discoveries:'closeDiscoveriesBtn',betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',notebook:'closeNotebookBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
+const infoButtons={desktopQuit:'desktopQuitCancel',whiteBrothers:'closeWhiteBrothersBtn',discoveries:'closeDiscoveriesBtn',betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
+  if(kind==='notebook')kind='betaScraps';
   if(game.api.wobbleRepairActive?.())return;
   if(activeInfo===kind||activeInfo==='monsterIntro')return;
   if(activeInfo){const history=[...returnInfo,...(['pause','hub','options'].includes(activeInfo)?[activeInfo]:[])];closeInfo(false);returnInfo=history.at(-1)===kind?history.slice(0,-1):history;}
@@ -191,7 +192,6 @@ function openInfo(kind){
   if(kind==='build')renderBuild();
   if(kind==='discoveries')game.api.renderDiscoveries(true);
   if(kind==='compendium')game.api.renderCompendium();
-  if(kind==='notebook')game.api.renderNotebook();
   if(kind==='betaScraps')game.api.renderBetaTree();
   if(kind==='options')game.api.renderOptions();
   if(kind==='report')game.api.renderProblemReport();
@@ -211,7 +211,7 @@ function closeInfo(back=true){
   if(!activeInfo)return;
   const kind=activeInfo,history=returnInfo,goBack=back&&history.at(-1);
   if(kind==='whiteBrothers')game.api.stopWhiteBrothersPreview();
-  if(kind==='betaScraps')game.api.cancelBetaGesture();returnInfo=[];activeInfo=null;game.state.paused=pausedBeforeInfo;
+  if(kind==='betaScraps'){if(game.api.scrapLessonPending()&&game.api.notebookSnapshot().betaPencilClaimed)game.api.finishScrapTutorial();game.api.cancelBetaGesture();}returnInfo=[];activeInfo=null;game.state.paused=pausedBeforeInfo;
   game.dom.$(kind+'Overlay').style.display='none';game.api.updateScoreHUD();
   if(kind==='lesson')game.api.dismissFirstLesson?.();
   if(kind==='doodle')game.api.dismissDoodleChoice?.();
