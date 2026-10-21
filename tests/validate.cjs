@@ -2655,3 +2655,5 @@ require("./utility-toys.cjs")(load);
 require("./under-desk.cjs")(load);
 
 require("./blast-arming.cjs")(load);
+
+require('./touch-hold-and-desktop-backup.cjs')(load);

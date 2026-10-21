@@ -146,6 +146,7 @@ game.dom.canvas.addEventListener('pointermove',e=>{
  game.api.utilityPointer?.(p,!eraserActive());
  if(eraserActive()){
   const pressing=game.api.movePaperPress(p);
+  if(pressing)erasePoint={...p};
   // A click is not a rub. Accumulate slow movement from an anchor so small
   // pointer samples still form a stroke, without rewarding stationary jitter.
   if(!erasePoint)erasePoint={...lastPoint};

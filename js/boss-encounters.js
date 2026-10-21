@@ -6,7 +6,7 @@ const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-mot
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
 function abilityImmune(e){return game.api.isBootstomp?.(e)||game.api.isWhiteBrother?.(e)||game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||game.api.isWobbleBoss(e);}
 function isFirstBoss(e){return e.waveBoss&&e.type==='boss'&&game.state.wave===5}
-function firstBossTuning(e){const furious=e.hp<e.maxHp*.4;return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/(1.1*1.2),helperCap:7,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:1.8,minThrowGain:minFriendGain}}
+function firstBossTuning(e){const furious=e.hp<e.maxHp*.4,desktop=!!game.api.desktopUiEnabled?.();return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/(1.1*1.2)*(desktop?.55:1),helperCap:desktop?14:7,driveByReach:desktop?40:18,driveByGap:desktop?.45:.9,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:desktop?2.2:1.8,minThrowGain:minFriendGain}}
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
 const colors={boss:'#9b3549',stapler:'#ad741f',crayon:'#8751ac',eraser:'#b95176'};
 function bossBrain(e){let b=brains.get(e);if(!b){b={cd:3,cast:null,turn:0,moveCd:0,target:null,enclosed:false,enclosedAge:0,damageBudget:Math.max(30,e.maxHp*.045)*.5,contactCd:0,recovery:0,charge:0,action:null,repeat:0,helperCd:1.5,helperSerial:0,pickup:null};brains.set(e,b)}return b}
@@ -61,7 +61,12 @@ function updateFirstBossHelpers(dt){
  b.helperCd=firstBossTuning(e).helperGap;
  if(game.state.enemies.filter(n=>n.bossOwner===e&&n.hp>0).length>=firstBossTuning(e).helperCap)return;
  const {W,H}=game.state,serial=b.helperSerial++,side=serial%4;
- const x=side===1?W+26:side===3?-26:W*(side===0?.25:.75),y=side===0?-26:side===2?H+26:H*(side===1?.3:.7);
+ let x=side===1?W+26:side===3?-26:W*(side===0?.25:.75),y=side===0?-26:side===2?H+26:H*(side===1?.3:.7);
+ if(game.api.desktopUiEnabled?.()&&serial%2===0){
+  // Feed his current patrol side as well as the rotating perimeter stream.
+  const nearest=[{d:e.x,x:-26,y:e.y},{d:W-e.x,x:W+26,y:e.y},{d:e.y,x:e.x,y:-26},{d:H-e.y,x:e.x,y:H+26}].sort((a,b)=>a.d-b.d)[0];
+  x=nearest.x;y=nearest.y;
+ }
  const friend=game.api.spawnEnemy(false,x,y,'grunt');if(friend)friend.bossOwner=e;
 }
 function friendCanBePicked(e,n){
@@ -209,9 +214,9 @@ function execute(e,b,c){
 }
 function tryDriveByFling(e,dt){
  const b=bossBrain(e);b.driveByCd=Math.max(0,(b.driveByCd||0)-dt);if(b.driveByCd>0||e.hp<=0||e.freeze>0||e.stun>0)return;
- for(const n of game.state.enemies){if(n.bossOwner!==e||n.hp<=0||n.flight||game.api.underPaper(n)||n.freeze>0||n.stun>0||bossFriendHeld(n)||Math.hypot(n.x-e.x,n.y-e.y)>e.r+n.r+18||!bossPathClear(e,n.x,n.y))continue;
+ for(const n of game.state.enemies){if(n.bossOwner!==e||n.hp<=0||n.flight||game.api.underPaper(n)||n.freeze>0||n.stun>0||bossFriendHeld(n)||Math.hypot(n.x-e.x,n.y-e.y)>e.r+n.r+firstBossTuning(e).driveByReach||!bossPathClear(e,n.x,n.y))continue;
   const landing=friendLanding(n,true);if(!landing)continue;
-  if(game.api.flingBossFriend(n,landing)){b.driveByCd=.9;game.api.animateEnemyAction(e,'summon');if(b.pickup?.friend===n)b.pickup=null;break;}
+  if(game.api.flingBossFriend(n,landing)){b.driveByCd=firstBossTuning(e).driveByGap;game.api.animateEnemyAction(e,'summon');if(b.pickup?.friend===n)b.pickup=null;break;}
  }
 }
 function updateBossEncounter(e,dt){
