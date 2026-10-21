@@ -1,7 +1,7 @@
 /* loop: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.loop = function createLoopSystem(game) {
 function update(dt){
-  game.api.paperPressGuard();
+  game.api.paperPressGuard();game.api.guardYankGrip?.();
   if(game.api.windowFocusBlocked?.()){game.api.stopSoundEffects();return;}
   game.api.updateStevieGuides();
   game.api.syncSoundEffects();game.api.updateMenuPencil(dt);

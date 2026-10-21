@@ -7,7 +7,7 @@ module.exports=load=>{
   a.spawnChapterGroup();assert(s.enemies.every(e=>!['fast','wardling'].includes(e.type)),'scripted groups exclude parked types');
  }
  a.resetRun({skipIntro:true});s.wave=9;a.startWave({skipIntro:true});s.enemies=[];assert.equal(a.spawnScheduledEnemy(null,null,'papertearer'),null,'Rip-Raff waits until wave fourteen');s.wave=14;a.startWave({skipIntro:true});s.enemies=[];for(let i=0;i<3;i++){s.spawnTimer=0;a.spawnWaveEnemies(.01);}assert(s.enemies.some(e=>e.type==='papertearer'),'Rip-Raff introduced with wave-fourteen specialists');
- s.wave=16;const crew=a.specialistReinforcements({x:100,y:160},5,{kind:'tunnel',entryId:1,exitId:2});assert.equal(crew.length,5,'wave-sixteen shortcut can call its runners');assert(crew.every(e=>e.type==='grunt'));
+ s.wave=16;const crew=a.specialistReinforcements({x:100,y:160},5,{kind:'tunnel',entryId:1,exitId:2});assert.equal(crew.length,2,'wave-sixteen shortcut can call its runners');assert(crew.every(e=>e.type==='grunt'));
  assert(a.spawnEnemy(false,100,200,'fast'));assert(a.spawnEnemy(false,150,200,'wardling'),'parked enemies remain available for explicit test spawning');
- console.log('PASS: parked Nugget/Nope Goblin excluded from wave pools/groups, retained explicit test spawns, wave-fourteen Rip-Raff introduction and five-runner shortcut call.');
+ console.log('PASS: parked Nugget/Nope Goblin excluded from wave pools/groups, retained explicit test spawns, wave-fourteen Rip-Raff introduction and two-runner shortcut call.');
 };

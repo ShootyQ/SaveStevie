@@ -216,7 +216,7 @@ console.log('PASS: 60-second arrival counts '+JSON.stringify(pressureCounts));
 pg.state.wave=20;pg.api.startWave();pg.state.timeLeft=51;const surgeGap=pg.api.spawnGap();pg.state.timeLeft=57;
 assert.ok(surgeGap<pg.api.spawnGap(),'short surge increases frequency');
 assert.equal(pg.api.enemySpeedScale(),1.28);
-for(const [wave,type] of [[14,'papertearer'],[3,'sprinter'],[10,'brood'],[11,'wallpuller'],[13,'catapulter']]){
+for(const [wave,type] of [[14,'papertearer'],[3,'sprinter'],[11,'wallpuller'],[13,'catapulter']]){
   pg.state.enemies=[];pg.api.resetCatapulterRun();const pick=pg.api.pick;let pool;
   pg.api.pick=list=>{pool=list;return list[0]};pg.state.wave=wave-1;pg.api.enemyType();assert.ok(!pool.includes(type));
   pg.state.wave=wave;pg.api.enemyType();assert.ok(pool.includes(type));pg.api.pick=pick;
@@ -536,7 +536,7 @@ assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
 assert.equal(g.catalog.monsters.length,31);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,31);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],2:['scrubber'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['sniper'],10:['bootstomp','brood'],11:['wallpuller','bulwark'],12:['gnawer'],13:['catapulter','basil','medic'],14:['papertearer','brute'],15:['crayon','sapper'],16:['elite'],20:['mr-glue','eraser']};
+const expected={1:['grunt'],2:['scrubber'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['sniper'],10:['bootstomp'],11:['wallpuller','bulwark'],12:['gnawer'],13:['catapulter','basil','medic'],14:['papertearer','brute'],15:['crayon','sapper'],16:['elite'],20:['mr-glue','eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -662,7 +662,8 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
 const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['catapulter','basil','scrubber','flanker','wallpuller','papertearer','bootstomp','wobblechomp','wobble-tooth','eraser','mr-glue','gnawer'].includes(type));
 for(let i=0;i<76;i++){
- const e=g.api.spawnEnemy(false,100+i,200,types[i%types.length]),mask=[3,7,19,27][Math.floor(i/types.length)%4];
+ const type=types[i%types.length],e=g.api.spawnEnemy(false,100+i,200,type==='sniper'?'grunt':type),mask=[3,7,19,27][Math.floor(i/types.length)%4];
+ e.type=types[i%types.length]; // Rendering fixture deliberately exceeds normal encounter limits.
  e.burn=mask&1?2:0;e.poison=mask&2?2:0;e.freeze=mask&4?2:0;e.charged=mask&8?2:0;e.gravitySlow=mask&16?.4:0;
 }
 const state=JSON.stringify(g.state);g.api.draw();const warm=g.api.rendererCacheStats();assert.equal(warm.tintEntries,76,'cache holds more than the old 32-image limit');
@@ -1259,7 +1260,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  console.log('PASS: delayed blue rune drains real ink, hazard translation, reachable boss steering and safe contact retreat.');
 }
 {
- const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=9;g.api.startWave();g.state.spawnTimer=9999;g.state.timeLeft=g.state.waveTime-12;g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,2,'neighbor gets a small relocated pair');g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,2,'pair threshold cannot fire twice');g.state.timeLeft=g.state.waveTime-20;g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,4,'normal chapter group still fires');
+ const g=load(true).sandbox.testGame;g.api.resetRun();g.state.wave=9;g.api.startWave();g.state.spawnTimer=9999;g.state.timeLeft=g.state.waveTime-12;g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,0,'later waves no longer add relocated burst pairs');g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,0,'no extra burst on repeated updates');g.state.timeLeft=g.state.waveTime-20;g.api.spawnWaveEnemies(.01);assert.equal(g.state.enemies.length,2,'normal chapter group still fires');
  g.state.enemies=[];g.state.enemyShots=[{x:100,y:200,vx:125,vy:0,life:3,r:4,damage:6,bossKind:'staple'}];g.state.player.x=300;g.state.player.y=200;g.state.walls=[{pts:[{x:200,y:150},{x:200,y:250}],thick:8,hp:100}];const hp=g.state.player.hp;g.api.updateEnemyShots(2);assert.equal(g.state.enemyShots.length,0);assert.equal(g.state.player.hp,hp,'wall cover blocks boss shots');
  console.log('PASS: paced relocated neighbors retain chapter groups and boss projectiles respect cover.');
 }
@@ -2657,3 +2658,5 @@ require("./under-desk.cjs")(load);
 require("./blast-arming.cjs")(load);
 
 require('./touch-hold-and-desktop-backup.cjs')(load);
+
+require('./late-counterplay.cjs')(load);
