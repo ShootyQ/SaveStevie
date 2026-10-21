@@ -2660,3 +2660,5 @@ require("./blast-arming.cjs")(load);
 require('./touch-hold-and-desktop-backup.cjs')(load);
 
 require('./late-counterplay.cjs')(load);
+
+require('./bootstomp-walk.cjs')(load);
