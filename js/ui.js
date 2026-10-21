@@ -184,8 +184,9 @@ function openInfo(kind){
   if(activeInfo){const history=[...returnInfo,...(['pause','hub','options'].includes(activeInfo)?[activeInfo]:[])];closeInfo(false);returnInfo=history.at(-1)===kind?history.slice(0,-1):history;}
   game.api.endDraw();pausedBeforeInfo=game.state.paused;focusBeforeInfo=document.activeElement;
   game.state.paused=true;activeInfo=kind;
-  game.dom.$('pauseBtn').textContent='Resume';
+  game.dom.$('pauseBtn').textContent='Resume';game.dom.$('pauseBtn').setAttribute?.('aria-label','Resume');game.dom.$('pauseBtn').title='Resume';
   if(kind==='pause'){
+    game.api.renderGameSpeed();
     game.api.renderScorecard('pauseScorecard');game.dom.$('pauseScoreTitle').textContent='Scorecard · '+game.state.score.toLocaleString('en-US')+' points';
     game.dom.$('quitConfirmation').hidden=true;game.dom.$('pauseActions').hidden=false;
     game.dom.$('pauseSummary').textContent='Wave '+game.state.wave+' · '+game.state.tool.name+' · '+game.api.notebookSnapshot().runScraps+' scraps earned';
@@ -216,7 +217,7 @@ function closeInfo(back=true){
   game.dom.$(kind+'Overlay').style.display='none';game.api.updateScoreHUD();
   if(kind==='lesson')game.api.dismissFirstLesson?.();
   if(kind==='doodle')game.api.dismissDoodleChoice?.();
-  game.dom.$('pauseBtn').textContent='Pause';
+  game.dom.$('pauseBtn').textContent='Pause';game.dom.$('pauseBtn').setAttribute?.('aria-label','Pause');game.dom.$('pauseBtn').title='Pause';
   if(goBack){openInfo(goBack);returnInfo=history.slice(0,-1);return}
   game.api.syncScrapTutorial();
   if(kind==='monsterIntro'||(focusBeforeInfo?.getClientRects&&focusBeforeInfo.getClientRects().length===0))game.dom.$(game.state.running?'pauseBtn':'splashHubBtn').focus?.();else focusBeforeInfo?.focus?.();

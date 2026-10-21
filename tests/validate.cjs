@@ -2664,3 +2664,5 @@ require('./late-counterplay.cjs')(load);
 require('./bootstomp-walk.cjs')(load);
 
 require('./small-utilities.cjs')(load);
+
+require('./game-speed.cjs')(load);

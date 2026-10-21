@@ -14,7 +14,7 @@ function update(dt){
 
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
   if(game.api.synergyRevealActive()||game.api.beginSynergyReveal())return;
-  if(game.api.bossEntranceActive()){game.api.resetCircleShapes();game.api.updateBossEntrance(dt);game.api.updateUI();return}
+  if(game.api.bossEntranceActive()){game.api.resetBossSpeed();game.api.resetCircleShapes();game.api.updateBossEntrance(dt);game.api.updateUI();return}
   if((game.state.wave===5||game.state.wave===10)&&game.state.timeLeft<=0&&game.api.bossWavePhase()==='timed'&&!game.state.enemies.some(e=>e.hp>0||e.flight)){game.api.spawnWaveEnemies(0);game.api.updateUI();return}
   game.api.updateRefuge(dt);game.api.updatePaper(dt);game.api.updatePaperPress(dt);game.api.updateHardhatBombs(dt);game.api.updateScrubberHint(dt);if(game.api.updateDoodleScraps(dt))return;
   if(game.api.bossFightResolved()){game.api.waveComplete();return}
@@ -252,10 +252,18 @@ function update(dt){
   game.api.updateUI();
 }
 
-function loop(t){
-  const dt=Math.min(.033,(t-game.state.last)/1000||0);game.state.last=t;game.api.update(dt);if(game.api.shouldDrawDesktopFrame?.(t)??true)game.api.draw();requestAnimationFrame(game.api.loop)
+function advanceSimulation(dt){
+  const steps=game.api.simulationSpeed();
+  for(let i=0;i<steps;i++){
+    // A step may open a reward, pause, finish the wave or start a boss entrance.
+    if(i&&game.api.simulationSpeed()!==2)break;
+    game.api.update(dt);
+  }
 }
-const api = { update, loop };
+function loop(t){
+  const dt=Math.min(.033,(t-game.state.last)/1000||0);game.state.last=t;advanceSimulation(dt);if(game.api.shouldDrawDesktopFrame?.(t)??true)game.api.draw();requestAnimationFrame(game.api.loop)
+}
+const api = { update, loop, advanceSimulation };
 Object.assign(game.api, api);
 return api;
 };
