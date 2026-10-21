@@ -22,7 +22,19 @@ module.exports=function(load){
   a.spawnEnemy=(boss,x,y,type)=>{assert(!boss);assert(allowed.has(type),'all scheduled routes use focused roster: '+type);arrivals.push(type);return {type};};
   for(let frame=0;frame<3600;frame++){s.timeLeft=60-frame/60;a.spawnWaveEnemies(1/60);}
   a.spawnEnemy=spawn;assert(arrivals.includes('grunt')&&arrivals.includes('tank')&&arrivals.includes('wallpuller'));
-  if(wave===11)assert(arrivals.includes('catapulter'),'guaranteed catapulter introduction remains');
+  if(wave===11)assert(!arrivals.includes('catapulter')&&!arrivals.includes('papertearer'),'wave eleven introduces only Yank');
+ }
+ // All arrival paths respect the staggered specialist introductions.
+ for(const [wave,newType] of [[11,'wallpuller'],[12,'gnawer'],[13,'catapulter'],[14,'papertearer']]){
+  a.resetRun({skipIntro:true});s.wave=wave;a.startWave({skipIntro:true});s.enemies=[];
+  const firstWaves={wallpuller:11,gnawer:12,catapulter:13,papertearer:14};
+  for(const [type,first] of Object.entries(firstWaves))if(wave<first)assert.equal(a.spawnScheduledEnemy(null,null,type,true),null,'no premature scripted '+type);
+  const spawn=a.spawnEnemy,arrivals=[];a.spawnEnemy=(boss,x,y,type)=>{assert(wave>=(firstWaves[type]||0),'no premature random/group '+type);arrivals.push(type);return {type};};
+  s.spawnTimer=0;a.spawnWaveEnemies(.01);assert.equal(arrivals[0],newType,'guaranteed first newcomer on wave '+wave);a.spawnChapterGroup();a.spawnEnemy=spawn;
+ }
+ for(const [wave,kind,count] of [[13,'catapult',0],[14,'catapult',2],[14,'tunnel',0],[16,'tunnel',2]]){
+  a.resetRun({skipIntro:true});s.wave=wave;a.startWave({skipIntro:true});s.enemies=[];
+  assert.equal(a.specialistReinforcements({x:100,y:160},2,{kind}).length,count,'staggered backup on wave '+wave+' for '+kind);
  }
  console.log('PASS: waves 11+ focused roster across random, introductions and scripted groups; no splitter/nested families, 20% lower regular spawn rate, and early-wave spawn timing preserved.');
 };

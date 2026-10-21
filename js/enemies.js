@@ -40,7 +40,7 @@ game.catalog.enemyGuide=game.catalog.monsters.filter(m=>['wardling','sprinter','
 
 // Keep late waves focused on the early cast and interactive wall counters.
 const lateRoster=new Set([...game.catalog.monsters.filter(m=>m.wave<=9&&!['splitter','mini','boss'].includes(m.type)).map(m=>m.type),'wallpuller','catapulter','papertearer','gnawer']);
-function scheduledTypeAvailable(type){return (type!=='papertearer'||game.state.wave>=11)&&(type!=='gnawer'||game.state.wave>=12)&&!game.catalog.monsters.find(m=>m.type===type)?.pausedFromWaves&&(game.state.wave<11||lateRoster.has(type));}
+function scheduledTypeAvailable(type){return (!['wallpuller','catapulter','papertearer','gnawer'].includes(type)||game.state.wave>=game.catalog.monsters.find(m=>m.type===type).wave)&&!game.catalog.monsters.find(m=>m.type===type)?.pausedFromWaves&&(game.state.wave<11||lateRoster.has(type));}
 function enemyType(){
   const pool=game.state.wave>=12?['grunt']:['grunt','grunt'];
   for(const m of game.catalog.monsters){
@@ -544,7 +544,7 @@ function updateBossArrival(dt){
 // Trim only scheduled plain attackers, not offspring, introductions or boss adds.
 const commonSpawnTypes=new Set(['grunt','fast','brute','elite']);
 function specialistReinforcements(point,count,job){
- if(game.state.wave<(job.kind==='tunnel'?11:13)||game.state.timeLeft<=0||bossPhase!=='timed')return [];
+ if(game.state.wave<(job.kind==='tunnel'?16:14)||game.state.timeLeft<=0||bossPhase!=='timed')return [];
  const sides=[{d:point.x,x:-26,y:point.y},{d:game.state.W-point.x,x:game.state.W+26,y:point.y},{d:point.y-90,x:point.x,y:-26},{d:game.state.H-point.y,x:point.x,y:game.state.H+26}],edge=sides.sort((a,b)=>a.d-b.d)[0],spawned=[];
  for(let i=0;i<count&&(job.kind==='tunnel'?tunnelAdds<20:specialistAdds<10);i++){const n=game.api.spawnEnemy(false,edge.x,edge.y,'grunt');if(!n)break;if(job.kind==='tunnel')tunnelAdds++;else specialistAdds++;n.specialistJob={...job};n.speed*=1.4;spawned.push(n);}
  return spawned;
@@ -565,7 +565,7 @@ function spawnScheduledEnemy(x=null,y=null,type=null,protectedIntro=false){
 }
 function spawnChapterGroup(){
   const wave=game.state.wave;if(wave<6)return;
-  const types=wave>=12&&game.api.canSpawnCatapulter()?['catapulter','sniper']:wave>=13?(groupsSpawned%2===0?['tank','sniper']:['wallpuller','grunt']):wave<=10?(wave>=9?['sniper','grunt']:wave>=7?['flanker','grunt']:['tank','grunt']):groupsSpawned%2===0?['tank','sniper','grunt']:['wallpuller','bouncer','grunt'];
+  const types=wave>=13&&game.api.canSpawnCatapulter()?['catapulter','sniper']:wave>=13?(groupsSpawned%2===0?['tank','sniper']:['wallpuller','grunt']):wave<=10?(wave>=9?['sniper','grunt']:wave>=7?['flanker','grunt']:['tank','grunt']):groupsSpawned%2===0?['tank','sniper','grunt']:['wallpuller','bouncer','grunt'];
   const fromLeft=groupsSpawned%2===0;
   for(let i=0;i<types.length;i++)spawnScheduledEnemy(fromLeft?-26:game.state.W+26,game.state.H*(.35+.12*i),types[i]);
 }
