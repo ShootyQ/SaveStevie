@@ -149,7 +149,7 @@ function killEnemy(e){
   game.api.recordShapeVictory(e);
   game.api.playSound('defeated');
   game.state.kills++;game.state.waveKills++;game.api.awardKillScore(e);
-  game.api.awardKillScraps(e);game.api.dropDoodleScrap(e);
+  game.api.awardKillScraps(e);game.api.dropDoodleScrap(e);game.api.dropNumber(e);
   game.api.refundKillInk(game.state.stats.refund);game.api.healStevie(game.state.stats.killHeal);game.api.repairWallsOnKill();
   if(e.waveBoss){if(game.api.isBootstomp?.(e))game.api.clearBootstomp(e);if(game.api.isWhiteBrother?.(e))game.api.clearWhiteBrothers(e);if(game.api.isCrayonBoss?.(e))game.api.clearCrayonBoss(e);if(game.api.isWobbleBoss(e))game.api.clearWobbleBoss(e);if(game.api.isStapleBoss(e))game.api.clearStapleBoss(e);bossResolved=true;game.api.selectMusicTrack('victory')}
   game.api.burst(e.x,e.y,e.color,12);
