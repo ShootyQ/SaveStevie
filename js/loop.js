@@ -43,7 +43,7 @@ function update(dt){
     if(w.life<=0)game.state.walls=game.state.walls.filter(x=>x!==w);
   }
 
-  game.api.updateUnderDesk(dt);game.api.updateUtilityToys(dt);
+  game.api.updateUnderDesk(dt);game.api.updateUtilityToys(dt);game.api.updateSmallUtilities(dt);
   game.api.updateCircleShapes(dt);
   game.api.updateStevie(dt);game.api.updateProjectiles(dt);game.api.updateEnemyShots(dt);
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
@@ -124,6 +124,7 @@ function update(dt){
     if(game.api.paperPressCaptures(e)){const hit=game.api.nearestWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
     if(game.api.heldByCatapulter(e))continue;
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
+    if(game.api.smallUtilityWaiting(e)){const hit=game.api.nearestWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
     game.api.applyCircleEnclosure(e,dt);if(e.hp<=0)continue;
     game.api.circleTurretContact(e,dt);if(e.hp<=0)continue;
     if(game.api.avoidCircleTurret(e,dt))continue;

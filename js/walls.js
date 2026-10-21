@@ -79,7 +79,7 @@ function eraseWallPath(a,b,r=20,options={}){
    if(length<2||total<=0)continue;
    const fraction=length/total;kept+=fraction;result.push({...wall,pts,hp:wall.hp*fraction,maxHp:wall.maxHp*fraction,eraseInk:(wall.eraseInk||0)*fraction,closed:false});
   }
-  if(!options.enemy&&!lesson)game.api.ventBackdraft(wall,a,b);
+  if(!options.enemy&&!lesson){game.api.ventBackdraft(wall,a,b);game.api.leaveEraserCrumbs(b,(wall.eraseInk||0)*Math.max(0,1-kept));}
   if(!options.enemy&&!lesson)game.api.eraseWallReaction(wall,result.slice(firstPiece),a,b,r,(wall.eraseInk||0)*Math.max(0,1-kept));
   if(!options.enemy&&wall.eraseInk>0&&wall.maxHp>0)recovered+=wall.eraseInk*Math.max(0,1-kept)*game.api.clamp(wall.hp/wall.maxHp,0,1)*game.api.clamp(game.state.stats.eraseRefund??.25,0,.6);
  }

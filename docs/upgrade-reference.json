@@ -1,5 +1,5 @@
 {
-  "version": "0.1.125",
+  "version": "0.1.126",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -318,6 +318,42 @@
       "synergies": [
         "Stevie the Unreasonable"
       ],
+      "source": "js/upgrades.js"
+    },
+    {
+      "id": "Eraser Crumbs",
+      "name": "Eraser Crumbs",
+      "category": "Walls / shapes",
+      "effect": "Erasing 6 ink worth of your own paid walls leaves pink rubber crumbs. An ordinary monster stops to chew for 0.9 seconds. Up to three piles, lasting 8 seconds; each monster needs 5 seconds between snacks. Free walls and enemy erasing leave no crumbs.",
+      "rarities": "common",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "id": "Please Form a Line",
+      "name": "Please Form a Line",
+      "category": "Walls / shapes",
+      "effect": "When three ordinary monsters crowd the same wall, a ONE AT A TIME sign makes two wait for 1.25 seconds while the front monster keeps chewing. Each wall has a 7-second cooldown. Bosses and specialist monsters ignore the sign.",
+      "rarities": "uncommon",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
+      "source": "js/upgrades.js"
+    },
+    {
+      "id": "Connect the Dots",
+      "name": "Connect the Dots",
+      "category": "Drawing / ink economy",
+      "effect": "PROTOTYPE: defeated non-boss monsters have a 10% chance to drop numbered dots: 1, 2, 3 and onward, with no cap or expiry, even across waves. Start at 1, trace at least three numbers in order, then return to 1 in one stroke. Tracing is free. Closing clears the entire batch, including unused dots; the next drop is 1. No combat reward yet. The page shows drops and your biggest loop.",
+      "rarities": "uncommon",
+      "levels": "One-time: +1 unlock",
+      "stacking": "One-time unlock",
+      "limits": "See effect description and game code for per-level combat tuning.",
+      "synergies": [],
       "source": "js/upgrades.js"
     },
     {
@@ -1634,6 +1670,45 @@
       "name": "Stevie Has Had Enough",
       "category": "Stevie / paper balls / survival",
       "effect": "Improve paper-ball damage with diminishing gains toward 30 base damage. Each level shortens throws by 0.14s, down to 0.45s.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "id": "Eraser Crumbs",
+      "name": "Eraser Crumbs",
+      "category": "Walls / shapes",
+      "effect": "Erasing 6 ink worth of your own paid walls leaves pink rubber crumbs. An ordinary monster stops to chew for 0.9 seconds. Up to three piles, lasting 8 seconds; each monster needs 5 seconds between snacks. Free walls and enemy erasing leave no crumbs.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "id": "Please Form a Line",
+      "name": "Please Form a Line",
+      "category": "Walls / shapes",
+      "effect": "When three ordinary monsters crowd the same wall, a ONE AT A TIME sign makes two wait for 1.25 seconds while the front monster keeps chewing. Each wall has a 7-second cooldown. Bosses and specialist monsters ignore the sign.",
+      "evidence": "Not rated",
+      "priority": "Unrated",
+      "idea": "",
+      "playerRating": "",
+      "playerNotes": "",
+      "decision": "",
+      "nextTest": ""
+    },
+    {
+      "id": "Connect the Dots",
+      "name": "Connect the Dots",
+      "category": "Drawing / ink economy",
+      "effect": "PROTOTYPE: defeated non-boss monsters have a 10% chance to drop numbered dots: 1, 2, 3 and onward, with no cap or expiry, even across waves. Start at 1, trace at least three numbers in order, then return to 1 in one stroke. Tracing is free. Closing clears the entire batch, including unused dots; the next drop is 1. No combat reward yet. The page shows drops and your biggest loop.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",

@@ -87,6 +87,7 @@ function waveDuration(){
 
 let paperChapter=null;
 function resetRun(options={}){
+  game.api.resetSmallUtilities();
   game.api.resetUnderDesk();
   paperChapter=null;delete game.state.lastDamage;game.state.startingUpgrade=false;game.state.startingUpgradeSkipIntro=false;
   game.api.resetCircleShapes();game.api.resetScoring();game.api.resetCatapulterRun();
@@ -124,7 +125,7 @@ function resetRun(options={}){
 }
 
 function startWave(options={}){
-  game.api.resetUtilityToys();
+  game.api.resetUtilityToys();game.api.resetSmallWave();
   game.api.resetCircleShapes();
   game.api.beginScoreWave();
   game.api.resetWaveFinale();
@@ -157,7 +158,7 @@ function waveComplete(){
   if(game.api.waveFinaleActive())return;
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending()||(game.state.wave%5!==0&&game.state.enemies.length>0)||(game.state.wave%5===0&&!game.api.bossFightResolved()))return;
   game.api.stopSoundEffects();
-  game.state.betweenWaves=true;game.api.finishUnderDeskWave();game.api.resetUtilityToys();game.api.resetCircleShapes();
+  game.state.betweenWaves=true;game.api.finishUnderDeskWave();game.api.resetUtilityToys();game.api.resetSmallWave();game.api.resetCircleShapes();
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
   game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetBackdraft();game.api.resetTesla();
@@ -200,7 +201,7 @@ function proceedAfterWave(){
 
 function returnToMenu(){
   game.api.resetUnderDesk();
-  game.api.resetUtilityToys();
+  game.api.resetUtilityToys();game.api.resetSmallWave();
   game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
   game.api.resetSynergyReveals();
@@ -218,7 +219,7 @@ function returnToMenu(){
 }
 function gameOver(){
   game.api.resetUnderDesk();
-  game.api.resetUtilityToys();
+  game.api.resetUtilityToys();game.api.resetSmallWave();
   game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
   game.api.resetSynergyReveals();
