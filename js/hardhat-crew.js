@@ -1,9 +1,35 @@
 /* Doodle construction crew: visible jobs, erasable tools, bounded sabotage. */
 DoodleDefender.systems.hardhatCrew=function(game){
-let bombs=[],flungWalls=[];
+let bombs=[],flungWalls=[],grip=null,counterPops=[];
 const yankTuning={hook:.65,pull:.7,windup:.3,pullSpeed:145,cooldown:1.1,flight:.8};
 const types=new Set(['wallpuller','papertearer']);
-function resetHardhatCrew(){bombs=[];flungWalls=[];}
+function resetHardhatCrew(){endYankGrip(false);bombs=[];flungWalls=[];counterPops=[];}
+const gripTuning={reach:240,slack:70,duration:4,speed:220,snags:2};
+function yankGripActive(){return !!grip;}
+function grippable(n){return n.hp>0&&!n.waveBoss&&!game.catalog.enemyDefs[n.type]?.boss&&!['boss','eraser','wallpuller','papertearer'].includes(n.type)&&!n.flight&&!game.api.underPaper(n)&&!game.api.abilityImmune(n)&&!game.api.heldByCatapulter(n)&&!game.api.bossFriendHeld(n)&&!game.api.heldUnderDesk?.(n);}
+function beginYankGrip(p){
+ if(!game.api.paperActive()||grip)return false;
+ const e=game.state.enemies.find(e=>e.type==='wallpuller'&&e.hp>0&&e.stun<=0&&e.freeze<=0&&['hook','pull','windup'].includes(e.crew?.phase)&&e.crew.anchor&&Math.hypot(p.x-e.crew.anchor.x,p.y-e.crew.anchor.y)<=26);
+ if(!e)return false;grip={owner:e,p:{...e.crew.anchor},age:0,stretch:0,snagged:new Map()};e.crew={phase:'gripped',cooldown:0};moveYankGrip(p);game.api.playSound('wall');yankText(e,'HEY! THAT’S MY END!');return true;
+}
+function moveYankGrip(p){if(!grip)return false;const e=grip.owner,dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy)||1,k=Math.min(1,gripTuning.reach/d);grip.p={x:game.api.clamp(e.x+dx*k,12,game.state.W-12),y:game.api.clamp(e.y+dy*k,58,game.state.H-20)};grip.stretch=Math.max(grip.stretch,Math.min(1,Math.max(0,(d-gripTuning.slack)/(gripTuning.reach-gripTuning.slack))));return true;}
+function endYankGrip(commit=true){
+ if(!grip)return false;const g=grip;grip=null;const e=g.owner;
+ if(game.state.enemies.includes(e)&&e.hp>0){e.crew={phase:'walk',cooldown:3};e.stun=Math.max(e.stun,commit?1.2:0);
+  if(commit&&g.stretch>.08){game.api.dealDamage(e,e.maxHp*(.1+.25*g.stretch),'physical');if(e.hp>0)game.api.launchEnemy(e,g.p.x,g.p.y);game.api.playSound('wall');yankText(e,'SNAP!');counterPops.push({x:e.x,y:e.y,age:0});}}
+ for(const n of g.snagged.keys())if(commit&&g.stretch>.08&&game.state.enemies.includes(n)&&grippable(n)){game.api.dealDamage(n,10+n.maxHp*.15,'physical');if(n.hp>0)game.api.launchEnemy(n,g.p.x,g.p.y);}
+ return true;
+}
+function guardYankGrip(){if(grip&&(!game.api.paperActive()||!game.state.enemies.includes(grip.owner)||grip.owner.hp<=0||grip.owner.freeze>0||grip.owner.stun>0||grip.owner.flight))endYankGrip(false);}
+function moveRopedEnemy(n,dx,dy){const p=game.state.player,b=game.api.refugeBounds(),clear=Math.hypot(b.halfWidth,b.halfHeight)+n.r+4;if(game.api.pointSegDist(p.x,p.y,n.x,n.y,n.x+dx,n.y+dy)<clear)return false;return game.api.moveEnemySafely(n,dx,dy);}
+function updateYankGrip(dt){
+ guardYankGrip();if(!grip)return;const g=grip,e=g.owner;g.age+=dt;if(g.age>=gripTuning.duration){endYankGrip(true);return;}
+ const dx=g.p.x-e.x,dy=g.p.y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(Math.max(0,d-gripTuning.slack),gripTuning.speed*dt);if(step)moveRopedEnemy(e,dx/d*step,dy/d*step);
+ for(const n of game.state.enemies){if(n===e||!grippable(n)||g.snagged.has(n)||g.snagged.size>=gripTuning.snags)continue;if(game.api.pointSegDist(n.x,n.y,e.x,e.y,g.p.x,g.p.y)<=n.r+7){const vx=g.p.x-e.x,vy=g.p.y-e.y,len=vx*vx+vy*vy||1;g.snagged.set(n,game.api.clamp(((n.x-e.x)*vx+(n.y-e.y)*vy)/len,.2,.9));game.api.floatText(n.x,n.y-20,'SNAGGED!','#386d79');}}
+ for(const [n,t] of g.snagged){if(!game.state.enemies.includes(n)||!grippable(n)){g.snagged.delete(n);continue;}const tx=e.x+(g.p.x-e.x)*t,ty=e.y+(g.p.y-e.y)*t,nx=tx-n.x,ny=ty-n.y,len=Math.hypot(nx,ny)||1,k=Math.min(1,180*dt/len);moveRopedEnemy(n,nx*k,ny*k);n.stun=Math.max(n.stun,.12);}
+}
+function drawYankGrip(ctx){if(!grip)return;const g=grip,e=g.owner,t=Math.min(1,Math.hypot(g.p.x-e.x,g.p.y-e.y)/gripTuning.reach);ctx.strokeStyle='#477b87';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(e.x,e.y);const dx=g.p.x-e.x,dy=g.p.y-e.y,d=Math.hypot(dx,dy)||1;for(let i=1;i<=24;i++){const q=i/24,w=Math.sin(q*Math.PI*12)*(1-t)*5;ctx.lineTo(e.x+dx*q-dy/d*w,e.y+dy*q+dx/d*w);}ctx.stroke();ctx.fillStyle='#d4eee9';ctx.strokeStyle='#386d79';ctx.beginPath();ctx.arc(g.p.x,g.p.y,15,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.strokeStyle='#b67e32';ctx.beginPath();ctx.arc(g.p.x,g.p.y,19,-Math.PI/2,-Math.PI/2+Math.PI*2*(1-g.age/gripTuning.duration));ctx.stroke();ctx.font='14px "Stevie Pencil",sans-serif';ctx.textAlign='center';ctx.fillStyle='#315965';ctx.fillText('Drag · release to snap',game.api.clamp(g.p.x,80,game.state.W-80),Math.max(72,g.p.y-26));for(const n of g.snagged.keys()){ctx.beginPath();ctx.arc(n.x,n.y,n.r+5,0,Math.PI*2);ctx.stroke();}}
+function counterPop(x,y){counterPops.push({x,y,age:0});if(counterPops.length>8)counterPops.shift();game.api.burst(x,y,'#e1ae50',16);}
 function crewText(x,y,text){game.api.floatText(game.api.clamp(x,90,game.state.W-90),game.api.clamp(y,95,game.state.H-65),text,'#855c3e');}
 function yankText(e,text){game.state.floaters=game.state.floaters.filter(f=>!f.yankCaption);crewText(e.x,e.y-e.r-15,text);const f=game.state.floaters.at(-1);if(f)f.yankCaption=true;}
 function nextRipSite(e){
@@ -54,6 +80,7 @@ function drawFlungWalls(ctx){
 function yankPose(e){
  const still={x:0,y:0,angle:0,sx:1,sy:1};if(e.type!=='wallpuller'||game.api.enemyMotionReduced()||e.freeze>0||e.stun>0)return still;
  const c=e.crew||{},face=game.api.enemyFacing(e),walk=game.api.enemyWalkClock(e)*19;
+ if(c.phase==='gripped'&&grip?.owner===e)return {x:0,y:Math.sin(grip.age*12)*2,angle:game.api.clamp((grip.p.x-e.x)/220,-.4,.4),sx:1+grip.stretch*.12,sy:1-grip.stretch*.08};
  if(c.phase==='hook'){const t=game.api.clamp(1-c.left/yankTuning.hook,0,1);return {x:face*t*5,y:-Math.sin(t*Math.PI)*3,angle:face*t*.25,sx:1+t*.12,sy:1-t*.08};}
  if(c.phase==='pull'){const t=game.api.clamp(1-c.left/yankTuning.pull,0,1);return {x:-face*5,y:3+Math.sin(t*Math.PI*5)*2,angle:-face*.35,sx:1.12,sy:.85};}
  if(c.phase==='windup'){const t=game.api.clamp(1-c.left/yankTuning.windup,0,1);return {x:-face*t*7,y:5*t,angle:-face*t*.65,sx:1+t*.2,sy:1-t*.25};}
@@ -85,6 +112,7 @@ function updateHardhat(e,dt){
  const c=e.crew??={phase:'walk',cooldown:1};
  const hit=game.api.nearestWallHit(e)||game.api.gravityWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');
  if(e.hp<=0){cancelCrewJob(e);return true;}
+ if(c.phase==='gripped'){if(grip?.owner!==e)e.crew={phase:'walk',cooldown:2};return true;}
  if(e.freeze>0||e.stun>0||e.flight||game.api.underPaper(e)){if(c.phase!=='walk')cancelCrewJob(e);return true;}
  if(e.x<e.r+10||e.x>game.state.W-e.r-10||e.y<100||e.y>game.state.H-e.r-15){cancelCrewJob(e);moveCrew(e,crewPoint(e),dt);return true;}
  if(c.wall&&!game.state.walls.includes(c.wall)){cancelCrewJob(e);return true;}
@@ -103,7 +131,7 @@ function updateHardhat(e,dt){
  if(c.phase==='tear'||c.phase==='bomb'){
   c.left-=dt;if(c.left>0)return true;
   if(c.phase==='tear'){const hole=makeCrewHole(c.aim);if(hole){c.entryId=hole.id;crewText(hole.x,hole.y-25,'RIP!');}const aim=fireBombPoint(e);if(aim){c.phase='bomb';c.left=1.2;c.aim=aim;return true;}}
-  else if(bombs.length<3){const d=Math.hypot(e.x-c.aim.x,e.y-c.aim.y);bombs.push({from:{x:e.x,y:e.y},to:{...c.aim},entryId:c.entryId,age:0,life:game.api.clamp(d/380+.35,1,2),arc:Math.min(140,Math.max(60,d*.18))});e.crew={phase:'tossRecover',left:.55,cooldown:6};return true;}
+  else if(bombs.length<3){const d=Math.hypot(e.x-c.aim.x,e.y-c.aim.y);bombs.push({owner:e,returned:false,from:{x:e.x,y:e.y},to:{...c.aim},entryId:c.entryId,age:0,life:game.api.clamp(d/380+.35,1,2),arc:Math.min(140,Math.max(60,d*.18))});e.crew={phase:'tossRecover',left:.55,cooldown:6};return true;}
   cancelCrewJob(e);nextRipSite(e);e.crew.cooldown=1.5;return true;
  }
  c.cooldown=Math.max(0,c.cooldown-dt);
@@ -122,16 +150,25 @@ function updateHardhat(e,dt){
 }
 function bombPosition(b){const t=game.api.clamp(b.age/b.life,0,1);return {x:b.from.x+(b.to.x-b.from.x)*t,y:b.from.y+(b.to.y-b.from.y)*t-Math.sin(t*Math.PI)*(b.arc||60)};}
 function updateHardhatBombs(dt){
- if(!game.api.paperActive())return;
+ if(!game.api.paperActive()){endYankGrip(false);return;}
+ updateYankGrip(dt);for(const p of counterPops)p.age+=dt;counterPops=counterPops.filter(p=>p.age<.45);
  for(const f of flungWalls)f.age+=dt;flungWalls=flungWalls.filter(f=>f.age<f.life);
- for(const b of bombs){b.age+=dt;if(b.age>=b.life){const hole=makeCrewHole(b.to);if(hole){const entry=game.state.paper.holes.find(h=>h.id===b.entryId),p=game.state.player;if(entry&&entry!==hole&&Math.hypot(entry.x-p.x,entry.y-p.y)>Math.hypot(hole.x-p.x,hole.y-p.y)+45){const squad=game.api.specialistReinforcements(entry,5,{kind:'tunnel',entryId:entry.id,exitId:hole.id});if(squad.length)crewText(entry.x,entry.y-30,'SHORTCUT! THIS WAY!');}game.api.burst(hole.x,hole.y,'#ee8036',8);crewText(hole.x,hole.y-25,'NEW SHORTCUT!');game.api.playSound('wall');game.api.playSound('fire');}}}bombs=bombs.filter(b=>b.age<b.life);
+ for(const b of bombs){
+  const old=bombPosition(b);b.age+=dt;
+  if(b.returned){if(b.owner?.hp>0&&game.state.enemies.includes(b.owner))b.to={x:b.owner.x,y:b.owner.y};
+   if(b.age>=b.life){counterPop(b.to.x,b.to.y);if(b.owner?.hp>0&&game.state.enemies.includes(b.owner)){game.api.dealDamage(b.owner,b.owner.maxHp*.4,'physical');b.owner.stun=Math.max(b.owner.stun,1.5);cancelCrewJob(b.owner,true);}game.api.playSound('wallBreak');}continue;}
+  const next=bombPosition(b),hit=game.api.bossShotWallHit({x:old.x,y:old.y,r:9},next.x,next.y);
+  if(hit){b.returned=true;b.from={x:hit.x??next.x,y:hit.y??next.y};b.to=b.owner?{x:b.owner.x,y:b.owner.y}:{...b.from};b.age=0;b.life=.55;b.arc=45;game.api.playSound('wall');crewText(b.from.x,b.from.y-24,'RETURN TO SENDER!');continue;}
+  if(b.age>=b.life){const hole=makeCrewHole(b.to);if(hole){const entry=game.state.paper.holes.find(h=>h.id===b.entryId),p=game.state.player;if(entry&&entry!==hole&&Math.hypot(entry.x-p.x,entry.y-p.y)>Math.hypot(hole.x-p.x,hole.y-p.y)+45){const squad=game.api.specialistReinforcements(entry,2,{kind:'tunnel',entryId:entry.id,exitId:hole.id});if(squad.length)crewText(entry.x,entry.y-30,'SHORTCUT! THIS WAY!');}game.api.burst(hole.x,hole.y,'#ee8036',8);crewText(hole.x,hole.y-25,'NEW SHORTCUT!');game.api.playSound('wall');game.api.playSound('fire');}}
+ }
+ bombs=bombs.filter(b=>b.age<b.life);
 }
 function eraseHardhatTools(a,b,r){
  let changed=false;
  for(const e of game.state.enemies){const c=e.crew;if(!types.has(e.type)||e.hp<=0||game.api.underPaper(e)||!c)continue;
   const nearRope=(['hook','pull','windup'].includes(c.phase))&&c.anchor&&game.api.eraserIntervals({x:e.x,y:e.y},c.anchor,a,b,r).length>0;
   const mark=(c.phase==='tear'||c.phase==='bomb')&&game.api.pointSegDist(c.aim.x,c.aim.y,a.x,a.y,b.x,b.y)<=r+12;
-  if(nearRope||mark){cancelCrewJob(e,true);changed=true;}
+  if(nearRope||mark){cancelCrewJob(e,true);if(mark&&e.type==='papertearer')game.api.dealDamage(e,e.maxHp*.2,'physical');changed=true;}
  }
  bombs=bombs.filter(bomb=>{const q=bombPosition(bomb);if(game.api.pointSegDist(q.x,q.y,a.x,a.y,b.x,b.y)>r+12)return true;game.api.burst(q.x,q.y,'#cbbba4',5);changed=true;return false;});return changed;
 }
@@ -140,18 +177,18 @@ function drawHardhatCrew(){
  const ctx=game.dom.ctx;ctx.save();
  for(const e of game.state.enemies){const c=e.crew;if(!types.has(e.type)||!c||e.hp<=0||game.api.underPaper(e))continue;
   if(['hook','pull','windup'].includes(c.phase)&&c.anchor){
-   const reduced=game.api.enemyMotionReduced(),t=c.phase==='hook'?game.api.clamp(1-c.left/yankTuning.hook,0,1):1,hand={x:e.x+game.api.enemyFacing(e)*e.r*.65,y:e.y-(c.phase==='windup'?e.r:0)},end={x:hand.x+(c.anchor.x-hand.x)*t,y:hand.y+(c.anchor.y-hand.y)*t},sag=reduced?0:c.phase==='hook'?18*Math.sin(t*Math.PI):c.phase==='pull'?Math.sin(c.left*35)*3:0;
+   const reduced=game.api.enemyMotionReduced(),t=c.phase==='hook'?game.api.clamp(1-c.left/yankTuning.hook,0,1):1,hand={x:e.x+game.api.enemyFacing(e)*e.r*.65,y:e.y-(c.phase==='windup'?e.r:0)},end=c.anchor,sag=reduced?0:c.phase==='hook'?18*Math.sin(t*Math.PI):c.phase==='pull'?Math.sin(c.left*35)*3:0;
    ctx.strokeStyle=c.phase==='hook'?'#96713d':'#b85431';ctx.lineWidth=3;ctx.setLineDash(c.phase==='hook'?[5,4]:[]);ctx.beginPath();ctx.moveTo(hand.x,hand.y);ctx.quadraticCurveTo((hand.x+end.x)/2,(hand.y+end.y)/2+sag,end.x,end.y);ctx.stroke();ctx.setLineDash([]);
-   ctx.beginPath();ctx.arc(end.x,end.y,7,0,Math.PI*1.6);ctx.stroke();ctx.fillStyle='#42bfba';ctx.strokeStyle='#293e3d';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(hand.x,hand.y,6,4,-.25,0,Math.PI*2);ctx.fill();ctx.stroke();
+   ctx.fillStyle='#e8fbef';ctx.strokeStyle='#387e76';ctx.lineWidth=2;ctx.beginPath();ctx.arc(end.x,end.y,14,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.font='13px "Stevie Pencil",sans-serif';ctx.textAlign='center';ctx.fillStyle='#315965';ctx.fillText('Grab & drag!',game.api.clamp(end.x,50,game.state.W-50),Math.max(75,end.y-22));ctx.fillStyle='#42bfba';ctx.strokeStyle='#293e3d';ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(hand.x,hand.y,6,4,-.25,0,Math.PI*2);ctx.fill();ctx.stroke();
   }
   if(e.type==='papertearer')drawPapertearerTools(ctx,e);
   if(c.phase==='tear'||c.phase==='bomb')drawMark(ctx,c.aim,c.phase==='tear'?'#855c3e':'#cc642f');
  }
  drawFlungWalls(ctx);
- for(const b of bombs){drawMark(ctx,b.to,'#cc642f');const q=bombPosition(b);ctx.fillStyle='#5f4130';ctx.strokeStyle='#292c2d';ctx.lineWidth=2;ctx.beginPath();ctx.arc(q.x,q.y,9,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#ee8036';ctx.beginPath();ctx.moveTo(q.x,q.y-5);ctx.lineTo(q.x+4,q.y-17);ctx.lineTo(q.x+9,q.y-6);ctx.closePath();ctx.fill();}
- ctx.restore();
+ for(const b of bombs){drawMark(ctx,b.to,b.returned?'#3b8794':'#cc642f');const q=bombPosition(b);if(b.returned){ctx.strokeStyle='#54a0ac';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(b.from.x,b.from.y);ctx.lineTo(q.x,q.y);ctx.stroke();}ctx.fillStyle=b.returned?'#438b94':'#5f4130';ctx.strokeStyle='#292c2d';ctx.lineWidth=2;ctx.beginPath();ctx.arc(q.x,q.y,9,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#ee8036';ctx.beginPath();ctx.moveTo(q.x,q.y-5);ctx.lineTo(q.x+4,q.y-17);ctx.lineTo(q.x+9,q.y-6);ctx.closePath();ctx.fill();}
+ drawYankGrip(ctx);for(const p of counterPops){ctx.globalAlpha=1-p.age/.45;ctx.strokeStyle='#dba24b';ctx.lineWidth=3;ctx.beginPath();ctx.arc(p.x,p.y,12+p.age*85,0,Math.PI*2);ctx.stroke();}ctx.restore();
 }
-function moveHardhatCrew(dx,dy){for(const f of flungWalls){f.x+=dx;f.y+=dy;}for(const e of game.state.enemies){const c=e.crew;for(const q of [c?.aim,c?.anchor,e.ripGoal])if(q){q.x+=dx;q.y+=dy;}}for(const b of bombs)for(const q of [b.from,b.to]){q.x+=dx;q.y+=dy;}}
-function hardhatSnapshot(){return {flungWalls:flungWalls.map(f=>({...f,pts:f.pts.map(p=>({...p}))})),bombs:bombs.map(b=>({...b,from:{...b.from},to:{...b.to}}))};}
-const api={crewWorkPoint:crewPoint,papertearerPose,drawPapertearerTools,yankPose,yankTuning:()=>({...yankTuning}),updateHardhat,updateHardhatBombs,eraseHardhatTools,drawHardhatCrew,moveHardhatCrew,resetHardhatCrew,hardhatSnapshot};Object.assign(game.api,api);return api;
+function moveHardhatCrew(dx,dy){if(grip){grip.p.x+=dx;grip.p.y+=dy;}for(const p of counterPops){p.x+=dx;p.y+=dy;}for(const f of flungWalls){f.x+=dx;f.y+=dy;}for(const e of game.state.enemies){const c=e.crew;for(const q of [c?.aim,c?.anchor,e.ripGoal])if(q){q.x+=dx;q.y+=dy;}}for(const b of bombs)for(const q of [b.from,b.to]){q.x+=dx;q.y+=dy;}}
+function hardhatSnapshot(){return {flungWalls:flungWalls.map(f=>({...f,pts:f.pts.map(p=>({...p}))})),grip:grip?{ownerType:grip.owner.type,p:{...grip.p},age:grip.age,stretch:grip.stretch,snagged:grip.snagged.size}:null,bombs:bombs.map(({owner,...b})=>({...b,ownerType:owner?.type,from:{...b.from},to:{...b.to}}))};}
+const api={beginYankGrip,moveYankGrip,endYankGrip,yankGripActive,guardYankGrip,crewWorkPoint:crewPoint,papertearerPose,drawPapertearerTools,yankPose,yankTuning:()=>({...yankTuning}),updateHardhat,updateHardhatBombs,eraseHardhatTools,drawHardhatCrew,moveHardhatCrew,resetHardhatCrew,hardhatSnapshot};Object.assign(game.api,api);return api;
 };
