@@ -57,7 +57,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['startingUpgrade','startingUpgradeSkipIntro','scoring','doubleLine','tripleLine','paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>['doubleLine','tripleLine','synergySplashTimer'].includes(key)?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['blastAge','startingUpgrade','startingUpgradeSkipIntro','scoring','doubleLine','tripleLine','paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>['doubleLine','tripleLine','synergySplashTimer'].includes(key)?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
 for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -216,7 +216,7 @@ console.log('PASS: 60-second arrival counts '+JSON.stringify(pressureCounts));
 pg.state.wave=20;pg.api.startWave();pg.state.timeLeft=51;const surgeGap=pg.api.spawnGap();pg.state.timeLeft=57;
 assert.ok(surgeGap<pg.api.spawnGap(),'short surge increases frequency');
 assert.equal(pg.api.enemySpeedScale(),1.28);
-for(const [wave,type] of [[11,'papertearer'],[3,'sprinter'],[10,'brood'],[11,'wallpuller'],[11,'catapulter']]){
+for(const [wave,type] of [[14,'papertearer'],[3,'sprinter'],[10,'brood'],[11,'wallpuller'],[13,'catapulter']]){
   pg.state.enemies=[];pg.api.resetCatapulterRun();const pick=pg.api.pick;let pool;
   pg.api.pick=list=>{pool=list;return list[0]};pg.state.wave=wave-1;pg.api.enemyType();assert.ok(!pool.includes(type));
   pg.state.wave=wave;pg.api.enemyType();assert.ok(pool.includes(type));pg.api.pick=pick;
@@ -508,7 +508,7 @@ let fx=g.api.abilityEffectsSnapshot();assert.equal(fx.lightning.length,1);assert
 assert.deepEqual(JSON.parse(JSON.stringify(fx.lightning[0].targets)),g.state.enemies.slice(1,3).map(e=>({x:e.x,y:e.y,immune:false})));assert.ok(Math.abs(g.state.enemies[0].hp-493.4)<1e-8);assert.ok(Math.abs(g.state.enemies[1].hp-495.248)<1e-8);assert.equal(g.state.enemies[3].hp,500,'out-of-range enemy is untouched');
 for(const game of [g,c]){
  game.state.inks.blast=2;game.state.synergies.add('Heavy Artillery');game.state.synergies.add('Demolition Grid');game.state.synergies.add('INFERNO');
- const {x,y}=game.state.player,wall={pts:[{x:x+60,y},{x:x+180,y}],thick:8,hp:1,maxHp:1,life:50,maxLife:50,intersections:2};game.state.walls=[wall];game.api.damageWall(wall,2,x+120,y);
+ const {x,y}=game.state.player,wall={pts:[{x:x+60,y},{x:x+180,y}],thick:8,hp:1,maxHp:1,blastAge:.5,life:50,maxLife:50,intersections:2};game.state.walls=[wall];game.api.damageWall(wall,2,x+120,y);
 }
 assert.equal(JSON.stringify(g.state),JSON.stringify(c.state),'explosion cosmetics preserve damage, knockback, statuses, healing, and random draws');
 fx=g.api.abilityEffectsSnapshot();assert.equal(fx.explosions.length,1);assert.equal(fx.explosions[0].radius,164,'visual records exact synergy-adjusted combat radius');assert.equal(fx.explosions[0].inferno,true);assert.ok(fx.explosions[0].fragments>=4,'two-point walls still throw distributed fragments');assert.equal(g.state.walls.length,0);
@@ -536,7 +536,7 @@ assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
 assert.equal(g.catalog.monsters.length,31);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,31);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
-const expected={1:['grunt'],2:['scrubber'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['sniper'],10:['bootstomp','brood'],11:['catapulter','wallpuller','papertearer','bulwark'],12:['gnawer'],13:['basil','medic'],14:['brute'],15:['crayon','sapper'],16:['elite'],20:['mr-glue','eraser']};
+const expected={1:['grunt'],2:['scrubber'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['sniper'],10:['bootstomp','brood'],11:['wallpuller','bulwark'],12:['gnawer'],13:['catapulter','basil','medic'],14:['papertearer','brute'],15:['crayon','sapper'],16:['elite'],20:['mr-glue','eraser']};
 g.api.resetRun();
 for(let wave=1;wave<=21;wave++){
   g.api.closeInfo();g.state.wave=wave;g.state.paused=false;g.api.startWave();
@@ -889,7 +889,7 @@ console.log('PASS: minimum ink and affordable clipping, free-stroke limits, 2–
 // Personality motion is driven by real combat actions and lives outside state.
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;
- const wall=(x=200)=>({pts:[{x,y:80},{x,y:280}],hp:500,maxHp:500,thick:8,life:72,maxLife:72});
+ const wall=(x=200)=>({pts:[{x,y:80},{x,y:280}],hp:500,maxHp:500,thick:8,blastAge:.5,life:72,maxLife:72});
  const gnawer=g.api.spawnEnemy(false,190,160,'gnawer');gnawer.speed=0;g.state.walls=[wall()];
  g.api.update(.03);assert.equal(g.api.chompzillaSnapshot(gnawer).phase,'windup');assert.equal(g.state.walls[0].hp,500,'windup preserves the whole stroke');
  for(let i=0;i<27;i++)g.api.update(.025);assert.equal(g.api.chompzillaSnapshot(gnawer).bites,1);assert.equal(g.state.walls[0].hp,500,'first bite marks a local section');
@@ -1535,7 +1535,7 @@ console.log('PASS: three first-boss attacks, sideways curved flight, swept wall 
   g.api.resetRun();assert.equal(g.api.launchEffectsSnapshot().landings.length,0);
  }
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;g.state.inks.fire=2;g.state.inks.blast=1;g.state.synergies.add('Napalm Scribbles');
- const wall=()=>({pts:[{x:40,y:90},{x:260,y:90}],hp:1,maxHp:1,thick:8,life:72,maxLife:72});
+ const wall=()=>({pts:[{x:40,y:90},{x:260,y:90}],hp:1,maxHp:1,thick:8,blastAge:.5,life:72,maxLife:72});
  const w=wall();g.state.walls=[w];g.api.damageWall(w,2,50,90);g.api.damageWall(w,2,50,90);assert.equal(g.api.launchEffectsSnapshot().napalm.length,1,'one patch per destroyed wall');
  const e=g.api.spawnEnemy(false,150,90,'grunt');e.hp=1000;g.api.updateLaunchEffects(.03);assert.equal(e.burnDps,18,'midpoint of two-point stroke burns');
  const second=wall();g.state.walls=[second];g.api.damageWall(second,2,50,90);e.burnDps=0;g.api.updateLaunchEffects(.03);assert.equal(e.burnDps,18,'overlap uses strongest patch');
@@ -1548,7 +1548,7 @@ console.log('PASS: orphan-fire removal, synchronized/disabled rerolls and preser
 {
  const env=load(true),g=env.sandbox.testGame;g.api.resetRun();g.state.spawnTimer=999;g.state.inks.blast=1;g.state.inks.repulsion=1;g.state.synergies.add('Cannon Ink');
  const e=g.api.spawnEnemy(false,140,180,'grunt');e.hp=e.maxHp=10;
- const w={pts:[{x:120,y:180},{x:160,y:180}],hp:1,maxHp:1,thick:8,life:72,maxLife:72};g.state.walls=[w];g.api.damageWall(w,2,130,180);
+ const w={pts:[{x:120,y:180},{x:180,y:180}],hp:1,maxHp:1,thick:8,blastAge:.5,life:72,maxLife:72};g.state.walls=[w];g.api.damageWall(w,2,130,180);
  assert.ok(e.flight&&e.hp<=0,'lethal explosion still launches the body');assert.equal(g.api.nearestEnemy(e.x,e.y,100),null,'rocks do not target an airborne fatality');g.state.timeLeft=0;const kills=g.state.kills;
  g.api.update(.03);assert.ok(g.state.enemies.includes(e));assert.equal(g.state.betweenWaves,false);assert.equal(g.state.kills,kills);
  for(let i=0;i<35;i++)g.api.update(.03);assert.equal(g.state.enemies.includes(e),false);assert.equal(g.state.kills,kills+1);assert.equal(g.state.betweenWaves,true,'clear waits for landing');
@@ -2544,7 +2544,7 @@ require('./smarter-convoys.cjs')(load);
  g.state.enemies=[];g.state.walls=[];g.state.stats.ink=160;const chonk=g.api.spawnEnemy(false,120,300,'tank');chonk.chonks.momentum=.6;wall();g.api.eraseWallPath({x:150,y:300},{x:150,y:300});assert(chonk.eraseSlide);assert.equal(chonk.chonks.momentum,0);assert.equal(chonk.chonks.phase,'recover');
  const snapshot=JSON.stringify(g.state);g.state.paused=true;assert.equal(g.api.eraseWallPath({x:150,y:300},{x:150,y:300}),false);g.state.paused=false;assert.equal(JSON.stringify(g.state),snapshot);
  g.api.resetRun();g.state.inks.electric=1;g.api.createWall([{x:100,y:200},{x:300,y:200}]);g.api.eraseWallPath({x:200,y:200},{x:200,y:200});assert.equal(g.state.paper.arcs.length,1);assert.equal(g.state.paper.arcs[0].life,.45);assert(g.state.floaters.some(f=>f.text==='SPARK GAP!'));g.state.walls=[];g.state.stats.ink=160;g.api.createWall([{x:100,y:200},{x:300,y:200}]);g.api.eraseWallPath({x:0,y:200},{x:400,y:200});assert.equal(g.state.paper.arcs.length,1,'erasing whole wall cannot arc');
- g.api.resetRun();g.state.inks.fire=2;g.state.inks.blast=1;g.state.synergies.add('Napalm Scribbles');const w={pts:[{x:100,y:250},{x:300,y:250}],hp:1,maxHp:1,thick:8,life:72,maxLife:72};g.state.walls=[w];g.api.damageWall(w,2,150,250);const enemy=g.api.spawnEnemy(false,200,250,'grunt');enemy.hp=1000;
+ g.api.resetRun();g.state.inks.fire=2;g.state.inks.blast=1;g.state.synergies.add('Napalm Scribbles');const w={pts:[{x:100,y:250},{x:300,y:250}],hp:1,maxHp:1,thick:8,blastAge:.5,life:72,maxLife:72};g.state.walls=[w];g.api.damageWall(w,2,150,250);const enemy=g.api.spawnEnemy(false,200,250,'grunt');enemy.hp=1000;
  g.api.eraseWallPath({x:200,y:225},{x:200,y:275},12);g.api.updateLaunchEffects(.05);assert.equal(enemy.burn,0,'Napalm strip does not ignite enemies');enemy.x=260;g.api.updateLaunchEffects(.05);assert(enemy.burn>0,'uncleared Napalm still burns');
  g.api.resetRun();g.state.inks.fire=g.state.inks.poison=1;g.state.synergies.add('Plaguefire');g.api.dropPlaguefire({x:200,y:250,burn:1,poison:1});const safe=g.api.spawnEnemy(false,200,250,'grunt');safe.hp=1000;g.api.eraseWallPath({x:200,y:210},{x:200,y:290},12);g.api.updatePlaguefire(5);assert.equal(safe.hp,1000,'growth never reclaims erased strip');safe.x=220;g.api.updatePlaguefire(.1);assert(safe.hp<1000,'pool outside the strip still deals damage');
  g.api.movePlaguefire(20,30);safe.x=220;safe.y=280;safe.hp=1000;g.api.updatePlaguefire(.1);assert.equal(safe.hp,1000,'cleared geometry follows page translation');g.api.dropPlaguefire({x:220,y:280,burn:1,poison:1});g.api.updatePlaguefire(.1);assert(safe.hp<1000,'fresh fire can reignite erased ground');
@@ -2653,3 +2653,5 @@ require('./head-start-and-turrets.cjs')(load);
 require("./utility-toys.cjs")(load);
 
 require("./under-desk.cjs")(load);
+
+require("./blast-arming.cjs")(load);

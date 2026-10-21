@@ -145,7 +145,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Poison Ink':()=>`${f(1+.55*n)} poison stacks/s on contact (cap 6); ${f((2+2.5*n)*.24)} damage/s per poison stack`,
     'Repulsion Ink':()=>`${r.repulsionDamage} impact damage and ${r.repulsionPush}px safe shove after every 0.8s contact; 0.12s stagger; bosses halve shove and stagger`,
     'Electric Ink':()=>{const t=game.api.electricTuning(n);return `${f(t.damage)} source damage; each jump retains 72% damage; up to ${t.count} additional enemies, ${t.range}px per hop within 360px of the source. Shared ${f(t.cooldown)}s hit recovery, ${f(t.stun)}s shock (bosses half), 1.25s shock recovery. Synergies cap at 8 jumps and 220px per hop.${game.state.stats.tesla?' · TESLA: 2s wall volleys, up to 8 targets, 160px, '+f(t.damage*4)+' damage each':''}`},
-    'Blast Ink':()=>`${35+20*n} explosion damage; ${70+12*n}px radius; synergies can boost this`,
+    'Blast Ink':()=>`${35+20*n} explosion damage; ${70+12*n}px radius; requires a 50px wall armed for 0.5s; synergies can boost this`,
     'Vampire Ink':()=>`${t.vampireDps} life-drain damage/s on contact; heals up to ${Number((t.vampireDps*t.vampireHeal).toFixed(3))} HP/s from actual damage, sharing the 6 HP/s budget`,
     'Gravity Ink':()=>`${t.gravityPull}px/s pull within ${t.gravityRange}px (range cap 64px; 60% pull on other bosses). No lingering slow, damage bonus or reduced wall bites. King Doodle is immune; his returnable shots get a slight wall nudge within 28px (maximum 8px per shot)`,
     'Void Ink':()=>`${r.voidDps} Void damage/s; executes ordinary enemies below ${f(r.voidExecute*100)}% HP (cap 30%); bosses take damage without execution`,

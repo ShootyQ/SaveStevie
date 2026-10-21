@@ -1,6 +1,6 @@
 const assert=require('assert');
 module.exports=load=>{
- const env=load(true),g=env.sandbox.testGame,a=g.api,s=g.state;a.resetRun();s.W=800;s.H=700;s.player.x=400;s.player.y=350;s.wave=14;a.startWave();s.enemies=[];s.walls=[];s.timeLeft=300;
+ const env=load(true),g=env.sandbox.testGame,a=g.api,s=g.state;a.resetRun();s.W=800;s.H=700;s.player.x=400;s.player.y=350;s.wave=16;a.startWave();s.enemies=[];s.walls=[];s.timeLeft=300;
  const e=a.spawnEnemy(false,54,180,'papertearer'),yank=a.spawnEnemy(false,700,200,'wallpuller');assert.equal(e.r,12);assert.equal(yank.r,12);const sites=new Set();let last='';
  for(let i=0;i<2400;i++){a.updateHardhat(e,.1);a.updateHardhatBombs(.1);if(e.crew.phase==='tear'&&last!=='tear')sites.add(Math.round(e.x)+','+Math.round(e.y));last=e.crew.phase;}
  assert(sites.size>=3,'keeps cutting at different patrol sites');assert(s.paper.crewHoles<=6,'reuses openings after six new holes');assert.equal(s.enemies.filter(n=>n.specialistJob?.kind==='tunnel').length,20,'repeated shortcuts call up to twenty runners');

@@ -3,7 +3,7 @@ DoodleDefender.systems.catapulter=function(game){
  let appearances=0;
  const basics=new Set(['grunt','fast','bouncer']);
  const tuning={cap:4,setup:2.5,warning:1.25,cooldown:4,flight:1.05};
- function canSpawnCatapulter(){return game.state.wave>=11&&game.state.wave%5!==0&&appearances<tuning.cap&&!game.state.enemies.some(e=>e.type==='catapulter'&&e.hp>0);}
+ function canSpawnCatapulter(){return game.state.wave>=game.catalog.monsters.find(m=>m.type==='catapulter').wave&&game.state.wave%5!==0&&appearances<tuning.cap&&!game.state.enemies.some(e=>e.type==='catapulter'&&e.hp>0);}
  function registerCatapulter(){return ++appearances;}
  function resetCatapulterRun(){appearances=0;}
  function say(e,text){if(e.catapult){e.catapult.speech=text;e.catapult.speechLeft=2;}}

@@ -15,10 +15,10 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   });
   await page.goto('http://127.0.0.1:8001/');await page.waitForFunction(()=>testGame.api.artworkReady(),null,{polling:50});await page.click('#startBtn');
   const result=await page.evaluate(()=>{
-   const g=testGame;g.api.resetRun();g.state.spawnTimer=999;g.state.inks.blast=2;g.state.inks.repulsion=3;g.state.inks.fire=2;g.state.synergies=new Set(['Cannon Ink','Napalm Scribbles','INFERNO']);
+   const g=testGame;g.api.setFirstLessonsEnabled(false);g.api.setSynergyRevealsEnabled(false);g.api.resetRun();g.state.spawnTimer=999;g.state.inks.blast=2;g.state.inks.repulsion=3;g.state.inks.fire=2;g.state.synergies=new Set(['Cannon Ink','Napalm Scribbles','INFERNO']);
    const W=g.state.W,H=g.state.H;
    const e=g.api.spawnEnemy(false,W*.35,H*.35,'grunt');e.hp=e.maxHp=1000;
-   const wall={pts:[{x:e.x-30,y:e.y},{x:e.x+30,y:e.y}],hp:1,maxHp:1,thick:8,life:72,maxLife:72};g.state.walls=[wall];g.api.damageWall(wall,2,e.x-8,e.y);
+   const wall={pts:[{x:e.x-30,y:e.y},{x:e.x+30,y:e.y}],hp:1,maxHp:1,thick:8,blastAge:.5,life:72,maxLife:72};g.state.walls=[wall];g.api.damageWall(wall,2,e.x-8,e.y);
    if(!e.flight)throw Error('Real INFERNO explosion failed to launch');g.api.update(.3);
    const before=JSON.stringify(g.state);g.api.draw();if(before!==JSON.stringify(g.state))throw Error('Flight drawing mutated simulation');
    const height=g.api.enemyFlightHeight(e);if(height<=0)throw Error('Monster not visibly airborne');
@@ -36,7 +36,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
   await page.screenshot({path:`/tmp/napalm-landing-${viewport.width}.png`});
   // Check every atlas frame with every status tint against the empty background.
   const bodyPixels=await page.evaluate(()=>{
-   const g=testGame;g.api.resetRun();g.state.spawnTimer=999;g.state.player.hp=g.state.player.maxHp=10000;
+   const g=testGame;g.api.setFirstLessonsEnabled(false);g.api.setSynergyRevealsEnabled(false);g.api.resetRun();g.state.spawnTimer=999;g.state.player.hp=g.state.player.maxHp=10000;
    g.api.drawInkStatusEffects=()=>{};g.api.drawEnemyAnimations=()=>{};
    const e=g.api.spawnEnemy(false,100,140,'grunt');e.speed=0;e.hp=e.maxHp=1000;g.state.enemies=[];g.api.draw();
    const ctx=g.dom.ctx,dpr=g.state.dpr,region=()=>ctx.getImageData(Math.floor(75*dpr),Math.floor(115*dpr),Math.floor(50*dpr),Math.floor(50*dpr)).data;
