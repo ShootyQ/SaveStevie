@@ -1,5 +1,5 @@
 {
-  "version": "0.1.119",
+  "version": "0.1.122",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -526,7 +526,7 @@
       "id": "Blast Ink",
       "name": "Blast Ink",
       "category": "Ink effects",
-      "effect": "Destroyed walls explode and damage nearby enemies.",
+      "effect": "Walls at least 50px long arm after 0.5s, then explode when destroyed and damage nearby enemies.",
       "rarities": "Common / Uncommon / Rare / Legendary",
       "levels": "Common +1 / Uncommon +2 / Rare +3 / Legendary +4",
       "stacking": "Repeatable; caps/diminishing returns may apply",
@@ -1828,7 +1828,7 @@
       "id": "Blast Ink",
       "name": "Blast Ink",
       "category": "Ink effects",
-      "effect": "Destroyed walls explode and damage nearby enemies.",
+      "effect": "Walls at least 50px long arm after 0.5s, then explode when destroyed and damage nearby enemies.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",

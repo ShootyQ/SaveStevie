@@ -229,13 +229,19 @@ function drawLaunchGround(){
 }
 function launchEffectsSnapshot(){return {napalm:napalm.map(p=>({...p,points:p.points.map(q=>({...q}))})),landings:landingPuffs.map(p=>({...p}))}}
 
+const blastArmingSeconds=.5,blastMinimumLength=50;
+function blastWallReady(wall){
+ if((wall.blastAge||0)+1e-9<blastArmingSeconds)return false;
+ let length=0;for(let i=1;i<wall.pts.length;i++)length+=game.api.dist(wall.pts[i-1].x,wall.pts[i-1].y,wall.pts[i].x,wall.pts[i].y);
+ return length+1e-9>=blastMinimumLength;
+}
 function damageWall(wall,amount,x,y){
   if(amount>0&&wall.hp>0)game.api.playSound('wall');
   if(wall.hp<=0||!game.state.walls.includes(wall))return;
   wall.hp-=amount;
   if(wall.hp<=0){
     game.api.playSound('wallBreak');
-    if(game.state.stats.explode||game.state.inks.blast>0){
+    if((game.state.stats.explode||game.state.inks.blast>0)&&blastWallReady(wall)){
       let radius=70+game.state.inks.blast*12;
       let dmg=35+game.state.inks.blast*20;
 
@@ -412,7 +418,7 @@ function createWall(points,options={}){
   // long strokes cost more ink but can take much more punishment.
   const hp=game.api.wallHpForLength(length,closed,intersections);
   const life=infinite?Math.min(10,game.state.stats.wallLife):game.state.stats.wallLife;
-  const base={eraseInk:actualPaid,...(inkScale<1?{sneakyDraft:true}:{}),...(game.api.wobbleRicochetActive?.()?{wobbleBumper:true,wobbleDraft:!!options.live}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
+  const base={blastAge:0,eraseInk:actualPaid,...(inkScale<1?{sneakyDraft:true}:{}),...(game.api.wobbleRicochetActive?.()?{wobbleBumper:true,wobbleDraft:!!options.live}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
   game.state.walls.push(base);
 
   const copies=[];
