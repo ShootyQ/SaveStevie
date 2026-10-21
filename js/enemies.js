@@ -139,14 +139,14 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
   if(type==='catapulter')enemy.catapultId=game.api.registerCatapulter();
   game.state.enemies.push(enemy);if(type==='bootstomp')game.api.initBootstomp(enemy);game.api.discoverMonster(type);
-  if(forceBoss){game.api.finishUnderDeskWave?.();game.api.resetUtilityToys?.();game.api.resetCircleShapes();if(game.api.isBootstomp?.(enemy))game.api.initBootstomp(enemy);const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;if(game.api.isWhiteBrother?.(enemy))game.api.initWhiteBrothers(enemy);if(game.api.isCrayonBoss?.(enemy))game.api.initCrayonBoss(enemy);bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isBootstomp?.(enemy))game.api.selectMusicTrack('wobblechomp');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
+  if(forceBoss){game.api.resetBossSpeed();game.api.finishUnderDeskWave?.();game.api.resetUtilityToys?.();game.api.resetCircleShapes();if(game.api.isBootstomp?.(enemy))game.api.initBootstomp(enemy);const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;if(game.api.isWhiteBrother?.(enemy))game.api.initWhiteBrothers(enemy);if(game.api.isCrayonBoss?.(enemy))game.api.initCrayonBoss(enemy);bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isBootstomp?.(enemy))game.api.selectMusicTrack('wobblechomp');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
   return enemy;
 }
 
 function killEnemy(e){
   if(!game.state.enemies.includes(e))return;
   if(e.whiteBrother&&e.whiteKind==='glue'&&game.state.enemies.includes(e.bossOwner)){if(e.bossOwner.hp<=0)killEnemy(e.bossOwner);return;}
-  game.api.recordShapeVictory(e);
+  game.api.recordShapeVictory(e);game.api.recordSpeedVictory(e);
   game.api.playSound('defeated');
   game.state.kills++;game.state.waveKills++;game.api.awardKillScore(e);
   game.api.awardKillScraps(e);game.api.dropDoodleScrap(e);game.api.dropNumber(e);

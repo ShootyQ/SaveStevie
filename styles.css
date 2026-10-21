@@ -1901,3 +1901,12 @@ html.desktop-ui #app > .hud{width:100%;max-width:1286px;align-self:center}
 :is(html.native-app,html:not(.desktop-ui)) #freehandMeter{top:calc(52px + var(--native-top,env(safe-area-inset-top,0px)) + var(--dev-inset,0px))!important}
 :is(html.native-app,html:not(.desktop-ui)) #bossOvertime{top:calc(52px + var(--native-top,env(safe-area-inset-top,0px)) + var(--dev-inset,0px))}
 :is(html.native-app,html:not(.desktop-ui)) .scrubber-hint{bottom:calc(max(48px,var(--eraser-button-height)) + 22px + var(--native-bottom,env(safe-area-inset-bottom,0px)))}
+
+/* Compact touch pause control; desktop keeps its existing controls. */
+:is(html.native-app,html:not(.desktop-ui)) #app>.bottom #pauseBtn{flex:0 0 48px;width:48px;min-width:48px;max-width:48px;height:48px;min-height:48px;padding:0;border-radius:50%;font-size:0;gap:0}
+:is(html.native-app,html:not(.desktop-ui)) #app>.bottom #pauseBtn::before{display:block;width:26px;height:26px;margin:0}
+#pauseOverlay .pause-speed{grid-column:1/-1;display:flex;align-items:center;gap:14px}
+#pauseOverlay .pause-speed #pauseSpeedBtn{flex:0 0 142px;min-height:48px;padding:12px 8px;font-size:23px;color:#315d8c}
+#pauseOverlay .pause-speed .option-help{flex:1;font-size:14px}
+#pauseOverlay #pauseSpeedBtn[aria-pressed="true"]{color:#2a6940}
+#pauseOverlay #pauseSpeedBtn:disabled{opacity:.65;cursor:default}

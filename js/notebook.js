@@ -31,7 +31,7 @@ try{
   const saved=JSON.parse(localStorage.getItem(key)||'null');
   if(saved&&[1,2].includes(saved.version)&&typeof saved.levels==='object'&&saved.levels!==null){
     progress.scrapTutorialDone=saved.scrapTutorialDone===true;
-    progress.betaPencilClaimed=saved.betaPencilClaimed===true;if(saved.wobbleDefeated===true)progress.wobbleDefeated=true;
+    progress.speedUnlocked=saved.speedUnlocked===true;progress.betaPencilClaimed=saved.betaPencilClaimed===true;if(saved.wobbleDefeated===true)progress.wobbleDefeated=true;
     progress.scraps=cleanNumber(saved.scraps);progress.lifetimeScraps=Math.max(progress.scraps,cleanNumber(saved.lifetimeScraps));
     for(const p of perks)progress.levels[p.id]=Math.min(p.max,cleanNumber(saved.levels[p.id]));
     if(saved.version===1){
@@ -83,6 +83,11 @@ function applyNotebookLoadout(){
   s.luck+=l.luck*2;game.state.rerolls+=l.rerolls;
 }
 function canSpendScraps(){return !game.state.running}
+function doubleSpeedUnlocked(){return progress.speedUnlocked===true||game.state.best>5;}
+function recordSpeedVictory(e){
+ if(game.api.devRunActive()||game.api.testLabActive?.()||game.state.endless||game.state.wave!==5||!e.waveBoss||e.type!=='boss'||e.hp>0||doubleSpeedUnlocked())return false;
+ progress.speedUnlocked=true;saveNotebook();game.api.setMsg('2× speed unlocked! Change game speed in Pause on any run.');return true;
+}
 function shapeStudiesAvailable(){return progress.wobbleDefeated===true||game.state.best>10||progress.levels.circles>0;}
 function recordShapeVictory(e){if(game.api.devRunActive()||game.state.endless||game.state.wave!==10||!e.waveBoss||!['wobblechomp','bootstomp'].includes(e.type)||e.hp>0)return false;progress.wobbleDefeated=true;saveNotebook();return true;}
 function buyNotebookPerk(id){
@@ -140,6 +145,6 @@ function syncScrapTutorial(){
 function finishScrapTutorial(){if(!progress.betaPencilClaimed&&!progress.levels.starterEraser)return false;progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial();return true;}
 function openNotebook(){game.api.openInfo('betaScraps')}
 function closeNotebook(){game.api.closeInfo()}
-const api={shapeStudiesAvailable,recordShapeVictory,claimBetaPencil,notebookPerkPrice,adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
+const api={doubleSpeedUnlocked,recordSpeedVictory,shapeStudiesAvailable,recordShapeVictory,claimBetaPencil,notebookPerkPrice,adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;
 };
