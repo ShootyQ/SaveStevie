@@ -308,7 +308,10 @@ function updateStevie(dt){
  game.api.updateStevieAnimation(dt);
  if(!game.state.stats.rockDamage||!game.state.stats.rockRate)return;
  game.state.player.rockCd-=dt;
- if(game.state.player.rockCd<=0){const aim=game.api.throwAim(),e=game.api.nearestEnemy(game.state.player.x,game.state.player.y,game.api.paperRange());if((aim||e)&&throwPaper(e,null,aim))game.state.player.rockCd=game.api.paperThrowInterval();}
+ if(game.state.player.rockCd<=0){
+  const aim=game.api.throwAim(),e=game.api.nearestEnemy(game.state.player.x,game.state.player.y,game.api.paperRange()),plan=!aim&&!e?game.api.underlineLaunchPlan():null;
+  if(aim||e||plan){const p=throwPaper(e||plan?.target,null,aim||plan?.aim);if(p){if(plan)p.underlineGoal=plan.target;game.state.player.rockCd=game.api.paperThrowInterval();}}
+ }
 }
 function hitPaper(p,e){
   game.api.playSound('paperHit');game.api.dealDamage(e,p.damage,'physical',{rock:true});

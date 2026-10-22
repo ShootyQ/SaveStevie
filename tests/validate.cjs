@@ -2672,3 +2672,5 @@ require('./playtest-routes.cjs')(load);
 require('./fresh-catapult-and-tunnels.cjs')(load);
 
 require('./ink-tunnels-and-chomp.cjs')(load);
+
+require('./follow-underline.cjs')(load);

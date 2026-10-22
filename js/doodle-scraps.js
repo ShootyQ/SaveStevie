@@ -8,7 +8,7 @@ DoodleDefender.systems.doodleScraps=function(game){
   ['eraser','Correction Notice','Common','#ae537a','Add eraser damage. Each hit wipes one chunk off Ruff.'],
   ['range','Long Distance Learning','Common','#4169a4','Reach farther enemies. Repeat copies extend range with diminishing returns.'],
   ['second','Second Draft','Uncommon','#66549b','Every few throws, send a second ball at a different enemy. Copies make this happen more often.'],
-  ['underline','Follow the Underline','Uncommon','#40856a','Paper balls ride your lines, then launch from the far end with extra range.'],
+  ['underline','Follow the Underline','Uncommon','#40856a','Paper balls board lines they cross, ride toward the target, then launch from the far end with +100px target range (+30px per extra copy, up to +200px). With no enemy in normal range, Stevie can aim at an open line endpoint within throwing range to reach enemies near its far end. Long rides last until the end; a broken line releases and retargets the ball.'],
   ['cling','Static Cling','Rare','#386ac3','Repeated electric hits make nearby monsters cling to each other in slow, sparking clumps. Includes basic electricity.'],
   ['ash','Ash Impostor','Rare','#c25a30','Hit a burning enemy to shed a smoky decoy that distracts nearby monsters. Includes basic fire if needed.'],
   ['bubble','Bubble Trouble','Rare','#528237','Repeated poison hits inflate a wandering bubble. Erase it to pop and stagger the monster. Includes basic poison if needed.'],
