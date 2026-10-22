@@ -58,7 +58,7 @@ DoodleDefender.systems.crayonBoss=function(game){
  function updateCrayonCrew(e,s,dt){
   if(!s.crewStarted){s.crewDelay-=dt;if(s.crewDelay>0)return;const {W,H,player:p}=game.state,portrait=H>W*1.15,q=portrait?{x:game.api.clamp(W*.28,72,W-72),y:p.y>=H/2?132:H-140}:{x:e.x<W/2?W-72:72,y:game.api.clamp(H*.32,150,H-95)};const n=game.api.spawnEnemy(false,q.x,q.y,'catapulter',e);if(!n){s.crewDelay=1;return;}s.crewStarted=true;s.crewId=n.catapultId;game.api.floatText(n.x,n.y-30,'DELIVERY CREW!','#855b37');}
   const operator=game.state.enemies.find(n=>n.catapultId===s.crewId&&n.crayonCatapultCrew&&n.bossOwner===e&&n.hp>0),c=operator?.catapult;
-  // Erasing or defeating the one machine permanently stops this encounter's queue.
+  // Erasing pauses the queue while the same operator relocates; death stops it.
   if(!c||!['build','ready','aim'].includes(c.phase))return;
   s.crewFeed-=dt;if(s.crewFeed>0)return;
   if(game.state.enemies.filter(n=>n.bossOwner===e&&n.crayonCatapultMinion&&n.hp>0).length>=tuning.crewCap){s.crewFeed=.5;return;}
