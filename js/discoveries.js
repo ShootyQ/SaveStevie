@@ -16,7 +16,7 @@ DoodleDefender.systems.discoveries=function(game){
    ...game.catalog.notebookPerks.map(p=>({id:'project:'+p.id,name:p.name,group:'projects',desc:p.desc+' Maximum rank: '+p.max+'.',art:p.art}))
   ];
  }
- const valid=new Set(abilityDiscoveryCatalogue().map(d=>d.id));let found=new Set(),storageIssue=false,page=0;
+ const valid=new Set(abilityDiscoveryCatalogue().map(d=>d.id));let found=new Set(),storageIssue=false,page=0,selected=null;
  try{const saved=JSON.parse(localStorage.getItem(key)||'[]');if(Array.isArray(saved))found=new Set(saved.filter(id=>typeof id==='string'&&valid.has(id)));}catch{storageIssue=true;}
  function abilityDiscoveryIds(){
   const ids=new Set(found),levels=game.api.notebookSnapshot().levels;
@@ -30,8 +30,8 @@ DoodleDefender.systems.discoveries=function(game){
  // Storage is written transactionally by the backup system before adopting it.
  function adoptAbilityDiscoveryBackup(ids){found=new Set(ids.filter(id=>valid.has(id)));storageIssue=false;}
  const escape=text=>String(text??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- function artwork(entry){
-  if(entry.upgrade)return game.api.upgradeArtworkMarkup(entry.upgrade,60);
+ function artwork(entry,size=60){
+  if(entry.upgrade)return game.api.upgradeArtworkMarkup(entry.upgrade,size);
   if(entry.group==='notes'){
    const extra=entry.art>=14,index=extra?entry.art-14:entry.art,rows=extra?2:4;
    return '<span class="discovery-note-art" style="background-image:url(assets/art/'+(extra?'doodle-scraps-extra':'doodle-scraps')+'.png);background-size:400% '+rows*100+'%;background-position:'+index%4/3*100+'% '+Math.floor(index/4)/(rows-1)*100+'%" aria-hidden="true"></span>';
@@ -40,19 +40,24 @@ DoodleDefender.systems.discoveries=function(game){
   return '<span class="discovery-synergy-mark" aria-hidden="true">'+(entry.major?'★':'✦')+'</span>';
  }
  function renderDiscoveries(reset=false){
-  if(reset){page=0;game.dom.$('discoverySearch').value='';game.dom.$('discoveryCategory').value='all';}
+  if(reset){page=0;selected=null;game.dom.$('discoverySearch').value='';game.dom.$('discoveryCategory').value='all';}
   const all=abilityDiscoveryCatalogue(),ids=new Set(abilityDiscoveryIds()),category=game.dom.$('discoveryCategory').value||'all',query=String(game.dom.$('discoverySearch').value||'').trim().toLocaleLowerCase();
   const known=all.filter(d=>ids.has(d.id)),matches=known.filter(d=>(category==='all'||d.group===category)&&(!query||(d.name+' '+d.desc).toLocaleLowerCase().includes(query))).sort((a,b)=>a.name.localeCompare(b.name));
-  const size=game.api.desktopUiEnabled?.()&&game.state.W>=900?4:2,pages=Math.max(1,Math.ceil(matches.length/size));page=Math.max(0,Math.min(pages-1,page));
+  const size=window.innerWidth>=1000&&window.innerHeight>=750?8:4,pages=Math.max(1,Math.ceil(matches.length/size));page=Math.max(0,Math.min(pages-1,page));
   game.dom.$('discoveryProgress').textContent=known.length+' / '+all.length+' discoveries · '+(all.length-known.length)+' still waiting to be found.';
-  const list=game.dom.$('discoveryEntries');list.innerHTML=matches.slice(page*size,(page+1)*size).map(d=>'<article class="discovery-entry" data-discovery-id="'+escape(d.id)+'"><div class="discovery-art">'+artwork(d)+'</div><div><small>'+groups[d.group]+(d.rarity?' · '+escape(d.rarity):'')+'</small><h3>'+escape(d.name)+'</h3><p>'+escape(d.desc)+'</p></div></article>').join('')||'<div class="discovery-empty"><span aria-hidden="true">✎</span><h3>'+(known.length?'No matching discoveries.':'A fresh page!')+'</h3><p>'+(known.length?'Try another name or collection.':'Add upgrades or Doodle Scraps to your build in a normal run. Activated synergies and legendary walls get their own notes. Purchased scrap projects are included too.')+'</p></div>';
-  list.scrollTop=0;
-  for(const img of list.querySelectorAll?.('img[data-art-fallback]')||[])img.onerror=()=>{img.onerror=null;img.src=img.dataset.artFallback;img.style.cssText='width:100%;height:100%;left:0;top:0;';};
+  const visible=matches.slice(page*size,(page+1)*size),entry=visible.find(d=>d.id===selected)||visible[0];selected=entry?.id||null;
+  const list=game.dom.$('discoveryEntries'),detail=game.dom.$('discoveryDetail');list.innerHTML=visible.map(d=>'<article class="discovery-entry" data-discovery-id="'+escape(d.id)+'"><button type="button" class="discovery-choice" data-discovery-select="'+escape(d.id)+'" aria-pressed="'+(d.id===selected)+'"><span class="discovery-art">'+artwork(d,44)+'</span><span class="discovery-choice-label"><small>'+groups[d.group]+'</small><strong>'+escape(d.name)+'</strong></span></button></article>').join('')||'<div class="discovery-empty"><span aria-hidden="true">✎</span><h3>'+(known.length?'No matching discoveries.':'A fresh page!')+'</h3><p>'+(known.length?'Try another name or collection.':'Use upgrades, Doodle Scraps and synergies in a normal run to fill these pages. Purchased scrap projects count too.')+'</p></div>';
+  detail.hidden=!entry;list.parentElement?.classList.toggle('discovery-browser-empty',!entry);
+  detail.innerHTML=entry?'<div class="discovery-detail-heading"><div class="discovery-art">'+artwork(entry,72)+'</div><div><small>'+groups[entry.group]+(entry.rarity?' · '+escape(entry.rarity):'')+'</small><h3>'+escape(entry.name)+'</h3></div></div><p class="discovery-description">'+escape(entry.desc)+'</p><span class="discovery-kept">✎ Kept in my notebook.</span>':'';
+  list.scrollTop=0;detail.scrollTop=0;
+  for(const button of list.querySelectorAll?.('[data-discovery-select]')||[])button.onclick=()=>{selected=button.dataset.discoverySelect;renderDiscoveries();[...(list.querySelectorAll?.('[data-discovery-select]')||[])].find(b=>b.dataset.discoverySelect===selected)?.focus({preventScroll:true});};
+  for(const root of [list,detail])for(const img of root.querySelectorAll?.('img[data-art-fallback]')||[])img.onerror=()=>{img.onerror=null;img.src=img.dataset.artFallback;img.style.cssText='width:100%;height:100%;left:0;top:0;';};
   game.dom.$('discoveryPage').textContent='Page '+(page+1)+' of '+pages+' · '+matches.length+' found';game.dom.$('discoveryPrev').disabled=page===0;game.dom.$('discoveryNext').disabled=page===pages-1;
-  game.dom.$('discoverySaveNote').textContent=storageIssue?'This browser cannot save your collection. New discoveries last for this visit.':'Saved between runs. Taking an upgrade counts as using it; previews and test builds do not. Earlier run choices were not recorded before this update.';
+  game.dom.$('discoverySaveNote').textContent=storageIssue?'This browser cannot save your collection. New discoveries last for this visit.':'Tap a discovery to read it. Collected during normal runs; saved between runs.';
  }
- game.dom.$('optionsDiscoveriesBtn').onclick=()=>game.api.openInfo('discoveries');game.dom.$('closeDiscoveriesBtn').onclick=()=>game.api.closeInfo();
- for(const id of ['discoverySearch','discoveryCategory'])game.dom.$(id)[id==='discoverySearch'?'oninput':'onchange']=()=>{page=0;renderDiscoveries();};
- game.dom.$('discoveryPrev').onclick=()=>{page--;renderDiscoveries();};game.dom.$('discoveryNext').onclick=()=>{page++;renderDiscoveries();};
+ for(const id of ['pauseDiscoveriesBtn','hubDiscoveriesBtn'])game.dom.$(id).onclick=()=>game.api.openInfo('discoveries');game.dom.$('closeDiscoveriesBtn').onclick=()=>game.api.closeInfo();
+ for(const id of ['discoverySearch','discoveryCategory'])game.dom.$(id)[id==='discoverySearch'?'oninput':'onchange']=()=>{page=0;selected=null;renderDiscoveries();};
+ game.dom.$('discoveryPrev').onclick=()=>{page--;selected=null;renderDiscoveries();};game.dom.$('discoveryNext').onclick=()=>{page++;selected=null;renderDiscoveries();};
+ window.addEventListener('resize',()=>{if(game.dom.$('discoveriesOverlay').style.display==='grid')renderDiscoveries();});
  const api={abilityDiscoveryCatalogue,abilityDiscoveryIds,recordAbilityDiscovery,adoptAbilityDiscoveryBackup,renderDiscoveries};Object.assign(game.api,api);return api;
 };
