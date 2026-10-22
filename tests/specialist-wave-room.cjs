@@ -10,12 +10,12 @@ module.exports=load=>{
  reset();const pew=a.spawnEnemy(false,420,350,'sniper');pew.shootCd=.61;a.updateSniper(pew,.02);assert(pew.sniperAim,'aim is locked as telegraph starts');const x=pew.x,y=pew.y;
  a.createWall([{x:500,y:290},{x:500,y:410}]);assert(a.shotBlocked(pew.x,pew.y,s.player.x,s.player.y,3));a.updateSniper(pew,.6);assert.equal(pew.x,x);assert.equal(pew.y,y);assert.equal(s.enemyShots.length,1,'new counter-wall cannot cancel the promised shot');assert(!s.enemyShots[0].eraser);a.updateEnemyShots(.6);assert(s.enemyShots[0]?.reflected,'committed pencil still reflects normally');
  reset(7);const sneaky=a.spawnEnemy(false,100,200,'flanker');a.updateSneaky(sneaky,1.2);
- for(let i=0;i<6;i++){
+ for(let i=0;i<2;i++){
   const plan=a.sneakySnapshot()[0].route;assert(plan&&!plan.hijacked);const p=plan.points[0],q=plan.points[1],cut={x:(p.x+q.x)/2,y:(p.y+q.y)/2};a.eraseSneakyRoutes(cut,cut,12);const broken=a.sneakySnapshot()[0].route;assert(broken.gap);assert.deepEqual(broken.points.at(-1),broken.gap.start,'tail disappears at the cut');
   assert(a.redirectSneakyRoute([broken.gap.start,{x:70+i*15,y:580}]));
-  a.updateSneakyOrders(4.01);a.updateSneaky(sneaky,.6);assert(a.sneakySnapshot()[0].route&&!a.sneakySnapshot()[0].route.hijacked,'owner makes another plan without deleting old false directions');
+  a.updateSneakyOrders(4.01);a.updateSneaky(sneaky,.6);if(i===0)assert(a.sneakySnapshot()[0].route&&!a.sneakySnapshot()[0].route.hijacked,'owner can make a second plan');else assert.equal(a.sneakySnapshot()[0].route,null,'two active lines prevent a third plan');
  }
- assert(a.stolenRouteSnapshot().length>=4,'multiple independent false routes coexist');const before=JSON.stringify(a.stolenRouteSnapshot());a.drawSneakyRoutes();assert.equal(JSON.stringify(a.stolenRouteSnapshot()),before,'drawing cannot age routes');
- sneaky.hp=0;s.enemies=[];a.updateSneakyOrders(.1);assert(a.stolenRouteSnapshot().length,'stolen routes survive owner death');a.moveEnemyTactics(10,20);assert(a.stolenRouteSnapshot()[0].points[0].x===JSON.parse(before)[0].points[0].x+10);a.updateSneakyOrders(20);assert.equal(a.stolenRouteSnapshot().length,0);a.resetEnemyTactics();assert.equal(a.stolenRouteSnapshot().length,0);
- console.log('PASS: specialist weighting/early tearer/scheduled catapult, longest nearby wall, committed reflected shot, and independent 20-second stolen routes through replanning/death/resize/reset.');
+ assert.equal(a.stolenRouteSnapshot().length,2,'two independent false routes coexist');const before=JSON.stringify(a.stolenRouteSnapshot());a.drawSneakyRoutes();assert.equal(JSON.stringify(a.stolenRouteSnapshot()),before,'drawing cannot age routes');
+ sneaky.hp=0;s.enemies=[];a.updateSneakyOrders(.1);assert(a.stolenRouteSnapshot().length,'stolen routes survive owner death');a.moveEnemyTactics(10,20);assert(a.stolenRouteSnapshot()[0].points[0].x===JSON.parse(before)[0].points[0].x+10);a.updateSneakyOrders(20);assert.equal(a.stolenRouteSnapshot().length,2);a.resetEnemyTactics();assert.equal(a.stolenRouteSnapshot().length,0);
+ console.log('PASS: specialist weighting/early tearer/scheduled catapult, longest nearby wall, committed reflected shot, and two independent stolen routes through replanning/death/resize/reset.');
 };

@@ -46,7 +46,12 @@ function crewPoint(e){
   return sites.filter(q=>Math.hypot(q.x-p.x,q.y-p.y)>=Math.min(far*.72,game.api.desktopUiEnabled?.()?Math.min(W,H)*.3:Math.max(W,H)*.25)&&game.api.safePaperPoint(q)).sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y))[0]||sites[0];
  }
 const p=game.state.player,dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy)||1;return {x:game.api.clamp(p.x+dx/d*195,e.r+18,game.state.W-e.r-18),y:game.api.clamp(p.y+dy/d*195,110,game.state.H-e.r-20)};}
-function moveCrew(e,goal,dt){const dx=goal.x-e.x,dy=goal.y-e.y,d=Math.hypot(dx,dy)||1,step=Math.min(d,e.speed*(e.type==='papertearer'?1.6:1)*dt);game.api.moveEnemySafely(e,dx/d*step,dy/d*step);}
+function moveCrew(e,goal,dt){
+ const dx=e.x-goal.x,dy=e.y-goal.y,d=Math.hypot(dx,dy)||1;
+ // Yank hooks from a distance; his destination must not be inside the wall.
+ const approach=e.type==='wallpuller'?{x:goal.x+dx/d*Math.min(75,d),y:goal.y+dy/d*Math.min(75,d)}:goal;
+ return game.api.navigateSpecialist(e,approach,dt,e.type==='papertearer'?1.6:1);
+}
 function cancelCrewJob(e,stumble=false){e.crew={phase:'walk',cooldown:stumble?3:1};if(stumble){e.stun=Math.max(e.stun,1);crewText(e.x,e.y-e.r-14,'JOB CANCELLED!');}}
 function fireBombPoint(e){
  const p=game.state.player,dx=e.x-p.x,dy=e.y-p.y,d=Math.hypot(dx,dy)||1;
@@ -131,7 +136,7 @@ function updateHardhat(e,dt){
  if(c.phase==='tear'||c.phase==='bomb'){
   c.left-=dt;if(c.left>0)return true;
   if(c.phase==='tear'){const hole=makeCrewHole(c.aim);if(hole){c.entryId=hole.id;crewText(hole.x,hole.y-25,'RIP!');}const aim=fireBombPoint(e);if(aim){c.phase='bomb';c.left=1.2;c.aim=aim;return true;}}
-  else if(bombs.length<3){const d=Math.hypot(e.x-c.aim.x,e.y-c.aim.y);bombs.push({owner:e,returned:false,from:{x:e.x,y:e.y},to:{...c.aim},entryId:c.entryId,age:0,life:game.api.clamp(d/380+.35,1,2),arc:Math.min(140,Math.max(60,d*.18))});e.crew={phase:'tossRecover',left:.55,cooldown:6};return true;}
+  else if(bombs.length<3){const d=Math.hypot(e.x-c.aim.x,e.y-c.aim.y);bombs.push({owner:e,existingStrokes:new Set(game.state.walls.map(w=>w.strokeId)),returned:false,from:{x:e.x,y:e.y},to:{...c.aim},entryId:c.entryId,age:0,life:game.api.clamp(d/380+.35,1,2),arc:Math.min(140,Math.max(60,d*.18))});e.crew={phase:'tossRecover',left:.55,cooldown:6};return true;}
   cancelCrewJob(e);nextRipSite(e);e.crew.cooldown=1.5;return true;
  }
  c.cooldown=Math.max(0,c.cooldown-dt);
@@ -157,7 +162,7 @@ function updateHardhatBombs(dt){
   const old=bombPosition(b);b.age+=dt;
   if(b.returned){if(b.owner?.hp>0&&game.state.enemies.includes(b.owner))b.to={x:b.owner.x,y:b.owner.y};
    if(b.age>=b.life){counterPop(b.to.x,b.to.y);if(b.owner?.hp>0&&game.state.enemies.includes(b.owner)){game.api.dealDamage(b.owner,b.owner.maxHp*.4,'physical');b.owner.stun=Math.max(b.owner.stun,1.5);cancelCrewJob(b.owner,true);}game.api.playSound('wallBreak');}continue;}
-  const next=bombPosition(b),hit=game.api.bossShotWallHit({x:old.x,y:old.y,r:9},next.x,next.y);
+  const next=bombPosition(b),fresh=game.state.walls.filter(w=>!w.sneakyDraft&&!w.shapeTurret&&!b.existingStrokes.has(w.strokeId)&&(w.blastAge??Infinity)<=.75),hit=game.api.bossShotWallHit({x:old.x,y:old.y,r:9},next.x,next.y,null,fresh);
   if(hit){b.returned=true;b.from={x:hit.x??next.x,y:hit.y??next.y};b.to=b.owner?{x:b.owner.x,y:b.owner.y}:{...b.from};b.age=0;b.life=.55;b.arc=45;game.api.playSound('wall');crewText(b.from.x,b.from.y-24,'RETURN TO SENDER!');continue;}
   if(b.age>=b.life){const hole=makeCrewHole(b.to);if(hole){const entry=game.state.paper.holes.find(h=>h.id===b.entryId),p=game.state.player;if(entry&&entry!==hole&&Math.hypot(entry.x-p.x,entry.y-p.y)>Math.hypot(hole.x-p.x,hole.y-p.y)+45){const squad=game.api.specialistReinforcements(entry,2,{kind:'tunnel',entryId:entry.id,exitId:hole.id});if(squad.length)crewText(entry.x,entry.y-30,'SHORTCUT! THIS WAY!');}game.api.burst(hole.x,hole.y,'#ee8036',8);crewText(hole.x,hole.y-25,'NEW SHORTCUT!');game.api.playSound('wall');game.api.playSound('fire');}}
  }

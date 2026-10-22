@@ -39,7 +39,7 @@ DoodleDefender.systems.catapulter=function(game){
   const hit=game.api.nearestWallHit(e)||game.api.gravityWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');if(e.hp<=0)return true;
   if(c.phase==='walk'){
    const dx=c.goal.x-e.x,dy=c.goal.y-e.y,d=Math.hypot(dx,dy),step=Math.min(d,e.speed*dt);
-   if(d>6){const oldX=e.x,oldY=e.y;if(!game.api.moveEnemySafely(e,dx/(d||1)*step,dy/(d||1)*step)){c.blocked=(c.blocked||0)+dt;if(c.blocked>2&&Math.hypot(e.x-game.state.player.x,e.y-game.state.player.y)>125){c.goal={x:game.api.clamp(e.x,48,game.state.W-48),y:game.api.clamp(e.y,115,game.state.H-80)};}}c.walkDistance=(c.walkDistance||0)+Math.hypot(e.x-oldX,e.y-oldY);return true;}
+   if(d>6){const oldX=e.x,oldY=e.y;if(!game.api.navigateSpecialist(e,c.goal,dt)){c.blocked=(c.blocked||0)+dt;if(c.blocked>2&&Math.hypot(e.x-game.state.player.x,e.y-game.state.player.y)>125){c.goal={x:game.api.clamp(e.x,48,game.state.W-48),y:game.api.clamp(e.y,115,game.state.H-80)};}}if(Math.hypot(e.x-oldX,e.y-oldY)>.01)c.blocked=0;c.walkDistance=(c.walkDistance||0)+Math.hypot(e.x-oldX,e.y-oldY);return true;}
    c.x=game.api.clamp(e.x+(e.x<game.state.player.x?45:-45),48,game.state.W-48);c.y=e.y+20;c.phase='build';c.left=tuning.setup;say(e,'SOME ASSEMBLY REQUIRED!');return true;
   }
   c.left-=dt;

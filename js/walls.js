@@ -1,5 +1,6 @@
 /* walls: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.walls = function createWallsSystem(game) {
+let strokeSerial=0;
 function loopUtilityTuning(levels=(game.state.stacks['Closed Loop']||0)+(game.state.stacks['Fortress Geometry']||0)){
  if(levels<=0)return {refund:0,repair:0,damage:0};
  const fall=Math.pow(.8,levels-1);return {refund:.35-.2*fall,repair:.3-.15*fall,damage:.25-.15*fall};
@@ -418,7 +419,7 @@ function createWall(points,options={}){
   // long strokes cost more ink but can take much more punishment.
   const hp=game.api.wallHpForLength(length,closed,intersections);
   const life=infinite?Math.min(10,game.state.stats.wallLife):game.state.stats.wallLife;
-  const base={blastAge:0,eraseInk:actualPaid,...(inkScale<1?{sneakyDraft:true}:{}),...(game.api.wobbleRicochetActive?.()?{wobbleBumper:true,wobbleDraft:!!options.live}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
+  const base={strokeId:++strokeSerial,blastAge:0,eraseInk:actualPaid,...(inkScale<1?{sneakyDraft:true}:{}),...(game.api.wobbleRicochetActive?.()?{wobbleBumper:true,wobbleDraft:!!options.live}:{}),pts:points.map(p=>({...p})),hp,maxHp:hp,thick:game.state.stats.lineWidth,life,maxLife:life,closed,intersections};
   game.state.walls.push(base);
 
   const copies=[];

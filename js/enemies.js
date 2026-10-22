@@ -48,7 +48,7 @@ function enemyType(){
     if(m.wave<=game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','bootstomp','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser','mr-glue'].includes(m.type)){pool.push(m.type);if(game.state.wave>=12&&['sniper','flanker','wallpuller','catapulter','papertearer'].includes(m.type))pool.push(m.type,m.type);}
   }
   const weighted=game.state.wave>=11?pool.flatMap(type=>type==='grunt'?[type]:[type,type]):pool;
-  return game.api.pick(weighted.filter(type=>type!=='sniper'||canSpawnSniper()).filter(type=>type!=='gnawer'||game.state.enemies.filter(e=>e.type==='gnawer'&&e.hp>0).length<2).filter(type=>!['wallpuller','papertearer'].includes(type)||!game.state.enemies.some(e=>e.type===type&&e.hp>0)).filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
+  return game.api.pick(weighted.filter(type=>type!=='flanker'||game.state.enemies.filter(e=>e.type==='flanker'&&e.hp>0).length<2).filter(type=>type!=='sniper'||canSpawnSniper()).filter(type=>type!=='gnawer'||game.state.enemies.filter(e=>e.type==='gnawer'&&e.hp>0).length<2).filter(type=>!['wallpuller','papertearer'].includes(type)||!game.state.enemies.some(e=>e.type===type&&e.hp>0)).filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
 }
 
 function bossTypeForWave(wave=game.state.wave){
