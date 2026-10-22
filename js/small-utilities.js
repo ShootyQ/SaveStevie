@@ -7,7 +7,7 @@ DoodleDefender.systems.smallUtilities=function(game){
  const wallAlive=w=>s.walls.includes(w)&&w.hp>0&&w.life>0;
  const position=p=>({x:a.clamp(p.x,26,Math.max(26,s.W-26)),y:a.clamp(p.y,85,Math.max(85,s.H-35))});
  function dropNumber(e){
-  if(!has('Connect the Dots')||!active()||e.waveBoss||game.catalog.enemyDefs[e.type]?.boss||Math.random()>=.1)return false;
+  if(!has('Connect the Dots')||!active()||e.waveBoss||game.catalog.enemyDefs[e.type]?.boss||Math.random()>=.05)return false;
   // Spread coincident deaths so every number remains individually targetable.
   let p=position(e);for(let i=0;i<36&&dots.some(d=>Math.hypot(d.x-p.x,d.y-p.y)<42);i++){const angle=i*2.399963,r=24+7*i;p=position({x:e.x+Math.cos(angle)*r,y:e.y+Math.sin(angle)*r});}
   dots.push({...p,n:next++,age:0});total++;return true;
@@ -53,7 +53,7 @@ DoodleDefender.systems.smallUtilities=function(game){
   }
  }
  function smallUtilityWaiting(e){return ordinary(e)&&(chewing.has(e)||queues.some(q=>wallAlive(q.wall)&&q.waiters.includes(e)));}
- function resetSmallWave(){crumbs=[];crumbInk=0;chewing.clear();rest=new WeakMap();queues=[];queueRest=new WeakMap();trace=null;flash=null;}
+ function resetSmallWave(){dots=[];next=1;crumbs=[];crumbInk=0;chewing.clear();rest=new WeakMap();queues=[];queueRest=new WeakMap();trace=null;flash=null;}
  function resetSmallUtilities(){resetSmallWave();dots=[];next=1;total=best=loops=clock=0;}
  function moveSmallUtilities(dx,dy){for(const d of [...dots,...crumbs])Object.assign(d,position({x:d.x+dx,y:d.y+dy}));trace=null;for(const q of queues){q.x+=dx;q.y+=dy;}if(flash)for(const p of flash.points){p.x+=dx;p.y+=dy;}}
  function art(ctx,x,y,w,h,col,row){const img=a.doodleArtwork('small-utilities');if(!img)return false;ctx.drawImage(img,col*img.width/2,row*img.height/2,img.width/2,img.height/2,x-w/2,y-h/2,w,h);return true;}

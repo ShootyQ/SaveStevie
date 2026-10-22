@@ -1,5 +1,5 @@
 {
-  "version": "0.1.126",
+  "version": "0.1.128",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -348,7 +348,7 @@
       "id": "Connect the Dots",
       "name": "Connect the Dots",
       "category": "Drawing / ink economy",
-      "effect": "PROTOTYPE: defeated non-boss monsters have a 10% chance to drop numbered dots: 1, 2, 3 and onward, with no cap or expiry, even across waves. Start at 1, trace at least three numbers in order, then return to 1 in one stroke. Tracing is free. Closing clears the entire batch, including unused dots; the next drop is 1. No combat reward yet. The page shows drops and your biggest loop.",
+      "effect": "PROTOTYPE: defeated non-boss monsters have a 5% chance to drop numbered dots: 1, 2, 3 and onward, with no cap within the wave. Dots clear and numbering restarts at 1 when the wave ends. Start at 1, trace at least three numbers in order, then return to 1 in one stroke. Tracing is free. Closing clears the entire batch, including unused dots; the next drop is 1. No combat reward yet. The page shows drops and your biggest loop.",
       "rarities": "uncommon",
       "levels": "One-time: +1 unlock",
       "stacking": "One-time unlock",
@@ -1708,7 +1708,7 @@
       "id": "Connect the Dots",
       "name": "Connect the Dots",
       "category": "Drawing / ink economy",
-      "effect": "PROTOTYPE: defeated non-boss monsters have a 10% chance to drop numbered dots: 1, 2, 3 and onward, with no cap or expiry, even across waves. Start at 1, trace at least three numbers in order, then return to 1 in one stroke. Tracing is free. Closing clears the entire batch, including unused dots; the next drop is 1. No combat reward yet. The page shows drops and your biggest loop.",
+      "effect": "PROTOTYPE: defeated non-boss monsters have a 5% chance to drop numbered dots: 1, 2, 3 and onward, with no cap within the wave. Dots clear and numbering restarts at 1 when the wave ends. Start at 1, trace at least three numbers in order, then return to 1 in one stroke. Tracing is free. Closing clears the entire batch, including unused dots; the next drop is 1. No combat reward yet. The page shows drops and your biggest loop.",
       "evidence": "Not rated",
       "priority": "Unrated",
       "idea": "",
