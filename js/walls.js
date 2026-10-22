@@ -21,7 +21,7 @@ function rewardClosedLoop(wall,paid){
   if(touched)requests.push({w,amount:(w.maxHp-w.hp)*t.repair});
  }
  const total=requests.reduce((n,r)=>n+r.amount,0),scale=total?Math.min(1,paid*.5/total):0;
- for(const r of requests)r.w.hp=Math.min(r.w.maxHp,r.w.hp+r.amount*scale);
+ for(const r of requests){const before=r.w.hp;r.w.hp=Math.min(r.w.maxHp,r.w.hp+r.amount*scale);game.api.recordSupport?.('repair',r.w.hp-before);}
  const center=game.api.wallGeometry(wall.pts);wall.sealAge=0;
  game.api.floatText((center.minX+center.maxX)/2,(center.minY+center.maxY)/2,'SEALED! +'+refund.toFixed(1)+' ink','#456d49');
 }
@@ -150,7 +150,7 @@ function landingPoint(e,x,y,inferno){
  return best;
 }
 function launchEnemy(e,x,y,inferno=false){
- if(e.hp<=0||e.flight||game.api.underPaper(e)||game.api.heldUnderDesk?.(e))return false;
+ if(e.hp<=0||e.flight||game.api.underPaper(e)||game.api.heldUnderDesk?.(e)||game.api.gravityCaptured?.(e))return false;
  if(isInkBoss(e)){game.api.animateEnemyAction(e,'slam');return false}
  const target=landingPoint(e,x,y,inferno);if(!target)return false;
  e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:inferno?1.05:.85,
@@ -159,7 +159,7 @@ function launchEnemy(e,x,y,inferno=false){
  game.api.floatText(e.x,e.y,'WHOOSH!','#36786b');return true;
 }
 function flingBossFriend(e,target){
- if(e.hp<=0||e.flight||isInkBoss(e)||game.api.heldUnderDesk?.(e))return false;
+ if(e.hp<=0||e.flight||isInkBoss(e)||game.api.heldUnderDesk?.(e)||game.api.gravityCaptured?.(e))return false;
  e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:.65,
   height:Math.min(90,Math.max(16,Math.min(e.y,target.y)-e.r*2-50)),spin:target.x<e.x?-1:1,damage:0,stun:0,bossThrown:true};
  game.api.floatText(e.x,e.y,'WHEEEE!','#a55b39');return true;
@@ -239,7 +239,7 @@ function blastWallReady(wall){
 function damageWall(wall,amount,x,y){
   if(amount>0&&wall.hp>0)game.api.playSound('wall');
   if(wall.hp<=0||!game.state.walls.includes(wall))return;
-  wall.hp-=amount;
+  game.api.recordSupport?.('absorbed',Math.min(wall.hp,Math.max(0,amount)));wall.hp-=amount;
   if(wall.hp<=0){
     game.api.playSound('wallBreak');
     if((game.state.stats.explode||game.state.inks.blast>0)&&blastWallReady(wall)){
@@ -292,7 +292,7 @@ function repairTouchedWalls(points,excluded=null){
     }
     if(touched){
       const before=w.hp;
-      w.hp=Math.min(w.maxHp,w.hp+game.state.stats.repairDraw);
+      w.hp=Math.min(w.maxHp,w.hp+game.state.stats.repairDraw);game.api.recordSupport?.('repair',w.hp-before);
       if(game.state.synergies.has('Blood Patch')){
         const repaired=Math.max(0,w.hp-before);
         game.api.healStevie(repaired*.08);

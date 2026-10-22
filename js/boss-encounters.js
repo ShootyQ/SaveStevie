@@ -70,7 +70,7 @@ function updateFirstBossHelpers(dt){
  const friend=game.api.spawnEnemy(false,x,y,'grunt');if(friend)friend.bossOwner=e;
 }
 function friendCanBePicked(e,n){
- const p=game.state.player;return n.bossOwner===e&&n.hp>0&&!n.flight&&n.freeze<=0&&n.stun<=0&&game.state.enemies.includes(n)&&n.x>=n.r&&n.x<=game.state.W-n.r&&n.y>=n.r&&n.y<=game.state.H-n.r&&Math.hypot(n.x-p.x,n.y-p.y)>p.r+n.r+75+firstBossTuning(e).minThrowGain+12;
+ const p=game.state.player;return !game.api.gravityCaptured(n)&&n.bossOwner===e&&n.hp>0&&!n.flight&&n.freeze<=0&&n.stun<=0&&game.state.enemies.includes(n)&&n.x>=n.r&&n.x<=game.state.W-n.r&&n.y>=n.r&&n.y<=game.state.H-n.r&&Math.hypot(n.x-p.x,n.y-p.y)>p.r+n.r+75+firstBossTuning(e).minThrowGain+12;
 }
 function friendLanding(n,opportunistic=false){
  const {player:p,W,H}=game.state,clear=p.r+n.r+75,distance=Math.hypot(n.x-p.x,n.y-p.y),radius=clear+12,angle=Math.atan2(n.y-p.y,n.x-p.x);
@@ -176,7 +176,7 @@ function updateFirstBossShot(s,dt){
    if(s.age<=s.duration){s.vx=(nx-s.x)/step;s.vy=(ny-s.y)/step}
    const p=game.state.player,impact=shotCircleTime(s.x,s.y,nx,ny,p.x,p.y,p.r+s.r),wall=returnWallHit(s,nx,ny);
    if(wall&&(impact===null||wall.t<=impact)){
-    nx=s.x+(nx-s.x)*wall.t;ny=s.y+(ny-s.y)*wall.t;s.reflected=true;s.age=0;s.life=6;s.trail=[];
+    nx=s.x+(nx-s.x)*wall.t;ny=s.y+(ny-s.y)*wall.t;s.reflected=true;game.api.recordSkillPlay?.('ROYAL RETURN!',150,nx,ny);s.age=0;s.life=6;s.trail=[];
     game.api.damageWall(wall.wall,wall.wall.hp+1,nx,ny);game.api.burst(nx,ny,'#61aca0',6);game.api.floatText(nx,ny-10,'RETURN · WALL SPENT!','#287a78');game.api.playSound('rock');
    }else if(impact!==null){game.api.damageStevie(s.damage*(1-game.state.stats.playerArmor),'King Doodle '+s.bossKind,s);game.api.burst(p.x,p.y,'#9b3549',6);return false}
   }

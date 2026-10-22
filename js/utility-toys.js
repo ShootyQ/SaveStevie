@@ -4,7 +4,7 @@ DoodleDefender.systems.utilityToys=function(game){
  const owned=name=>!!s.stacks[name];
  const active=()=>s.running&&!s.paused&&!s.inUpgrade&&!s.betweenWaves&&!s.awaitingSpec&&!document.hidden&&!a.infoOpen()&&!a.firstLessonActive()&&!a.synergyRevealActive()&&!a.waveFinaleActive()&&!a.bossEntranceActive();
  const alive=w=>w&&w.hp>0&&w.life>0&&s.walls.includes(w);
- const ordinary=e=>e.hp>0&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!a.abilityImmune(e)&&!a.underPaper(e)&&!e.flight&&!e.hurdle&&!e.catapultHeld&&!a.bossFriendHeld(e);
+ const ordinary=e=>!a.gravityCaptured(e)&&e.hp>0&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!a.abilityImmune(e)&&!a.underPaper(e)&&!e.flight&&!e.hurdle&&!e.catapultHeld&&!a.bossFriendHeld(e);
  let gates=[],boulders=[],links=[],friends=[],mark=null,markCd=2,boulderCd=0,hold=null,clock=0,pops=[],eraseHandled=false,eraseGate=null;
  const length=pts=>pts.slice(1).reduce((sum,p,i)=>sum+Math.hypot(p.x-pts[i].x,p.y-pts[i].y),0);
  const clearRadius=()=>Math.hypot(a.refugeBounds().halfWidth,a.refugeBounds().halfHeight)+18;

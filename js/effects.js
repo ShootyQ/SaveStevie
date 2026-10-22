@@ -69,6 +69,7 @@ function damageNumber(enemy,amount,kind='physical',finishing=false){
   }
 }
 function dealDamage(enemy,amount,kind='physical',source=null){
+  if(game.api.gravityCaptured?.(enemy)&&!source?.gravityGulp)return;
   if(game.api.isBootstomp?.(enemy))return;
   if(game.api.routeWhiteBrotherDamage?.(enemy,amount,kind,source))return;
   if(game.api.chonksProtected(enemy))return;
@@ -85,7 +86,7 @@ function dealDamage(enemy,amount,kind='physical',source=null){
   if(!game.api.abilityImmune(enemy)&&kind==='physical'&&death>0&&enemy.hp<=enemy.maxHp*.5)amount*=1+Math.min(.4,.16+.04*death);
   amount=game.api.limitBossDamage(enemy,Math.max(0,amount),kind);
   const before=enemy.hp,actual=Math.min(Math.max(0,before),amount);
-  enemy.hp-=amount;
+  enemy.hp-=amount;game.api.recordCombatDamage?.(actual,kind,source);
   if(actual>=4)game.api.chompzillaHit?.(enemy);
   if(actual>0){if(kind==='physical'&&game.state.stacks['Death Ink']>0)game.api.animateInkAccent(enemy,'death');game.api.reactEnemyHit(enemy);if(kind==='void')game.api.animateVoidHit(enemy)}
   game.api.damageNumber(enemy,actual,kind,before>0&&enemy.hp<=0);

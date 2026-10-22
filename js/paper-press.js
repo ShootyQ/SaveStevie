@@ -10,7 +10,7 @@ DoodleDefender.systems.paperPress=function(game){
  function resetPaperPress(){cancelPaperPress();ripples=[];}
  function beginPaperPress(p){cancelPaperPress();if(!allowed()||!validPaper(p)||(!game.api.bootstompPressTarget?.(p)&&game.state.enemies.some(e=>e.hp>0&&(e.type==='scrubber'||game.api.hasChonksShield(e))&&!game.api.underPaper(e)&&Math.hypot(e.x-p.x,e.y-p.y)<e.r+14)))return false;press={x:p.x,y:p.y,age:0,r:tuning.startRadius,depth:0};return true;}
  function movePaperPress(p){if(press&&Math.hypot(p.x-press.x,p.y-press.y)<=(touchPlay()&&press.age>=tuning.delay?holdRadius(press):tuning.drift))return press.age>=tuning.delay;beginPaperPress(p);return false;}
- const eligible=e=>e.hp>0&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!['boss','eraser'].includes(e.type)&&!game.api.abilityImmune(e)&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!e.catapultHeld&&!game.api.bossFriendHeld(e)&&!game.api.heldByCatapulter(e)&&e.freeze<=0;
+ const eligible=e=>!game.api.gravityCaptured?.(e)&&e.hp>0&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!['boss','eraser'].includes(e.type)&&!game.api.abilityImmune(e)&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!e.catapultHeld&&!game.api.bossFriendHeld(e)&&!game.api.heldByCatapulter(e)&&e.freeze<=0;
  function paperPressCaptures(e){return !!press&&press.age>=tuning.delay&&eligible(e)&&Math.hypot(e.x-press.x,e.y-press.y)<=press.r+e.r*.4&&!game.api.bossShotWallHit({x:e.x,y:e.y,r:e.r},press.x,press.y);}
  function paperPressEnemyDip(e){return paperPressCaptures(e)?press.depth*Math.max(0,1-Math.hypot(e.x-press.x,e.y-press.y)/(press.r+e.r))*.65:0;}
  function updatePaperPress(dt){

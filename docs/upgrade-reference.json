@@ -1,5 +1,5 @@
 {
-  "version": "0.1.131",
+  "version": "0.1.132",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -770,7 +770,7 @@
         "Gravity Ink",
         "Closed Loop"
       ],
-      "effect": "Closed loops pull nearby enemies toward their perimeter."
+      "effect": "Closed loops pull ordinary monsters through their own ink toward a notebook whirlpool. Each monster gets one 15% swallow roll when it reaches a center. Successful gulps share a 1.8-second cooldown; a failed roll briefly dazes it and ends its center pull. Bosses, shields, underground and airborne monsters resist. Other walls and the fort remain solid."
     },
     {
       "name": "Ring of Fire",

@@ -46,7 +46,7 @@ function renderOptions(){
   game.dom.$('optionsStorageNote').textContent=storageIssue?'This browser cannot save preferences. Changes work for this visit.':'Saved automatically on this browser. Your progress is kept separately.';
 }
 function renderStatistics(){
-  game.api.renderScorecard('statisticsScorecard');
+  game.api.renderScorecard('statisticsScorecard');game.api.renderReportRecords();
   const s=game.state,p=game.api.notebookSnapshot(),ranks=Object.values(p.levels).reduce((a,n)=>a+n,0),max=game.catalog.notebookPerks.reduce((a,x)=>a+x.max,0);
   const tiles=[['Best wave',s.best],['Best score',game.api.bestRunScore().toLocaleString('en-US')],['Scraps banked',p.scraps],['Scraps earned, all time',p.lifetimeScraps],['Permanent ranks',ranks+' / '+max]];
   game.dom.$('statisticsProgress').innerHTML=tiles.map(([label,value])=>`<div class="journal-stat"><span>${label}</span><strong>${value}</strong></div>`).join('');

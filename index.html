@@ -83,7 +83,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button><button class="paper-slip desktop-quit-entry" id="splashQuitBtn" hidden>Quit to desktop</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.131</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.132</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -135,6 +135,7 @@
         <div class="wave-summary-body"><span class="section-kicker">ANOTHER PAGE SAVED</span><span class="wave-pass-stamp" aria-hidden="true">PASSED!</span>
         <p id="waveChapter" class="scrap-summary"></p>
         <div class="wave-heading"><canvas id="waveStevie" width="128" height="136" role="img" aria-label="Stevie celebrating the cleared wave"></canvas><h2 id="waveClearTitle">Wave Cleared!</h2></div>
+        <section id="waveReportCard" class="report-card" aria-label="Chapter report card"></section><section id="waveBuildReport" class="build-report" aria-label="Wave contribution breakdown"></section>
         <p id="waveStevieNote" class="wave-stevie-note">still got all my fingers. probably.</p>
         <details class="wave-run-details"><summary>Your run so far</summary><div class="stats wave-stats">
           <div class="pill">Wave <span id="wave">1</span></div>
@@ -162,7 +163,7 @@
         <header class="result-heading"><div><span class="section-kicker">NOTEBOOK RESCUED</span><h2 id="victoryResultTitle">Stevie made it!</h2><p>The notebook is safe. Somehow.</p></div><div class="bigscore"><small>FINAL SCORE</small><span id="victoryScore">0</span><strong id="victoryRecordBadge" class="result-record" hidden></strong></div></header>
         <p id="victoryRunNote" class="result-cause">You defeated The Eraser. Keep going, or take your victory lap.</p>
         <div class="result-body"><section class="result-score"><h3>Scorecard</h3><div id="victoryScorecard"></div><div class="result-facts" id="victoryRunFacts"></div><p class="scrap-summary">Kept <b id="victoryRunScraps">0</b> scraps this run · Bank: <b id="victoryBankScraps">0</b></p></section>
-        <section class="result-build"><div class="result-build-heading"><h3>Your build highlights</h3><button class="secondary" id="victoryInspectBuild">Inspect build</button></div><div class="result-highlights" id="victoryHighlights"></div><p class="result-synergies" id="victorySynergies"></p>
+        <section class="result-build"><div class="result-build-heading"><h3>Your build highlights</h3><button class="secondary" id="victoryInspectBuild">Inspect build</button></div><details class="performance-details"><summary>Damage &amp; support · last chapter</summary><div id="victoryPerformance"></div></details><div class="result-highlights" id="victoryHighlights"></div><p class="result-synergies" id="victorySynergies"></p>
         <aside class="stevie-note" aria-label="A note from Stevie">
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
           <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="victoryNoteHeading"></h3><p id="victoryNoteMessage"></p><small id="victoryNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
@@ -177,7 +178,7 @@
         <header class="result-heading"><div><span class="section-kicker">THE END OF THIS ATTEMPT</span><h2 id="deathResultTitle">They got Stevie.</h2><p>Wave <b id="finalWave">1</b> · <b id="finalKills">0</b> monsters defeated</p></div><div class="bigscore"><small>FINAL SCORE</small><span id="finalScore">0</span><strong id="deathRecordBadge" class="result-record" hidden></strong></div></header>
         <p id="lastHitText" class="result-cause"></p>
         <div class="result-body"><section class="result-score"><h3>Scorecard</h3><div id="deathScorecard"></div><div class="result-facts" id="deathRunFacts"></div><p class="scrap-summary">Kept <b id="deathRunScraps">0</b> scraps this run · Bank: <b id="deathBankScraps">0</b></p></section>
-        <section class="result-build"><div class="result-build-heading"><h3>Your build highlights</h3><button class="secondary" id="deathInspectBuild">Inspect build</button></div><div class="result-highlights" id="deathHighlights"></div><p class="result-synergies" id="deathSynergies"></p>
+        <section class="result-build"><div class="result-build-heading"><h3>Your build highlights</h3><button class="secondary" id="deathInspectBuild">Inspect build</button></div><details class="performance-details"><summary>Damage &amp; support · last chapter</summary><div id="deathPerformance"></div></details><div class="result-highlights" id="deathHighlights"></div><p class="result-synergies" id="deathSynergies"></p>
         <aside class="stevie-note" aria-label="A note from Stevie">
           <img src="assets/art/stevie-cheer-a.png" alt="" width="72" height="72">
           <div><span class="note-label">A LITTLE NOTE FROM STEVIE</span><h3 id="deathNoteHeading"></h3><p id="deathNoteMessage"></p><small id="deathNoteKeepsake"></small><span class="note-signature">— StEvie <svg class="signature-pencil" viewBox="0 0 48 20" aria-hidden="true"><path d="M5 15 34 3 39 12 10 18Z" fill="#e4bd51"/><path d="m34 3 5 9 5-2-4-9Z" fill="#bb7272"/><path d="m5 15 5 3-8 1Z" fill="#caa273"/><path d="m2 19 4-1-1-3Z" fill="#38332e"/><path d="m5 15 29-12 5 9-29 6-8 1Z M9 15 35 6 M34 3l5 9" fill="none" stroke="#504336" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span></div>
@@ -253,7 +254,7 @@
       <button class="secondary paper-slip" id="pauseRestartTestBtn" hidden>Restart test · same build ↻</button>
       <button class="secondary paper-slip" id="returnMenuBtn">Return to main menu</button><button class="secondary paper-slip desktop-quit-entry" id="pauseQuitBtn" hidden>Quit to desktop</button>
       <p class="option-help">Your page stays right here until you resume.</p>
-      <details class="score-details"><summary id="pauseScoreTitle">Scorecard</summary><div id="pauseScorecard"></div><p class="score-footnote">Normal kills start at 10 points; bosses at 100. Distance adds up to 3×. Keep kills within 4 seconds for streaks: 3 kills = 1.25×, 6 = 1.5×, 10 = 2×. Stevie taking damage breaks the streak. Pauses stop the clock.</p></details>
+      <details class="score-details"><summary id="pauseScoreTitle">Scorecard</summary><div id="pauseScorecard"></div><p class="score-footnote">Normal kills start at 10 points; bosses at 100. Distance adds up to 3×. Keep kills within 4 seconds for streaks: 3 kills = 1.25×, 6 = 1.5×, 10 = 2×. Stevie taking damage drops a combo tier. Clever counters and completed numbered loops earn bonus points. Pauses stop the clock.</p></details>
     </div>
     <section id="quitConfirmation" hidden aria-labelledby="quitTitle">
       <h3 id="quitTitle">Close this notebook?</h3><p>Your current run and its upgrades will be lost. Scraps you’ve already earned stay saved, along with your permanent Notebook upgrades.</p>
@@ -354,6 +355,7 @@
     <div class="build-heading"><div><span class="section-kicker">YOUR NOTEBOOK SO FAR</span><h2 id="statisticsTitle">Stats</h2></div><button id="closeStatisticsBtn">Close</button></div>
     <h3>Saved progress</h3><div id="statisticsProgress" class="journal-grid"></div>
     <div class="journal-progress" aria-hidden="true"><span id="statisticsProgressBar"></span></div><p class="option-help">Permanent Notebook ranks unlocked</p>
+    <h3>Chapter report cards</h3><div id="chapterStamps" class="chapter-stamps"></div><p class="report-help">Earn an A or A+ to stamp a chapter. Normal campaigns only; practice leaves your bests alone.</p>
     <h3 id="statisticsRunTitle">This run</h3><div id="statisticsRun" class="journal-grid"></div>
     <details class="score-details"><summary>Run score breakdown</summary><div id="statisticsScorecard"></div></details>
     <p id="statisticsSaveNote" class="save-note"></p>
@@ -427,6 +429,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.132 · Report cards and notebook whirlpools</h3><p>Wave-clear pages show chapter grades based on protection, combos and clever counters, plus your top three damage contributors, DPS and support totals. Returning bombs and royal shots, catching catapult passengers, and connecting numbered loops earn visible score bonuses. Damage reduces combos by a tier. Normal chapter grades save personal bests and A-grade notebook stamps, including backups; practice leaves records unchanged. Gravity Trap now pulls ordinary monsters through its own loop into a swirling notebook drain. Each gets one 15% swallow roll at the center, with a shared 1.8-second gulp cooldown, a stretching spiral and eyes-last finish. Bosses and protected, underground or airborne monsters resist; other walls and Stevie’s fort stay solid.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.131 · Follow the Underline connects</h3><p>When no monster is in normal throwing range, Stevie can use an open line within reach to send paper balls toward enemies near its far end. Long rides now get enough flight time to reach the end. Breaking a ridden line releases the ball and finds a new target. Green trails make line rides easier to see, and the Doodle Scrap description explains the extra reach.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.130 · Hungry feet and finite fountains</h3><p>Fine Tip now reduces stroke cost by 10% per level. Living Fountain Pen starts at +28% regeneration with stronger diminishing repeats. Patch Job repairs 2.5 HP per wall per kill within a shared 10 HP/second budget; all combat healing shares 4.5 HP/second. Tunnel monsters get one underground trip each: they head toward Stevie, surface at the first opening crossed, and can warn then strike beneath the fort if no opening stops them. Underground contact grants no kill rewards. Chompzilla’s previously frozen walk now advances with actual movement, cycling through steps and open/closed mouth drawings, with a bigger bite wind-up, snap and chew.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.129 · Quicker tunnels, fresh catchers</h3><p>Monsters crawl under the paper 10% faster, including the minimum and maximum crawl speeds. Catapult passengers now fly past existing cover: catch them on descent with a line drawn after launch and less than 0.75 seconds old, matching Rip-Raff’s fresh-line counter. Erasing an old wall into fragments does not make a fresh catcher. Normal grounded wall collisions still work as before.</p></article>
@@ -769,6 +772,8 @@
 <script src="js/geometry.js"></script>
 <script src="js/refuge.js"></script>
 <script src="js/scoring.js"></script>
+<script src="js/report-cards.js"></script>
+<script src="js/gravity-whirlpool.js"></script>
 <script src="js/balance.js"></script>
 <script src="js/desktop-controls.js"></script>
 <script src="js/settings.js"></script>

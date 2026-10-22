@@ -118,7 +118,7 @@ function resetNotebookProgress(){
     game.dom.$('optionsStorageNote').textContent='Could not reset saved progress. Check this browser’s storage settings and try again.';
     return false;
   }
-  progress=fresh;migrationRefund=0;storageIssue=false;game.api.resetFirstLessons?.();
+  game.api.resetReportRecords?.();progress=fresh;migrationRefund=0;storageIssue=false;game.api.resetFirstLessons?.();
   game.api.closeInfo();game.state.best=1;game.api.resetRun();game.api.closeInfo();
   game.state.running=false;game.state.paused=false;runActive=false;runScraps=0;killScraps=0;
   game.api.selectMusicTrack('splash');

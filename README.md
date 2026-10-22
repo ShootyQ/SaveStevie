@@ -1094,3 +1094,24 @@ Newly activated synergies queue an animated notebook-paper reveal with their ing
 ## Steam page preparation
 
 See the [Steam asset checklist](docs/steam-assets.md) for required sizes, formats and reference templates. Artwork preparation is pending; screenshots are deferred.
+
+### Chapter report cards and Gravity Trap (Alpha 0.1.132)
+
+Wave-clear pages show provisional chapter grades, top-three actual damage contributors,
+combat DPS versus the previous wave, and healing, repairs, wall damage absorbed and
+control time. Chapter grades weigh protection (50%), best combo (25%) and clever
+plays (25%); thresholds are C below 60, B from 60, A from 75 and A+ from 90.
+Returning Rip-Raff bombs or royal shots, catching launched monsters and closing
+numbered loops earn score bonuses. Hits lower a combo tier instead of erasing it.
+Normal chapter endings save best grades; A/A+ earns a stamp in Notebook → My scores.
+Practice runs never change these records. Save backups include the new records,
+and older backups preserve them. There is no added practice page.
+
+Gravity Trap pulls ordinary monsters through its own closed ink loop into an
+animated scribble drain. Each monster gets one 15% swallow roll at the center.
+Successful gulps share a 1.8-second cooldown and take 1.1 seconds to finish,
+stretching the monster before its eyes disappear. A failed roll briefly dazes
+and releases it. Bosses, protected, airborne and underground monsters resist;
+other cover and Stevie’s fort block the pull. Event Horizon keeps its separate
+Void/Gravity behavior. Try an off-center closed loop with Gravity Ink to see
+the drain; failed rolls are expected, so test it against a group.

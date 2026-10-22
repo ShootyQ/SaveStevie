@@ -25,7 +25,7 @@ DoodleDefender.systems.smallUtilities=function(game){
   while(trace.count<dots.length){const d=dots[trace.count],t=crossed(d,min);if(t===null)break;trace.points.push({x:d.x,y:d.y});trace.count++;min=t;}
   // Closing is allowed before the newest number: unused numbers belong to this batch.
   if(trace.count>=3&&crossed(dots[0],min)!==null&&Math.hypot(from.x-dots[0].x,from.y-dots[0].y)>26){
-   const count=trace.count;best=Math.max(best,count);loops++;flash={points:[...trace.points,{x:dots[0].x,y:dots[0].y}],left:1.2,count};dots=[];next=1;trace.last={...p};trace.finished=true;a.playSound('pencilLift');a.floatText(p.x,p.y-30,count+' DOTS!','#416da6');a.setMsg('Connected '+count+' dots! Prototype only: no combat bonus. Next drop starts at 1.');return true;
+   const count=trace.count;best=Math.max(best,count);loops++;a.recordSkillPlay?.('DOT TO DOT!',Math.min(600,count*50),p.x,p.y);flash={points:[...trace.points,{x:dots[0].x,y:dots[0].y}],left:1.2,count};dots=[];next=1;trace.last={...p};trace.finished=true;a.playSound('pencilLift');a.floatText(p.x,p.y-30,count+' DOTS!','#416da6');a.setMsg('Connected '+count+' dots! Prototype only: no combat bonus. Next drop starts at 1.');return true;
   }
   trace.last={...p};return true;
  }
