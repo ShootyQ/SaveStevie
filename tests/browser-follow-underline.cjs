@@ -1,0 +1,13 @@
+const {chromium}=require('playwright'),assert=require('assert'),fs=require('fs'),path=require('path'),root=path.resolve(__dirname,'..');
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:'/usr/bin/chromium',args:['--no-sandbox']});try{
+ for(const viewport of [{width:1280,height:800},{width:393,height:851}]){
+  const touch=viewport.width<600,page=await browser.newPage({viewport,hasTouch:touch,deviceScaleFactor:2}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.addInitScript(()=>{requestAnimationFrame=()=>0;localStorage.setItem('saveStevieMusicMuted','yes');localStorage.setItem('saveStevieLessonsV1',JSON.stringify({draw:true,erase:true}));});
+  await page.route('http://stevie.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}if(name==='game.js')body=body.toString().replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');return route.fulfill({body,contentType:({'.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.ttf':'font/ttf','.wav':'audio/wav','.mp3':'audio/mpeg'})[path.extname(name)]||'text/html'});});
+  await page.goto('http://stevie.test/');await page.waitForFunction(()=>testGame.api.artworkStatus().ready,null,{polling:100,timeout:90000});
+  await page.evaluate(()=>{const g=testGame,a=g.api;a.setFirstLessonsEnabled(false);a.setMonsterIntrosEnabled(false);a.setWaveFinaleEnabled(false);a.setSynergyRevealsEnabled(false);a.resetRun({skipIntro:true});g.state.enemies=[];g.state.walls=[];g.state.projectiles=[];g.state.player.x=60;g.state.player.y=350;g.state.player.rockCd=0;g.state.stats.ink=g.state.stats.maxInk=2000;g.state.stats.rockDamage=10;g.state.stats.rockRate=1;a.noteLevel=id=>id==='underline'?1:0;a.paperPayload=()=>({underline:1});a.createWall([{x:110,y:350},{x:170,y:280},{x:280,y:200}]);window.target=a.spawnEnemy(false,350,120,'grunt');target.hp=target.maxHp=1000;a.updateStevie(.02);});
+  assert.equal(await page.evaluate(()=>testGame.state.projectiles.length),1);let rode=false;
+  for(let i=0;i<110;i++){rode||=await page.evaluate(()=>testGame.state.projectiles.some(p=>p.rail));await page.evaluate(()=>{testGame.api.updateProjectiles(.025);testGame.api.draw();});if(i===20)await page.screenshot({path:'/tmp/underline-ride-'+viewport.width+'.png'});}
+  assert(rode);assert(await page.evaluate(()=>target.hp<1000));assert.deepEqual(errors,[]);console.log('PASS: automatic line ride, green trail and far target hit',viewport);await page.close();
+ }
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

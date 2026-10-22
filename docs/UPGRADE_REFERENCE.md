@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.130
+# Save Stevie upgrade reference — Alpha 0.1.131
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -131,7 +131,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Correction Notice | Common | Add eraser damage. Each hit wipes one chunk off Ruff. |
 | Long Distance Learning | Common | Reach farther enemies. Repeat copies extend range with diminishing returns. |
 | Second Draft | Uncommon | Every few throws, send a second ball at a different enemy. Copies make this happen more often. |
-| Follow the Underline | Uncommon | Paper balls ride your lines, then launch from the far end with extra range. |
+| Follow the Underline | Uncommon | Paper balls board lines they cross, ride toward the target, then launch from the far end with +100px target range (+30px per extra copy, up to +200px). With no enemy in normal range, Stevie can aim at an open line endpoint within throwing range to reach enemies near its far end. Long rides last until the end; a broken line releases and retargets the ball. |
 | Static Cling | Rare | Repeated electric hits make nearby monsters cling to each other in slow, sparking clumps. Includes basic electricity. |
 | Ash Impostor | Rare | Hit a burning enemy to shed a smoky decoy that distracts nearby monsters. Includes basic fire if needed. |
 | Bubble Trouble | Rare | Repeated poison hits inflate a wandering bubble. Erase it to pop and stagger the monster. Includes basic poison if needed. |

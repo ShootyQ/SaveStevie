@@ -1,5 +1,5 @@
 {
-  "version": "0.1.130",
+  "version": "0.1.131",
   "legendaryPlan": {
     "chance": 0.3333333333333333,
     "firstWave": 1,
@@ -1204,7 +1204,7 @@
       "id": "underline",
       "name": "Follow the Underline",
       "rarity": "Uncommon",
-      "effect": "Paper balls ride your lines, then launch from the far end with extra range.",
+      "effect": "Paper balls board lines they cross, ride toward the target, then launch from the far end with +100px target range (+30px per extra copy, up to +200px). With no enemy in normal range, Stevie can aim at an open line endpoint within throwing range to reach enemies near its far end. Long rides last until the end; a broken line releases and retargets the ball.",
       "art": 7,
       "source": "js/doodle-scraps.js; js/doodle-tricks.js; js/paper-tricks.js"
     },
