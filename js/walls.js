@@ -230,7 +230,7 @@ function drawLaunchGround(){
 }
 function launchEffectsSnapshot(){return {napalm:napalm.map(p=>({...p,points:p.points.map(q=>({...q}))})),landings:landingPuffs.map(p=>({...p}))}}
 
-const blastArmingSeconds=.5,blastMinimumLength=50;
+const blastArmingSeconds=.5,blastMinimumLength=30;
 function blastWallReady(wall){
  if((wall.blastAge||0)+1e-9<blastArmingSeconds)return false;
  let length=0;for(let i=1;i<wall.pts.length;i++)length+=game.api.dist(wall.pts[i-1].x,wall.pts[i-1].y,wall.pts[i].x,wall.pts[i].y);

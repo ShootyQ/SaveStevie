@@ -1189,6 +1189,7 @@ html.native-app .panel:has(.score-hud:not([hidden])) #hitNotice{bottom:calc(122p
 #pauseOverlay #pauseSettingsBtn{--scrap-art:url('assets/art/ui/recess-math.svg')}
 #pauseOverlay #pauseToolBtn{--scrap-art:url('assets/art/ui/recess-pencil.svg')}
 #pauseOverlay #pauseMonstersBtn{--scrap-art:url('assets/art/ui/recess-monster.svg')}
+#pauseOverlay #pauseDiscoveriesBtn{--scrap-art:url('assets/art/ui/recess-pencil.svg')}
 #pauseOverlay #clearBtn{--scrap-art:url('assets/art/ui/recess-clean.svg')}
 #pauseOverlay #musicBtn{--scrap-art:url('assets/art/ui/recess-music.svg')}
 #pauseOverlay #returnMenuBtn{--scrap-art:url('assets/art/ui/recess-home.svg')}
@@ -1614,41 +1615,19 @@ html.desktop-ui .desktop-rewards .cardactions{flex-shrink:0;align-items:center;j
 html.desktop-ui .desktop-book #buildUpgrades,html.desktop-ui .desktop-book #buildSynergies,html.desktop-ui .desktop-book #buildDoodleScraps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 
 /* Stevie's discovered-ability field guide: fixed tools and page controls. */
-.discovery-book{display:flex!important;flex-direction:column;gap:8px;width:min(1040px,96vw);max-height:94dvh;overflow:hidden!important;background-color:#f6f0dd;color:#303c35}
-.discovery-book .build-heading{flex-shrink:0;margin:0}
-.discovery-book .build-heading h2{margin:0}
-.discovery-whisper{font-family:var(--font-hand,"Patrick Hand",cursive);color:#64584a;transform:rotate(-.5deg);margin:0;font-size:18px}
-#discoveryProgress{margin:0;font-size:14px;color:#43574a}
-.discovery-filters{display:grid;grid-template-columns:1fr 200px;gap:14px;flex-shrink:0}
-.discovery-filters label{display:flex;flex-direction:column;font-size:14px;gap:3px;color:#344a3d}
-.discovery-filters input,.discovery-filters select{width:100%;min-width:0;box-sizing:border-box;min-height:42px;font-size:16px;background:#fffdf3;color:#26393e;border:1px solid #968b72;border-radius:8px;padding:7px}
-.discovery-entries{display:grid;grid-template-columns:1fr 1fr;gap:14px;overflow-y:auto;min-height:0;align-content:start;padding:8px 4px 12px;flex:1}
-.discovery-entry{display:flex;gap:12px;padding:17px 14px;background:#fffdf1;box-shadow:1px 3px 3px #4c412324;border:1px solid #d5cbb3;border-radius:3px 8px 5px 3px;position:relative;min-width:0;align-items:flex-start}
-.discovery-entry:before{content:"";position:absolute;top:-6px;left:32%;width:55px;height:12px;background:#e9d685a6;transform:rotate(-5deg);pointer-events:none}
-.discovery-entry:nth-child(even):before{transform:rotate(6deg)}
-.discovery-entry h3{font-size:23px;color:#315d7c;margin:3px 0 7px;line-height:1.1}
-.discovery-entry p{font-size:15px;line-height:1.45;margin:0;color:#303c35}
-.discovery-entry small{font-size:12px;color:#6e5541}
-.discovery-art{width:60px;height:60px;flex-shrink:0;display:grid;place-items:center}
-.discovery-note-art{display:block;width:60px;height:60px;background-repeat:no-repeat}
-.discovery-project-art{object-fit:contain}
-.discovery-synergy-mark{font-size:48px;color:#97629b;text-shadow:2px 2px #ecd78b}
-.discovery-navigation{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;border-top:1px dashed #b4a88a;padding-top:8px}
-.discovery-navigation button{font-size:17px;min-height:42px;padding:8px 16px}
-.discovery-navigation span{font-size:13px;text-align:center}
-.discovery-book #discoverySaveNote{font-size:12px;margin:0;line-height:1.35;flex-shrink:0}
-.discovery-empty{grid-column:1/-1;text-align:center;padding:24px;color:#665b45}
-.discovery-empty>span{font-size:44px;color:#956944}
-@media(max-width:899px){.discovery-entries{grid-template-columns:1fr}.discovery-filters{grid-template-columns:1fr 145px;gap:8px}.discovery-book{padding:16px!important}.discovery-book .build-heading h2{font-size:30px}.discovery-book .build-heading button{font-size:15px;padding:8px}.discovery-whisper{font-size:15px}.discovery-entry{padding:14px 10px;gap:9px}.discovery-entry h3{font-size:22px}.discovery-entry p{font-size:14px}.discovery-art{width:48px;height:48px}.discovery-note-art,.discovery-project-art{width:48px;height:48px}.discovery-navigation button{padding:7px 9px;font-size:15px}}
-.discovery-book{background:url('assets/art/ui/recess-sheet.svg') center/100% 100% no-repeat;border:0;border-radius:0;filter:drop-shadow(3px 7px 5px #0005)}
-.discovery-book .build-heading h2{font:38px/1.05 'Stevie Pencil',cursive;color:#3562be}
-.discovery-book .discovery-whisper{font-family:'Stevie Pencil',cursive;font-size:20px}
-.discovery-entry{isolation:isolate;background:none;border:0;box-shadow:none;filter:drop-shadow(1px 3px 2px #4c41232b)}
-.discovery-entry:after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(#fffdf2c7,#fffdf2c7),url('assets/art/ui/recess-sheet.svg') center/100% 100% no-repeat;clip-path:polygon(1% 1%,14% 0,29% 1%,45% 0,64% 1%,81% 0,99% 1%,100% 21%,99% 48%,100% 72%,99% 99%,80% 100%,61% 99%,39% 100%,20% 99%,0 100%,1% 75%,0 48%,1% 24%);pointer-events:none}
-.discovery-entry h3{font:27px/1.05 'Stevie Pencil',cursive;transform:rotate(-.4deg)}
-.discovery-book .discovery-entry p{text-align:left}
-.discovery-book button{font-family:'Stevie Pencil',cursive;font-weight:400;font-size:21px;background:#fff7df;color:#315d8c;border:1px solid #928167;border-radius:3px 7px 4px 5px}
-@media(max-width:899px){.discovery-book .build-heading h2{font-size:32px}.discovery-book .discovery-whisper{font-size:17px}.discovery-entry h3{font-size:24px}}
+/* Illustrated index with one full entry, sized to the current sheet. */
+.discovery-book{display:flex!important;flex-direction:column;gap:10px;width:min(1040px,96vw);height:min(720px,calc(100dvh - 28px));max-height:calc(100dvh - 28px);overflow:hidden!important;padding:24px;background:#f6f0dd url('assets/art/ui/recess-sheet.svg') center/100% 100%;border:0;border-radius:5px 12px 7px 4px;color:#303c35;filter:drop-shadow(3px 7px 5px #0005)}
+.discovery-book .build-heading{flex-shrink:0;margin:0;gap:12px}.discovery-book .build-heading h2{margin:0;font:38px/1.05 'Stevie Pencil',cursive;color:#3562be}.discovery-book .build-heading .section-kicker{font-size:11px}.discovery-book button{font-family:'Stevie Pencil',cursive;font-weight:400;font-size:21px;background:#fff7df;color:#315d8c;border:1px solid #928167;border-radius:3px 7px 4px 5px}.discovery-book #closeDiscoveriesBtn{min-height:44px;padding:7px 18px;flex-shrink:0}
+.discovery-whisper{font:18px/1.2 'Stevie Pencil',cursive;color:#64584a;transform:rotate(-.5deg);margin:0}#discoveryProgress{margin:0;font-size:13px;color:#43574a;flex-shrink:0}
+.discovery-filters{display:grid;grid-template-columns:1fr 200px;gap:12px;flex-shrink:0}.discovery-filters label{display:flex;flex-direction:column;font-size:12px;gap:3px;text-align:left;color:#344a3d}.discovery-filters input,.discovery-filters select{width:100%;min-width:0;min-height:42px;font-size:16px;background:#fffdf3;color:#26393e;border:1px solid #968b72;border-radius:5px;padding:7px}
+.discovery-browser{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;flex:1;min-height:0}.discovery-entries{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:82px;gap:9px;overflow-y:auto;min-height:0;min-width:0;align-content:start;padding:3px}
+.discovery-entry{min-width:0}.discovery-book .discovery-choice{display:flex;align-items:center;gap:8px;width:100%;height:100%;padding:8px;text-align:left;background:#fffdf1;border:2px solid #bcb29b;box-shadow:1px 2px 0 #655b4229;cursor:pointer}.discovery-book .discovery-choice:hover{background:#eeeeda;border-color:#638377}.discovery-book .discovery-choice[aria-pressed="true"]{border-color:#3a735d;background:#e9f0df;box-shadow:2px 3px 0 #7b9d8340}.discovery-choice:focus-visible{outline:3px dashed #3562be;outline-offset:-5px}.discovery-choice-label{min-width:0}.discovery-choice strong{display:block;font:20px/1.05 'Stevie Pencil',cursive;overflow-wrap:anywhere;color:#315d7c}.discovery-choice small{display:block;font:10px/1.2 system-ui,sans-serif;color:#68634f;margin-bottom:4px}
+.discovery-art{--art-size:44px;width:var(--art-size);height:var(--art-size);flex-shrink:0;display:grid;place-items:center}.discovery-art .upgrade-illustration{width:var(--art-size);height:var(--art-size);flex-basis:var(--art-size)}.discovery-note-art{display:block;width:100%;height:100%;background-repeat:no-repeat}.discovery-project-art{width:100%;height:100%;object-fit:contain}.discovery-synergy-mark{font-size:40px;color:#97629b;text-shadow:2px 2px #ecd78b}
+.discovery-detail{min-width:0;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:18px;background:#fffdf1d9;border:1px dashed #aa9a7c;border-radius:5px 11px 4px 7px;box-shadow:2px 3px 0 #655b4217;text-align:left}.discovery-detail[hidden]{display:none}.discovery-detail-heading{display:flex;align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px dashed #c2b79d}.discovery-detail-heading .discovery-art{--art-size:72px}.discovery-detail h3{font:30px/1.05 'Stevie Pencil',cursive;color:#315d7c;margin:4px 0;overflow-wrap:anywhere}.discovery-detail small{font-size:12px;color:#6e5541}.discovery-book .discovery-description{font-size:16px;line-height:1.5;text-align:left;margin:14px 0}.discovery-kept{font:18px 'Stevie Pencil',cursive;color:#67784d}
+.discovery-navigation{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;border-top:1px dashed #b4a88a;padding-top:8px}.discovery-navigation button{min-height:44px;padding:7px 15px}.discovery-navigation span{font-size:12px;text-align:center}.discovery-book #discoverySaveNote{font-size:11px;margin:0;line-height:1.25;flex-shrink:0}.discovery-empty{grid-column:1/-1;text-align:center;padding:20px;color:#665b45}.discovery-empty>span{font-size:42px;color:#956944}.discovery-browser-empty{grid-template-columns:1fr}.discovery-browser-empty .discovery-entries{display:block}
+@media(max-width:650px){.discovery-book{padding:16px;gap:8px}.discovery-book .build-heading h2{font-size:31px}.discovery-whisper{display:none}.discovery-filters{grid-template-columns:minmax(0,1fr) 130px;gap:8px}.discovery-browser{grid-template-columns:1fr;grid-template-rows:146px minmax(0,1fr);gap:10px}.discovery-entries{grid-auto-rows:66px;gap:7px}.discovery-choice strong{font-size:18px}.discovery-choice small{font-size:9px}.discovery-book .discovery-choice{padding:6px;gap:6px}.discovery-art{--art-size:36px}.discovery-detail{padding:12px}.discovery-detail-heading{gap:10px;padding-bottom:8px}.discovery-detail-heading .discovery-art{--art-size:54px;overflow:hidden}.discovery-detail h3{font-size:26px}.discovery-book .discovery-description{font-size:14px;line-height:1.4;margin:10px 0}.discovery-navigation button{font-size:19px;padding:6px 9px}.discovery-browser-empty{grid-template-rows:1fr}.discovery-kept{font-size:16px}}
+@media(max-height:650px){.discovery-book{padding:14px;gap:7px}.discovery-whisper{display:none}.discovery-book .build-heading h2{font-size:28px}.discovery-filters input,.discovery-filters select{min-height:38px}.discovery-detail{padding:12px}.discovery-book .discovery-description{font-size:14px;line-height:1.4}.discovery-detail h3{font-size:25px}.discovery-detail-heading .discovery-art{--art-size:52px;overflow:hidden}.discovery-kept{display:none}.discovery-entries{grid-auto-rows:68px}.discovery-navigation{padding-top:5px}.discovery-book .section-kicker{display:none}.discovery-book #discoverySaveNote{font-size:10px}}
+
 
 /* PC interaction polish; touch controls retain their existing layout. */
 .desktop-bindings{display:none}
