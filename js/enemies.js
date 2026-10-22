@@ -249,7 +249,7 @@ function updateTwicey(e,dt){
 function nearestEnemy(x,y,maxD){
   let bestE=null,bestD=maxD;
   for(const e of game.state.enemies){
-    if(e.hp<=0||game.api.gravityCaptured(e))continue;
+    if(e.hp<=0||game.api.gravityCaptured(e)||game.api.catapulterAway(e))continue;
     const d=game.api.dist(x,y,e.x,e.y);if(d<bestD){bestD=d;bestE=e}
   }
   return bestE;

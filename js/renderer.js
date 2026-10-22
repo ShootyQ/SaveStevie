@@ -224,7 +224,7 @@ function updateEnemyAnimations(dt){
   motionTime+=dt;
   if(motionReduced)splitEchoes=[];
   for(const e of game.state.enemies){
-    if(game.api.heldUnderDesk?.(e)||game.api.gravityCaptured(e))continue;
+    if(game.api.heldUnderDesk?.(e)||game.api.gravityCaptured(e)||game.api.catapulterAway(e))continue;
     const m=motionFor(e),distance=Math.hypot(e.x-m.x,e.y-m.y),heavy=m.heavy;
     if(e.freeze<=0&&e.stun<=0&&Math.abs(e.x-m.x)>.05)m.facing=e.x<m.x?-1:1;
     m.x=e.x;m.y=e.y;m.hitAge+=dt;m.birthAge+=dt;m.actionAge+=dt;
@@ -415,11 +415,27 @@ function tintedDoodle(name,colors){
   tintedDoodles.set(key,{canvas,bytes});tintedBytes+=bytes
   return canvas;
 }
+// A runtime team uniform: preserve the original animated pencil texture and silhouette.
+// Atlas-space hat bounds/badge anchors track all eight independently cropped poses.
+const crewHatProfiles=[
+ [8,8,460,463,116,18,304,184,310,85,.25], [475,45,345,426,512,55,300,161,705,115,.15],
+ [833,6,423,465,912,17,309,175,1120,80,.2], [1296,0,363,472,1424,9,232,173,1555,80,.35],
+ [8,506,440,416,91,510,285,188,272,580,.15], [426,518,449,407,480,544,285,172,672,603,.2],
+ [846,466,417,461,938,507,273,190,1110,578,.25], [1232,549,419,376,1353,563,255,174,1530,615,.3]
+];
+function crewUniformDoodle(name){
+ if(!/^catapulter-frame-[0-7]$/.test(name))name='catapulter-frame-0';
+ const key=name+'-crayon-crew',source=doodles[name],portrait=doodles.crayon;if(doodles[key])return key;if(!source||!portrait)return name;
+ const f=crewHatProfiles[Number(name.at(-1))],canvas=document.createElement('canvas');canvas.width=canvas.height=canvas.naturalWidth=canvas.naturalHeight=160;const c=canvas.getContext('2d');c.drawImage(source,0,0);
+ const left=80-f[2]*.16,top=156-f[3]*.32,x=Math.max(0,Math.floor(left+(f[4]-f[0])*.32)),y=Math.max(0,Math.floor(top+(f[5]-f[1])*.32)),right=Math.min(160,Math.ceil(x+f[6]*.32)),bottom=Math.min(160,Math.ceil(y+f[7]*.32)),pixels=c.getImageData?.(0,0,160,160);
+ if(pixels?.data){for(let py=y;py<bottom;py++)for(let px=x;px<right;px++){const i=(py*160+px)*4,r=pixels.data[i],g=pixels.data[i+1],b=pixels.data[i+2];if(pixels.data[i+3]&&r>60&&g>50&&b<Math.min(r,g)*.75&&r>g*.8&&r<g*1.7){const light=r*.29+g*.57+b*.14;pixels.data[i]=light*.18;pixels.data[i+1]=light*.82;pixels.data[i+2]=light*.76;}}c.putImageData(pixels,0,0);}
+ c.save();c.translate(left+(f[8]-f[0])*.32,top+(f[9]-f[1])*.32);c.rotate(f[10]);c.fillStyle='#fff5d9';c.strokeStyle='#3a5a55';c.lineWidth=1.4;c.beginPath();c.roundRect(-10,-13,20,26,3);c.fill();c.stroke();c.drawImage(portrait,portrait.naturalWidth*.27,0,portrait.naturalWidth*.57,portrait.naturalHeight*.64,-8,-11,16,22);c.restore();doodles[key]=canvas;return key;
+}
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
  if(game.api.drawChompzilla?.(e)){game.api.drawBlackIceLimbs(e);game.api.drawThermalShockEnemy(e);if(showHealth)drawEnemyHealthBar(e,hpRatio);return true;}
  if(game.api.drawWhiteBrotherBody?.(e))return true;
  if(game.api.drawCrayonWaxling(e))return true;
-  const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),name=doodles[action]?action:e.type,image=doodles[name];if(!image)return false;
+  const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),original=doodles[action]?action:e.type,name=e.crayonCatapultCrew?crewUniformDoodle(original):original,image=doodles[name];if(!image)return false;
   const framed=/^(catapulter|grunt|fast|sprinter|sniper|boss)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
   const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['catapulter','wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?3.4:e.type==='flanker'?4.1:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
@@ -787,7 +803,7 @@ function draw(){
   game.api.drawWallExplosions();
   drawSplitAnimations();
   for(const e of game.state.enemies){
-    if(game.api.heldUnderDesk?.(e)||game.api.gravityCaptured(e))continue;
+    if(game.api.heldUnderDesk?.(e)||game.api.gravityCaptured(e)||game.api.catapulterAway(e))continue;
     if(game.api.underPaper(e)||e.type!=='sniper'||e.hp<=0||e.stun>0||e.freeze>0)continue;
     const erase=e.sniperErase,regular=!erase&&e.shootCd<=.6&&(e.sniperFollowUp>0||game.api.sniperCanAim(e));if(!erase&&!regular)continue;
     const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle=erase?'#a54e78':'#3562be';ctx.lineWidth=2;ctx.globalAlpha=.65;
@@ -854,7 +870,7 @@ function draw(){
   game.dom.ctx.restore();
 
   for(const e of game.state.enemies){
-    if(game.api.heldUnderDesk?.(e)||game.api.gravityCaptured(e))continue;
+    if(game.api.heldUnderDesk?.(e)||game.api.gravityCaptured(e)||game.api.catapulterAway(e))continue;
     if(game.api.underPaper(e)){game.api.drawPaperBump(e);continue;}
     if(e.bossWindup>0){
       game.dom.ctx.save();game.dom.ctx.strokeStyle=e.type==='stapler'?'#a56a16':'#9354b9';game.dom.ctx.lineWidth=3;
