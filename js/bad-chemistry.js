@@ -21,7 +21,7 @@ DoodleDefender.systems.badChemistry=function(game){
   a.playSound('poison');return true;
  }
  function globPoint(g,age=g.age){const t=a.clamp(age/g.duration,0,1);return {x:g.from.x+(g.to.x-g.from.x)*t,y:g.from.y+(g.to.y-g.from.y)*t-Math.sin(t*Math.PI)*g.height-g.lift*(1-t)};}
- function splat(g,p){if(splats.length>=64)splats.shift();splats.push({x:p.x,y:p.y,big:g.big,age:0,life:g.big?1.6:1.15,id:g.id});}
+ function splat(g,p){a.wakeLunchMouth(p);if(splats.length>=64)splats.shift();splats.push({x:p.x,y:p.y,big:g.big,age:0,life:g.big?1.6:1.15,id:g.id});}
  function updateBadChemistry(dt){
   if(!active())return;clock+=dt;for(const p of splats)p.age+=dt;splats=splats.filter(p=>p.age<p.life);
   const alive=[];

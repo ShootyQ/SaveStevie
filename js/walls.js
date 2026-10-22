@@ -150,7 +150,7 @@ function landingPoint(e,x,y,inferno){
  return best;
 }
 function launchEnemy(e,x,y,inferno=false){
- if(e.hp<=0||e.flight||game.api.underPaper(e)||game.api.heldUnderDesk?.(e)||game.api.gravityCaptured?.(e))return false;
+ if(e.hp<=0||e.flight||game.api.lunchCaptured(e)||game.api.underPaper(e)||game.api.heldUnderDesk?.(e)||game.api.gravityCaptured?.(e))return false;
  if(isInkBoss(e)){game.api.animateEnemyAction(e,'slam');return false}
  const target=landingPoint(e,x,y,inferno);if(!target)return false;
  e.flight={startX:e.x,startY:e.y,targetX:target.x,targetY:target.y,age:0,duration:inferno?1.05:.85,

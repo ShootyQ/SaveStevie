@@ -6,7 +6,7 @@ function update(dt){
   game.api.updateStevieGuides();
   game.api.syncSoundEffects();game.api.updateMenuPencil(dt);
   if(game.api.wobbleRepairActive()){game.api.updateWobbleRepair(dt);return;}
-  if(game.api.waveFinaleActive()){game.api.updateUnderDeskPresentation(dt);if(game.state.player.hp<=0){game.api.resetWaveFinale();game.api.gameOver();return}game.api.updateWaveFinale(dt);game.api.updateUI();return;}
+  if(game.api.waveFinaleActive()){game.api.updateUnderDeskPresentation(dt);game.api.updateLunchPresentation(dt);if(game.state.player.hp<=0){game.api.resetWaveFinale();game.api.gameOver();return}game.api.updateWaveFinale(dt);game.api.updateUI();return;}
   // The wave-clear portrait celebrates while combat is stopped, but respects
   // manual pause and the build/upgrade/specialization screens.
   if(game.state.betweenWaves&&!game.state.paused&&!game.state.inUpgrade&&!game.state.awaitingSpec)game.api.updateStevieCelebration(dt);
@@ -87,7 +87,7 @@ function update(dt){
   for(const e of [...game.state.enemies]){
     if(game.state.player.hp<=0)break;
     if(game.api.waveFinaleActive())break;
-    if(!game.state.enemies.includes(e)||game.api.gravityCaptured(e))continue;
+    if(!game.state.enemies.includes(e)||game.api.gravityCaptured(e)||game.api.lunchCaptured(e))continue;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.abilityImmune(e)){for(const k of ['burn','burnDps','poison','poisonDps','freeze','stun','charged','gravitySlow'])e[k]=0;}
     game.api.clearWobbleControl(e);game.api.clearCrayonControl(e);

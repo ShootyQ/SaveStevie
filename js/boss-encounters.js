@@ -4,7 +4,7 @@ let brains=new WeakMap(),marks=[],clock=0;
 const minFriendGain=70;
 const preference=typeof matchMedia==='function'?matchMedia('(prefers-reduced-motion: reduce)'):null;
 let reduced=!!preference?.matches;preference?.addEventListener?.('change',e=>{reduced=e.matches});
-function abilityImmune(e){return game.api.isBootstomp?.(e)||game.api.isWhiteBrother?.(e)||game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||game.api.isWobbleBoss(e);}
+function abilityImmune(e){return game.api.lunchCaptured?.(e)||game.api.isBootstomp?.(e)||game.api.isWhiteBrother?.(e)||game.api.isCrayonBoss?.(e)||game.api.chonksProtected?.(e)||isFirstBoss(e)||game.api.isWobbleBoss(e);}
 function isFirstBoss(e){return e.waveBoss&&e.type==='boss'&&game.state.wave===5}
 function firstBossTuning(e){const furious=e.hp<e.maxHp*.4,desktop=!!game.api.desktopUiEnabled?.();return {furious,windup:furious?.75:.95,cooldown:furious?1.05:1.65,recovery:1.25,orbReturn:.065,sparkReturn:.025,orbDamage:furious?18:14,sparkDamage:furious?11:9,wallDamage:furious?220:160,helperGap:(furious?3.5:4.5)/(1.1*1.2)*(desktop?.55:1),helperCap:desktop?14:7,driveByReach:desktop?40:18,driveByGap:desktop?.45:.9,paperWindup:furious?.32:.45,paperFlight:furious?.45:.55,paperCooldown:furious?.7:.9,friendWindup:furious?.28:.4,chaseScale:desktop?2.2:1.8,minThrowGain:minFriendGain}}
 function earlyBoss(e){return e.waveBoss&&(game.state.wave===5||game.state.wave===10)}
@@ -70,7 +70,7 @@ function updateFirstBossHelpers(dt){
  const friend=game.api.spawnEnemy(false,x,y,'grunt');if(friend)friend.bossOwner=e;
 }
 function friendCanBePicked(e,n){
- const p=game.state.player;return !game.api.gravityCaptured(n)&&n.bossOwner===e&&n.hp>0&&!n.flight&&n.freeze<=0&&n.stun<=0&&game.state.enemies.includes(n)&&n.x>=n.r&&n.x<=game.state.W-n.r&&n.y>=n.r&&n.y<=game.state.H-n.r&&Math.hypot(n.x-p.x,n.y-p.y)>p.r+n.r+75+firstBossTuning(e).minThrowGain+12;
+ const p=game.state.player;return !game.api.classroomHidden(n)&&!game.api.gravityCaptured(n)&&n.bossOwner===e&&n.hp>0&&!n.flight&&n.freeze<=0&&n.stun<=0&&game.state.enemies.includes(n)&&n.x>=n.r&&n.x<=game.state.W-n.r&&n.y>=n.r&&n.y<=game.state.H-n.r&&Math.hypot(n.x-p.x,n.y-p.y)>p.r+n.r+75+firstBossTuning(e).minThrowGain+12;
 }
 function friendLanding(n,opportunistic=false){
  const {player:p,W,H}=game.state,clear=p.r+n.r+75,distance=Math.hypot(n.x-p.x,n.y-p.y),radius=clear+12,angle=Math.atan2(n.y-p.y,n.x-p.x);
