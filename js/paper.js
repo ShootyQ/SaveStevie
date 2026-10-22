@@ -61,7 +61,7 @@ function updatePaperEnemy(e,dt){
  }
  const recentlyRubbed=game.state.paper.clock-t.rubbedAt<.12;
  if(!recentlyRubbed)t.rub=Math.max(0,t.rub-dt*.5);
- const dx=t.exit.x-e.x,dy=t.exit.y-e.y,d=Math.hypot(dx,dy),speed=Math.max(35,Math.min(90,e.speed*1.2))*(recentlyRubbed?.2:1),step=Math.min(d,speed*dt);
+ const dx=t.exit.x-e.x,dy=t.exit.y-e.y,d=Math.hypot(dx,dy),speed=Math.max(35,Math.min(90,e.speed*1.2))*1.1*(recentlyRubbed?.2:1),step=Math.min(d,speed*dt);
  if(d>0){e.x+=dx/d*step;e.y+=dy/d*step;}
  const crossed=game.state.paper.holes.find(h=>h.id!==t.entryId&&game.api.paperHoleContains(h,e));
  if(crossed&&!(t.rub>0))beginEmergence(e,{x:e.x,y:e.y});else if(d<=step+.01)beginEmergence(e,t.exit);
