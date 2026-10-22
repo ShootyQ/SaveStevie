@@ -46,7 +46,7 @@ DoodleDefender.systems.catapulter=function(game){
   if(c.phase==='build'){if(c.left<=1e-8){c.phase='ready';c.left=.5;say(e,'ERASE MY CATAPULT? RUDE.');recruit(e);}return true;}
   if(c.phase==='aim'){
    if(!c.passenger||c.passenger.hp<=0||!game.state.enemies.includes(c.passenger)){release(e);return true;}
-   if(c.left<=1e-8){const n=c.passenger,spoon=spoonPoint(e,true);delete n.catapultHeld;n.x=spoon.x;n.y=spoon.y;n.flight={catapult:true,startX:n.x,startY:n.y,targetX:c.target.x,targetY:c.target.y,age:0,duration:tuning.flight,height:72,spin:n.x<c.target.x?1:-1};c.passenger=null;c.phase='ready';c.target=null;c.left=tuning.cooldown;c.kick=.6;game.api.floatText(n.x,n.y-30,'Weeeeeee!','#854488');game.api.playSound('woodImpact');}return true;
+   if(c.left<=1e-8){const n=c.passenger,spoon=spoonPoint(e,true);delete n.catapultHeld;n.x=spoon.x;n.y=spoon.y;n.flight={catapult:true,existingStrokes:game.state.walls.map(w=>w.strokeId),startX:n.x,startY:n.y,targetX:c.target.x,targetY:c.target.y,age:0,duration:tuning.flight,height:72,spin:n.x<c.target.x?1:-1};c.passenger=null;c.phase='ready';c.target=null;c.left=tuning.cooldown;c.kick=.6;game.api.floatText(n.x,n.y-30,'Weeeeeee!','#854488');game.api.playSound('woodImpact');}return true;
   }
   c.kick=Math.max(0,(c.kick||0)-dt);if(c.left>0)return true;
   const n=game.state.enemies.filter(n=>n!==e&&basics.has(n.type)&&n.hp>0&&!n.waveBoss&&!n.bossOwner&&!n.flight&&!n.catapultHeld&&!game.api.bossFriendHeld(n)&&!game.api.underPaper(n)&&n.stun<=0&&n.freeze<=0&&Math.hypot(n.x-c.x,n.y-c.y)<120&&game.api.bouncePathClear(n,c.x,c.y,0)).sort((a,b)=>Math.hypot(a.x-c.x,a.y-c.y)-Math.hypot(b.x-c.x,b.y-c.y))[0];
@@ -58,8 +58,9 @@ DoodleDefender.systems.catapulter=function(game){
   if(e.hp<=0){delete e.flight;game.api.killEnemy(e);return true;}
   const before=f.age/f.duration;f.age=Math.min(f.duration,f.age+dt);const t=f.age/f.duration;
   // Check the whole swept descent, even when a slow frame skips across a wall.
+  const fresh=game.state.walls.filter(w=>w.hp>0&&w.life>0&&!w.sneakyDraft&&!w.shapeTurret&&!f.existingStrokes?.includes(w.strokeId)&&(w.blastAge??Infinity)<=.75);
   const start=Math.max(before,.55),steps=Math.ceil(Math.max(0,t-start)*Math.hypot(f.targetX-f.startX,f.targetY-f.startY)/5);
-  for(let i=0;i<=steps&&t>=start;i++){const u=steps?start+(t-start)*i/steps:t;e.x=f.startX+(f.targetX-f.startX)*u;e.y=f.startY+(f.targetY-f.startY)*u;const hit=game.api.nearestWallHit(e);if(hit){delete e.flight;if(game.api.touchesRefuge(e)){const p=game.state.player,dx=f.startX-p.x,dy=f.startY-p.y,d=Math.hypot(dx,dy)||1;e.x=p.x+dx/d*110;e.y=p.y+dy/d*110;}e.stun=Math.max(e.stun,1.2);game.api.damageWall(hit.wall,e.dmg*2,e.x,e.y);game.api.burst(e.x,e.y,'#cfb47b',9);game.api.floatText(e.x,e.y-25,'CAUGHT!','#456d49');return true;}}
+  for(let i=0;i<=steps&&t>=start;i++){const u=steps?start+(t-start)*i/steps:t;e.x=f.startX+(f.targetX-f.startX)*u;e.y=f.startY+(f.targetY-f.startY)*u;const hit=game.api.nearestWallHit(e,fresh);if(hit){delete e.flight;if(game.api.touchesRefuge(e)){const p=game.state.player,dx=f.startX-p.x,dy=f.startY-p.y,d=Math.hypot(dx,dy)||1;e.x=p.x+dx/d*110;e.y=p.y+dy/d*110;}e.stun=Math.max(e.stun,1.2);game.api.damageWall(hit.wall,e.dmg*2,e.x,e.y);game.api.burst(e.x,e.y,'#cfb47b',9);game.api.floatText(e.x,e.y-25,'CAUGHT!','#456d49');return true;}}
   e.x=f.startX+(f.targetX-f.startX)*t;e.y=f.startY+(f.targetY-f.startY)*t;
   if(t>=1){delete e.flight;if(game.api.touchesRefuge(e)){game.api.damageStevie(e.dmg*2*(1-game.state.stats.playerArmor),'Catapult '+game.api.monsterName(e.type)+' impact',e);game.state.enemies=game.state.enemies.filter(n=>n!==e);game.api.burst(e.x,e.y,e.color,10);}else{e.stun=Math.max(e.stun,.8);game.api.floatText(e.x,e.y,'THUD!','#854488');}}return true;
  }

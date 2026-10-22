@@ -108,8 +108,8 @@ function eraseWallPath(a,b,r=20,options={}){
  return changed;
 }
 
-function nearestWallHit(e){
-  for(const wall of game.state.walls){
+function nearestWallHit(e,walls=game.state.walls){
+  for(const wall of walls){
     const bounds=game.api.wallGeometry(wall.pts),radius=e.r+wall.thick/2;
     if(e.x<bounds.minX-radius||e.x>bounds.maxX+radius||e.y<bounds.minY-radius||e.y>bounds.maxY+radius)continue;
     for(let i=1;i<wall.pts.length;i++){

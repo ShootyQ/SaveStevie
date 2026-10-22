@@ -2668,3 +2668,5 @@ require('./small-utilities.cjs')(load);
 require('./game-speed.cjs')(load);
 
 require('./playtest-routes.cjs')(load);
+
+require('./fresh-catapult-and-tunnels.cjs')(load);
