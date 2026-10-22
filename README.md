@@ -1130,3 +1130,18 @@ dive path for at least 0.95 seconds, then fly straight at 185px/second. An ordin
 short wall across that path catches them for 4 wall HP and earns a 50-point
 clever-play bonus before combo multipliers. Erasing flyers remains available.
 Full enclosures are optional; unblocked dives still deal 7 damage before armor.
+
+### Count Crayon’s delivery crew (Alpha 0.1.136)
+
+Two seconds into the fight, one catapulter arrives near the edge and builds his
+normal machine. Basic volunteers then arrive every 2.4 seconds, with at most four
+living at once, including held and airborne volunteers. They queue at the machine;
+the operator can launch his own boss-owned volunteers. They have 32 HP, 48px/second
+movement and 6 contact damage. The Count’s raised waxlings retain their separate
+six-minion limit.
+
+Three separate eraser swipes destroy the machine and send its operator retreating;
+killing him also stops new volunteers. The machine never respawns during the fight.
+Fresh-wall catches still stop passengers in flight. Defeating the Count removes all
+his crew. This encounter does not spend the four normal catapulter appearances,
+and other boss waves keep their usual catapulter restriction.

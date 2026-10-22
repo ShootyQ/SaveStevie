@@ -2675,3 +2675,5 @@ require('./ink-tunnels-and-chomp.cjs')(load);
 
 require('./follow-underline.cjs')(load);
 require('./report-cards-and-whirlpool.cjs')(load);
+
+require('./crayon-catapult-crew.cjs')(load);
