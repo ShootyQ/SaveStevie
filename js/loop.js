@@ -43,7 +43,7 @@ function update(dt){
     if(w.life<=0)game.state.walls=game.state.walls.filter(x=>x!==w);
   }
 
-  game.api.updateUnderDesk(dt);game.api.updateUtilityToys(dt);game.api.updateSmallUtilities(dt);
+  game.api.updateGravityWhirlpool(dt);game.api.updateUnderDesk(dt);game.api.updateUtilityToys(dt);game.api.updateSmallUtilities(dt);
   game.api.updateCircleShapes(dt);
   game.api.updateStevie(dt);game.api.updateProjectiles(dt);game.api.updateEnemyShots(dt);
   if(game.state.player.hp<=0){game.api.gameOver();game.api.updateUI();return}
@@ -55,19 +55,6 @@ function update(dt){
   for(const w of game.state.walls){
     if(!w.closed)continue;
     const {cx,cy}=game.api.wallGeometry(w.pts);
-
-    if(game.state.synergies.has('Gravity Trap')||game.state.synergies.has('THE BLACK HOLE')){
-      for(const e of game.state.enemies){
-        if(game.api.underPaper(e)||game.api.abilityImmune(e))continue;
-        if(game.api.bossFriendHeld(e)||game.api.isFirstBoss(e))continue;
-        if(game.api.withinRadius(e.x,e.y,cx,cy,game.api.supportInkTuning(game.state.inks.gravity).gravityRange)){
-          const dx=cx-e.x,dy=cy-e.y,m=Math.hypot(dx,dy)||1;
-          const pull=(game.state.synergies.has('THE BLACK HOLE')?20:10)+(game.state.inks.gravity*4);
-          game.api.moveEnemySafely(e,dx/m*pull*dt,dy/m*pull*dt);
-
-        }
-      }
-    }
 
     if(game.state.synergies.has('Ring of Fire')){
       for(const e of game.state.enemies){
@@ -100,13 +87,14 @@ function update(dt){
   for(const e of [...game.state.enemies]){
     if(game.state.player.hp<=0)break;
     if(game.api.waveFinaleActive())break;
-    if(!game.state.enemies.includes(e))continue;
+    if(!game.state.enemies.includes(e)||game.api.gravityCaptured(e))continue;
     if(e.hp<=0){if(e.flight)game.api.updateEnemyFlight(e,dt);else game.api.killEnemy(e);continue}
     if(game.api.abilityImmune(e)){for(const k of ['burn','burnDps','poison','poisonDps','freeze','stun','charged','gravitySlow'])e[k]=0;}
     game.api.clearWobbleControl(e);game.api.clearCrayonControl(e);
     if(game.api.isBootstomp?.(e)){game.api.updateBootstomp(e,dt);continue;}
     if(game.api.isWhiteBrother?.(e)){game.api.updateWhiteBrothers(e,dt);continue;}
     if(game.api.updatePaperEnemy(e,dt))continue;
+    if(e.freeze>0||e.stun>0||game.api.smallUtilityWaiting(e)||game.api.gravityWhirlpoolPulling(e))game.api.recordSupport('control',Math.min(dt,Math.max(e.freeze||0,e.stun||0,(game.api.smallUtilityWaiting(e)||game.api.gravityWhirlpoolPulling(e))?dt:0)));
     if(e.shockRest>0)e.shockRest=Math.max(0,e.shockRest-dt);e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
     game.api.updateSupportInkEnemy(e,dt);game.api.updateThermalShockEnemy(e,dt);
@@ -124,7 +112,7 @@ function update(dt){
     if(game.api.paperPressCaptures(e)){const hit=game.api.nearestWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
     if(game.api.heldByCatapulter(e))continue;
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
-    if(game.api.smallUtilityWaiting(e)){const hit=game.api.nearestWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
+    if(game.api.smallUtilityWaiting(e)||game.api.gravityWhirlpoolPulling(e)){const hit=game.api.nearestWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
     game.api.applyCircleEnclosure(e,dt);if(e.hp<=0)continue;
     game.api.circleTurretContact(e,dt);if(e.hp<=0)continue;
     if(game.api.avoidCircleTurret(e,dt))continue;

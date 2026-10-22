@@ -1,4 +1,4 @@
-# Save Stevie upgrade reference — Alpha 0.1.131
+# Save Stevie upgrade reference — Alpha 0.1.132
 
 [Download the Excel workbook](SaveStevie-Upgrade-Reference.xlsx)
 
@@ -80,7 +80,7 @@ Regenerate: node scripts/build-upgrade-reference.cjs && python3 scripts/build-up
 | Napalm Scribbles | Fire Ink + Blast Ink | Destroyed Fire + Blast walls leave four-second burning scribbles; overlapping patches do not stack damage. |
 | Venom Ice | Poison Ink + Frost Ink | Poison decays much more slowly while enemies are chilled. |
 | Rail Ink | Electric Ink + Repulsion Ink | Repelled monsters radiate a small electric surge. Electric paper-ball hits widen the active field and send fresh ripples; overlapping surges share a hit cooldown. |
-| Gravity Trap | Gravity Ink + Closed Loop | Closed loops pull nearby enemies toward their perimeter. |
+| Gravity Trap | Gravity Ink + Closed Loop | Closed loops pull ordinary monsters through their own ink toward a notebook whirlpool. Each monster gets one 15% swallow roll when it reaches a center. Successful gulps share a 1.8-second cooldown; a failed roll briefly dazes it and ends its center pull. Bosses, shields, underground and airborne monsters resist. Other walls and the fort remain solid. |
 | Ring of Fire | Fire Ink + Closed Loop | Closed loops radiate heat and ignite enemies nearby. |
 | Circuit Board | Electric Ink + Architect | Wall intersections become electrical nodes. |
 | Demolition Grid | Blast Ink + Architect | Intersections make wall explosions larger and stronger. |

@@ -18,13 +18,13 @@ function enemyHpScale(wave=game.state.wave){
 function resetSustain(){budgets={heal:settings.healRate,refund:settings.refundRate,repair:settings.repairRate}}
 function updateSustain(dt){for(const kind of ['heal','refund','repair']){const rate=settings[kind+'Rate'];if(rate===Infinity){budgets[kind]=Infinity;continue}budgets[kind]=Math.min(rate,budgets[kind]+rate*dt)}}
 function consume(kind,amount){const actual=Math.min(Math.max(0,amount),budgets[kind]);budgets[kind]-=actual;return actual}
-function healStevie(amount){const p=game.state.player;if(p.hp<=0)return 0;const actual=consume('heal',Math.min(amount,Math.max(0,p.maxHp-p.hp)));p.hp+=actual;return actual}
+function healStevie(amount){const p=game.state.player;if(p.hp<=0)return 0;const actual=consume('heal',Math.min(amount,Math.max(0,p.maxHp-p.hp)));p.hp+=actual;game.api.recordSupport?.('heal',actual);return actual}
 function refundKillInk(amount){const s=game.state.stats;s.ink+=consume('refund',Math.min(amount,Math.max(0,s.maxInk-s.ink)))}
 function repairWallsOnKill(){
   const amount=game.state.stats.repairOnKill;if(!amount)return;
   const requests=game.state.walls.map(w=>({w,amount:Math.min(amount,Math.max(0,w.maxHp-w.hp))}));
   const total=requests.reduce((sum,r)=>sum+r.amount,0);if(!total)return;
-  const ratio=consume('repair',total)/total;for(const r of requests)r.w.hp+=r.amount*ratio;
+  const ratio=consume('repair',total)/total;for(const r of requests)r.w.hp+=r.amount*ratio;game.api.recordSupport?.('repair',total*ratio);
 }
 function regenPick(name,rank=Math.max(0,(game.state.stacks[name]||1)-1)){
   if(name==='Living Fountain Pen')return 1+settings.fountainBonus/(1+.6*rank);

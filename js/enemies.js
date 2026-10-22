@@ -249,7 +249,7 @@ function updateTwicey(e,dt){
 function nearestEnemy(x,y,maxD){
   let bestE=null,bestD=maxD;
   for(const e of game.state.enemies){
-    if(e.hp<=0)continue;
+    if(e.hp<=0||game.api.gravityCaptured(e))continue;
     const d=game.api.dist(x,y,e.x,e.y);if(d<bestD){bestD=d;bestE=e}
   }
   return bestE;
@@ -845,8 +845,8 @@ function moveEnemySafely(e,dx,dy){
 function damageStevie(damage,source,impact=game.state.player){
   if(game.state.player.hp<=0)return;
   if(damage>0)game.api.playSound('stevieHit');
-  game.state.player.hp=Math.max(0,game.state.player.hp-damage);
-  if(damage>0){game.state.lastDamage={source,amount:damage,fatal:game.state.player.hp<=0};game.api.breakScoreStreak();game.api.reactStevieHit();game.api.refugeImpact(impact)}
+  const healthBefore=game.state.player.hp;game.state.player.hp=Math.max(0,game.state.player.hp-damage);
+  if(damage>0){game.state.lastDamage={source,amount:damage,fatal:game.state.player.hp<=0};game.api.recordSupport?.('taken',Math.min(damage,healthBefore));game.api.softenScoreStreak();game.api.reactStevieHit();game.api.refugeImpact(impact)}
   game.state.floaters.push({hitMarker:true,x:impact.x,y:impact.y,r:impact.r||5,type:impact.type||'arrow',t:.9,source,amount:damage});
   game.dom.$('lastHitText').textContent='Last hit: '+source+' · '+Number(damage.toFixed(1))+' damage';
 }

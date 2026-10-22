@@ -6,7 +6,7 @@ DoodleDefender.systems.underDesk=function(game){
  const active=()=>s.running&&!s.paused&&!s.inUpgrade&&!s.betweenWaves&&!s.awaitingSpec&&!document.hidden&&!a.infoOpen()&&!a.firstLessonActive()&&!a.synergyRevealActive()&&!a.waveFinaleActive()&&!a.bossEntranceActive()&&!a.wobbleRepairActive();
  const living=e=>!!e&&e.hp>0&&s.enemies.includes(e);
  const live=w=>w&&w.hp>0&&w.life>0&&s.walls.includes(w);
- const eligible=e=>living(e)&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!a.abilityImmune(e)&&!a.chonksProtected(e)&&!a.underPaper(e)&&!e.flight&&!e.hurdle&&!e.catapultHeld&&!a.bossFriendHeld(e)&&!['catapulter','wallpuller','papertearer','brood','splitter','scrubber'].includes(e.type);
+ const eligible=e=>!a.gravityCaptured(e)&&living(e)&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!a.abilityImmune(e)&&!a.chonksProtected(e)&&!a.underPaper(e)&&!e.flight&&!e.hurdle&&!e.catapultHeld&&!a.bossFriendHeld(e)&&!['catapulter','wallpuller','papertearer','brood','splitter','scrubber'].includes(e.type);
  function sketch(w){
   if(!live(w)||!w.closed||w.shapeTurret||w.sneakyDraft||w.wobbleBumper||(w.eraseInk||0)<6)return null;
   const b=a.wallGeometry(w.pts),width=b.maxX-b.minX,height=b.maxY-b.minY;if(Math.min(width,height)<64||Math.max(width,height)>160)return null;

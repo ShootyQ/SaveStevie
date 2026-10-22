@@ -125,7 +125,7 @@ function resetRun(options={}){
 }
 
 function startWave(options={}){
-  game.api.resetUtilityToys();game.api.resetSmallWave();
+  game.api.resetUtilityToys();game.api.resetGravityWhirlpool();game.api.resetSmallWave();
   game.api.resetCircleShapes();
   game.api.beginScoreWave();
   game.api.resetWaveFinale();
@@ -158,7 +158,7 @@ function waveComplete(){
   if(game.api.waveFinaleActive())return;
   if(game.state.betweenWaves||game.state.inUpgrade||!game.state.running||game.api.campaignBossPending()||(game.state.wave%5!==0&&game.state.enemies.length>0)||(game.state.wave%5===0&&!game.api.bossFightResolved()))return;
   game.api.stopSoundEffects();
-  game.state.betweenWaves=true;game.api.finishUnderDeskWave();game.api.resetUtilityToys();game.api.resetSmallWave();game.api.resetCircleShapes();
+  game.state.betweenWaves=true;game.api.finishUnderDeskWave();game.api.resetUtilityToys();game.api.resetGravityWhirlpool();game.api.resetSmallWave();game.api.resetCircleShapes();
   game.api.awardWaveScraps();
   game.api.celebrateStevie();
   game.api.resetAbilityEffects();game.api.resetThermalShock();game.api.resetRailInk();game.api.resetBackdraft();game.api.resetTesla();
@@ -172,7 +172,7 @@ function waveComplete(){
   const hpBonus=Math.floor(75*(game.state.player.hp/game.state.player.maxHp));
   const total=survival+killBonus+inkBonus+hpBonus;
   game.api.awardClearScore(total);
-  game.api.renderScorecard('waveScorecard','wave');
+  game.api.finishReportWave();game.api.renderScorecard('waveScorecard','wave');
 
   game.dom.$('survivalBonus').textContent='+'+survival;
   game.dom.$('killBonus').textContent='+'+killBonus;
@@ -201,7 +201,7 @@ function proceedAfterWave(){
 
 function returnToMenu(){
   game.api.resetUnderDesk();
-  game.api.resetUtilityToys();game.api.resetSmallWave();
+  game.api.resetUtilityToys();game.api.resetGravityWhirlpool();game.api.resetSmallWave();
   game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
   game.api.resetSynergyReveals();
@@ -219,7 +219,7 @@ function returnToMenu(){
 }
 function gameOver(){
   game.api.resetUnderDesk();
-  game.api.resetUtilityToys();game.api.resetSmallWave();
+  game.api.resetUtilityToys();game.api.resetGravityWhirlpool();game.api.resetSmallWave();
   game.api.cancelDrawingInput?.();
   game.api.resetWobbleRepair?.();
   game.api.resetSynergyReveals();

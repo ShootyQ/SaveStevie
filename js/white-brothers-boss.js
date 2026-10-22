@@ -29,7 +29,7 @@ DoodleDefender.systems.whiteBrothersBoss=function(game){
  function hurt(amount,kind,target=fight?.host){
   if(!active()||fight.intro>0||!Number.isFinite(amount)||amount<=0)return;
   const host=fight.host,before=host.hp,actual=Math.min(before,amount);host.hp=Math.max(0,before-amount);fight.glue.hp=host.hp;
-  api.damageNumber(target,actual,kind,before>0&&host.hp<=0);
+  api.recordCombatDamage?.(actual,kind,kind==='physical'?{rock:true}:null);api.damageNumber(target,actual,kind,before>0&&host.hp<=0);
   const actor=fight.actors.find(a=>a.e===target);if(actor)actor.flash=.16;
  }
  function routeWhiteBrotherDamage(e,amount,kind,source){
