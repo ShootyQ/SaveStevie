@@ -7,8 +7,8 @@ const root=path.resolve(__dirname,'..');
   await page.route('http://stevie.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}if(name==='game.js')body=body.toString().replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');return route.fulfill({body,contentType:({'.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.wav':'audio/wav','.mp3':'audio/mpeg','.ttf':'font/ttf'})[path.extname(name)]||'text/html'});});
   await page.goto('http://stevie.test/',{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>testGame.api.artworkStatus().ready);
   const desktop=viewport.width>=600;
-  await page.click('#splashHubBtn');assert.equal(await page.locator('#hubOverlay .desktop-page-nav').count(),0);
-  for(const id of ['hubMonstersBtn','hubToolBtn','hubNotebookBtn','hubSettingsBtn','hubStatsBtn','hubChangelogBtn']){assert(await page.locator('#'+id).isVisible());if(desktop){const r=await page.locator('#'+id).boundingBox();assert(r.y>=0&&r.y+r.height<=viewport.height,'hub button fits '+id);}}
+  await page.click('#splashHubBtn');assert(!(await page.locator('#hubToolBtn').isVisible()));assert.equal(await page.locator('#hubOverlay .desktop-page-nav').count(),0);
+  for(const id of ['hubMonstersBtn','hubDiscoveriesBtn','hubNotebookBtn','hubSettingsBtn','hubStatsBtn','hubChangelogBtn']){assert(await page.locator('#'+id).isVisible());if(desktop){const r=await page.locator('#'+id).boundingBox();assert(r.y>=0&&r.y+r.height<=viewport.height,'hub button fits '+id);}}
   await page.screenshot({path:'/tmp/menu-hub-'+viewport.width+'x'+viewport.height+'.png'});await page.click('#hubSettingsBtn');
   if(desktop){
    assert.equal(await page.locator('#optionsOverlay .desktop-page-nav').count(),0);assert.equal(await page.locator('.desktop-settings-nav [role=tab]:visible').count(),6);
