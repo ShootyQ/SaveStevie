@@ -98,7 +98,7 @@ function updateBossAbility(e,dt){
   e.bossWindup=1.2;
 }
 
-function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
+function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null,encounterOwner=null){
   if(!forceBoss&&game.state.enemies.length>=pressure.maxEnemies)return null;
   let side=Math.floor(Math.random()*4),px,py;
   if(forceBoss&&x===null){const point=bossSpawnPoint();x=point.x;y=point.y}
@@ -117,7 +117,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='gnawer'&&game.state.enemies.filter(e=>e.type==='gnawer'&&e.hp>0).length>=2)return null;
   if(type==='scrubber'&&game.state.enemies.filter(e=>e.type==='scrubber'&&e.hp>0).length>=3)return null;
   if(type==='basil'&&game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length>=2)return null;
-  if(type==='catapulter'&&!game.api.canSpawnCatapulter())return null;
+  if(type==='catapulter'&&!game.api.canSpawnCatapulter(encounterOwner))return null;
   if(type==='sniper'&&!canSpawnSniper())return null;
   const d=defs[type],baseHp=type==='boss'?d.hp+game.state.wave*15:d.hp;
   const earlyBoss=forceBoss&&(game.state.wave===5||game.state.wave===10),bossHp=forceBoss&&game.state.wave===5?3:earlyBoss?1.8:1,bossSpeed=forceBoss&&game.state.wave===5?7.8:earlyBoss?2:1;
@@ -137,7 +137,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null){
   if(type==='sniper')enemy.returnHitsNeeded=game.state.wave<=12?1:game.state.wave<=18?2:3;
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
-  if(type==='catapulter')enemy.catapultId=game.api.registerCatapulter();
+  if(type==='catapulter'){enemy.catapultId=game.api.registerCatapulter(encounterOwner);if(encounterOwner){enemy.bossOwner=encounterOwner;enemy.crayonCatapultCrew=true;}}
   game.state.enemies.push(enemy);if(type==='bootstomp')game.api.initBootstomp(enemy);game.api.discoverMonster(type);
   if(forceBoss){game.api.resetBossSpeed();game.api.finishUnderDeskWave?.();game.api.resetUtilityToys?.();game.api.resetCircleShapes();if(game.api.isBootstomp?.(enemy))game.api.initBootstomp(enemy);const cinematic=firstBossIntroActive()||!!arrival?.wobbleIntro;bossSpawned=true;enemy.waveBoss=true;if(game.api.isWhiteBrother?.(enemy))game.api.initWhiteBrothers(enemy);if(game.api.isCrayonBoss?.(enemy))game.api.initCrayonBoss(enemy);bossPhase='fight';arrival=null;if(!cinematic)game.api.playSound('bossEnter');if(game.state.wave===5)game.api.selectMusicTrack('first-boss');if(game.api.isBootstomp?.(enemy))game.api.selectMusicTrack('wobblechomp');if(game.api.isWobbleBoss(enemy)){if(!cinematic)clearWobbleEntranceWalls();game.api.initWobbleBoss(enemy);game.api.selectMusicTrack('wobblechomp')}}
   return enemy;
@@ -555,7 +555,7 @@ function specialistReinforcements(point,count,job){
  return spawned;
 }
 function specialistTarget(e){const job=e.specialistJob;if(!job)return null;
- if(job.kind==='catapult'){const owner=game.state.enemies.find(n=>n.catapultId===job.id&&n.hp>0),c=owner?.catapult;if(c&&['build','ready','aim'].includes(c.phase))return Math.hypot(e.x-c.x,e.y-c.y)<42?e:{x:c.x,y:c.y};}
+ if(job.kind==='catapult'){const owner=game.state.enemies.find(n=>n.catapultId===job.id&&n.hp>0),c=owner?.catapult;if(c&&['build','ready','aim'].includes(c.phase)){if(owner.crayonCatapultCrew&&e.crayonCatapultMinion){const queue=game.state.enemies.filter(n=>n.hp>0&&n.crayonCatapultMinion&&n.specialistJob?.id===job.id&&!n.flight&&!n.catapultHeld),index=Math.max(0,queue.indexOf(e)),q={x:game.api.clamp(c.x+(c.x<game.state.W/2?1:-1)*(28+24*index),24,game.state.W-24),y:game.api.clamp(c.y-18,96,game.state.H-60)};return Math.hypot(e.x-q.x,e.y-q.y)<7?e:q;}return Math.hypot(e.x-c.x,e.y-c.y)<42?e:{x:c.x,y:c.y};}}
  else {const hole=game.state.paper.holes.find(h=>h.id===job.entryId),exit=game.state.paper.holes.find(h=>h.id===job.exitId);if(hole&&exit)return hole;}
  delete e.specialistJob;return null;
 }

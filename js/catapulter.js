@@ -1,19 +1,19 @@
 /* A finite construction crew that borrows existing basic doodles. */
 DoodleDefender.systems.catapulter=function(game){
- let appearances=0;
+ let appearances=0,serial=0;
  const basics=new Set(['grunt','fast','bouncer']);
  const tuning={cap:4,setup:2.5,warning:1.25,cooldown:4,flight:1.05};
- function canSpawnCatapulter(){return game.state.wave>=game.catalog.monsters.find(m=>m.type==='catapulter').wave&&game.state.wave%5!==0&&appearances<tuning.cap&&!game.state.enemies.some(e=>e.type==='catapulter'&&e.hp>0);}
- function registerCatapulter(){return ++appearances;}
- function resetCatapulterRun(){appearances=0;}
+ function canSpawnCatapulter(owner=null){if(owner)return game.api.isCrayonBoss(owner)&&owner.hp>0&&game.state.enemies.includes(owner)&&!game.state.enemies.some(e=>e.type==='catapulter'&&e.hp>0);return game.state.wave>=game.catalog.monsters.find(m=>m.type==='catapulter').wave&&game.state.wave%5!==0&&appearances<tuning.cap&&!game.state.enemies.some(e=>e.type==='catapulter'&&e.hp>0);}
+ function registerCatapulter(owner=null){if(!owner)appearances++;return ++serial;}
+ function resetCatapulterRun(){appearances=0;serial=0;}
  function say(e,text){if(e.catapult){e.catapult.speech=text;e.catapult.speechLeft=2;}}
  function site(e){const {W,H,player:p}=game.state;
   // Keep the whole erasable machine visible on the long axis of phone screens.
-  if(H>W*1.15)return {x:game.api.clamp(e.x,72,W-72),y:e.y<p.y?132:H-92};
+  if(H>W*1.15)return {x:game.api.clamp(e.x,72,W-72),y:e.y<p.y?132:H-(e.crayonCatapultCrew?140:92)};
   if(W>H*1.5)return {x:e.x<p.x?72:W-72,y:game.api.clamp(e.y,150,H-95)};
   const choices=[{x:72,y:game.api.clamp(e.y,150,H-95)},{x:W-72,y:game.api.clamp(e.y,150,H-95)},{x:game.api.clamp(e.x,72,W-72),y:132},{x:game.api.clamp(e.x,72,W-72),y:H-92}];return choices.sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y))[0];
  }
- function recruit(e){const c=e.catapult;if((c.recruited||0)>=6)return;const squad=game.api.specialistReinforcements({x:c.x,y:c.y},2,{kind:'catapult',id:e.catapultId});c.recruited=(c.recruited||0)+squad.length;if(squad.length)say(e,'VOLUNTEERS! LINE UP!');}
+ function recruit(e){if(e.crayonCatapultCrew)return;const c=e.catapult;if((c.recruited||0)>=6)return;const squad=game.api.specialistReinforcements({x:c.x,y:c.y},2,{kind:'catapult',id:e.catapultId});c.recruited=(c.recruited||0)+squad.length;if(squad.length)say(e,'VOLUNTEERS! LINE UP!');}
  function release(e){const c=e.catapult;if(c?.passenger){delete c.passenger.catapultHeld;c.passenger=null;}if(c){c.target=null;c.phase='ready';c.left=1;}}
  function buildProgress(c){return game.api.clamp(1-c.left/tuning.setup,0,1);}
  function catapulterFrame(e){const c=e.catapult;if(!c||game.api.enemyMotionReduced())return null;if(c.phase==='walk'||c.phase==='flee')return 'catapulter-frame-'+Math.floor((c.walkDistance||0)/8)%4;if(c.phase==='build'){const p=buildProgress(c);return 'catapulter-frame-'+(p<.25?4:p<.5?5:6+Math.floor((p-.5)*12)%2);}if(c.phase==='aim')return 'catapulter-frame-5';return null;}
@@ -49,7 +49,7 @@ DoodleDefender.systems.catapulter=function(game){
    if(c.left<=1e-8){const n=c.passenger,spoon=spoonPoint(e,true);delete n.catapultHeld;n.x=spoon.x;n.y=spoon.y;n.flight={catapult:true,existingStrokes:game.state.walls.map(w=>w.strokeId),startX:n.x,startY:n.y,targetX:c.target.x,targetY:c.target.y,age:0,duration:tuning.flight,height:72,spin:n.x<c.target.x?1:-1};c.passenger=null;c.phase='ready';c.target=null;c.left=tuning.cooldown;c.kick=.6;game.api.floatText(n.x,n.y-30,'Weeeeeee!','#854488');game.api.playSound('woodImpact');}return true;
   }
   c.kick=Math.max(0,(c.kick||0)-dt);if(c.left>0)return true;
-  const n=game.state.enemies.filter(n=>n!==e&&basics.has(n.type)&&n.hp>0&&!game.api.gravityCaptured(n)&&!n.waveBoss&&!n.bossOwner&&!n.flight&&!n.catapultHeld&&!game.api.bossFriendHeld(n)&&!game.api.underPaper(n)&&n.stun<=0&&n.freeze<=0&&Math.hypot(n.x-c.x,n.y-c.y)<120&&game.api.bouncePathClear(n,c.x,c.y,0)).sort((a,b)=>Math.hypot(a.x-c.x,a.y-c.y)-Math.hypot(b.x-c.x,b.y-c.y))[0];
+  const n=game.state.enemies.filter(n=>n!==e&&basics.has(n.type)&&n.hp>0&&!game.api.gravityCaptured(n)&&!n.waveBoss&&(!n.bossOwner||(e.crayonCatapultCrew&&n.crayonCatapultMinion&&n.bossOwner===e.bossOwner))&&!n.flight&&!n.catapultHeld&&!game.api.bossFriendHeld(n)&&!game.api.underPaper(n)&&n.stun<=0&&n.freeze<=0&&Math.hypot(n.x-c.x,n.y-c.y)<120&&game.api.bouncePathClear(n,c.x,c.y,0)).sort((a,b)=>Math.hypot(a.x-c.x,a.y-c.y)-Math.hypot(b.x-c.x,b.y-c.y))[0];
   if(!n){if(!game.state.enemies.some(n=>n.hp>0&&n.specialistJob?.kind==='catapult'&&n.specialistJob.id===e.catapultId))recruit(e);c.left=1;return true;}
   if(n){delete n.specialistJob;c.passenger=n;n.catapultHeld=e.catapultId;n.x=c.x+(c.x<game.state.player.x?-32:32);n.y=c.y-34;c.target={x:game.state.player.x,y:game.state.player.y};c.phase='aim';c.left=tuning.warning;const spoon=spoonPoint(e);n.x=spoon.x;n.y=spoon.y;say(e,'INCOMING! DRAW A CATCHER!');}return true;
  }
