@@ -121,20 +121,20 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Spitball Express':()=>game.catalog.upgrades.find(u=>u.name==='Spitball Express').desc,
     'Red Pen Corrections':()=>game.catalog.upgrades.find(u=>u.name==='Red Pen Corrections').desc,
     'Thick Ink':()=>`+${20*n} base wall HP`, 'First Aid':()=>`+${18*n} max HP; heals 18 per level`,
-    'Fine Tip':()=>`${f((1-Math.pow(.88,n))*100)}% cheaper strokes (multiplicative)`,
+    'Fine Tip':()=>`${f((1-Math.pow(.9,n))*100)}% cheaper strokes (multiplicative)`,
     'Lucky Scribble':()=>`+${8*n} Luck — better rarity odds on rewards and rerolls`,
     'Clean Erasing':()=>`+${10*n} percentage points to erasing recovery; 60% cap, reduced by wall damage`,
     'Recycling':()=>`+${5*n} ink per kill; shared 8 ink/s budget`, 'Closed Loop':()=>`+${40*n}% closed-wall durability; `+loopDetails(n,'Fortress Geometry'),
     'Architect':()=>`+${15*n}% durability per intersection`, 'Patchwork':()=>`+${18*n} HP per repaired wall`,
     'Doodle Stitch':()=>`One-time unlock: connect open wall ends; connector HP 75% / 50% / 25% / then 0%; normal ink cost, old damage and lifetime retained`,
-    'Patch Job':()=>`Up to ${3*n} HP per wall per kill; shared 12 HP/s budget`, 'Freehand':()=>`${40+(n-1)*20} free-ink bank; charge with ${s.freehandThreshold} spent ink`,
+    'Patch Job':()=>`Up to ${2.5*n} HP per wall per kill; shared 10 HP/s budget`, 'Freehand':()=>`${40+(n-1)*20} free-ink bank; charge with ${s.freehandThreshold} spent ink`,
     'Living Fountain Pen':()=>`×${f(game.api.regenStackEffect('Living Fountain Pen',n))} ink regeneration; diminishing returns`,
     'Bottomless Pen':()=>`+${40*n} max ink; +${f(game.api.regenStackEffect('Bottomless Pen',n))} ink/s; diminishing returns`, 'Fortress Geometry':()=>`+${50*n}% closed-wall durability; `+loopDetails(n,'Closed Loop'),
     'Bandages':()=>`+${8*n} HP healed between waves`, 'Helmet':()=>`${f(Math.min(.55,.1*n)*100)}% damage reduction (cap 55%)`,
     'Electric Rocks':()=>`Level ${Math.min(6,n)}: paper balls charge a 48px wall patch for 2.4s; Electric Ink bursts hit up to 8 monsters for ${3+Math.min(6,n)} damage, with 1.1s wall recovery`,
     'Pocket Rocks':()=>`Paper-ball strength ×${n}; damage gains diminish toward 30 base damage, while Doodle Notes add throwing tricks; faster throws are preserved`,
     'Better Rocks':()=>`Paper-ball strength ×${n}; damage gains diminish toward 30 base damage, while Doodle Notes add throwing tricks; faster throws are preserved`,
-    'Emergency Medicine':()=>`Up to ${2*n} HP per kill; shared 6 HP/s combat budget`, 'Really Good Rocks':()=>`Paper-ball strength ×${n}; damage gains diminish toward 30 base damage, while Doodle Notes add throwing tricks; faster throws are preserved`,
+    'Emergency Medicine':()=>`Up to ${2*n} HP per kill; shared 4.5 HP/s combat budget`, 'Really Good Rocks':()=>`Paper-ball strength ×${n}; damage gains diminish toward 30 base damage, while Doodle Notes add throwing tricks; faster throws are preserved`,
     'Stevie Has Had Enough':()=>`Paper-ball strength ×${n}; damage gains diminish toward 30 base damage, while Doodle Notes add throwing tricks; faster throws are preserved`,
     'Loaded Deck':()=>`One-time unlock: normal rewards are Uncommon or better`,
     'Reroll Coupon':()=>`+2 rerolls per level (inventory cap 5)`,
@@ -146,7 +146,7 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
     'Repulsion Ink':()=>`${r.repulsionDamage} impact damage and ${r.repulsionPush}px safe shove after every 0.8s contact; 0.12s stagger; bosses halve shove and stagger`,
     'Electric Ink':()=>{const t=game.api.electricTuning(n);return `${f(t.damage)} source damage; each jump retains 72% damage; up to ${t.count} additional enemies, ${t.range}px per hop within 360px of the source. Shared ${f(t.cooldown)}s hit recovery, ${f(t.stun)}s shock (bosses half), 1.25s shock recovery. Synergies cap at 8 jumps and 220px per hop.${game.state.stats.tesla?' · TESLA: 2s wall volleys, up to 8 targets, 160px, '+f(t.damage*4)+' damage each':''}`},
     'Blast Ink':()=>`${35+20*n} explosion damage; ${70+12*n}px radius; requires a 50px wall armed for 0.5s; synergies can boost this`,
-    'Vampire Ink':()=>`${t.vampireDps} life-drain damage/s on contact; heals up to ${Number((t.vampireDps*t.vampireHeal).toFixed(3))} HP/s from actual damage, sharing the 6 HP/s budget`,
+    'Vampire Ink':()=>`${t.vampireDps} life-drain damage/s on contact; heals up to ${Number((t.vampireDps*t.vampireHeal).toFixed(3))} HP/s from actual damage, sharing the 4.5 HP/s budget`,
     'Gravity Ink':()=>`${t.gravityPull}px/s pull within ${t.gravityRange}px (range cap 64px; 60% pull on other bosses). No lingering slow, damage bonus or reduced wall bites. King Doodle is immune; his returnable shots get a slight wall nudge within 28px (maximum 8px per shot)`,
     'Void Ink':()=>`${r.voidDps} Void damage/s; executes ordinary enemies below ${f(r.voidExecute*100)}% HP (cap 30%); bosses take damage without execution`,
     'Chaos Ink':()=>`One random ink after every ${f(r.chaosInterval)}s contact; every roll works and adds ${r.chaosDamage} impact damage; rolls scale with Chaos level`,
@@ -164,7 +164,7 @@ function renderBuild(){
     ['Stevie max HP',game.state.player.maxHp],['Damage reduction',f(s.playerArmor*100)+'%'],
     ['Doodle Scraps',Object.values(game.api.paperPayload()).reduce((sum,n)=>sum+n,0)+' collected'],['Throw reach',Math.round(game.api.paperRange())+'px'],['Paper-ball damage',s.rockDamage],['Throw interval',s.rockRate?f(game.api.paperThrowInterval())+'s':'Not unlocked'],
     ['Walls per stroke',1],['Erase recovery',Math.round(s.eraseRefund*100)+'%'],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
-    ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','6 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','12 HP/s shared']];
+    ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','4.5 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','10 HP/s shared']];
   game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
   game.dom.$('buildStats').innerHTML=totals.map(([name,value])=>`<div class="build-stat">${name}<strong>${value}</strong></div>`).join('');
   game.dom.$('buildUpgrades').innerHTML=Object.entries(game.state.stacks).map(([name,n])=>{

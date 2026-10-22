@@ -231,6 +231,7 @@ function updateEnemyAnimations(dt){
     if(motionReduced)continue;
     const moving=distance>.001&&e.freeze<=0&&e.stun<=0;
     if(e.type==='wallpuller'&&moving)m.walkAge+=dt;
+    if(e.type==='gnawer'&&moving)m.walkAge+=distance/45;
     if(e.type==='grunt'&&e.freeze<=0&&e.stun<=0){
       if(moving)m.walkAge+=dt;
       m.gruntFrame=m.action==='bite'&&m.actionAge<.42?8+Math.min(7,Math.floor(m.actionAge/.42*8)):moving?Math.floor(m.walkAge*12)%8:0;
