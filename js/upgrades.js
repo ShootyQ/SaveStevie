@@ -1,6 +1,7 @@
 /* upgrades: original v8 behavior, with explicit shared game dependencies. */
 DoodleDefender.systems.upgrades = function createUpgradesSystem(game) {
 game.catalog.synergyDefs = [
+  {name:'Bad Chemistry', req:()=>game.state.inks.poison&&game.state.inks.blast, desc:'Blast explosions hitting poisoned monsters have a 20% chance to spit 6–9 random green globs, or a 3% chance for a nastier chunky burst. Small globs hit one other monster for 5 damage plus 1 per two waves; big globs deal 24 plus 1 per wave. Each source rolls once per 2 seconds. Misses leave harmless stains; glob hits cannot trigger more globs.'},
   {name:'Plaguefire', req:()=>game.state.inks.fire&&game.state.inks.poison, desc:'Defeated burning, poisoned enemies leave growing ten-second Plaguefire pools that scorch holes in the paper.'},
   {name:'Cryoshock', req:()=>game.state.inks.frost&&game.state.inks.electric, desc:'Frozen enemies conduct boosted chain lightning.'},
   {name:'Singularity Ink', req:()=>game.state.inks.gravity&&game.state.inks.blast, desc:'Broken walls pull enemies inward before exploding.'},

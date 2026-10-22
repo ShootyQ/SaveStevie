@@ -174,3 +174,5 @@ Hard-hat crew artwork (2026-10-10): `wallpuller.png` (Yank Doodle) and
 optimized to transparent PNGs up to 384px. The variants share a silhouette but
 have distinct body/helmet colors and tools. Both are included in the core
 artwork manifest; their walking and job motion is procedural.
+
+`bad-chemistry.png` is an original generated transparent 4-column, 4-row colored-pencil effects atlas. Rows contain four small bright-green flight wobble frames, four chunky dark-green/yellow blistered flight frames, four small impact/stain frames, and four big impact/stain frames. The original PNG is preserved unchanged. Runtime crops equal cells and adds deterministic squash, goo trails, projected ground shadows and popping bubbles; frame selection never consumes combat randomness. Impacts and harmless stains use the lower rows.

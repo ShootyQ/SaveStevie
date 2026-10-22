@@ -133,7 +133,7 @@ function wallNear(x,y,r){
 
 // Ground coordinates stay on the page; vertical height is presentation only.
 let napalm=[],landingPuffs=[];
-function resetLaunchEffects(){napalm=[];landingPuffs=[]}
+function resetLaunchEffects(){napalm=[];landingPuffs=[];game.api.resetBadChemistry();}
 function landingPoint(e,x,y,inferno){
  const {W,H,player}=game.state,margin=e.r+24,top=e.r+76,bottom=Math.max(top,H-e.r-64);
  const length=Math.min(240,140+game.state.inks.repulsion*10+(inferno?50:0));
@@ -198,6 +198,7 @@ function eraseBurningGround(a,b,r){
  if(changed)game.api.burst(b.x,b.y,'#cbbba4',4);return changed;
 }
 function updateLaunchEffects(dt){
+ game.api.updateBadChemistry(dt);
  for(const p of napalm)p.age+=dt;napalm=napalm.filter(p=>p.age<p.life);
  for(const p of landingPuffs)p.age+=dt;landingPuffs=landingPuffs.filter(p=>p.age<.45);
  for(const e of game.state.enemies){
@@ -207,6 +208,7 @@ function updateLaunchEffects(dt){
  }
 }
 function moveLaunchEffects(dx,dy){
+ game.api.moveBadChemistry(dx,dy);
  for(const patch of napalm){game.api.moveFirePatch(patch,dx,dy);patch.minX+=dx;patch.maxX+=dx;patch.minY+=dy;patch.maxY+=dy;for(const p of patch.points){p.x+=dx;p.y+=dy}}
  for(const p of landingPuffs){p.x+=dx;p.y+=dy}
  for(const e of game.state.enemies)if(e.flight){e.flight.startX+=dx;e.flight.targetX+=dx;e.flight.startY+=dy;e.flight.targetY+=dy}
@@ -260,6 +262,7 @@ function damageWall(wall,amount,x,y){
       for(const e of game.state.enemies){
         const near=wall.pts.some(p=>game.api.withinRadius(p.x,p.y,e.x,e.y,radius));
         if(near){
+          game.api.burstBadChemistry(e);
           if(game.state.synergies.has('Singularity Ink')&&!game.api.isFirstBoss(e)){
             const dx=x-e.x,dy=y-e.y,m=Math.hypot(dx,dy)||1;
             game.api.moveEnemySafely(e,dx/m*24,dy/m*24);
