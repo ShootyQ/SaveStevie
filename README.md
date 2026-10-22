@@ -1115,3 +1115,18 @@ and releases it. Bosses, protected, airborne and underground monsters resist;
 other cover and Stevie’s fort block the pull. Event Horizon keeps its separate
 Void/Gravity behavior. Try an off-center closed loop with Gravity Ink to see
 the drain; failed rolls are expected, so test it against a group.
+
+### Count Crayon counterplay (Alpha 0.1.135)
+
+Wrong-colour connections at the shield trigger three telegraphed wax drops,
+4 damage each before armor. Walls can catch their descent. One gesture cannot
+repeat the punishment, and a 2.5-second cooldown prevents pointer spam from
+creating stacked showers. Passing near the ring does not count as connecting.
+
+Summoning globs launch from the Count with staggered arcs, shadows and landing
+splats. Their 3.3-second hatching timer starts after landing; landed pools still
+take two separate eraser wipes. Flying crayons now fan out, stop and mark a locked
+dive path for at least 0.95 seconds, then fly straight at 185px/second. An ordinary
+short wall across that path catches them for 4 wall HP and earns a 50-point
+clever-play bonus before combo multipliers. Erasing flyers remains available.
+Full enclosures are optional; unblocked dives still deal 7 damage before armor.
