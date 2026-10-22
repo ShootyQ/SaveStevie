@@ -11,6 +11,7 @@ function updateUI(){
   game.api.syncDesktopCursor?.();
   game.api.updateScoreHUD();
   game.dom.$('quickBuildBtn').hidden=!game.state.running;
+  game.dom.$('hubToolBtn').hidden=!game.state.running;
   game.api.syncScrapTutorial();
   game.api.updateChapterBackground();
   const app=game.dom.$('app'),menu=!game.state.running&&game.dom.startOverlay.style.display!=='none',wasMenu=app.classList?.contains?.('menu-view');

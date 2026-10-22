@@ -31,8 +31,8 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..')),native=proce
   assert.equal(await page.locator('.bottom').isVisible(),false);
   assert.deepEqual(await page.locator('#startOverlay button:visible').allTextContents(),['Play →','Notebook','Settings']);
   for(const id of ['startBtn','splashHubBtn','splashOptionsBtn']){const b=await page.locator('#'+id).boundingBox();assert.ok(b.height>=44&&b.x>=0&&b.y>=0&&b.x+b.width<=viewport.width+1&&b.y+b.height<=viewport.height+1,'cover action fits '+id)}
-  await page.click('#splashHubBtn');assert.equal(await page.locator('#hubOverlay').isVisible(),true);
-  for(const [button,overlay,close] of [['hubMonstersBtn','compendiumOverlay','closeCompendiumBtn'],['hubToolBtn','buildOverlay','closeBuildBtn'],['hubNotebookBtn','betaScrapsOverlay','closeBetaScrapsBtn'],['hubSettingsBtn','optionsOverlay','closeOptionsBtn'],['hubStatsBtn','statisticsOverlay','closeStatisticsBtn'],['hubChangelogBtn','changelogOverlay','closeChangelogBtn']]){
+  await page.click('#splashHubBtn');assert.equal(await page.locator('#hubOverlay').isVisible(),true);assert(!(await page.locator('#hubToolBtn').isVisible()));
+  for(const [button,overlay,close] of [['hubMonstersBtn','compendiumOverlay','closeCompendiumBtn'],['hubDiscoveriesBtn','discoveriesOverlay','closeDiscoveriesBtn'],['hubNotebookBtn','betaScrapsOverlay','closeBetaScrapsBtn'],['hubSettingsBtn','optionsOverlay','closeOptionsBtn'],['hubStatsBtn','statisticsOverlay','closeStatisticsBtn'],['hubChangelogBtn','changelogOverlay','closeChangelogBtn']]){
    await page.click('#'+button);assert.equal(await page.locator('#'+overlay).isVisible(),true);assert.equal(await page.locator('#hubOverlay').isVisible(),false);await page.click('#'+close);assert.equal(await page.locator('#hubOverlay').isVisible(),true);
   }
   await page.screenshot({path:'/tmp/notebook-hub-'+viewport.width+'.png'});
