@@ -278,6 +278,7 @@ function updateEnemyAnimations(dt){
     const crayon=game.api.crayonBossPose(e);if(crayon){Object.assign(p,crayon);m.cue='summon';continue;}
     const thermal=game.api.thermalShockPose(e);if(thermal){Object.assign(p,thermal);m.cue=null;continue;}
     const ice=game.api.blackIcePose(e);if(ice){Object.assign(p,ice);m.cue=null;continue;}
+    const dots=game.api.dotKnockdownPose(e);if(dots){Object.assign(p,dots);m.cue=null;continue;}
     if(e.freeze>0||e.stun>0)continue;
     // Distinct silhouettes reuse the existing art. These offsets never touch
     // enemy coordinates, attack timers, damage, or the combat random stream.
