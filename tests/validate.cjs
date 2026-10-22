@@ -2679,3 +2679,5 @@ require('./report-cards-and-whirlpool.cjs')(load);
 require('./crayon-catapult-crew.cjs')(load);
 
 require('./bad-chemistry.cjs')(load);
+
+require('./classroom-combos.cjs')(load);

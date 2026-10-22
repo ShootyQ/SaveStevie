@@ -114,6 +114,6 @@ function drawPlaguefire(){
   }
 }
 function plaguefirePaperMissing(p){return patches.some(b=>Math.hypot(p.x-b.x,p.y-b.y)<=radius(b))||scars.some(b=>Math.hypot(p.x-b.x,p.y-b.y)<=b.r);}
-const api={plaguefirePaperMissing,erasePlaguefire,drawDeskGrain,dropPlaguefire,updatePlaguefire,resetPlaguefire,movePlaguefire,plaguefireSnapshot,drawPlaguefire};
+const api={plaguefireAt:(x,y)=>patches.find(p=>p.age<p.life&&Math.hypot(x-p.x,y-p.y)<=radius(p)&&!game.api.firePatchCleared(p,x,y))||null,plaguefirePaperMissing,erasePlaguefire,drawDeskGrain,dropPlaguefire,updatePlaguefire,resetPlaguefire,movePlaguefire,plaguefireSnapshot,drawPlaguefire};
 Object.assign(game.api,api);return api;
 };

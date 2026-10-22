@@ -72,10 +72,14 @@ DoodleDefender.systems.smallUtilities=function(game){
   crumbs.push({...position(p),left:8,seed:clock});
  }
  function updateSmallUtilities(dt){
-  if(!active())return;clock+=dt;updateDotLines(dt);if(flash){flash.left-=dt;if(flash.left<=0)flash=null;}
+  if(!active())return;clock+=dt;a.updateClassroomCombos(dt);updateDotLines(dt);if(flash){flash.left-=dt;if(flash.left<=0)flash=null;}
   for(const d of dots)d.age+=dt;
   for(const [e,c] of chewing){c.left-=dt;if(c.left<=0||!s.enemies.includes(e)||!ordinary(e)){chewing.delete(e);rest.set(e,clock+5);}}
-  for(const c of crumbs){c.left-=dt;if(c.left<=0)continue;const e=s.enemies.find(e=>ordinary(e)&&!chewing.has(e)&&(rest.get(e)||0)<=clock&&Math.hypot(e.x-c.x,e.y-c.y)<e.r+15);if(e){c.left=0;chewing.set(e,{x:e.x,y:e.y,left:.9});a.animateEnemyAction(e,'bite',c);}}
+  for(const c of crumbs){c.left-=dt;if(c.left<=0)continue;
+   const candidates=s.enemies.filter(e=>ordinary(e)&&!chewing.has(e)&&!smallUtilityWaiting(e)&&(rest.get(e)||0)<=clock&&Math.hypot(e.x-c.x,e.y-c.y)<140),scramble=a.tryLastCrumb(c,candidates);
+   const e=scramble?scramble.winner:s.enemies.find(e=>ordinary(e)&&!chewing.has(e)&&(rest.get(e)||0)<=clock&&!a.crumbScrambleTarget(e)&&Math.hypot(e.x-c.x,e.y-c.y)<e.r+15);
+   if(e){c.left=0;chewing.set(e,{x:e.x,y:e.y,left:.9});a.animateEnemyAction(e,'bite',c);}
+  }
   crumbs=crumbs.filter(c=>c.left>0);
   queues=queues.filter(q=>q.until>clock&&wallAlive(q.wall));
   for(const q of queues)q.waiters=q.waiters.filter(e=>s.enemies.includes(e)&&ordinary(e)&&a.nearestWallHit(e)?.wall===q.wall);
@@ -88,10 +92,10 @@ DoodleDefender.systems.smallUtilities=function(game){
    }
   }
  }
- function smallUtilityWaiting(e){return ordinary(e)&&(chewing.has(e)||queues.some(q=>wallAlive(q.wall)&&q.waiters.includes(e)));}
- function resetSmallWave(){rays=[];knockdowns.clear();dots=[];next=1;crumbs=[];crumbInk=0;chewing.clear();rest=new WeakMap();queues=[];queueRest=new WeakMap();trace=null;flash=null;}
+ function smallUtilityWaiting(e){return ordinary(e)&&(a.classroomWaiting(e)||chewing.has(e)||queues.some(q=>wallAlive(q.wall)&&q.waiters.includes(e)));}
+ function resetSmallWave(){a.resetClassroomCombos();rays=[];knockdowns.clear();dots=[];next=1;crumbs=[];crumbInk=0;chewing.clear();rest=new WeakMap();queues=[];queueRest=new WeakMap();trace=null;flash=null;}
  function resetSmallUtilities(){resetSmallWave();dots=[];next=1;total=best=loops=clock=0;}
- function moveSmallUtilities(dx,dy){for(const r of rays)for(const p of [r.p,r.q]){p.x+=dx;p.y+=dy;}for(const d of [...dots,...crumbs])Object.assign(d,position({x:d.x+dx,y:d.y+dy}));trace=null;for(const q of queues){q.x+=dx;q.y+=dy;}if(flash)for(const p of flash.points){p.x+=dx;p.y+=dy;}}
+ function moveSmallUtilities(dx,dy){a.moveClassroomCombos(dx,dy);for(const r of rays)for(const p of [r.p,r.q]){p.x+=dx;p.y+=dy;}for(const d of [...dots,...crumbs])Object.assign(d,position({x:d.x+dx,y:d.y+dy}));trace=null;for(const q of queues){q.x+=dx;q.y+=dy;}if(flash)for(const p of flash.points){p.x+=dx;p.y+=dy;}}
  function art(ctx,x,y,w,h,col,row){const img=a.doodleArtwork('small-utilities');if(!img)return false;ctx.drawImage(img,col*img.width/2,row*img.height/2,img.width/2,img.height/2,x-w/2,y-h/2,w,h);return true;}
  function drawSmallUtilities(){
   if(!s.running)return;const c=game.dom.ctx,reduced=a.enemyMotionReduced();c.save();c.textAlign='center';c.textBaseline='middle';c.font='bold 17px "Stevie Pencil", cursive';

@@ -249,7 +249,7 @@ function updateTwicey(e,dt){
 function nearestEnemy(x,y,maxD){
   let bestE=null,bestD=maxD;
   for(const e of game.state.enemies){
-    if(e.hp<=0||game.api.gravityCaptured(e)||game.api.catapulterAway(e))continue;
+    if(e.hp<=0||game.api.gravityCaptured(e)||game.api.lunchCaptured(e)||game.api.catapulterAway(e))continue;
     const d=game.api.dist(x,y,e.x,e.y);if(d<bestD){bestD=d;bestE=e}
   }
   return bestE;
@@ -785,6 +785,7 @@ function updateChonks(e,dt){
 function enemyMoveScale(e){return game.api.enemySpeedScale()*game.api.doodleClingScale(e)*(e.type==='basil'&&e.feastPhase!=='idle'?0:e.feastRush>0?2:feastHost(e)?1.6:e.type==='tank'?1+1.4*(e.chonks?.momentum||0):e.type==='sprinter'?(1+.45*game.api.clamp((e.screenAge||0)/3,0,1))*(e.dashTime>=2.6?1.35:1):1)}
 function enemyTarget(e){
   if(e.waveBoss)return game.api.bossTarget(e);
+  const snack=game.api.crumbScrambleTarget(e);if(snack)return snack;
   const host=feastHost(e);if(host)return game.api.dist(e.x,e.y,host.x,host.y)<host.r+e.r+14?e:host;
   let target=game.api.specialistTarget(e)||(!game.api.hasChonksShield(e)&&game.api.doodleTarget(e))||game.api.sneakFollowTarget(e)||game.state.player;
   if(e.type==='sapper'){
