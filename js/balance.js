@@ -3,8 +3,8 @@ DoodleDefender.systems.balance = function createBalance(game) {
 const settings=game.catalog.balance={
   hpAnchors:[[1,1],[5,1.2],[10,1.9],[15,2.8],[20,4]],
   openingDelay:1.5,openingGap:2.7,copyDurability:.6,
-  healRate:6,refundRate:8,repairRate:12,
-  quickRegen:2,fountainBonus:.35,bottomlessRegen:2,
+  healRate:4.5,refundRate:8,repairRate:10,
+  quickRegen:2,fountainBonus:.28,bottomlessRegen:2,
   chapterScraps:[6,8,10,12],killsPerScrap:25,killScrapCap:8,victoryScraps:5
 };
 let budgets={heal:settings.healRate,refund:settings.refundRate,repair:settings.repairRate};
@@ -27,7 +27,7 @@ function repairWallsOnKill(){
   const ratio=consume('repair',total)/total;for(const r of requests)r.w.hp+=r.amount*ratio;
 }
 function regenPick(name,rank=Math.max(0,(game.state.stacks[name]||1)-1)){
-  if(name==='Living Fountain Pen')return 1+settings.fountainBonus/(1+.5*rank);
+  if(name==='Living Fountain Pen')return 1+settings.fountainBonus/(1+.6*rank);
   return (name==='Quick Refill'?settings.quickRegen:settings.bottomlessRegen)/(1+.4*rank);
 }
 function regenStackEffect(name,n){let result=name==='Living Fountain Pen'?1:0;for(let i=0;i<n;i++){if(name==='Living Fountain Pen')result*=regenPick(name,i);else result+=regenPick(name,i)}return result}

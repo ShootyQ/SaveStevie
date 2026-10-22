@@ -38,21 +38,24 @@ function beginEmergence(e,point,forced=false){
  game.api.floatText(e.x,e.y-e.r-15,forced?'CAUGHT YOU!':'COMING UP!','#855c3e');
 }
 function updatePaperEnemy(e,dt){
- if(game.api.hasChonksShield(e))return false;
+ if(e.hp<=0||game.api.hasChonksShield(e))return false;
  if(e.paperCooldown>0)e.paperCooldown=Math.max(0,e.paperCooldown-dt);
  if(e.eraseStumble>0)e.eraseStumble=Math.max(0,e.eraseStumble-dt);
  let t=e.paperTunnel;
  if(!t){
-  if(e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.hurdle||e.thermalShock?.phase==='pressure'||['catapulter','wallpuller','papertearer','wobble-tooth'].includes(e.type)||e.catapultHeld||e.specialistJob?.kind==='catapult'||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
+  if(e.paperTripUsed||e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.hurdle||e.thermalShock?.phase==='pressure'||['catapulter','wallpuller','papertearer','wobble-tooth'].includes(e.type)||e.catapultHeld||e.specialistJob?.kind==='catapult'||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
   const holes=game.state.paper.holes,player=game.state.player,entry=holes.find(h=>game.api.paperHoleContains(h,e,e.r*.35));
   if(e.paperEncounter&&!holes.some(h=>h.id===e.paperEncounter&&game.api.paperHoleContains(h,e,e.r*.35+18)))delete e.paperEncounter;
   if(!entry||e.paperEncounter===entry.id)return false;
-  const startDistance=Math.hypot(e.x-player.x,e.y-player.y),exit=holes.filter(h=>h!==entry).map(h=>game.api.paperHoleExit(h,player,e.r+22)).filter(h=>h&&Math.hypot(h.x-player.x,h.y-player.y)<startDistance-45).sort((a,b)=>Math.hypot(a.x-player.x,a.y-player.y)-Math.hypot(b.x-player.x,b.y-player.y))[0];
-  if(!exit)return false;
-  const directed=e.specialistJob?.kind==='tunnel'&&e.specialistJob.entryId===entry.id&&holes.some(h=>h.id===e.specialistJob.exitId);e.paperEncounter=entry.id;if(!directed&&Math.random()>=tuning.entryChance)return false;delete e.specialistJob;
+  const exit={x:player.x,y:player.y};
+  const directed=e.specialistJob?.kind==='tunnel'&&e.specialistJob.entryId===entry.id&&holes.some(h=>h.id===e.specialistJob.exitId);e.paperEncounter=entry.id;if(!directed&&Math.random()>=tuning.entryChance)return false;delete e.specialistJob;e.paperTripUsed=true;
   game.api.playSound('paperDive');t=e.paperTunnel={phase:'enter',entry:{x:e.x,y:e.y},hole:{x:entry.x,y:entry.y},entryTimer:tuning.entryDuration,entryId:entry.id,exit:{x:exit.x,y:exit.y},rub:0,rubbedAt:-Infinity,age:0};clearSurfaceEffects(e);if(e.type==='basil')game.api.finishFeast(e);game.api.floatText(e.x,e.y-24,'ZIP!','#855c3e');if(!game.state.paper.tunnelHint){game.state.paper.tunnelHint=true;game.api.setMsg('Follow the moving bump! Rub near it for 1 second to force the monster up. Rocks still hit underground.');}
  }
  clearSurfaceEffects(e);t.age+=dt;
+ if(t.phase==='fort-bite'){
+  t.warning-=dt;if(t.warning<=0){game.api.damageStevie(e.dmg*(1-game.state.stats.playerArmor),'Underground '+game.api.monsterName(e.type),e);game.api.burst(e.x,e.y,'#a98664',8);delete e.paperTunnel;game.state.enemies=game.state.enemies.filter(n=>n!==e);}
+  return true;
+ }
  if(t.phase==='enter'){t.entryTimer=Math.max(0,t.entryTimer-dt);if(t.hole){const progress=1-t.entryTimer/tuning.entryDuration;e.x=t.entry.x+(t.hole.x-t.entry.x)*progress;e.y=t.entry.y+(t.hole.y-t.entry.y)*progress;}if(!t.entryTimer)t.phase='travel';return true;}
  if(t.phase==='emerge'){
   t.warning-=dt;
@@ -61,10 +64,16 @@ function updatePaperEnemy(e,dt){
  }
  const recentlyRubbed=game.state.paper.clock-t.rubbedAt<.12;
  if(!recentlyRubbed)t.rub=Math.max(0,t.rub-dt*.5);
+ t.exit={x:game.state.player.x,y:game.state.player.y};
  const dx=t.exit.x-e.x,dy=t.exit.y-e.y,d=Math.hypot(dx,dy),speed=Math.max(35,Math.min(90,e.speed*1.2))*1.1*(recentlyRubbed?.2:1),step=Math.min(d,speed*dt);
- if(d>0){e.x+=dx/d*step;e.y+=dy/d*step;}
- const crossed=game.state.paper.holes.find(h=>h.id!==t.entryId&&game.api.paperHoleContains(h,e));
- if(crossed&&!(t.rub>0))beginEmergence(e,{x:e.x,y:e.y});else if(d<=step+.01)beginEmergence(e,t.exit);
+ // Sweep the entire move: even a large time step must surface at the first opening.
+ const from={x:e.x,y:e.y},samples=Math.max(1,Math.ceil(step/3));
+ for(let i=1;i<=samples;i++){
+  const travel=step*i/samples;e.x=from.x+(d?dx/d*travel:0);e.y=from.y+(d?dy/d*travel:0);
+  const crossed=game.state.paper.holes.find(h=>h.id!==t.entryId&&game.api.paperHoleContains(h,e));
+  if(crossed){beginEmergence(e,{x:e.x,y:e.y});return true;}
+  if(game.api.touchesRefuge(e)||d<=travel+.01){t.phase='fort-bite';t.warning=tuning.exitWarning;game.api.floatText(game.state.player.x,game.state.player.y+65,'UNDER THE FORT!','#a54732');return true;}
+ }
  return true;
 }
 function eraseProjectiles(a,b,r){
@@ -161,6 +170,7 @@ function paperBumpPose(e){
 function drawPaperBump(e){
  const ctx=game.dom.ctx,t=e.paperTunnel;if(!t)return;
  if(t.phase==='enter'){game.api.drawPaperDoodle(e,paperTransitionPose(e));return;}
+ if(t.phase==='fort-bite'){const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#b26042';ctx.lineWidth=3;ctx.beginPath();ctx.arc(e.x,e.y,e.r+14,-Math.PI/2,-Math.PI/2+Math.PI*2*(1-t.warning/tuning.exitWarning));ctx.stroke();ctx.restore();return;}
  const p=paperBumpPose(e),{r,angle,step,rise}=p;
  ctx.save();ctx.translate(e.x,e.y);ctx.rotate(angle);ctx.translate(0,p.sway);
  // Soft contact shadow anchors the displaced sheet; the crown catches the light.

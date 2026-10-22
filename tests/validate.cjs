@@ -157,8 +157,8 @@ assert.equal(bg.state.stacks['Bigger Ink Tank'],2);
 assert.equal(bg.state.stats.maxInk,230,'repeated upgrades add their effects');
 assert.match(bg.api.upgradeEffect('Bigger Ink Tank'),/70/);
 choose('Fine Tip');choose('Fine Tip');
-assert.ok(Math.abs(bg.state.stats.lineCost-.31*.88*.88)<1e-10);
-assert.match(bg.api.upgradeEffect('Fine Tip'),/22.56%/);
+assert.ok(Math.abs(bg.state.stats.lineCost-.31*.9*.9)<1e-10);
+assert.match(bg.api.upgradeEffect('Fine Tip'),/19%/);
 choose('Fire Ink');choose('Fire Ink');
 assert.equal(bg.state.inks.fire,2);assert.match(bg.api.upgradeEffect('Fire Ink'),/9 burn damage/);
 choose('Pocket Rocks');choose('Better Rocks');const rate=bg.state.stats.rockRate;
@@ -789,13 +789,13 @@ g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.upda
 const contactBoss=g.state.enemies.find(e=>e.waveBoss);contactBoss.x=g.state.player.x;contactBoss.y=g.state.player.y;g.api.contactStevie(contactBoss);assert.ok(g.state.enemies.includes(contactBoss),'boss contact cannot remove the encounter');g.api.killEnemy(contactBoss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);
 g.api.resetRun();g.state.stats.killHeal=g.state.stats.refund=g.state.stats.repairOnKill=100;g.state.player.hp=20;g.state.stats.ink=0;g.state.walls=[{hp:10,maxHp:100},{hp:10,maxHp:100}];
 for(let i=0;i<4;i++)g.api.killEnemy(g.api.spawnEnemy(false,0,0,'grunt'));
-assert.equal(g.state.player.hp,26);assert.equal(g.state.stats.ink,8);assert.equal(g.state.walls.reduce((sum,w)=>sum+w.hp,0),32,'repair shares a single budget across walls');
-g.state.paused=true;g.api.update(1);assert.equal(g.api.healStevie(100),0,'pause cannot recharge sustain');g.state.paused=false;g.api.updateSustain(1);g.api.killEnemy(g.api.spawnEnemy(false,0,0,'grunt'));assert.equal(g.state.player.hp,32);assert.equal(g.state.stats.ink,16);assert.equal(g.state.walls.reduce((sum,w)=>sum+w.hp,0),44);
+assert.equal(g.state.player.hp,24.5);assert.equal(g.state.stats.ink,8);assert.equal(g.state.walls.reduce((sum,w)=>sum+w.hp,0),30,'repair shares a single budget across walls');
+g.state.paused=true;g.api.update(1);assert.equal(g.api.healStevie(100),0,'pause cannot recharge sustain');g.state.paused=false;g.api.updateSustain(1);g.api.killEnemy(g.api.spawnEnemy(false,0,0,'grunt'));assert.equal(g.state.player.hp,29);assert.equal(g.state.stats.ink,16);assert.equal(g.state.walls.reduce((sum,w)=>sum+w.hp,0),40);
 g.state.player.hp=0;assert.equal(g.api.healStevie(100),0,'combat healing never revives Stevie');
-g.api.resetRun();g.state.player.hp=20;g.state.synergies.add('Stevie the Unreasonable');const rockTarget=g.api.spawnEnemy(false,100,200,'tank');g.state.projectiles=Array.from({length:4},()=>({x:100,y:200,target:rockTarget,speed:0,damage:100,life:1}));g.api.updateProjectiles(.01);assert.equal(g.state.player.hp,26,'rock-healing synergy shares the same combat budget');
+g.api.resetRun();g.state.player.hp=20;g.state.synergies.add('Stevie the Unreasonable');const rockTarget=g.api.spawnEnemy(false,100,200,'tank');g.state.projectiles=Array.from({length:4},()=>({x:100,y:200,target:rockTarget,speed:0,damage:100,life:1}));g.api.updateProjectiles(.01);assert.equal(g.state.player.hp,24.5,'rock-healing synergy shares the same combat budget');
 g.api.resetRun();const choose=name=>g.api.chooseUpgrade(g.catalog.upgrades.find(u=>u.name===name));
 choose('Quick Refill');assert.equal(g.state.stats.inkRegen,8);choose('Quick Refill');assert.ok(Math.abs(g.state.stats.inkRegen-(8+2/1.4))<1e-10);assert.match(g.api.upgradeEffect('Quick Refill'),/3.43/);
-const before=g.state.stats.inkRegen;choose('Living Fountain Pen');choose('Living Fountain Pen');assert.ok(Math.abs(g.state.stats.inkRegen-before*1.35*(1+.35/1.5))<1e-10);
+const before=g.state.stats.inkRegen;choose('Living Fountain Pen');choose('Living Fountain Pen');assert.ok(Math.abs(g.state.stats.inkRegen-before*1.28*(1+.28/1.6))<1e-10);
 const preBottomless=g.state.stats.inkRegen;choose('Bottomless Pen');choose('Bottomless Pen');assert.ok(Math.abs(g.state.stats.inkRegen-preBottomless-2-2/1.4)<1e-10);
 g.api.resetRun();g.state.stats.tripleLine=true;g.state.stats.doubleLine=true;g.api.createWall([{x:100,y:100},{x:280,y:100}]);assert.equal(g.state.walls.length,1,'retired flags never generate copies');
 g.api.resetRun();for(let i=1;i<=12;i++){g.state.kills=i*25;g.api.awardKillScraps()}assert.equal(g.api.notebookSnapshot().runScraps,8,'kill scraps capped across a run');g.api.resumeScrapRun();g.state.kills=325;g.api.awardKillScraps();assert.equal(g.api.notebookSnapshot().runScraps,8,'endless cannot reset kill cap');
@@ -1139,7 +1139,7 @@ console.log('PASS: 50 distinct rotating notes, stable endings, favorite ink, vic
  g.api.resetSustain();e.hp=1;g.state.player.hp=50;g.api.applyVampireContact(e,1);assert.ok(Math.abs(g.state.player.hp-50.175)<1e-9,'overkill never creates extra healing');
  e.hp=0;g.api.applyVampireContact(e,1);assert.ok(Math.abs(g.state.player.hp-50.175)<1e-9,'dead enemies never heal');
  e.hp=1000;g.state.player.hp=0;g.api.applyVampireContact(e,1);assert.equal(g.state.player.hp,0,'drain never revives Stevie');
- g.api.resetSustain();g.state.player.hp=10;g.state.inks.vampire=10;for(let i=0;i<20;i++){e.hp=1000;g.api.applyVampireContact(e,1)}assert.equal(g.state.player.hp,16,'crowds share the existing 6 HP healing reserve');
+ g.api.resetSustain();g.state.player.hp=10;g.state.inks.vampire=10;for(let i=0;i<20;i++){e.hp=1000;g.api.applyVampireContact(e,1)}assert.equal(g.state.player.hp,14.5,'crowds share the 4.5 HP healing reserve');
  const stateBefore=JSON.stringify(g.state),visualBefore=JSON.stringify(g.api.supportInkSnapshot());env.calls.length=0;g.api.drawSupportInks();assert.equal(JSON.stringify(g.state),stateBefore);assert.equal(JSON.stringify(g.api.supportInkSnapshot()),visualBefore);for(const call of env.calls)for(const v of call.slice(1))if(typeof v==='number')assert.ok(Number.isFinite(v));
  g.state.paused=true;const paused=JSON.stringify(g.api.supportInkSnapshot());g.api.update(.2);assert.equal(JSON.stringify(g.api.supportInkSnapshot()),paused);g.state.paused=false;
  g.api.startWave();assert.equal(g.api.supportInkSnapshot().enemies.length+g.api.supportInkSnapshot().bites.length,0);
@@ -2360,15 +2360,15 @@ require('./wobblechomp-overhaul.cjs')(loadRetiredWobble);
  const oldWear=JSON.stringify(g.state.paper.surface),oldPatches=g.state.paper.patches.length;g.state.wave=2;g.api.startWave({skipIntro:true});assert.equal(g.state.paper.holes.length,2,'same chapter keeps holes');assert.equal(g.state.paper.patches.length,oldPatches,'same chapter keeps smudges');assert.equal(g.state.paper.arcs.length,0);g.api.updatePaper(.1);assert.equal(JSON.stringify(g.state.paper.surface),oldWear,'wave transition cancels queued rubs');g.state.wave=6;g.api.startWave({skipIntro:true});assert.equal(g.state.paper.holes.length,0,'next chapter is fresh paper');
  rub(100,180,2.5);rub(240,220,2.5);
  const enemy=()=>{const e=g.api.spawnEnemy(false,100,180,'grunt');e.x=100;e.y=180;e.hp=e.maxHp=100;return e;};
- let e=enemy();e.burn=3;e.poison=2;e.charged=2;assert(g.api.updatePaperEnemy(e,.05));assert.equal(e.paperTunnel.exit.x,240);assert.equal(e.burn,0);assert.equal(e.poison,0);g.api.updatePaperEnemy(e,.5);
+ let e=enemy();e.burn=3;e.poison=2;e.charged=2;assert(g.api.updatePaperEnemy(e,.05));assert.equal(e.paperTunnel.exit.x,g.state.player.x);assert.equal(e.burn,0);assert.equal(e.poison,0);g.api.updatePaperEnemy(e,.5);
  const hp=e.hp,x=e.x;g.api.dealDamage(e,30,'physical');g.api.dealDamage(e,30,'electric');assert.equal(e.hp,hp,'surface physical and elemental damage blocked');assert.equal(g.api.moveEnemySafely(e,50,0),false);assert.equal(e.x,x);assert.equal(g.api.launchEnemy(e,200,200),false);assert.equal(g.api.applyInkContact(e,.1),0);
  g.state.projectiles=[{x:e.x,y:e.y,target:e,speed:290,damage:9,life:1.2}];g.state.synergies.add('Hot Rocks');g.state.synergies.add('Snowball Fight');g.api.updateProjectiles(.01);assert.equal(e.hp,hp-9,'real rocks hit underground');assert.equal(e.burn,0,'rock effects remain on surface');assert.equal(e.freeze,0);g.state.synergies.clear();const lightningHp=e.hp;g.state.inks.electric=1;g.api.chainLightning(e,1);assert.equal(e.hp,lightningHp);assert.equal(e.stun,0);const sniper=g.api.spawnEnemy(false,e.x,e.y,'sniper');sniper.paperTunnel=e.paperTunnel;g.state.enemyShots=[{x:sniper.x,y:sniper.y,r:3,life:1,sniperOwner:sniper,reflected:true}];g.api.updateEnemyShots(.1);assert.equal(sniper.returnHits||0,0,'surface returns do not count through the paper');g.state.enemies=g.state.enemies.filter(n=>n!==sniper);
  e.x=170;e.y=190;
  for(let i=0;i<19;i++){g.api.queuePaperRub({x:e.x-5,y:e.y},{x:e.x+10,y:e.y});g.api.updatePaper(.05);g.api.updatePaperEnemy(e,.05);}
  assert.equal(e.paperTunnel.phase,'travel','less than one second cannot force emergence');g.api.queuePaperRub({x:e.x-5,y:e.y},{x:e.x+10,y:e.y});g.api.updatePaper(.05);assert.equal(e.paperTunnel.phase,'emerge');const warning=e.paperTunnel.warning;g.state.paused=true;g.api.update(.3);assert.equal(e.paperTunnel.warning,warning);g.state.paused=false;
  for(let i=0;i<15;i++)g.api.updatePaperEnemy(e,.05);assert.equal(e.paperTunnel,undefined);assert(e.stun>1);assert.equal(g.api.updatePaperEnemy(e,.01),false,'emerged monster cannot immediately burrow again');
- e=enemy();g.api.updatePaperEnemy(e,.05);g.api.updatePaperEnemy(e,.5);for(let i=0;i<300&&e.paperTunnel?.phase==='travel';i++)g.api.updatePaperEnemy(e,.05);assert.equal(e.paperTunnel.phase,'emerge');assert(g.state.paper.holes.some(h=>g.api.paperHoleContains(h,e)),'natural emergence lands in actual open paper, including an earlier opening on the route');
- const wrong=enemy();wrong.x=240;wrong.y=220;assert.equal(g.api.updatePaperEnemy(wrong,.05),false,'no shortcut toward a farther hole');wrong.waveBoss=true;wrong.x=100;wrong.y=180;assert.equal(g.api.updatePaperEnemy(wrong,.05),false,'boss never burrows');
+ g.api.addPaperHole({x:260,y:270});e=enemy();g.api.updatePaperEnemy(e,.05);g.api.updatePaperEnemy(e,.5);for(let i=0;i<300&&e.paperTunnel?.phase==='travel';i++)g.api.updatePaperEnemy(e,.05);assert.equal(e.paperTunnel.phase,'emerge');assert(g.state.paper.holes.some(h=>g.api.paperHoleContains(h,e)),'natural emergence lands in actual open paper, including an earlier opening on the route');
+ const wrong=enemy();wrong.x=240;wrong.y=220;assert.equal(g.api.updatePaperEnemy(wrong,.05),true,'a tunnel can head directly toward the fort');delete wrong.paperTunnel;wrong.waveBoss=true;wrong.x=100;wrong.y=180;assert.equal(g.api.updatePaperEnemy(wrong,.05),false,'boss never burrows');
  const snapshot=JSON.stringify(g.state);const random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('paper rendering consumed RNG')};g.api.drawPaper();g.api.drawPaperBump(e);g.api.drawSparkGaps();env.sandbox.Math.random=random;assert.equal(JSON.stringify(g.state),snapshot,'paper rendering pure');
  const naturalExitX=e.paperTunnel.exit.x;g.api.movePaper(20,10);assert.equal(e.paperTunnel.exit.x,naturalExitX+20);assert.equal(g.state.paper.holes[0].x,120);g.api.resetRun({skipIntro:true});assert.equal(g.state.paper.holes.length,0);assert.equal(g.state.paper.patches.length,0,'new run clears all wear');
  fresh();g.state.enemyShots=[{x:100,y:180,r:3,damage:7},{x:100,y:180,r:3,reflected:true},{x:100,y:180,r:10},{x:100,y:180,r:3,owner:{}}];g.state.stats.ink=0;g.api.eraseWallPath({x:90,y:180},{x:110,y:180},20);assert.equal(g.state.enemyShots.length,3,'small hostile shot erased without ink, returned/boss shots retained');
@@ -2389,11 +2389,11 @@ require('./wobblechomp-overhaul.cjs')(loadRetiredWobble);
  g.state.paper.holes=[{id:1,x:100,y:180,r:22},{id:2,x:240,y:220,r:22}];
  let rolls=0;env.sandbox.Math.random=()=>{rolls++;return .3};const e=g.api.spawnEnemy(false,100,180,'grunt');rolls=0;
  for(let i=0;i<120;i++)assert.equal(g.api.updatePaperEnemy(e,.016),false);assert.equal(rolls,1,'30% boundary declines once, never every frame');assert(!e.paperTunnel);
- e.x=155;g.api.updatePaperEnemy(e,.1);e.x=100;env.sandbox.Math.random=()=>{rolls++;return .299};assert(g.api.updatePaperEnemy(e,.1));assert.equal(rolls,2,'leaving and returning starts a new encounter');assert.equal(e.paperTunnel.phase,'enter');assert.equal(e.paperTunnel.exit.x,240,'off-angle closer exit allowed');
+ e.x=155;g.api.updatePaperEnemy(e,.1);e.x=100;env.sandbox.Math.random=()=>{rolls++;return .299};assert(g.api.updatePaperEnemy(e,.1));assert.equal(rolls,2,'leaving and returning starts a new encounter');assert.equal(e.paperTunnel.phase,'enter');assert.equal(e.paperTunnel.exit.x,g.state.player.x,'tunnel heads toward the fort');
  const timer=e.paperTunnel.entryTimer;g.state.paused=true;g.api.update(.2);assert.equal(e.paperTunnel.entryTimer,timer);g.state.paused=false;
  // Every catalogue boss, even one without the waveBoss marker, stays above paper.
  for(const type of ['boss','stapler','crayon','eraser','wobblechomp']){const b=g.api.spawnEnemy(false,100,180,type);const before=rolls;assert.equal(g.api.updatePaperEnemy(b,.1),false,type);assert.equal(rolls,before,'boss does not even roll');}
- const noExit=g.api.spawnEnemy(false,240,220,'grunt'),before=rolls;assert.equal(g.api.updatePaperEnemy(noExit,.1),false);assert.equal(rolls,before,'farther exits never roll');
+ const noExit=g.api.spawnEnemy(false,240,220,'grunt'),before=rolls;assert.equal(g.api.updatePaperEnemy(noExit,.1),true);assert.equal(rolls,before+1,'an entry can roll without a farther exit hole');
  const poses=[];g.state.enemies=[];
  for(const type of ['grunt','scrubber','fast','sprinter','bouncer']){
   const n=g.api.spawnEnemy(false,100,180,type);n.paperTunnel={phase:'enter',entryTimer:.25,age:.25,exit:{x:240,y:220}};
@@ -2670,3 +2670,5 @@ require('./game-speed.cjs')(load);
 require('./playtest-routes.cjs')(load);
 
 require('./fresh-catapult-and-tunnels.cjs')(load);
+
+require('./ink-tunnels-and-chomp.cjs')(load);

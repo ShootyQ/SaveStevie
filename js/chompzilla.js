@@ -51,7 +51,7 @@ DoodleDefender.systems.chompzilla=function(game){
  }
  function chompzillaFrame(e){
   if(e.hp<=0)return 15;
-  const b=brains.get(e),reduced=api.enemyMotionReduced();if(!b||b.phase==='walk')return b?.hit>0?14:reduced?0:Math.floor(api.enemyWalkClock(e)*8)%4;
+  const b=brains.get(e),reduced=api.enemyMotionReduced();if(!b||b.phase==='walk')return b?.hit>0?14:reduced?0:[0,1,0,2,3,6,7,0][Math.floor(api.enemyWalkClock(e)*10)%8];
   if(b.phase==='windup')return 4+(reduced?0:Math.min(1,Math.floor(b.age/(b.bites?tuning.secondWindup:tuning.windup)*2)));
   if(b.phase==='chomp')return 6+(reduced?1:Math.min(1,Math.floor(b.age/tuning.chomp*2)));
   if(b.phase==='chew')return 8+(reduced?0:Math.floor(b.age*8)%2);
@@ -61,7 +61,15 @@ DoodleDefender.systems.chompzilla=function(game){
  function drawChompzilla(e){
   if(e.type!=='gnawer')return false;const image=api.doodleArtwork('gnawer-animations');if(!image)return false;
   const frame=chompzillaFrame(e),cw=image.naturalWidth/4,rows=[0,310,609,889,1213],row=Math.floor(frame/4),scale=image.naturalHeight/1213,y=rows[row]*scale,h=(rows[row+1]-rows[row])*scale,ctx=game.dom.ctx,width=e.r*3.6,height=width*h/cw,b=brains.get(e),facing=b&&b.phase!=='walk'?b.facing:api.enemyFacing(e);
-  ctx.save();if(facing<0)ctx.scale(-1,1);ctx.drawImage(image,(frame%4)*cw,y,cw,h,-width/2,-height*.55,width,height);ctx.restore();return true;
+  ctx.save();if(facing<0)ctx.scale(-1,1);
+  if(!api.enemyMotionReduced()&&e.freeze<=0&&e.stun<=0){
+   const clock=api.enemyWalkClock(e),step=Math.sin(clock*Math.PI*10),phase=b?.phase||'walk';
+   if(phase==='walk'){ctx.translate(0,-Math.abs(step)*1.6);ctx.rotate(step*.025);}
+   else if(phase==='windup'){const t=api.clamp(b.age/(b.bites?tuning.secondWindup:tuning.windup),0,1);ctx.translate(-3*t,0);ctx.scale(1-.06*t,1+.07*t);}
+   else if(phase==='chomp'){const snap=Math.sin(api.clamp(b.age/tuning.chomp,0,1)*Math.PI);ctx.translate(5*snap,0);ctx.scale(1+.1*snap,1-.07*snap);}
+   else if(phase==='chew'){ctx.rotate(Math.sin(b.age*30)*.035);}
+  }
+  ctx.drawImage(image,(frame%4)*cw,y,cw,h,-width/2,-height*.55,width,height);ctx.restore();return true;
  }
  function drawChompzillaMarks(){
   const ctx=game.dom.ctx;ctx.save();ctx.strokeStyle='#84613d';ctx.lineWidth=2;ctx.lineCap='round';
