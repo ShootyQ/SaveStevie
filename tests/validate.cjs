@@ -2681,3 +2681,5 @@ require('./crayon-catapult-crew.cjs')(load);
 require('./bad-chemistry.cjs')(load);
 
 require('./classroom-combos.cjs')(load);
+
+require('./crayon-wax-pressure.cjs')(load);
