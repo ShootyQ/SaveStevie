@@ -12,6 +12,16 @@ DoodleDefender.systems.paperSurface=function(game){
    const dx=Math.max(s.origin.x+x*size-p.x,0,p.x-(s.origin.x+(x+1)*size)),dy=Math.max(s.origin.y+y*size-p.y,0,p.y-(s.origin.y+(y+1)*size));if(dx*dx+dy*dy<=pad*pad)return true;
   }return false;
  }
+ // Every cell touched by the creature's footprint must be open. A long narrow
+ // slit, nearby edge, or paper island cannot admit a wider monster.
+ function paperHoleFits(h,p,r){
+  if(!h.surface)return Math.hypot(p.x-h.x,p.y-h.y)+r<=h.r;
+  const {s,c}=data();
+  for(let ix=Math.floor((p.x-r-s.origin.x)/size);ix<=Math.floor((p.x+r-s.origin.x)/size);ix++)for(let iy=Math.floor((p.y-r-s.origin.y)/size);iy<=Math.floor((p.y+r-s.origin.y)/size);iy++){
+   const dx=Math.max(s.origin.x+ix*size-p.x,0,p.x-(s.origin.x+(ix+1)*size)),dy=Math.max(s.origin.y+iy*size-p.y,0,p.y-(s.origin.y+(iy+1)*size));if(dx*dx+dy*dy>=r*r)continue;
+   const v=c.index.get(key(ix,iy));if(!v||v.wear<1||v.region!==h.id)return false;
+  }return true;
+ }
  function paperHoleExit(h,toward,padding){
   if(!h.surface)return game.api.safePaperPoint(h,padding)?{x:h.x,y:h.y,id:h.id}:null;
   const {s,c}=data(),cacheKey=h.id+':'+padding+':'+toward.x+':'+toward.y;if(c.exitCache.has(cacheKey)){const cached=c.exitCache.get(cacheKey);return cached?{...cached}:null;}
@@ -81,5 +91,5 @@ DoodleDefender.systems.paperSurface=function(game){
    ctx.strokeStyle='#fffbedbb';ctx.lineWidth=.7;ctx.beginPath();for(const loop of c.loops)for(let i=0;i<loop.length;i+=3){const p=loop[i],n=loop[(i+1)%loop.length],dx=n.x-p.x,dy=n.y-p.y,d=Math.hypot(dx,dy)||1;ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-dy/d*2.5,p.y+dx/d*2.5);}ctx.stroke();ctx.restore();layerKey=cache;
   }game.dom.ctx.drawImage(layer,0,0,W,H);
  }
- const api={paperHoleExit,rubPaperSurface,stampPaperHole,paperHoleContains,surfaceHoleAt,movePaperSurface,drawPaperSurface,paperSurfaceSnapshot:()=>{const {s,c}=data();return {cells:s.cells.length,open:s.cells.filter(v=>v.wear>=1).length,regions:c.regions.size,contours:c.loops.length,revision:s.revision,edges:c.loops.reduce((n,l)=>n+l.length,0)};}};Object.assign(game.api,api);return api;
+ const api={paperHoleFits,paperHoleExit,rubPaperSurface,stampPaperHole,paperHoleContains,surfaceHoleAt,movePaperSurface,drawPaperSurface,paperSurfaceSnapshot:()=>{const {s,c}=data();return {cells:s.cells.length,open:s.cells.filter(v=>v.wear>=1).length,regions:c.regions.size,contours:c.loops.length,revision:s.revision,edges:c.loops.reduce((n,l)=>n+l.length,0)};}};Object.assign(game.api,api);return api;
 };

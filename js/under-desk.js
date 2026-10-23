@@ -83,5 +83,6 @@ DoodleDefender.systems.underDesk=function(game){
   ctx.restore();
  }
  const underDeskSnapshot=()=>({cooldown,gesture:gesture?{x:gesture.x,y:gesture.y,travel:gesture.travel}:null,armed:armed?{x:armed.x,y:armed.y,left:armed.left}:null,pit:pit?{x:pit.x,y:pit.y,r:pit.r,age:pit.age,phase:pit.phase,captures:pit.captures,victim:pit.victim?.type||null}:null,scars:scars.map(p=>({...p}))});
- Object.assign(a,{updateUnderDeskPresentation:dt=>{if(pit&&pit.phase==='chew'&&!s.paused)pit.phaseAge+=dt;},underDeskErase,endUnderDeskGesture,heldUnderDesk,underDeskPose,updateUnderDesk,drawUnderDeskGround,drawUnderDeskActors,moveUnderDesk,finishUnderDeskWave,resetUnderDesk,underDeskSnapshot,underDeskEraseHandled:()=>handled,resetUnderDeskEraseHandled:()=>{handled=false;}});return {};
+ function underDeskPaperMissing(p){const inside=q=>((p.x-q.x)/q.r)**2+((p.y-q.y)/(q.r*.7))**2<=1;return !!(pit&&inside(pit))||scars.some(inside);}
+ Object.assign(a,{underDeskPaperMissing,updateUnderDeskPresentation:dt=>{if(pit&&pit.phase==='chew'&&!s.paused)pit.phaseAge+=dt;},underDeskErase,endUnderDeskGesture,heldUnderDesk,underDeskPose,updateUnderDesk,drawUnderDeskGround,drawUnderDeskActors,moveUnderDesk,finishUnderDeskWave,resetUnderDesk,underDeskSnapshot,underDeskEraseHandled:()=>handled,resetUnderDeskEraseHandled:()=>{handled=false;}});return {};
 };
