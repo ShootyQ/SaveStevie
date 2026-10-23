@@ -35,7 +35,7 @@ module.exports=load=>{
  // Double waves demand defenses even when the footprint counter succeeds.
  for(const covered of [false,true]){const r=setup(),{a,e,g}=r;down(r);let s=a.bootstompSnapshot(e);for(let i=0;i<1000&&s.phase!=='shockwave';i++){step(r,.05);s=a.bootstompSnapshot(e);}assert.equal(s.phase,'shockwave');assert.equal(s.ripples.length,0,'warning precedes the waves');
   const p=g.state.player,hp=p.hp;if(covered){const x=(e.x+p.x)/2,y=(e.y+p.y)/2,dx=p.x-e.x,dy=p.y-e.y,d=Math.hypot(dx,dy);g.state.walls.push({pts:[{x:x-dy/d*130,y:y+dx/d*130},{x:x+dy/d*130,y:y-dx/d*130}],hp:100,maxHp:100,life:100,thick:8});}
-  step(r,.75);assert.equal(a.bootstompSnapshot(e).shockCount,1);step(r,2);assert.equal(a.bootstompSnapshot(e).shockCount,2);assert.equal(hp-p.hp,covered?0:28,'both waves can be completely caught by a wall');if(covered)assert.equal(g.state.walls[0].hp,20);
+  step(r,.75);assert.equal(a.bootstompSnapshot(e).shockCount,1);step(r,1.1);assert.equal(a.bootstompSnapshot(e).shockCount,2);if(covered)assert.equal(g.state.walls[0].hp,20,'both waves spend cover HP before the boss resumes walking');step(r,.9);assert.equal(hp-p.hp,covered?0:28,'both waves can be completely caught by a wall');
  }
  // A nearby helper is visibly wound up, kicked through the air and lands safely
  // with no fall damage or stun.
@@ -48,12 +48,12 @@ module.exports=load=>{
   for(let i=0;i<1600;i++){const before=a.bootstompSnapshot(e),x=e.x,y=e.y;step(r,.025);const after=a.bootstompSnapshot(e);if(before.phase!=='intro')minDistance=Math.min(minDistance,Math.hypot(e.x-g.state.player.x,e.y-g.state.player.y));if(before.phase==='walk'){const distance=Math.hypot(e.x-x,e.y-y);assert(distance<=110*.025+1e-7,'walk retains its 110px/s combat pace');walked+=distance;}}
   assert(walked>150,'boss still relocates between attacks');assert(minDistance>220,'PC route stays well clear of Stevie');assert.equal(e.speed,110);
  }
- // Entrance uses the nearest horizontal edge and is bounded by walking speed.
- for(const [W,H] of [[1280,800],[393,700]]){const {a,g}=setup(W,H);a.resetRun({skipIntro:true});g.state.W=W;g.state.H=H;g.state.player.x=W/2;g.state.player.y=H/2;g.state.wave=10;a.startWave();g.state.enemies=[];const boss=a.spawnEnemy(true,100,180),s=a.bootstompSnapshot(boss),start=boss.x;
-  assert((s.introGoal.x<W/2&&start<0)||(s.introGoal.x>=W/2&&start>W),'nearest entry side');
-  assert(s.introDuration>=Math.abs(s.introGoal.x-start)/88,'duration respects capped speed');
-  for(let i=0;i<10;i++){const old=boss.x;a.updateBootstomp(boss,.1);assert(Math.abs(boss.x-old)<=8.8+1e-7,'entrance cannot race across a wide screen');}
-  a.updateBootstomp(boss,s.introDuration-1+.01);assert(Math.abs(boss.x-s.introGoal.x)<1e-7);assert.equal(a.bootstompSnapshot(boss).phase,'intro');a.updateBootstomp(boss,1.45);assert.equal(a.bootstompSnapshot(boss).phase,'idle');assert.equal(boss.speed,110);
+ // A short top entrance eases in and out, with the same capped walking speed.
+ for(const [W,H] of [[1280,800],[393,700]]){const {a,g}=setup(W,H);a.resetRun({skipIntro:true});g.state.W=W;g.state.H=H;g.state.player.x=W/2;g.state.player.y=H/2;g.state.wave=10;a.startWave();g.state.enemies=[];const boss=a.spawnEnemy(true,100,180),s=a.bootstompSnapshot(boss),start={x:boss.x,y:boss.y};
+  assert(start.y<0&&start.x===s.introGoal.x,'short entrance from above rather than a screen-wide horizontal slide');
+  assert(s.introDuration>=1.5*Math.hypot(s.introGoal.x-start.x,s.introGoal.y-start.y)/88,'eased entrance respects capped peak speed');
+  for(let i=0;i<10;i++){const old={x:boss.x,y:boss.y};a.updateBootstomp(boss,.1);assert(Math.hypot(boss.x-old.x,boss.y-old.y)<=8.8+1e-7,'entrance cannot race across a wide screen');}
+  a.updateBootstomp(boss,s.introDuration-1+.01);assert(Math.hypot(boss.x-s.introGoal.x,boss.y-s.introGoal.y)<1e-7);assert.equal(a.bootstompSnapshot(boss).phase,'intro');a.updateBootstomp(boss,1.45);assert.equal(a.bootstompSnapshot(boss).phase,'idle');assert.equal(boss.speed,110);
  }
  // Helpers keep the same cap, but actual arrivals are spaced farther apart.
  {const r=setup(),{a,e,g}=r,count=()=>g.state.enemies.filter(n=>n.bossOwner===e).length;assert.equal(count(),0);step(r,.2);assert.equal(count(),1);step(r,2);assert.equal(count(),1,'no second helper at the old arrival cadence');step(r,.5);assert.equal(count(),2,'reduced stream continues spawning helpers');}
