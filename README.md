@@ -1148,3 +1148,13 @@ portrait badge, with the original walking and building drawings preserved.
 Fresh-wall catches still stop passengers in flight. Defeating the Count removes all
 his crew. This encounter does not spend the four normal catapulter appearances,
 and other boss waves keep their usual catapulter restriction.
+
+
+Paper tunnel openings (Alpha 0.1.144): a monster's full visible-width footprint
+must fit the actual erased region before it can use that entrance. Small tears,
+thin slits and partial overlaps do not admit larger bodies. Entry movement stays
+visible across exposed desk and does not snap to a merged opening's old centre.
+Crawlers surface at the first exposed area, including active/expired Plaguefire
+burns and Under the Desk openings/scars. Erasing anywhere over a moving bump
+for 0.55 seconds forces it out through a body-sized opening; short gaps lose
+progress more slowly. One underground trip per monster remains the rule.
