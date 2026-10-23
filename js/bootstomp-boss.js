@@ -20,16 +20,16 @@ DoodleDefender.systems.bootstompBoss=function(game){
  }
  function initBootstomp(e){
   if(brains.has(e))return brains.get(e);
-  const p=safePoint(-Math.PI/2);e.x=p.x;e.y=p.y;e.r=30;e.speed=110;e.hp=e.maxHp=150;e.waveBoss=true;
-  const b={phase:'intro',age:0,time:0,wear:Object.fromEntries(names.map(n=>[n,0])),turn:0,attack:0,side:'right',target:null,goal:null,helperCd:1,helperSerial:0,swipeCd:0,rubs:{},reaction:0,passenger:null,kickCd:0,kickCount:0,shockCount:0,finished:false,motion:{distance:0,vx:0,vy:0,lean:0,blend:0,weight:0,lagX:0,lagY:0,feet:null,marks:[],stepCd:0},introGoal:{x:p.x,y:p.y},introStart:{x:p.x<game.state.W/2?-120:game.state.W+120,y:p.y}};b.enterDuration=Math.max(1.2,Math.abs(b.introGoal.x-b.introStart.x)/tune.enterSpeed);e.x=b.introStart.x;brains.set(e,b);
+  const p=safePoint(-Math.PI/2);p.x=a.clamp(game.state.W*.25,75,game.state.W-75);e.x=p.x;e.y=p.y;e.r=30;e.speed=110;e.hp=e.maxHp=150;e.waveBoss=true;
+  const b={phase:'intro',age:0,time:0,wear:Object.fromEntries(names.map(n=>[n,0])),turn:0,attack:0,side:'right',target:null,goal:null,helperCd:1,helperSerial:0,swipeCd:0,rubs:{},reaction:0,passenger:null,kickCd:0,kickCount:0,shockCount:0,finished:false,motion:{distance:0,vx:0,vy:0,lean:0,blend:0,weight:0,lagX:0,lagY:0,feet:null,marks:[],stepCd:0},introGoal:{x:p.x,y:p.y},introStart:{x:p.x,y:-65}};b.enterDuration=Math.max(2.4,1.5*Math.hypot(b.introGoal.x-b.introStart.x,b.introGoal.y-b.introStart.y)/tune.enterSpeed);e.x=b.introStart.x;e.y=b.introStart.y;brains.set(e,b);
   a.resetCircleShapes();a.setMsg('Bootstomp! Hold the eraser in his footprint until he lands. When he falls, rub out his five patches!');return b;
  }
  function state(e){return brains.get(e)||initBootstomp(e);}
  function setPhase(e,phase){const b=state(e);b.phase=phase;b.age=0;}
  function clipAt(e){
   const b=state(e),left=b.side==='left';
-  if(b.phase==='intro')return b.age<b.enterDuration?[a.enemyMotionReduced()?'idle':'walk',a.enemyMotionReduced()?0:b.motion.distance/58*.72]:['intro_challenge',b.age-b.enterDuration];
-  if(b.phase==='walk')return [a.enemyMotionReduced()?'idle':'walk',a.enemyMotionReduced()?0:b.motion.distance/58*.72];
+  if(b.phase==='intro')return b.age<b.enterDuration?[a.enemyMotionReduced()?'idle':'intro_enter',a.enemyMotionReduced()?0:b.motion.distance/strideLength*.72]:['intro_challenge',b.age-b.enterDuration];
+  if(b.phase==='walk')return [a.enemyMotionReduced()?'idle':'walk',a.enemyMotionReduced()?0:b.motion.distance/strideLength*.72];
   if(b.phase==='shockwave')return b.age<.7?['windup_right',b.age*3/.7]:['impact_'+(b.shockCount===1?'right':'left'),b.age-(b.shockCount===1?.7:1.25)];
   if(b.phase==='kick')return ['shoe_scrape',b.age];
   if(b.phase==='windup')return ['windup_'+b.side,b.age*3/tune.charge];
@@ -55,8 +55,8 @@ DoodleDefender.systems.bootstompBoss=function(game){
   const f=atlas.frames[key],scale=atlas.pages[f.page].scale*size();return {key,f,clip,name,scale,flip:!!clip.flipX||(b.phase==='down'&&b.reaction>0&&b.side==='left')||(b.phase.startsWith('lace')&&b.lace?.side===-1)};
  }
  // Track distance and alternating footfalls for pose timing and step sounds.
- // Draw complete authored poses; animation never changes collision or attack clocks.
- const strideLength=58,stanceFraction=.6;
+ // Distance, rather than elapsed time, drives the whole-pose walk cycle.
+ const strideLength=76,stanceFraction=.62;
  function footBases(){const f=atlas.frames['arrival:15'],scale=atlas.pages[f.page].scale*size();return ['left_boot','right_boot'].map(n=>{const q=f.parts[n];return {x:(q[0]-f.pivot[0])*scale,y:ground()+(q[1]-f.pivot[1])*scale};});}
  function updateWalkMotion(e,old,dt){
   if(dt<=0)return;
@@ -65,7 +65,7 @@ DoodleDefender.systems.bootstompBoss=function(game){
   m.vx+=(moving?dx/Math.max(dt,.00001)-m.vx:-m.vx)*blend;m.vy+=(moving?dy/Math.max(dt,.00001)-m.vy:-m.vy)*blend;
   m.lean+=(a.clamp(m.vx/110,-1,1)*.065-m.lean)*blend;m.lagX+=(a.clamp(-m.vx*.025,-4,4)-m.lagX)*blend;m.lagY+=(a.clamp(-m.vy*.015,-2,2)-m.lagY)*blend;m.blend+=((moving?1:0)-m.blend)*blend;
   if(!m.feet)m.feet=bases.map((p,i)=>({x:old.x+p.x,y:old.y+p.y,lift:0,u:i*.5,planted:false,startX:old.x+p.x,startY:old.y+p.y}));
-  if(!moving){for(const [i,f] of m.feet.entries()){f.x+=(e.x+bases[i].x-f.x)*blend;f.y+=(e.y+bases[i].y-f.y)*blend;f.lift*=1-blend;f.planted=false;}return;}
+  if(!moving){for(const f of m.feet){f.lift*=1-blend;f.planted=true;}return;}
   m.distance+=d;const nx=dx/d,ny=dy/d,half=strideLength*stanceFraction/2;
   for(const [i,f] of m.feet.entries()){
    const u=(m.distance/strideLength+i*.5)%1,base=bases[i];
@@ -76,15 +76,10 @@ DoodleDefender.systems.bootstompBoss=function(game){
    }else{
     if(f.planted||d>strideLength/2){f.startX=f.x;f.startY=f.y;}f.planted=false;
     const t=(u-stanceFraction)/(1-stanceFraction),smooth=t*t*(3-2*t),ahead=(1-u)*strideLength+half;
-    f.x=f.startX+(e.x+base.x+nx*ahead-f.startX)*smooth;f.y=f.startY+(e.y+base.y+ny*ahead-f.startY)*smooth;f.lift=Math.sin(t*Math.PI)*8;
+    f.x=f.startX+(e.x+base.x+nx*ahead-f.startX)*smooth;f.y=f.startY+(e.y+base.y+ny*ahead-f.startY)*smooth;f.lift=Math.sin(t*Math.PI)*12;
    }
    f.u=u;
   }
- }
- function drawWalkingRig(e){
-  const ctx=game.dom.ctx,p=pose(e),image=sprite(e,p);if(!image)return false;
-  // Keep the authored drawing crisp: cross-fading silhouettes produces double eyes and boots.
-  ctx.translate(0,ground());ctx.drawImage(image,-p.f.pivot[0]*p.scale,-p.f.pivot[1]*p.scale,image.width*p.scale,image.height*p.scale);return true;
  }
  function partPoints(e,p=pose(e)){
   const result={},parts=p.f.parts;for(const n of names){const q=parts[n],x=(q[0]-p.f.pivot[0])*p.scale;result[n]={x:e.x+(p.flip?-x:x),y:e.y+ground()+(q[1]-p.f.pivot[1])*p.scale,rx:q[2]*p.scale,ry:q[3]*p.scale};}return result;
@@ -152,7 +147,7 @@ DoodleDefender.systems.bootstompBoss=function(game){
   b.age+=dt;b.time+=dt;b.kickCd=Math.max(0,b.kickCd-dt);b.swipeCd=Math.max(0,b.swipeCd-dt);b.reaction=Math.max(0,b.reaction-dt);e.freeze=e.stun=e.gravitySlow=e.burn=e.poison=e.charged=0;
   if(b.phase==='defeat'){if(b.age>=3.09){e.hp=0;a.killEnemy(e);}return;}
   updateRipples(e,dt);helpers(e,dt);sweep(e,e,e);
-  if(b.phase==='intro'){const t=Math.min(1,b.age/b.enterDuration),old={x:e.x,y:e.y};e.x=b.introStart.x+(b.introGoal.x-b.introStart.x)*t;e.y=b.introGoal.y;sweep(e,old,e);if(Math.floor(b.age/.6)!==Math.floor((b.age-dt)/.6)&&b.age<b.enterDuration)a.playSound('chonksStep');if(b.age>=b.enterDuration+tune.challengeDuration){setPhase(e,'idle');a.setMsg('Bootstomp · Hold his footprint, then rub out the fallen patches!');}return;}
+  if(b.phase==='intro'){const t=Math.min(1,b.age/b.enterDuration),ease=t*t*(3-2*t),old={x:e.x,y:e.y};e.x=b.introStart.x+(b.introGoal.x-b.introStart.x)*ease;e.y=b.introStart.y+(b.introGoal.y-b.introStart.y)*ease;sweep(e,old,e);const challengeAge=b.age-b.enterDuration;if(challengeAge>=.45&&challengeAge-dt<.45)a.playSound('paperCrumple');if(challengeAge>=1.05&&challengeAge-dt<1.05)a.playSound('chonksStep');if(b.age>=b.enterDuration+tune.challengeDuration){setPhase(e,'idle');a.setMsg('Bootstomp · Hold his footprint, then rub out the fallen patches!');}return;}
   if(b.phase==='shockwave'){
    if(b.shockCount===0&&b.age>=.7){b.shockCount=1;launchRipple(e,true);}
    if(b.shockCount===1&&b.age>=1.25){b.shockCount=2;launchRipple(e,true);}
@@ -217,11 +212,11 @@ DoodleDefender.systems.bootstompBoss=function(game){
   for(const [j,n] of names.entries()){const rank=b.wear[n];if(!rank)continue;const q=p.f.parts[n],factor=1.13;ctx.globalAlpha=[0,.4,.72,.95][rank];ctx.beginPath();for(let i=0;i<20;i++){const angle=i*Math.PI/10,k=1+.065*Math.sin(i*2.4+j);const xx=q[0]+Math.cos(angle)*q[2]*factor*k,yy=q[1]+Math.sin(angle)*q[3]*factor*k;if(i)ctx.lineTo(xx,yy);else ctx.moveTo(xx,yy);}ctx.closePath();ctx.fill();}
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';frameCache.set(key,c);if(frameCache.size>40)frameCache.delete(frameCache.keys().next().value);return c;
  }
- function drawBootstomp(e){if(!isBootstomp(e))return false;const b=state(e),rigged=!a.enemyMotionReduced()&&(b.phase==='walk'||b.phase==='intro'&&b.age<b.enterDuration),p=pose(e),ctx=game.dom.ctx;
-  ctx.save();if(!rigged||!drawWalkingRig(e)){const image=sprite(e,p);ctx.translate(0,ground());if(p.flip)ctx.scale(-1,1);if(image)ctx.drawImage(image,-p.f.pivot[0]*p.scale,-p.f.pivot[1]*p.scale,p.f.rect[2]*p.scale,p.f.rect[3]*p.scale);else a.drawPaperDoodle?.('bootstomp',-70,-130,140,140);}ctx.restore();
+ function drawBootstomp(e){if(!isBootstomp(e))return false;const b=state(e),p=pose(e),ctx=game.dom.ctx;
+  ctx.save();const image=sprite(e,p);ctx.translate(0,ground());if(p.flip)ctx.scale(-1,1);if(image)ctx.drawImage(image,-p.f.pivot[0]*p.scale,-p.f.pivot[1]*p.scale,p.f.rect[2]*p.scale,p.f.rect[3]*p.scale);else a.drawPaperDoodle?.('bootstomp',-70,-130,140,140);ctx.restore();
   if(b.phase==='lace'&&b.lace){ctx.save();ctx.strokeStyle='#49322b';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(b.lace.x-e.x,b.lace.y-e.y);ctx.lineTo(b.lace.ex-e.x,b.lace.y2-e.y);ctx.stroke();ctx.strokeStyle='#f5e8ce';ctx.lineWidth=1;ctx.stroke();ctx.restore();}
   if(b.phase==='down'){const points=partPoints(e,p);ctx.save();ctx.lineWidth=1.5;for(const n of names){if(b.wear[n]>=3)continue;const q=points[n];ctx.strokeStyle=b.swipeCd>0?'#8298a0':'#557bb0';ctx.beginPath();ctx.arc(q.x-e.x,q.y-e.y,Math.max(8,q.rx)+4,-Math.PI/2,-Math.PI/2+Math.PI*2*(3-b.wear[n])/3);ctx.stroke();}ctx.restore();}
-  if(b.phase!=='intro'&&b.phase!=='defeat'){const y=Math.max(-e.y+22,ground()+(p.f.inkBounds[1]-p.f.pivot[1])*p.scale-15),w=130*size()/.76;ctx.save();ctx.fillStyle='#fff7e8';ctx.fillRect(-w/2-3,y-3,w+6,13);for(let i=0;i<5;i++){ctx.fillStyle='#d3c6ae';ctx.fillRect(-w/2+i*w/5,y,w/5-3,6);ctx.fillStyle='#4268b3';ctx.fillRect(-w/2+i*w/5,y,(w/5-3)*(3-b.wear[names[i]])/3,6);}ctx.restore();}return true;
+  if(b.phase!=='intro'&&b.phase!=='defeat'){const y=Math.max(-e.y+22,['walk','idle','intro'].includes(b.phase)?-86*size()/.38:ground()+(p.f.inkBounds[1]-p.f.pivot[1])*p.scale-15),w=130*size()/.76;ctx.save();ctx.fillStyle='#fff7e8';ctx.fillRect(-w/2-3,y-3,w+6,13);for(let i=0;i<5;i++){ctx.fillStyle='#d3c6ae';ctx.fillRect(-w/2+i*w/5,y,w/5-3,6);ctx.fillStyle='#4268b3';ctx.fillRect(-w/2+i*w/5,y,(w/5-3)*(3-b.wear[names[i]])/3,6);}ctx.restore();}return true;
  }
  function drawBootstompFields(){const ctx=game.dom.ctx;ctx.save();for(const e of hosts()){const b=state(e);if(b.phase==='windup'&&b.target){const p=b.target,ready=pressure(e)>=tune.threshold;ctx.save();ctx.translate(p.x,p.y);ctx.strokeStyle=ready?'#477c72':'#866e51';ctx.fillStyle=ready?'#8ebcab44':'#ead5a033';ctx.lineWidth=2;ctx.setLineDash(ready?[]:[5,4]);ctx.beginPath();ctx.ellipse(0,0,29,39,b.side==='left'?-.15:.15,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.setLineDash([]);for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(-18,i*11);ctx.lineTo(18,i*11);ctx.stroke();}ctx.font='bold 12px "Stevie Pencil", cursive';ctx.textAlign='center';ctx.fillStyle=ready?'#346e5a':'#67533e';ctx.fillText(ready?'KEEP HOLDING!':'HOLD ERASE',0,Math.min(55,game.state.H-p.y-10));ctx.restore();}
    if(b.phase==='shockwave'&&b.age<.7){ctx.save();ctx.strokeStyle='#a66c44';ctx.lineWidth=3;ctx.setLineDash([7,7]);ctx.beginPath();ctx.moveTo(e.x,e.y+ground());ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();ctx.setLineDash([]);ctx.font='bold 12px "Stevie Pencil", cursive';ctx.textAlign='center';ctx.fillStyle='#855332';ctx.fillText('DOUBLE STOMP!',e.x,e.y-75);ctx.restore();}

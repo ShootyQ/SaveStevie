@@ -65,6 +65,40 @@ for name in ('arrival', 'stomp', 'fall', 'special', 'reaction', 'erasure'):
             }
 
 
+# The expanded sheet is kept intact. Catalogue its actual transparent gutters,
+# then register complete drawings at their blue-body centre and sole baseline.
+im = Image.open(DEST / 'full-motion.png').convert('RGBA')
+w, h = im.size
+alpha = im.getchannel('A')
+rows = [sum(v > 32 for v in alpha.crop((0,y,w,y+1)).tobytes()) for y in range(h)]
+ys = [0]+[boundary(rows,h*i/6,h*.035) for i in range(1,6)]+[h]
+pages['full-motion'] = {'image':'full-motion.png','width':w,'height':h,'scale':round(320/(w/6),6)}
+for row in range(6):
+    y0,y1=ys[row:row+2]
+    columns=[sum(v>32 for v in alpha.crop((x,y0,x+1,y1)).tobytes()) for x in range(w)]
+    xs=[0]+[boundary(columns,w*i/6,w*.025) for i in range(1,6)]+[w]
+    for col in range(6):
+        x0,x1=xs[col:col+2]
+        crop=im.crop((x0,y0,x1,y1))
+        box=crop.getchannel('A').point(lambda v:255 if v>32 else 0).getbbox()
+        bx,by,ex,ey=box;bw,bh=ex-bx,ey-by
+        blue=[x for y in range(crop.height) for x in range(crop.width)
+              if (lambda r,g,b,a:a>128 and b>95 and b>r*1.45 and b>g*1.2)(*crop.getpixel((x,y)))]
+        # Per-pose masks stay on the complete drawing; no detached body parts.
+        pts={'left_fist':[.12,.49,.13,.18],'right_fist':[.88,.49,.13,.18],
+             'left_boot':[.25,.84,.22,.17],'right_boot':[.76,.84,.22,.17],
+             'star':[.53,.50,.08,.09]}
+        idx=row*6+col
+        if idx in (20,21):pts.update(left_fist=[.40,.55,.14,.17],right_fist=[.65,.55,.14,.17])
+        if idx in (24,25):pts['right_boot']=[.76,.59,.25,.24]
+        if idx==26:pts['left_boot']=[.32,.54,.25,.24]
+        if idx in (27,28):pts.update(left_fist=[.16,.83,.14,.16],right_fist=[.86,.83,.14,.16])
+        if idx==33:pts.update(left_boot=[.31,.23,.18,.17],right_boot=[.69,.23,.18,.17],left_fist=[.12,.83,.14,.16],right_fist=[.88,.83,.14,.16],star=[.53,.5,0,0])
+        frames[f'full-motion:{idx}']={'page':'full-motion','rect':[x0,y0,x1-x0,y1-y0],
+            'pivot':[round(sum(blue)/len(blue),2),ey], 'inkBounds':list(box),
+            'parts':{n:[round(bx+q[0]*bw,2),round(by+q[1]*bh,2),round(q[2]*bw,2),round(q[3]*bh,2)] for n,q in pts.items()}}
+
+
 clips = {}
 
 
@@ -101,6 +135,23 @@ clip('lace_rebound', 'special', [12, 13, 14, 15], [.16, .15, .24, .3], events={'
 clip('rub_flinch', 'reaction', [0, 1, 2, 3], [.1, .12, .14, .18], events={'1': 'rub_hit'})
 clip('patch_gone', 'reaction', [4, 5, 6, 7], [.12, .16, .18, .22], events={'0': 'patch_pop'})
 clip('defeat', 'reaction', list(range(8, 16)), [.3, .25, .24, .3, .35, .35, .5, .8], events={'0': 'defeat_grumble', '6': 'defeat_flop'})
+
+# Whole-pose replacement for the layered animation. Keep specialised lace,
+# exposed rub targets and defeat art, which have their own readable poses.
+clip('intro_enter','full-motion',[0,1,3,4],.18,True)
+clip('intro_challenge','full-motion',list(range(18,24)),[.20,.20,.25,.25,.24,.30])
+clip('idle','full-motion',[5],1,True)
+clip('walk','full-motion',list(range(6,18)),.06,True,events={'0':'boot_step','6':'boot_step'})
+clip('windup_right','full-motion',[24,25],[.55,2.45],landingFoot='right')
+clip('windup_left','full-motion',[24,25],[.55,2.45],flipX=True,landingFoot='left')
+clip('impact_right','full-motion',[27,28,29],[.14,.22,.29],landingFoot='right')
+clip('impact_left','full-motion',[27,28,29],[.14,.22,.29],flipX=True,landingFoot='left')
+clip('stumble_right','full-motion',[30,31,32],[.14,.16,.18])
+clip('stumble_left','full-motion',[30,31,32],[.14,.16,.18],flipX=True)
+clip('faceplant','full-motion',[32,33],[.22,.50])
+clip('faceplant_left','full-motion',[32,33],[.22,.50],flipX=True)
+clip('recover','full-motion',[34,35],[.46,.48])
+clip('recover_left','full-motion',[34,35],[.46,.48],flipX=True)
 
 patches = {}
 for key, label, ids in (
