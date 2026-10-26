@@ -1185,3 +1185,16 @@ gesture ends. The fallen pose stays fixed so part targets do not jump during
 flinches; graphite crumbs provide hit feedback. Parts still take three swipes
 and retain faint ghosts. Mouse and phone touch regressions include sustained
 overshoot onto bare paper and release cleanup.
+
+
+Reactive boss counters (Alpha 0.1.148): Bootstomp's footprint uses a dedicated
+0.25s growth after the ordinary 0.1s activation delay; 80% depth prepares the
+counter in about 0.3s. The dent remains after release until that stomp consumes
+it. New stomps and resized target positions clear prepared dents. Raised boots
+and footprint markers use matching mirrored artwork, and wave 10 starts his own
+intro without the retired stapler cinematic. Ordinary paper pressing retains its
+2.5s growth. Count Crayon permits turrets against his operator and minions while
+Count himself remains excluded from cannon targets. Returning flying crayons
+have separate marked approach waypoints and staggered speeds. Reflected Pew Pew
+pencils pierce visible ordinary enemies (including shields), and one return
+always defeats the shooter; boss mechanics and underground protections remain.

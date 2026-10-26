@@ -73,7 +73,7 @@ function dealDamage(enemy,amount,kind='physical',source=null){
   if(game.api.gravityCaptured?.(enemy)&&!source?.gravityGulp)return;
   if(game.api.isBootstomp?.(enemy))return;
   if(game.api.routeWhiteBrotherDamage?.(enemy,amount,kind,source))return;
-  if(game.api.chonksProtected(enemy))return;
+  if(game.api.chonksProtected(enemy)&&!(kind==='reflected'&&source?.pencilReturn))return;
   if(game.api.abilityImmune(enemy)&&!game.api.isCrayonBoss(enemy)&&!game.api.isWobbleBoss(enemy)&&kind!=='physical'&&kind!=='reflected')return;
   const underground=game.api.underPaper(enemy);if(underground&&!source?.rock)return;
 
