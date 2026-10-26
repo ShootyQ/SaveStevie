@@ -139,6 +139,8 @@ clip('defeat', 'reaction', list(range(8, 16)), [.3, .25, .24, .3, .35, .35, .5, 
 # Whole-pose replacement for the layered animation. Keep specialised lace,
 # exposed rub targets and defeat art, which have their own readable poses.
 clip('intro_enter','full-motion',[0,1,3,4],.18,True)
+clip('intro_drop','full-motion',[30,26],[.5,.42])
+clip('intro_land','full-motion',[28,34,35],[.19,.28,.28])
 clip('intro_challenge','full-motion',list(range(18,24)),[.20,.20,.25,.25,.24,.30])
 clip('idle','full-motion',[5],1,True)
 clip('walk','full-motion',list(range(6,18)),.06,True,events={'0':'boot_step','6':'boot_step'})
@@ -169,7 +171,7 @@ data = {
     'pages': pages, 'frames': frames, 'clips': clips, 'patches': patches,
     'excludedFrames': {'stomp:6': 'Raised foot changes side.', 'special:3': 'Extended fist touches outer sheet edge.'},
     'scenes': {
-        'Intro': [['intro_enter', 1.2], ['intro_challenge', 1.44], ['idle', 1.3]],
+        'Intro': [['intro_drop', .92], ['intro_land', .75], ['intro_challenge', 1.44], ['idle', 1.3]],
         'Right stomp — countered': [['windup_right', 3], ['stumble_right', .48], ['faceplant', .72], ['fallen', 2.8], ['recover', .94], ['idle', .5]],
         'Left stomp — countered': [['windup_left', 3], ['stumble_left', .48], ['faceplant_left', .72], ['fallen_left', 2.8], ['recover_left', .94], ['idle', .5]],
         'Stomp — gets through': [['windup_right', 3], ['impact_right', .65], ['idle', 1]],

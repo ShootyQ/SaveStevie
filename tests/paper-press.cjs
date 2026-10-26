@@ -2,7 +2,7 @@ const assert=require('assert');
 module.exports=load=>{
  const setup=options=>{const env=load(true,options),g=env.sandbox.testGame,a=g.api,s=g.state;a.resetRun();s.enemies=[];s.walls=[];s.W=800;s.H=700;s.player.x=600;s.player.y=400;s.spawnTimer=99999;s.timeLeft=300;s.stats.rockDamage=0;return {env,g,a,s};};
  {
-  const {a,s,env}=setup();assert(a.beginPaperPress({x:200,y:220}));a.updatePaperPress(.39);assert.equal(a.paperPressSnapshot().press.depth,0);a.updatePaperPress(.01);assert(a.paperPressSnapshot().press.depth>0);a.updatePaperPress(2.5);assert.equal(a.paperPressSnapshot().press.r,90);a.updatePaperPress(20);assert.equal(a.paperPressSnapshot().press.r,90);
+  const {a,s,env}=setup();assert(a.beginPaperPress({x:200,y:220}));a.updatePaperPress(.09);assert.equal(a.paperPressSnapshot().press.depth,0);a.updatePaperPress(.011);assert(a.paperPressSnapshot().press.depth>0);a.updatePaperPress(2.5);assert.equal(a.paperPressSnapshot().press.r,90);a.updatePaperPress(20);assert.equal(a.paperPressSnapshot().press.r,90);
   const e=a.spawnEnemy(false,275,220,'grunt'),before=e.x,hp=e.hp;a.updatePaperPress(.2);assert(e.x<before);assert(a.paperPressCaptures(e));const brain=JSON.stringify(a.paperPressSnapshot()),state=JSON.stringify(s),random=env.sandbox.Math.random;env.sandbox.Math.random=()=>{throw Error('draw must not roll RNG')};a.draw();env.sandbox.Math.random=random;assert.equal(JSON.stringify(s),state);assert.equal(JSON.stringify(a.paperPressSnapshot()),brain);
   assert(a.releasePaperPress());assert(e.flight?.paperBounce);const start={x:e.x,y:e.y};assert(Math.hypot(e.flight.targetX-e.x,e.flight.targetY-e.y)<=58.01);a.updateEnemyFlight(e,.5);assert(!e.flight);assert.equal(e.hp,hp-2);assert(e.stun>0);assert(Math.hypot(e.x-start.x,e.y-start.y)<=58.01);
  }

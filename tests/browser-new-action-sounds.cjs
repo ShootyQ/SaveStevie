@@ -13,7 +13,7 @@ const root=path.resolve(__dirname,'..');
    const sniper=a.spawnEnemy(false,50,180,'sniper');a.fireSniper(sniper);const shot=kinds();a.resetSoundEffects();
    g.state.walls=[{pts:[{x:100,y:80},{x:100,y:g.state.H-20}],thick:8,hp:100,maxHp:100,life:60,maxLife:60}];a.updateEnemyShots(.7);const deflect=kinds(),returned=g.state.enemyShots.some(s=>s.reflected);clear();
    const sneak=a.spawnEnemy(false,60,160,'flanker');a.updateSneaky(sneak,1.2);const plan=kinds();a.resetSoundEffects();a.updateSneaky(sneak,.01);const noRepeat=kinds();clear();
-   const p={x:70,y:160};if(!a.beginPaperPress(p))throw Error('test point must support a press');a.updatePaperPress(.39);const early=kinds();a.updatePaperPress(.02);const stretch=kinds();const played=a.soundEffectsSnapshot().played;a.updatePaperPress(.5);const once=a.soundEffectsSnapshot().played===played;
+   const p={x:70,y:160};if(!a.beginPaperPress(p))throw Error('test point must support a press');a.updatePaperPress(.09);const early=kinds();a.updatePaperPress(.02);const stretch=kinds();const played=a.soundEffectsSnapshot().played;a.updatePaperPress(.5);const once=a.soundEffectsSnapshot().played===played;
    const released=a.releasePaperPress(),release=kinds();clear();a.beginPaperPress(p);a.updatePaperPress(.5);a.movePaperPress({x:110,y:160});const moved=kinds();a.cancelPaperPress();const cancelled=a.releasePaperPress();clear();
    a.beginPaperPress(p);a.updatePaperPress(.5);g.state.paused=true;a.updatePaperPress(.01);a.syncSoundEffects();const paused=kinds();g.state.paused=false;const afterPause=a.releasePaperPress();
    return {hit,zero,shot,deflect,returned,plan,noRepeat,early,stretch,once,released,release,moved,cancelled,paused,afterPause};

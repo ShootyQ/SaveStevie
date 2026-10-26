@@ -1,6 +1,6 @@
 /* Eraser-held paper trampoline. Simulation owns all clocks; rendering never rolls RNG. */
 DoodleDefender.systems.paperPress=function(game){
- const tuning={delay:.4,drift:10,growTime:2.5,startRadius:28,maxRadius:90,pullSpeed:100,throwDistance:58,damage:2};
+ const tuning={delay:.1,drift:10,growTime:2.5,startRadius:28,maxRadius:90,pullSpeed:100,throwDistance:58,damage:2};
  let press=null,ripples=[];
  const touchPlay=()=>!!document.documentElement?.classList?.contains('native-app')||!!window.matchMedia?.('(pointer: coarse)').matches;
  const holdRadius=p=>Math.max(52,p.r+12);

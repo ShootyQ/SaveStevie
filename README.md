@@ -1158,3 +1158,11 @@ Crawlers surface at the first exposed area, including active/expired Plaguefire
 burns and Under the Desk openings/scars. Erasing anywhere over a moving bump
 for 0.55 seconds forces it out through a body-sized opening; short gaps lose
 progress more slowly. One underground trip per monster remains the rule.
+
+
+Bootstomp entrance (Alpha 0.1.145): a short overhead drop ends in a compressed
+landing, one heavy wooden/paper thump, paper scuffs and a clumsy recovery before
+his challenge. The boss root stays at a safe landing point; falling cannot sweep
+walls out of the air. Reduced motion removes the fall offset, tilt and squash.
+Paper pressing starts after 0.1s, grows to full depth over a further 2.5s, and
+Bootstomp reads the shared tuning for his 80%-depth counter (about 2.1s).
