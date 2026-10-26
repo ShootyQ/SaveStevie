@@ -136,7 +136,7 @@ game.dom.canvas.addEventListener('pointerdown',e=>{
  if(!dots&&!rope&&!erase&&!game.api.canStartStroke(game.api.pointerPos(e))){game.api.setMsg('Not enough ink to start this stroke. Let it refill, or start from a free/discounted route.');game.api.showDesktopInkFeedback?.(e);return;}
  e.preventDefault?.();strokePointer=e.pointerId;rightDrag=game.api.mouseControl(e)==='erase';lastPoint=game.api.pointerPos(e);game.state.drawing=true;game.state.currentWall=erase||rope||dots?null:[lastPoint];game.dom.canvas.setPointerCapture(e.pointerId);
  if(!rope&&!dots)game.api.utilityPointer?.(lastPoint,!erase);
- if(erase){game.api.beginPaperPress(lastPoint);cursor={...lastPoint,r:20};erasePoint={...lastPoint};}
+ if(erase){game.api.captureBootstompRub?.(lastPoint);game.api.beginPaperPress(lastPoint);cursor={...lastPoint,r:20};erasePoint={...lastPoint};}
  else if(!rope&&!dots&&game.api.whitePencilPath?.(lastPoint,lastPoint,true))game.state.currentWall=null;syncDrawingControls();
 });
 game.dom.canvas.addEventListener('pointermove',e=>{
@@ -149,14 +149,15 @@ game.dom.canvas.addEventListener('pointermove',e=>{
  if(game.api.dotTraceActive()){game.api.moveDotTrace(p);lastPoint=p;return;}
  game.api.utilityPointer?.(p,!eraserActive());
  if(eraserActive()){
-  const pressing=game.api.movePaperPress(p);
+  const bossRub=game.api.captureBootstompRub?.(erasePoint||lastPoint,p,13);
+  const pressing=bossRub?false:game.api.movePaperPress(p);
   if(pressing)erasePoint={...p};
   // A click is not a rub. Accumulate slow movement from an anchor so small
   // pointer samples still form a stroke, without rewarding stationary jitter.
   if(!erasePoint)erasePoint={...lastPoint};
   if(!pressing&&game.api.dist(erasePoint.x,erasePoint.y,p.x,p.y)>=6){
    game.api.sustainSound('erase');game.api.eraseWallPath(erasePoint,p,20);
-   if(!game.api.whiteToolsEraseHandled?.()&&!game.api.bootstompEraseHandled?.()&&!game.api.utilityEraseHandled?.()&&!game.api.underDeskEraseHandled?.())game.api.queuePaperRub(erasePoint,p,20);
+   if(!bossRub&&!game.api.whiteToolsEraseHandled?.()&&!game.api.bootstompEraseHandled?.()&&!game.api.utilityEraseHandled?.()&&!game.api.underDeskEraseHandled?.())game.api.queuePaperRub(erasePoint,p,20);
    erasePoint={...p};
   }
   cursor={...p,r:20};

@@ -14,7 +14,7 @@ function clearSurfaceEffects(e){for(const key of ['burn','burnDps','poison','poi
 function safePaperPoint(p,r=tuning.holeRadius){const b=game.api.refugeBounds(),near=game.api.refugePoint(p.x,p.y);return p.x>=r+8&&p.x<=game.state.W-r-8&&p.y>=r+76&&p.y<=game.state.H-r-20&&Math.hypot(p.x-near.x,p.y-near.y)> (r===tuning.holeRadius?12:r+8);}
 function addPaperHole(p,r=tuning.holeRadius){return game.api.stampPaperHole(p,r);}
 function queuePaperRub(a,b,r=20){
- if(!paperActive()||![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||Math.hypot(b.x-a.x,b.y-a.y)<.05)return;
+ if(!paperActive()||game.api.bootstompRubActive?.()||![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||Math.hypot(b.x-a.x,b.y-a.y)<.05)return;
  // Adjacent pointer samples share one frame's time budget. Bound work even
  // on devices delivering thousands of coalesced moves.
  if(pending.length>=128)pending.shift();pending.push({a:{...a},b:{...b},r});

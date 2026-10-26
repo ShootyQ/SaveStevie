@@ -4,7 +4,7 @@ DoodleDefender.systems.bootstompBoss=function(game){
  const a=game.api,atlas=DoodleDefender.bootstompArt;
  const tune={charge:3.25,threshold:.8,exposure:3.2,swipeDistance:18,swipeGap:.6,rippleDamage:14,rippleSpeed:370,helperCap:14,introHang:.22,introFall:.7,introSettle:.75,challengeDuration:1.44,helperRate:.7};
  const names=['left_fist','right_fist','left_boot','right_boot','star'];
- let brains=new WeakMap(),ripples=[],lastErase=false,serial=0,frameCache=new Map();
+ let brains=new WeakMap(),ripples=[],lastErase=false,serial=0,frameCache=new Map(),rubOwner=null;
  const isBootstomp=e=>!!e&&e.type==='bootstomp';
  const hosts=()=>game.state.enemies.filter(e=>isBootstomp(e)&&e.hp>0);
  const playable=()=>game.state.running&&!game.state.paused&&!game.state.inUpgrade&&!game.state.betweenWaves&&!game.state.awaitingSpec&&!document.hidden&&!a.waveFinaleActive()&&!a.synergyRevealActive()&&!a.infoOpen();
@@ -41,8 +41,9 @@ DoodleDefender.systems.bootstompBoss=function(game){
   if(b.phase==='impact')return ['impact_'+b.side,b.age];
   if(b.phase==='stumble')return ['stumble_'+b.side,b.age];
   if(b.phase==='fall')return [left?'faceplant_left':'faceplant',b.age];
-  if(b.phase==='down'&&b.reaction>0)return [b.patchReaction?'patch_gone':'rub_flinch',b.reactTotal-b.reaction];
-  if(b.phase==='down')return [left?'fallen_left':'fallen',b.age];
+  // Hold the exposed drawing still: swapping flinch poses moved the rub
+  // targets underneath a finger between consecutive swipes.
+  if(b.phase==='down')return [left?'fallen_left':'fallen',0];
   if(b.phase==='recover')return [left?'recover_left':'recover',b.age];
   if(b.phase==='scrape')return ['shoe_scrape',b.age];
   if(b.phase==='tantrum')return ['tantrum',b.age];
@@ -100,7 +101,15 @@ DoodleDefender.systems.bootstompBoss=function(game){
   return {fall:t,landed:b.age>=landAt,offsetY:reduced?0:-(b.introGoal.y-b.introStart.y)*(1-t*t),angle:reduced?0:b.age<landAt?.12+Math.sin(t*7)*.07:Math.sin(after*18)*.1*Math.exp(-after*5),sx:reduced?1:1+impact*.15,sy:reduced?1:1-impact*.22,impact,after};
  }
  function bootstompPressTarget(p){return hosts().some(e=>{const b=state(e);return b.phase==='windup'&&b.target&&Math.hypot(p.x-b.target.x,p.y-b.target.y)<=b.target.r;});}
- function bootstompRubTarget(p){return hosts().some(e=>state(e).phase==='down'&&Math.abs(p.x-e.x)<145*size()/.76&&p.y>e.y-115&&p.y<e.y+95);}
+ function rubBounds(e){const p=pose(e),q=p.f.inkBounds,x0=(q[0]-p.f.pivot[0])*p.scale,x1=(q[2]-p.f.pivot[0])*p.scale;return {left:e.x+(p.flip?-x1:x0),right:e.x+(p.flip?-x0:x1),top:e.y+ground()+(q[1]-p.f.pivot[1])*p.scale,bottom:e.y+ground()+(q[3]-p.f.pivot[1])*p.scale};}
+ function rubTouchesBody(e,from,to,r=12){const q=rubBounds(e),inside=p=>p.x>=q.left-r&&p.x<=q.right+r&&p.y>=q.top-r&&p.y<=q.bottom+r;if(inside(from)||inside(to))return true;const corners=[{x:q.left-r,y:q.top-r},{x:q.right+r,y:q.top-r},{x:q.right+r,y:q.bottom+r},{x:q.left-r,y:q.bottom+r}];return corners.some((p,i)=>a.segmentIntersection(from,to,p,corners[(i+1)%4]));}
+ function bootstompRubTarget(p){return hosts().some(e=>state(e).phase==='down'&&rubTouchesBody(e,p,p));}
+ function captureBootstompRub(from,to=from,r=12){
+  if(!playable())return false;if(rubOwner)return true;
+  rubOwner=hosts().find(e=>state(e).phase==='down'&&rubTouchesBody(e,from,to,r))||null;
+  if(rubOwner){a.cancelPaperRub();a.cancelPaperPress();lastErase=true;}
+  return !!rubOwner;
+ }
  function sweep(e,from,to,r=e.r+8){
   for(const w of [...game.state.walls]){if(w.hp<=0)continue;let hit=false;
    for(let i=1;i<w.pts.length;i++){const p=w.pts[i-1],q=w.pts[i];if(a.segmentIntersection(from,to,p,q)||Math.min(a.pointSegDist(from.x,from.y,p.x,p.y,q.x,q.y),a.pointSegDist(to.x,to.y,p.x,p.y,q.x,q.y),a.pointSegDist(p.x,p.y,from.x,from.y,to.x,to.y),a.pointSegDist(q.x,q.y,from.x,from.y,to.x,to.y))<=r+w.thick/2){hit=true;break;}}
@@ -196,20 +205,20 @@ DoodleDefender.systems.bootstompBoss=function(game){
   }finally{updateWalkMotion(e,old,dt);}
  }
  function eraseBootstompPath(from,to,r){
-  lastErase=false;if(!playable())return false;const length=Math.hypot(to.x-from.x,to.y-from.y);if(length<6)return false;
-  for(const e of hosts()){const b=state(e);if(b.phase!=='down')continue;const parts=partPoints(e);
+  lastErase=captureBootstompRub(from,to,r*.65);if(!playable())return false;const length=Math.hypot(to.x-from.x,to.y-from.y);if(length<6)return false;
+  for(const e of hosts()){const b=state(e);if(b.phase!=='down'||rubOwner&&rubOwner!==e)continue;const parts=partPoints(e);
    const found=names.filter(n=>b.wear[n]<3&&a.pointSegDist(parts[n].x,parts[n].y,from.x,from.y,to.x,to.y)<=Math.max(parts[n].rx,parts[n].ry)+r*.65).sort((n,m)=>Math.hypot(to.x-parts[n].x,to.y-parts[n].y)-Math.hypot(to.x-parts[m].x,to.y-parts[m].y))[0];
    if(!found){b.rubs={};if(bootstompRubTarget(to))lastErase=true;continue;}lastErase=true;
    const dir={x:(to.x-from.x)/length,y:(to.y-from.y)/length},rub=b.rubs[found]||(b.rubs[found]={travel:0,dir:null,spent:false});
    if(rub.spent&&rub.dir&&dir.x*rub.dir.x+dir.y*rub.dir.y<-.35){rub.spent=false;rub.travel=0;}
    if(!rub.spent)rub.travel+=length;if(rub.spent||rub.travel<tune.swipeDistance||b.swipeCd>0)return false;
    rub.spent=true;rub.dir=dir;b.swipeCd=tune.swipeGap;b.wear[found]++;b.patchReaction=b.wear[found]===3&&b.wear.star===3;b.reactTotal=b.patchReaction?.68:.54;b.reaction=b.reactTotal;
-   const total=names.reduce((sum,n)=>sum+b.wear[n],0);e.hp=Math.max(1,e.maxHp*(1-total/15));a.playSound(b.wear[found]===3?'paperPop':'paperHit');a.floatText(parts[found].x,parts[found].y-18,b.wear[found]===3?'RUBBED OUT!':(3-b.wear[found])+' swipes','#4872a2');
+   const total=names.reduce((sum,n)=>sum+b.wear[n],0);e.hp=Math.max(1,e.maxHp*(1-total/15));a.burst(parts[found].x,parts[found].y,'#a99a83',6);a.playSound(b.wear[found]===3?'paperPop':'paperHit');a.floatText(parts[found].x,parts[found].y-18,b.wear[found]===3?'RUBBED OUT!':(3-b.wear[found])+' swipes','#4872a2');
    if(total===15){b.finished=true;b.passenger=null;setPhase(e,'defeat');ripples=[];game.state.enemies=game.state.enemies.filter(n=>n.bossOwner!==e);a.endDraw();a.setMsg('Bootstomp is out of excuses. And quite a lot of drawing.');}
    return true;
   }return false;
  }
- function resetBootstompRub(){lastErase=false;for(const e of hosts())state(e).rubs={};}
+ function resetBootstompRub(){lastErase=false;rubOwner=null;for(const e of hosts())state(e).rubs={};}
  function counterBootstompStroke(points){
   if(!playable()||points.length<2)return false;
   for(const e of hosts()){const b=state(e);if(b.phase!=='lace'||b.age<.2||!b.lace)continue;const p={x:b.lace.x,y:b.lace.y},q={x:b.lace.ex,y:b.lace.y2};
@@ -219,7 +228,7 @@ DoodleDefender.systems.bootstompBoss=function(game){
   }return false;
  }
  function clearBootstomp(e){ripples=ripples.filter(q=>q.owner!==e);const b=brains.get(e);if(b)b.passenger=null;}
- function resetBootstomp(){brains=new WeakMap();ripples=[];lastErase=false;frameCache.clear();}
+ function resetBootstomp(){rubOwner=null;brains=new WeakMap();ripples=[];lastErase=false;frameCache.clear();}
  function moveBootstomp(dx,dy){for(const e of hosts()){const b=state(e);for(const p of [...(b.motion.feet||[]),...b.motion.marks]){p.x+=dx;p.y+=dy;if(p.startX!==undefined){p.startX+=dx;p.startY+=dy;}}for(const p of [b.target,b.goal,b.scrape?.a,b.scrape?.b,b.introGoal,b.introStart])if(p){p.x+=dx;p.y+=dy;}if(b.lace){b.lace.x+=dx;b.lace.ex+=dx;b.lace.y+=dy;b.lace.y2+=dy;}}for(const q of ripples){q.x+=dx;q.y+=dy;}}
  function resizeBootstomp(){for(const e of hosts()){const b=state(e);if(b.phase==='intro'){const p=safePoint(-Math.PI/2);p.x=a.clamp(game.state.W*.25,75,game.state.W-75);b.introGoal={...p};b.introStart={x:p.x,y:-170};e.x=p.x;e.y=p.y;continue;}b.motion.feet=null;e.x=a.clamp(e.x,Math.min(110,game.state.W*.28),Math.max(game.state.W*.72,game.state.W-110));e.y=a.clamp(e.y,Math.min(145,game.state.H*.32),Math.max(145,game.state.H-95));if(b.phase==='windup'){b.age=0;b.target=landing(e,b.side);}if(['lace','kick'].includes(b.phase)){b.passenger=null;setPhase(e,'lace_rebound');}}}
  function sprite(e,p){
@@ -248,6 +257,6 @@ DoodleDefender.systems.bootstompBoss=function(game){
   }
   for(const p of ripples){const d=Math.hypot(game.state.player.x-p.x,game.state.player.y-p.y),dx=(game.state.player.x-p.x)/(d||1),dy=(game.state.player.y-p.y)/(d||1);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(dy,dx)+Math.PI/2);ctx.fillStyle='#fff8e7';ctx.strokeStyle=p.reduced?'#839b9e':'#797568';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-55,5);ctx.bezierCurveTo(-25,-12,25,-12,55,5);ctx.lineTo(55,11);ctx.bezierCurveTo(25,2,-25,2,-55,11);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}ctx.restore();
  }
- const snapshot=e=>{if(!isBootstomp(e))return null;const b=state(e);return {introDuration:b.enterDuration,introStart:{...b.introStart},introGoal:{...b.introGoal},phase:b.phase,age:b.age,time:b.time,side:b.side,target:b.target?{...b.target}:null,wear:{...b.wear},parts:partPoints(e),swipeCd:b.swipeCd,pressure:pressure(e),lace:b.lace?{...b.lace}:null,passenger:b.passenger?.type||null,kickCount:b.kickCount,shockCount:b.shockCount,ripples:ripples.filter(q=>q.owner===e).map(({owner,...q})=>({...q})),frame:pose(e).key,intro:b.phase==='intro'?introPose(e):null,motion:{distance:b.motion.distance,lean:b.motion.lean,blend:b.motion.blend,feet:b.motion.feet?.map(f=>({...f}))||[],marks:b.motion.marks.map(p=>({...p}))},tuning:{...tune}};};
- Object.assign(a,{isBootstomp,initBootstomp,updateBootstomp,bootstompPressTarget,bootstompRubTarget,bootstompFriendHeld,eraseBootstompPath,resetBootstompRub,bootstompEraseHandled:()=>lastErase,counterBootstompStroke,clearBootstomp,resetBootstomp,moveBootstomp,resizeBootstomp,drawBootstomp,drawBootstompFields,bootstompSnapshot:snapshot});return {};
+ const snapshot=e=>{if(!isBootstomp(e))return null;const b=state(e);return {introDuration:b.enterDuration,introStart:{...b.introStart},introGoal:{...b.introGoal},phase:b.phase,age:b.age,time:b.time,side:b.side,target:b.target?{...b.target}:null,wear:{...b.wear},parts:partPoints(e),swipeCd:b.swipeCd,pressure:pressure(e),lace:b.lace?{...b.lace}:null,passenger:b.passenger?.type||null,kickCount:b.kickCount,shockCount:b.shockCount,ripples:ripples.filter(q=>q.owner===e).map(({owner,...q})=>({...q})),frame:pose(e).key,rubbing:rubOwner===e,intro:b.phase==='intro'?introPose(e):null,motion:{distance:b.motion.distance,lean:b.motion.lean,blend:b.motion.blend,feet:b.motion.feet?.map(f=>({...f}))||[],marks:b.motion.marks.map(p=>({...p}))},tuning:{...tune}};};
+ Object.assign(a,{isBootstomp,initBootstomp,updateBootstomp,bootstompPressTarget,bootstompRubTarget,captureBootstompRub,bootstompRubActive:()=>!!rubOwner,bootstompFriendHeld,eraseBootstompPath,resetBootstompRub,bootstompEraseHandled:()=>lastErase,counterBootstompStroke,clearBootstomp,resetBootstomp,moveBootstomp,resizeBootstomp,drawBootstomp,drawBootstompFields,bootstompSnapshot:snapshot});return {};
 };

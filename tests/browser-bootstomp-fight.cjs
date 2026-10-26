@@ -26,6 +26,13 @@ const root=path.resolve(__dirname,'..');
    await tick(.61);
   }
   assert.equal((await snapshot()).wear.left_boot,3);const ghostAlpha=await patchAlpha();assert(ghostAlpha>0&&ghostAlpha<=20,'erased boot retains only a faint ghost: '+ghostAlpha);await page.screenshot({path:'/tmp/bootstomp-live-erased-'+viewport.width+'.png'});
+  // Overshoot the already erased foot, then rub bare paper for over a second
+  // without lifting. The active boss gesture must never reach paper/press tools.
+  const protectedSurface=await page.evaluate(()=>JSON.stringify(testGame.state.paper.surface)),foot=(await snapshot()).parts.left_boot,far=await page.evaluate(()=>{const e=testGame.state.enemies.find(e=>e.type==='bootstomp');return {x:Math.min(testGame.state.W-45,e.x+130),y:e.y+50};});
+  if(cdp)await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[button,{id:4,x:box.x+foot.x,y:box.y+foot.y}]});else{await page.mouse.move(box.x+foot.x,box.y+foot.y);await page.mouse.down({button:'right'});}
+  for(let i=0;i<25;i++){const x=box.x+far.x+(i%2?-12:12),y=box.y+far.y;if(cdp)await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[button,{id:4,x,y}]});else await page.mouse.move(x,y);await page.evaluate(()=>{testGame.api.updatePaper(.05);testGame.api.updatePaperPress(.05);});}
+  assert.equal(await page.evaluate(()=>JSON.stringify(testGame.state.paper.surface)),protectedSurface,'mouse/touch drift off the boss cannot tear paper');assert.equal(await page.evaluate(()=>testGame.api.paperPressSnapshot().press),null,'drift cannot arm a dent');
+  if(cdp)await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});else await page.mouse.up({button:'right'});assert(!await page.evaluate(()=>testGame.api.bootstompRubActive()),'release ends the boss gesture');
   await until('windup');assert.equal((await snapshot()).wear.left_boot,3,'standing preserves missing boot');
   await page.screenshot({path:'/tmp/bootstomp-live-standing-'+viewport.width+'.png'});
   const hp=await page.evaluate(()=>testGame.state.player.hp);await page.evaluate(()=>{const g=testGame,e=g.state.enemies.find(e=>e.type==='bootstomp'),s=g.api.bootstompSnapshot(e),p=g.state.player,x=(s.target.x+p.x)/2,y=(s.target.y+p.y)/2,dx=p.x-s.target.x,dy=p.y-s.target.y,d=Math.hypot(dx,dy)||1;g.api.createWall([{x:x-dy/d*105,y:y+dx/d*105},{x:x+dy/d*105,y:y-dx/d*105}]);});await tick(5);assert.equal(hp-await page.evaluate(()=>testGame.state.player.hp),7,'wall mitigates real ripple once');
