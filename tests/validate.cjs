@@ -2687,3 +2687,5 @@ require('./crayon-wax-pressure.cjs')(load);
 require('./tunnel-openings.cjs')(load);
 
 require('./boss-reactive-counters.cjs')(load);
+
+require('./independent-hardhats.cjs')(load);

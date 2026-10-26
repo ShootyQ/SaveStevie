@@ -1198,3 +1198,12 @@ Count himself remains excluded from cannon targets. Returning flying crayons
 have separate marked approach waypoints and staggered speeds. Reflected Pew Pew
 pencils pierce visible ordinary enemies (including shields), and one return
 always defeats the shooter; boss mechanics and underground protections remain.
+
+
+Independent hard hats (Alpha 0.1.149): Yank and Rip-Raff are excluded from
+Chonks's recruitment, shelter and escort movement, and remain excluded from
+McSneak's route followers. When specialist navigation cannot find a path to a
+sealed work site, the worker approaches the first blocking wall and attacks only
+within body range, then replans once it opens. Reachable detours still preserve
+walls. Desktop/phone regression fixtures cover sealed jobs, ordinary convoy
+followers and existing mouse/touch hard-hat tool counters.
