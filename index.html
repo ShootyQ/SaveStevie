@@ -83,7 +83,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button><button class="paper-slip desktop-quit-entry" id="splashQuitBtn" hidden>Quit to desktop</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.151</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.153</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -214,17 +214,18 @@
 <audio id="gameMusic" src="assets/audio/save-stevie-splash.mp3" preload="none" loop></audio>
 
 <div class="overlay build-overlay" id="buildOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="buildTitle">
-  <div class="cardbox build-box">
+  <div class="cardbox build-box build-inspector">
     <div class="build-heading"><h2 id="buildTitle">Your Tool &amp; Build</h2><button id="closeBuildBtn">Close</button></div>
-    <p>The game pauses while you review. Totals include Notebook perks, run upgrades, and your specialization.</p>
-    <p class="option-help">Notebook · <span id="buildScraps">0</span> banked scraps. Spend them from the home screen.</p>
-    <h3>Current totals</h3><section id="buildTool" class="tool-panel" aria-label="Your drawing tool"></section>
-    <div id="buildStats" class="build-stats"></div>
-    <h3>Luck &amp; rewards</h3><p id="buildLuck" class="build-luck"></p>
-    <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
-    <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
-    <h3>Doodle Scraps</h3><div id="buildDoodleScraps" class="build-upgrades"></div>
-    <h3>Monster notes</h3><p>Open Monster notes from Pause or My notebook for the full illustrated compendium.</p>
+    <div class="build-inspector-body" id="buildInspectorBody">
+      <p class="build-inspector-note">Your pencil, your ink, your very good ideas. Game paused.</p>
+      <section id="buildTool" class="tool-panel" aria-label="Your drawing tool"></section>
+      <section aria-label="Key build stats"><div id="buildHighlights" class="build-stats"></div></section>
+      <details class="build-fold" open><summary>Upgrades &amp; stacks</summary><div id="buildUpgrades" class="build-upgrades"></div></details>
+      <details class="build-fold"><summary>Active synergies</summary><div id="buildSynergies" class="build-upgrades"></div></details>
+      <details class="build-fold"><summary>Doodle Scraps</summary><div id="buildDoodleScraps" class="build-upgrades"></div></details>
+      <details class="build-fold"><summary>All stats &amp; reward odds</summary><p class="option-help">Totals include Notebook perks, run upgrades, and your specialization.</p><div id="buildStats" class="build-stats"></div><p id="buildLuck" class="build-luck"></p></details>
+      <p class="option-help">Notebook · <span id="buildScraps">0</span> banked scraps. Spend them from the home screen.</p>
+    </div>
   </div>
 </div>
 <div class="overlay build-overlay" id="hubOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="hubTitle">
@@ -431,6 +432,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.153 · Inspect your pencil, all in one place</h3><p>Your Tool &amp; Build is now one scrollable notebook sheet, with your pencil and key stats at the top. Expand upgrades, synergies, Doodle Scraps, or detailed stats as needed. No blank opening page or page-flipping.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.151 · Hold the crowd</h3><p>Waves 15–20 now share a cap of 83 living minions, based on wave 15’s standard spawn allowance. Reinforcements share the cap, and new minions can enter as others fall. Bosses have their own slots. Enemy health scaling stays the same.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.150 · A normal throw after the ride</h3><p>Follow the Underline now gives paper balls Stevie’s normal throwing range from the end of the line. Long rides no longer leave extra flight time that sends balls across the page. Range upgrades still apply.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.149 · Hard hats, their own plans</h3><p>Yank and Rip-Raff keep to their own jobs instead of joining Chonks's convoy or McSneak's routes. When a work site is sealed off, specialists now approach and break the blocking wall instead of standing short of it. Reachable routes still go around walls.</p></article>

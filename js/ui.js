@@ -167,6 +167,7 @@ function renderBuild(){
     ['Walls per stroke',1],['Erase recovery',Math.round(s.eraseRefund*100)+'%'],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
     ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','4.5 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','10 HP/s shared']];
   game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
+  game.dom.$('buildHighlights').innerHTML=totals.filter(([name])=>['Max ink','Ink regeneration','Wall damage','Base wall HP','Stevie max HP','Paper-ball damage'].includes(name)).map(([name,value])=>`<div class="build-stat">${name}<strong>${value}</strong></div>`).join('');
   game.dom.$('buildStats').innerHTML=totals.map(([name,value])=>`<div class="build-stat">${name}<strong>${value}</strong></div>`).join('');
   game.dom.$('buildUpgrades').innerHTML=Object.entries(game.state.stacks).map(([name,n])=>{
     const u=game.catalog.upgrades.find(u=>u.name===name);
@@ -206,6 +207,7 @@ function openInfo(kind){
   game.dom.$(infoButtons[kind]).focus?.({preventScroll:true});
   const cards=game.dom.$(kind+'Overlay').querySelector?.('.build-box');
   if(cards)cards.scrollTop=0;
+  if(kind==='build')game.dom.$('buildInspectorBody').scrollTop=0;
   if(kind==='monsterIntro')game.dom.$('monsterIntroCards').scrollTop=0;
   game.api.prepareDesktopPages?.(kind);game.api.syncScrapTutorial();
   game.api.updateStevieGuides?.();

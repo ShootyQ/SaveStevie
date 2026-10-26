@@ -1896,3 +1896,13 @@ html.desktop-ui #app > .hud{width:100%;max-width:1286px;align-self:center}
 
 /* Keep continuation outside the scrolling report on touch screens, too. */
 #waveOverlay .wave-clear-book{display:flex;flex-direction:column;max-height:calc(100dvh - 28px);overflow:hidden;box-sizing:border-box}#waveOverlay .wave-summary-body{flex:1 1 auto;min-height:0;overflow-y:auto}#waveOverlay #continueBtn,#waveOverlay #waveRestartTestBtn{flex-shrink:0}
+
+/* Build inspection stays on one sheet; it does not use desktop page packing. */
+#buildOverlay .build-inspector{display:flex;flex-direction:column;width:min(940px,calc(100% - 20px));max-height:calc(100dvh - 32px);padding:22px;overflow:hidden;background:#f8f4e6 url('assets/art/ui/recess-sheet.svg') center/100% 100%;border:1px solid #a89b81;box-shadow:3px 6px 0 #0003}
+.build-inspector>.build-heading{flex-shrink:0;gap:12px;margin:0 0 10px}.build-inspector .build-heading h2{font:36px/1.1 'Stevie Pencil',cursive;color:#315e9b;margin:0}.build-inspector #closeBuildBtn{flex-shrink:0;min-height:44px}
+.build-inspector-body{min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:0 8px 8px 0;text-align:left}
+.build-inspector .build-inspector-note{margin:0 0 8px;text-align:left;font-size:14px;color:#5c655f}.build-inspector .tool-panel{margin:0 0 14px}.build-inspector #buildHighlights{grid-template-columns:repeat(3,minmax(0,1fr));margin:0 0 14px;gap:8px}
+.build-fold{margin:8px 0;border-top:1px dashed #b7a483}.build-fold>summary{cursor:pointer;padding:12px 6px;font:25px/1.2 'Stevie Pencil',cursive;color:#315e9b;min-height:44px}.build-fold>summary:hover{background:#e9e1c9}.build-fold>summary:focus-visible{outline:2px dashed #315e9b;outline-offset:-2px}.build-fold .build-upgrades{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.build-fold .build-entry{margin:0;padding:10px;background:#fffdf6b3}.build-inspector .build-entry p{font-size:13px;text-align:left;line-height:1.45}
+@media(max-width:600px){#buildOverlay .build-inspector{width:100%;max-height:calc(100dvh - 20px);padding:14px}.build-inspector .build-heading h2{font-size:29px}.build-inspector #buildHighlights{grid-template-columns:repeat(2,minmax(0,1fr))}.build-fold .build-upgrades{grid-template-columns:1fr}.build-fold>summary{font-size:23px}}
+
+.build-inspector .instrument-hero{width:min(100%,430px)}
