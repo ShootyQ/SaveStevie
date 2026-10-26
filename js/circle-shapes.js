@@ -4,7 +4,8 @@ DoodleDefender.systems.circleShapes=function(game){
  let pending=null,turrets=[],placementHint=null,clock=0,contacts=new WeakSet();
  const live=w=>w&&w.hp>0&&w.life>0&&game.state.walls.includes(w);
  const surface=e=>e.hp>0&&!e.flight&&!game.api.underPaper(e)&&!game.api.bossFriendHeld(e)&&!e.catapultHeld;
- const turretsAllowed=()=>(game.state.wave%5!==0||game.api.bossWavePhase()==='timed')&&!game.api.bossEntranceActive()&&!game.state.enemies.some(e=>e.waveBoss&&e.hp>0);
+ const turretsAllowed=()=>!game.api.bossEntranceActive()&&((game.state.wave%5!==0||game.api.bossWavePhase()==='timed')&&!game.state.enemies.some(e=>e.waveBoss&&e.hp>0)||game.state.enemies.some(e=>e.hp>0&&game.api.isCrayonBoss?.(e))&&!game.state.enemies.some(e=>e.waveBoss&&e.hp>0&&!game.api.isCrayonBoss?.(e)));
+ const turretTarget=e=>!e.waveBoss&&!game.api.abilityImmune(e);
  const enabled=()=>game.api.notebookSnapshot().levels.circles>0||game.api.devRunActive()&&!!game.state.stacks['Spitball Express'];
  function turretSettings(){const l=game.api.notebookSnapshot().levels;return {...tuning,range:tuning.range+30*(l.turretRange||0),seconds:tuning.seconds+3*(l.turretDuration||0),capacity:Math.max(1+(l.turretCapacity||0),game.state.stacks['Spitball Express']?2:1),interval:tuning.interval-.1*(l.turretRate||0),choiceSeconds:tuning.choiceSeconds-(l.turretFold||0)};}
  function circleGeometry(points,allowLarge=false){
@@ -71,9 +72,9 @@ DoodleDefender.systems.circleShapes=function(game){
   const existing=new Set(turrets),choiceLeft=pending?.left;
   if(pending){if(!live(pending.wall))pending=null;else{pending.left-=dt;if(pending.left<=1e-8)resolveCircleChoice(true,true);}}
   for(const t of turrets){const step=existing.has(t)?dt:Math.max(0,dt-choiceLeft);t.left=Math.max(0,t.left-step);t.age+=step;t.wall.life=t.left;t.recoil=Math.max(0,t.recoil-step);if(t.left<=0||t.wall.hp<=0||game.api.wobbleInfiniteInk()){t.left=0;continue;}
-   t.cd-=step;if(t.cd<=0&&game.api.sendExpress?.(t)){t.cd=t.interval;continue;}const target=game.api.nearestEnemy(t.circle.x,t.circle.y,t.range);
+   t.cd-=step;if(t.cd<=0&&game.api.sendExpress?.(t)){t.cd=t.interval;continue;}const target=game.api.nearestEnemy(t.circle.x,t.circle.y,t.range,turretTarget);
    if(target&&t.cd<=0){const origin={x:t.circle.x,y:t.circle.y-4},options={turret:true,turretRange:t.range},shot=game.api.throwPaper(target,origin,null,true,options);if(shot){t.cd=t.interval;t.angle=Math.atan2(target.y-origin.y,target.x-origin.x);t.recoil=.2;
-    const second=shot.doodlePayload?.second||0;if(second){t.draft=Math.min(1,t.draft+Math.min(.75,.35+.1*(second-1)));if(t.draft>=1){const other=game.state.enemies.find(e=>e!==target&&e.hp>0&&Math.hypot(e.x-origin.x,e.y-origin.y)<=t.range);if(other&&game.api.throwPaper(other,origin,null,true,options))t.draft-=1;}}
+    const second=shot.doodlePayload?.second||0;if(second){t.draft=Math.min(1,t.draft+Math.min(.75,.35+.1*(second-1)));if(t.draft>=1){const other=game.state.enemies.find(e=>e!==target&&e.hp>0&&turretTarget(e)&&!game.api.catapulterAway(e)&&Math.hypot(e.x-origin.x,e.y-origin.y)<=t.range);if(other&&game.api.throwPaper(other,origin,null,true,options))t.draft-=1;}}
    }}
   }turrets=turrets.filter(t=>t.left>0);syncCirclePrompt();
  }

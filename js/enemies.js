@@ -134,7 +134,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null,encounterOwn
   if(type==='scrubber')enemy.scrubOrbit=enemy.flankAngle;
   if(type==='sprinter'){enemy.dashTime=0;enemy.screenAge=0;enemy.hurdlesLeft=1;enemy.hurdleDistance=180;}
   if(type==='sniper')sniperAppearances++;
-  if(type==='sniper')enemy.returnHitsNeeded=game.state.wave<=12?1:game.state.wave<=18?2:3;
+  if(type==='sniper')enemy.returnHitsNeeded=1;
   if(type==='medic')enemy.healPulse=0;
   if(type==='basil'){enemy.feastCd=2;enemy.feastPhase='idle';enemy.feastLeft=0;}
   if(type==='catapulter'){enemy.catapultId=game.api.registerCatapulter(encounterOwner);if(encounterOwner){enemy.bossOwner=encounterOwner;enemy.crayonCatapultCrew=true;}}
@@ -246,10 +246,10 @@ function updateTwicey(e,dt){
  game.api.contactStevie(e);return true;
 }
 
-function nearestEnemy(x,y,maxD){
+function nearestEnemy(x,y,maxD,eligible=null){
   let bestE=null,bestD=maxD;
   for(const e of game.state.enemies){
-    if(e.hp<=0||game.api.gravityCaptured(e)||game.api.lunchCaptured(e)||game.api.catapulterAway(e))continue;
+    if(e.hp<=0||eligible&&!eligible(e)||game.api.gravityCaptured(e)||game.api.lunchCaptured(e)||game.api.catapulterAway(e))continue;
     const d=game.api.dist(x,y,e.x,e.y);if(d<bestD){bestD=d;bestE=e}
   }
   return bestE;
@@ -397,13 +397,13 @@ function updateEnemyShots(dt){
         for(const enemy of [...game.state.enemies]){
           if(enemy===owner||enemy.hp<=0||enemy.waveBoss||defs[enemy.type]?.boss||enemy.type==='boss'||enemy.type==='eraser')continue;
           if(game.api.pointSegDist(enemy.x,enemy.y,shot.x,shot.y,endX,endY)>enemy.r+shot.r)continue;
-          game.api.dealDamage(enemy,enemy.hp,'reflected');
+          game.api.dealDamage(enemy,enemy.hp,'reflected',{pencilReturn:true});
           if(enemy.hp<=0){game.api.floatText(enemy.x,enemy.y-25,'RETURN!','#287a78');game.api.killEnemy(enemy);}
         }
         if(reachesOwner){
           if(game.api.underPaper(owner)){game.api.burst(shot.x,shot.y,'#cbbba4',3);continue;}
           owner.returnHits=(owner.returnHits||0)+1;
-          game.api.dealDamage(owner,owner.maxHp/owner.returnHitsNeeded,'reflected');
+          game.api.dealDamage(owner,Math.max(owner.hp,owner.maxHp),'reflected',{pencilReturn:true});
           if(owner.returnHits>=owner.returnHitsNeeded&&owner.hp>0)game.api.dealDamage(owner,owner.hp,'reflected');
           game.api.playSound('rock');game.api.floatText(owner.x,owner.y-25,'RETURN!','#287a78');
           if(owner.hp<=0)game.api.killEnemy(owner);
@@ -541,7 +541,8 @@ function updateBossArrival(dt){
  if(bossSpawned||game.state.enemies.some(e=>e.hp>0||e.flight))return;
  if(!arrival&&game.state.wave===5){beginFirstBossIntro();return}
  if(!arrival&&game.state.wave===10&&game.api.bossTypeForWave()==='wobblechomp'){beginWobbleIntro();return}
- if(!arrival&&game.state.wave===10){game.api.resetCircleShapes();const p=game.api.stapleEntrancePoint();game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);arrival={...p,stapleIntro:true,age:0,left:3.3};bossPhase='entrance';game.api.resetCircleShapes();game.api.playSound('bossEnter');game.api.setMsg('Something is chewing through the notebook…');return}
+ if(!arrival&&game.state.wave===10&&game.api.bossTypeForWave()==='bootstomp'){game.api.endDraw();game.api.resetCircleShapes();game.api.spawnEnemy(true);game.api.setMsg('Bootstomp is dropping in!');return}
+ if(!arrival&&game.state.wave===10&&game.api.bossTypeForWave()==='stapler'){game.api.resetCircleShapes();const p=game.api.stapleEntrancePoint();game.api.endDraw();game.api.stopSoundEffects();game.api.suspendMusic(true);arrival={...p,stapleIntro:true,age:0,left:3.3};bossPhase='entrance';game.api.resetCircleShapes();game.api.playSound('bossEnter');game.api.setMsg('Something is chewing through the notebook…');return}
  if(!arrival){game.api.resetCircleShapes();arrival={...bossSpawnPoint(),left:2.4};bossPhase='warning';game.api.endDraw();game.api.setMsg(game.api.monsterName(game.api.bossTypeForWave())+(game.state.wave===20?' are coming. Collect whiteout with your pencil and glue with your eraser!':game.state.wave===15?' is coming. Get ready to erase wax and draw colour back!':game.state.wave===5?' is coming. Draw walls to return his shots!':' is coming. Build your enclosure!'));return}
  arrival.left=Math.max(0,arrival.left-dt);
  if(arrival.left===0){const point={...arrival};game.api.spawnEnemy(true,point.x,point.y);game.api.setMsg('Boss encounter. Defeat '+game.api.monsterName(game.api.bossTypeForWave())+'!')}

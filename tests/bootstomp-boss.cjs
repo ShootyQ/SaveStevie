@@ -28,9 +28,9 @@ module.exports=load=>{
  }
  // Missed stomp always reaches Stevie; any number of walls grants one reduction.
  for(const count of [0,1,3]){const r=setup(),{g,a,e}=r;const q=a.bootstompSnapshot(e).target,p=g.state.player;for(let i=1;i<=count;i++)g.state.walls.push(wall(q.x,q.y+(p.y-q.y)*i/(count+1)));const hp=p.hp;step(r,3.3);assert.equal(a.bootstompSnapshot(e).phase,'impact');step(r,1.2);assert.equal(hp-p.hp,count?7:14,'ripple mitigation is applied exactly once');}
- // A shallow hold and an early release fail; old completed dents cannot be banked.
- {const r=setup(),{a,e}=r;a.beginPaperPress(a.bootstompSnapshot(e).target);a.updatePaperPress(2);assert(a.bootstompSnapshot(e).pressure<.8);step(r,3.3);assert.equal(a.bootstompSnapshot(e).phase,'impact');}
- {const r=setup(),{a,e}=r;a.beginPaperPress(a.bootstompSnapshot(e).target);a.updatePaperPress(3);a.releasePaperPress();step(r,3.3);assert.equal(a.bootstompSnapshot(e).phase,'impact');}
+ // A very short hold fails; a completed footprint dent persists after release.
+ {const r=setup(),{a,e}=r;a.beginPaperPress(a.bootstompSnapshot(e).target);a.updatePaperPress(.29);assert(a.bootstompSnapshot(e).pressure<.8);step(r,3.3);assert.equal(a.bootstompSnapshot(e).phase,'impact');}
+ {const r=setup(),{a,e}=r;a.beginPaperPress(a.bootstompSnapshot(e).target);a.updatePaperPress(.31);assert(a.bootstompSnapshot(e).dent);a.releasePaperPress();assert.equal(a.paperPressSnapshot().press,null);assert(a.bootstompSnapshot(e).pressure>=.8);step(r,3.3);assert.equal(a.bootstompSnapshot(e).phase,'stumble');}
  // Every part needs three real swipes; all 15 survive across several openings.
  {const saved=new Map(),storage={getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v))},r=setup(800,700,storage),{a,e,g}=r;assert.equal(a.shapeStudiesAvailable(),false);let cycles=0;
   while(g.state.enemies.includes(e)&&cycles++<15){down(r);for(let i=0;i<4;i++){
@@ -68,8 +68,8 @@ module.exports=load=>{
  }
  // Quiet mode keeps the arrival on paper without a falling/tilting sprite.
  {const env=load(true,{reduced:true}),g=env.sandbox.testGame,a=g.api;a.resetRun({skipIntro:true});g.state.wave=10;a.startWave();g.state.enemies=[];const e=a.spawnEnemy(true,100,180),s=a.bootstompSnapshot(e);assert.equal(s.intro.offsetY,0);assert.equal(s.intro.angle,0);assert.equal(s.intro.sx,1);assert.equal(s.intro.sy,1);}
- // The boss reads the real press tuning: 0.1s delay + 80% of 2.5s growth.
- {const r=setup(),{a,e}=r;a.beginPaperPress(a.bootstompSnapshot(e).target);a.updatePaperPress(2.09);assert(a.bootstompSnapshot(e).pressure<.8);a.updatePaperPress(.02);assert(a.bootstompSnapshot(e).pressure>=.8);}
+ // Quick footprint preparation is separate from ordinary 2.5s paper growth.
+ {const r=setup(),{a,e}=r;a.beginPaperPress(a.bootstompSnapshot(e).target);a.updatePaperPress(.29);assert(a.bootstompSnapshot(e).pressure<.8);a.updatePaperPress(.02);assert(a.bootstompSnapshot(e).pressure>=.8);}
  // Helpers keep the same cap, but actual arrivals are spaced farther apart.
  {const r=setup(),{a,e,g}=r,count=()=>g.state.enemies.filter(n=>n.bossOwner===e).length;assert.equal(count(),0);step(r,.2);assert.equal(count(),1);step(r,2);assert.equal(count(),1,'no second helper at the old arrival cadence');step(r,.5);assert.equal(count(),2,'reduced stream continues spawning helpers');}
  console.log('PASS: Bootstomp held-foot counter, 15 persistent real swipes, immunity, one-time ripple mitigation, paid lace counter, full defeat, pause/pure draw and three arena sizes.');

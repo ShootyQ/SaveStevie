@@ -785,7 +785,7 @@ for(const wave of [5,10,15]){
 }
 g.api.resetRun();g.state.wave=5;g.api.startWave();const early=g.api.spawnEnemy(true,100,100);g.api.killEnemy(early);g.api.waveComplete();assert.equal(g.state.betweenWaves,true,'defeating the boss clears the encounter without waiting');
 g.state.timeLeft=0;g.api.update(.016);assert.equal(g.state.betweenWaves,true);
-g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.update(.016);assert.equal(g.api.bossWavePhase(),'entrance');g.api.update(6.132);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'boss follows arrival warning');g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'required boss never duplicates');
+g.api.resetRun();g.state.wave=10;g.api.startWave();g.state.timeLeft=0;g.api.update(.016);assert.equal(g.api.bossWavePhase(),'fight');assert.equal(g.api.stapleIntroPose(),null,'Bootstomp does not use the retired stapler entrance');g.api.update(6.132);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'boss follows arrival warning');g.api.update(.016);assert.equal(g.state.enemies.filter(e=>e.waveBoss).length,1,'required boss never duplicates');
 const contactBoss=g.state.enemies.find(e=>e.waveBoss);contactBoss.x=g.state.player.x;contactBoss.y=g.state.player.y;g.api.contactStevie(contactBoss);assert.ok(g.state.enemies.includes(contactBoss),'boss contact cannot remove the encounter');g.api.killEnemy(contactBoss);g.api.update(.016);assert.equal(g.state.betweenWaves,true);
 g.api.resetRun();g.state.stats.killHeal=g.state.stats.refund=g.state.stats.repairOnKill=100;g.state.player.hp=20;g.state.stats.ink=0;g.state.walls=[{hp:10,maxHp:100},{hp:10,maxHp:100}];
 for(let i=0;i<4;i++)g.api.killEnemy(g.api.spawnEnemy(false,0,0,'grunt'));
@@ -1353,7 +1353,7 @@ for(const child of [...g.state.enemies])g.api.killEnemy(child);
 g.api.update(.02);assert.equal(g.state.betweenWaves,true);const score=g.state.score;g.api.update(.02);assert.equal(g.state.score,score,'clear pays once');
 g.api.resetRun();g.state.timeLeft=0;g.state.player.hp=0;g.api.update(.02);assert.equal(g.state.betweenWaves,false,'death takes priority over cleanup clear');
 for(const wave of [5,10,15,20,25]){
- g.api.resetRun();g.state.endless=wave>20;g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;g.api.update(.01);assert.equal(g.api.bossWavePhase(),[5,10].includes(g.state.wave)?'entrance':'warning');g.api.update(g.state.wave===5?6.582:g.state.wave===10?6.132:2.4);
+ g.api.resetRun();g.state.endless=wave>20;g.state.wave=wave;g.api.startWave();g.state.timeLeft=0;g.api.update(.01);assert.equal(g.api.bossWavePhase(),g.state.wave===5?'entrance':g.state.wave===10?'fight':'warning');g.api.update(g.state.wave===5?6.582:g.state.wave===10?6.132:2.4);
  const boss=g.state.enemies.find(e=>e.waveBoss);assert.ok(boss);boss.freeze=999;boss.speed=0;boss.x=-100;boss.y=-100;g.state.player.hp=g.state.player.maxHp=100000;
  const time=g.state.timeLeft;for(let i=0;i<70;i++)g.api.update(1);
  assert.equal(g.state.timeLeft,time);assert.equal(g.state.betweenWaves,false);assert.ok(g.state.waveElapsed>60);
@@ -2101,7 +2101,7 @@ require('./wobblechomp-overhaul.cjs')(loadRetiredWobble);
  g.api.updateEnemyBehavior(dash,100);dash.dashTime=0;assert.ok(Math.abs(g.api.enemyMoveScale(dash)/base-1.45)<1e-8,'speed remains capped');
  for(const wave of [12,13,18,19,20]){
   g.state.wave=wave;g.state.enemies=[];g.state.enemyShots=[];g.state.walls=[];
-  const e=g.api.spawnEnemy(false,100,200,'sniper'),need=wave<=12?1:wave<=18?2:3;
+  const e=g.api.spawnEnemy(false,100,200,'sniper'),need=1;
   g.state.player.x=400;g.state.player.y=200;
   const hp=g.state.player.hp;
   for(let i=0;i<need;i++){
@@ -2685,3 +2685,5 @@ require('./classroom-combos.cjs')(load);
 require('./crayon-wax-pressure.cjs')(load);
 
 require('./tunnel-openings.cjs')(load);
+
+require('./boss-reactive-counters.cjs')(load);
