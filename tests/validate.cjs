@@ -733,7 +733,7 @@ g.api.killEnemy(s);assert.equal(g.api.notebookSnapshot().scraps,0,'boss scraps m
 g.state.wave=15;g.api.startWave();const c=g.api.spawnEnemy(true,100,200);c.waveBoss=false;c.bossCd=0;g.api.updateBossAbility(c,.1);assert.equal(g.state.enemies.length,1);assert.equal(c.bossWindup,1.2);
 g.api.updateBossAbility(c,1.2);assert.equal(g.state.enemies.filter(e=>e.type==='mini').length,3);assert.equal(c.bossCd,8);
 c.bossCd=0;g.api.updateBossAbility(c,.1);c.stun=1;g.api.updateBossAbility(c,.1);assert.equal(c.bossWindup,0);assert.equal(g.state.enemies.length,4,'stun interrupts summons');
-c.stun=0;while(g.state.enemies.length<180)g.api.spawnEnemy(false,100,200,'grunt');c.bossCd=0;g.api.updateBossAbility(c,.1);g.api.updateBossAbility(c,1.2);assert.equal(g.state.enemies.length,180,'summons obey global cap');
+c.stun=0;for(let i=0;i<g.api.minionLimit();i++)g.api.spawnEnemy(false,100,200,'grunt');c.bossCd=0;g.api.updateBossAbility(c,.1);g.api.updateBossAbility(c,1.2);assert.equal(g.state.enemies.length,g.api.minionLimit()+1,'summons obey minion cap with a separate boss slot');
 g.state.paused=true;c.bossCd=3;g.api.update(.3);assert.equal(c.bossCd,3,'pause stops boss timer');g.state.paused=false;
 g.api.killEnemy(c);assert.equal(g.api.notebookSnapshot().scraps,0);
 for(const type of ['stapler','crayon']){g.state.enemies=[];const e=g.api.spawnEnemy(false,100,200,type);g.state.inks.void=1;env.sandbox.Math.random=()=>0;const before=e.hp;g.api.applyInkContact(e,.1);assert.ok(e.hp>0&&e.hp<before,'Void damages new bosses instead of instantly erasing them');}
@@ -775,7 +775,7 @@ for(const [wave,members] of [[6,['tank','grunt']],[9,['sniper','grunt']],[11,['t
  g.state.wave=wave;g.api.startWave();g.state.spawnTimer=999;g.state.timeLeft=40;g.api.spawnChapterGroup();
  assert.deepEqual(Array.from(g.state.enemies,e=>e.type),members);
  g.state.timeLeft=20;g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,members.length*2);
- g.state.enemies=[];for(let i=0;i<180;i++)g.api.spawnEnemy(false,0,0,'grunt');g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,180,'groups obey enemy cap');
+ g.state.enemies=[];for(let i=0;i<180;i++)g.api.spawnEnemy(false,0,0,'grunt');g.api.spawnChapterGroup();assert.equal(g.state.enemies.length,g.api.minionLimit(),'groups obey current wave minion cap');
 }
 for(const wave of [5,10,15]){
  const e=load(true),g=e.sandbox.testGame;g.api.resetRun();g.state.wave=wave;g.api.startWave();const boss=g.api.spawnEnemy(true,100,100);boss.freeze=999;
@@ -2691,3 +2691,5 @@ require('./boss-reactive-counters.cjs')(load);
 require('./independent-hardhats.cjs')(load);
 
 require('./underline-range.cjs')(load);
+
+require('./late-minion-cap.cjs')(load);

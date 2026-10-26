@@ -98,6 +98,9 @@ function updateBossAbility(e,dt){
   e.bossWindup=1.2;
 }
 
+// Wave 15's standard 60-second budget is 83; hold that crowd size through 20.
+function minionLimit(wave=game.state.wave){return wave>=15&&wave<=20?83:pressure.maxEnemies;}
+function livingMinions(){return game.state.enemies.filter(e=>e.hp>0&&!e.waveBoss&&!defs[e.type]?.boss).length;}
 function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null,encounterOwner=null){
   if(!forceBoss&&game.state.enemies.length>=pressure.maxEnemies)return null;
   let side=Math.floor(Math.random()*4),px,py;
@@ -110,6 +113,7 @@ function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null,encounterOwn
   }
   let type=typeOverride||game.api.enemyType();
   if(forceBoss)type=game.api.bossTypeForWave();
+  if(!forceBoss&&!defs[type]?.boss&&livingMinions()>=minionLimit())return null;
   const scale=game.api.enemyHpScale()*game.state.stats.enemyScale;
   if(['wallpuller','papertearer'].includes(type)&&game.state.enemies.some(e=>e.type===type&&e.hp>0))return null;
   if(type==='tank'&&game.state.wave>=6&&game.state.enemies.filter(e=>e.type==='tank'&&e.hp>0).length>=2)return null;
@@ -171,6 +175,7 @@ let twiceySerial=0;
 function twiceyPartner(e){return game.state.enemies.find(n=>n!==e&&n.hp>0&&n.twicey?.pair===e.twicey?.pair&&e.twicey)}
 function splitTwicey(e,defeated=false,normal={x:1,y:.28}){
  if(!game.state.enemies.includes(e)||(!defeated&&(e.hp<=0||e.flight))||game.state.enemies.length+1>pressure.maxEnemies)return false;
+ if(livingMinions()+(e.hp>0?1:2)>minionLimit())return false;
  const pair=++twiceySerial,hp=defeated?defs.mini.hp*game.api.enemyHpScale()*game.state.stats.enemyScale:e.hp/2;
  game.api.animateEnemySplit(e);
  game.state.enemies=game.state.enemies.filter(n=>n!==e);
@@ -877,7 +882,7 @@ function contactStevie(e){
   }
   return true;
 }
-const api = { canSpawnSniper,scheduledWaveBudget,lateWaveGrowth,enemyArrivalSnapshot:()=>({scheduledArrivals,sniperAppearances,crewAdds}),specialistReinforcements,specialistTarget,hitPaper,throwPaper,resetScrubberRub,eraseScrubber,resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperRange,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie,spawnScheduledEnemy, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
+const api = { minionLimit,canSpawnSniper,scheduledWaveBudget,lateWaveGrowth,enemyArrivalSnapshot:()=>({scheduledArrivals,sniperAppearances,crewAdds}),specialistReinforcements,specialistTarget,hitPaper,throwPaper,resetScrubberRub,eraseScrubber,resetScrubberHint,updateScrubberHint,scrubberHintSnapshot,rockElectricLevel,rockWallReaction,updateRockWalls, updateScrubber,twiceyPartner, splitTwicey, cutTwiceyStroke, updateTwicey, wobbleIntroPose,bossEntranceActive,stapleIntroPose,updateBossEntrance,firstBossIntroActive,firstBossIntroPose,updateFirstBossIntro,feastHost,updateFeast,finishFeast,sniperRange,sniperCanAim, updateSniper, updateChonks, refreshBossArrival,bossWavePhase,bossSpawnPoint,bossArrivalSnapshot, bossFightResolved, campaignBossPending, ensureWaveBoss, spawnChapterGroup, bossTypeForWave, updateBossAbility, moveEnemySafely, damageStevie, shotBlocked, fireSniper, updateEnemyShots, contactStevie,spawnScheduledEnemy, wavePressure, enemySpeedScale, spawnGap, spawnWaveEnemies, resetEnemyWave, updateEnemyBehavior, enemyMoveScale, enemyTarget, bouncePathClear, steerBounce, enemyType, spawnEnemy, killEnemy, nearestEnemy, updateStevie, updateProjectiles, eraserAttack };
 Object.assign(game.api, api);
 return api;
 };
