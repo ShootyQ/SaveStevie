@@ -1218,3 +1218,22 @@ non-boss enemies, the scheduled allowance of a standard 60-second wave 15.
 Scheduled arrivals, reinforcements and split offspring share the cap. Bosses
 do not consume minion slots. Spawn timing, total arrival budgets and HP scaling
 are unchanged; defeats free slots. Other waves retain their existing limits.
+
+Plaguefire desk pass (Alpha 0.1.154): settled burn rims and wood fill have separate
+cached layers; growing pools composite against those layers at eight subpixel
+visual growth steps per second without resizing the page canvases. Combat uses
+exact growth radii. A bounded cache of 96 animated / four reduced-motion tiles
+retains bubbles, slime, flames and world-space eraser firebreaks. Desk grain and
+charred rims are lighter; overlapping fills cover internal burn rims.
+
+Plaguefire openings now participate in tunnel entry, not just forced emergence.
+Body clearance, encounter rolls, one underground trip, visible exposed-desk
+crossings, next-opening emergence and boss/specialist exclusions remain intact.
+A spatial grid accelerates both opening queries and swept tunnel visibility.
+
+`tests/browser-plaguefire-cost.cjs [baseline-module.js]` measures desk-only,
+fire-only, growing mixed and frozen mixed rendering with 120 scars / 12 pools.
+On this cloud Chromium run, growing mixed effect time fell from about 18 to 2 ms
+at desktop size and 9 to 0.8 ms at phone size. These are isolated browser effect
+measurements, not device FPS guarantees. The regression also checks that growing
+burns never resize a full-page canvas.
