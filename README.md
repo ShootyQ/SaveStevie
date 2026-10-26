@@ -1166,3 +1166,13 @@ his challenge. The boss root stays at a safe landing point; falling cannot sweep
 walls out of the air. Reduced motion removes the fall offset, tilt and squash.
 Paper pressing starts after 0.1s, grows to full depth over a further 2.5s, and
 Bootstomp reads the shared tuning for his 80%-depth counter (about 2.1s).
+
+Plaguefire visuals (Alpha 0.1.146): active pools use a readable green liquid
+body, three slow eddies, seven independently phased bubbling pops and six
+orange/green flame tongues. Eraser firebreaks clip every active visual in world
+space, leaving desk visible in cleared areas. A cached charred rim surrounds the
+union of burned openings, with overlapping interior rims covered by the wood
+fill. Animation uses pool age and seed without combat RNG; reduced motion keeps
+static poses and preserves growth. Lifetime, pool/scar caps and damage stay the
+same. `tests/browser-plaguefire-visuals.cjs` checks real kill drops, visible flame
+and slime pixels, firebreaks, reduced motion and burnout on desktop and phone.
