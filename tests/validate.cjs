@@ -2693,3 +2693,5 @@ require('./independent-hardhats.cjs')(load);
 require('./underline-range.cjs')(load);
 
 require('./late-minion-cap.cjs')(load);
+
+require('./plaguefire-entrances.cjs')(load);
