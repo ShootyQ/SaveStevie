@@ -2,7 +2,7 @@
  * Simulation owns all clocks/randomness. Rendering only selects drawn frames. */
 DoodleDefender.systems.bootstompBoss=function(game){
  const a=game.api,atlas=DoodleDefender.bootstompArt;
- const tune={charge:3.25,threshold:.8,exposure:3.2,swipeDistance:18,swipeGap:.6,rippleDamage:14,rippleSpeed:370,helperCap:14,enterSpeed:88,challengeDuration:1.44,helperRate:.7};
+ const tune={charge:3.25,threshold:.8,exposure:3.2,swipeDistance:18,swipeGap:.6,rippleDamage:14,rippleSpeed:370,helperCap:14,introHang:.22,introFall:.7,introSettle:.75,challengeDuration:1.44,helperRate:.7};
  const names=['left_fist','right_fist','left_boot','right_boot','star'];
  let brains=new WeakMap(),ripples=[],lastErase=false,serial=0,frameCache=new Map();
  const isBootstomp=e=>!!e&&e.type==='bootstomp';
@@ -21,14 +21,19 @@ DoodleDefender.systems.bootstompBoss=function(game){
  function initBootstomp(e){
   if(brains.has(e))return brains.get(e);
   const p=safePoint(-Math.PI/2);p.x=a.clamp(game.state.W*.25,75,game.state.W-75);e.x=p.x;e.y=p.y;e.r=30;e.speed=110;e.hp=e.maxHp=150;e.waveBoss=true;
-  const b={phase:'intro',age:0,time:0,wear:Object.fromEntries(names.map(n=>[n,0])),turn:0,attack:0,side:'right',target:null,goal:null,helperCd:1,helperSerial:0,swipeCd:0,rubs:{},reaction:0,passenger:null,kickCd:0,kickCount:0,shockCount:0,finished:false,motion:{distance:0,vx:0,vy:0,lean:0,blend:0,weight:0,lagX:0,lagY:0,feet:null,marks:[],stepCd:0},introGoal:{x:p.x,y:p.y},introStart:{x:p.x,y:-65}};b.enterDuration=Math.max(2.4,1.5*Math.hypot(b.introGoal.x-b.introStart.x,b.introGoal.y-b.introStart.y)/tune.enterSpeed);e.x=b.introStart.x;e.y=b.introStart.y;brains.set(e,b);
+  const b={phase:'intro',age:0,time:0,wear:Object.fromEntries(names.map(n=>[n,0])),turn:0,attack:0,side:'right',target:null,goal:null,helperCd:1,helperSerial:0,swipeCd:0,rubs:{},reaction:0,passenger:null,kickCd:0,kickCount:0,shockCount:0,finished:false,motion:{distance:0,vx:0,vy:0,lean:0,blend:0,weight:0,lagX:0,lagY:0,feet:null,marks:[],stepCd:0},introGoal:{x:p.x,y:p.y},introStart:{x:p.x,y:-170}};b.enterDuration=tune.introHang+tune.introFall+tune.introSettle;e.x=p.x;e.y=p.y;brains.set(e,b);
   a.resetCircleShapes();a.setMsg('Bootstomp! Hold the eraser in his footprint until he lands. When he falls, rub out his five patches!');return b;
  }
  function state(e){return brains.get(e)||initBootstomp(e);}
  function setPhase(e,phase){const b=state(e);b.phase=phase;b.age=0;}
  function clipAt(e){
   const b=state(e),left=b.side==='left';
-  if(b.phase==='intro')return b.age<b.enterDuration?[a.enemyMotionReduced()?'idle':'intro_enter',a.enemyMotionReduced()?0:b.motion.distance/strideLength*.72]:['intro_challenge',b.age-b.enterDuration];
+  if(b.phase==='intro'){
+   const landAt=tune.introHang+tune.introFall;
+   if(b.age<landAt)return [a.enemyMotionReduced()?'idle':'intro_drop',b.age];
+   if(b.age<b.enterDuration)return ['intro_land',b.age-landAt];
+   return ['intro_challenge',b.age-b.enterDuration];
+  }
   if(b.phase==='walk')return [a.enemyMotionReduced()?'idle':'walk',a.enemyMotionReduced()?0:b.motion.distance/strideLength*.72];
   if(b.phase==='shockwave')return b.age<.7?['windup_right',b.age*3/.7]:['impact_'+(b.shockCount===1?'right':'left'),b.age-(b.shockCount===1?.7:1.25)];
   if(b.phase==='kick')return ['shoe_scrape',b.age];
@@ -88,7 +93,12 @@ DoodleDefender.systems.bootstompBoss=function(game){
   const p=pose(e,['impact_'+side,.1]),q=partPoints(e,p)[side+'_boot'];return {x:q.x,y:e.y+ground()-5,r:29};
  }
  function beginStomp(e){const b=state(e);b.side=b.turn%2?'left':'right';b.turn++;b.target=landing(e,b.side);setPhase(e,'windup');a.setMsg('Hold Erase still in the footprint. Keep holding when the paper buckles!');}
- function pressure(e){const b=state(e),p=a.paperPressSnapshot().press;return p&&b.target&&Math.hypot(p.x-b.target.x,p.y-b.target.y)<=b.target.r?Math.max(0,Math.min(1,(p.age-.4)/2.5)):0;}
+ function pressure(e){const b=state(e),{press:p,tuning:t}=a.paperPressSnapshot();return p&&b.target&&Math.hypot(p.x-b.target.x,p.y-b.target.y)<=b.target.r?Math.max(0,Math.min(1,(p.age-t.delay)/t.growTime)):0;}
+ // The root stays at its safe landing site: the fall is a visual height, so an
+ // airborne boss cannot clear a vertical corridor of walls on the way down.
+ function introPose(e){const b=state(e),landAt=tune.introHang+tune.introFall,t=a.clamp((b.age-tune.introHang)/tune.introFall,0,1),after=Math.max(0,b.age-landAt),reduced=a.enemyMotionReduced(),impact=b.age>=landAt?Math.exp(-after*12):0;
+  return {fall:t,landed:b.age>=landAt,offsetY:reduced?0:-(b.introGoal.y-b.introStart.y)*(1-t*t),angle:reduced?0:b.age<landAt?.12+Math.sin(t*7)*.07:Math.sin(after*18)*.1*Math.exp(-after*5),sx:reduced?1:1+impact*.15,sy:reduced?1:1-impact*.22,impact,after};
+ }
  function bootstompPressTarget(p){return hosts().some(e=>{const b=state(e);return b.phase==='windup'&&b.target&&Math.hypot(p.x-b.target.x,p.y-b.target.y)<=b.target.r;});}
  function bootstompRubTarget(p){return hosts().some(e=>state(e).phase==='down'&&Math.abs(p.x-e.x)<145*size()/.76&&p.y>e.y-115&&p.y<e.y+95);}
  function sweep(e,from,to,r=e.r+8){
@@ -146,8 +156,16 @@ DoodleDefender.systems.bootstompBoss=function(game){
   if(!playable()||!isBootstomp(e))return;const b=state(e);if(e.hp<=0)return;const old={x:e.x,y:e.y,phase:b.phase};try{
   b.age+=dt;b.time+=dt;b.kickCd=Math.max(0,b.kickCd-dt);b.swipeCd=Math.max(0,b.swipeCd-dt);b.reaction=Math.max(0,b.reaction-dt);e.freeze=e.stun=e.gravitySlow=e.burn=e.poison=e.charged=0;
   if(b.phase==='defeat'){if(b.age>=3.09){e.hp=0;a.killEnemy(e);}return;}
-  updateRipples(e,dt);helpers(e,dt);sweep(e,e,e);
-  if(b.phase==='intro'){const t=Math.min(1,b.age/b.enterDuration),ease=t*t*(3-2*t),old={x:e.x,y:e.y};e.x=b.introStart.x+(b.introGoal.x-b.introStart.x)*ease;e.y=b.introStart.y+(b.introGoal.y-b.introStart.y)*ease;sweep(e,old,e);const challengeAge=b.age-b.enterDuration;if(challengeAge>=.45&&challengeAge-dt<.45)a.playSound('paperCrumple');if(challengeAge>=1.05&&challengeAge-dt<1.05)a.playSound('chonksStep');if(b.age>=b.enterDuration+tune.challengeDuration){setPhase(e,'idle');a.setMsg('Bootstomp · Hold his footprint, then rub out the fallen patches!');}return;}
+  updateRipples(e,dt);helpers(e,dt);if(b.phase!=='intro')sweep(e,e,e);
+  if(b.phase==='intro'){
+   const landAt=tune.introHang+tune.introFall;
+   if(b.age>=landAt&&b.age-dt<landAt){a.playSound('woodImpact');a.playSound('paperCrumple');a.burst(e.x,e.y+ground(),'#c9b797',14);a.floatText(e.x,e.y-80,'THUMP.','#80664b');}
+   if(b.age>=landAt)sweep(e,e,e);
+   const challengeAge=b.age-b.enterDuration;
+   if(challengeAge>=.45&&challengeAge-dt<.45)a.playSound('paperCrumple');
+   if(challengeAge>=1.05&&challengeAge-dt<1.05)a.playSound('chonksStep');
+   if(b.age>=b.enterDuration+tune.challengeDuration){setPhase(e,'idle');a.setMsg('Bootstomp · Hold his footprint, then rub out the fallen patches!');}return;
+  }
   if(b.phase==='shockwave'){
    if(b.shockCount===0&&b.age>=.7){b.shockCount=1;launchRipple(e,true);}
    if(b.shockCount===1&&b.age>=1.25){b.shockCount=2;launchRipple(e,true);}
@@ -203,7 +221,7 @@ DoodleDefender.systems.bootstompBoss=function(game){
  function clearBootstomp(e){ripples=ripples.filter(q=>q.owner!==e);const b=brains.get(e);if(b)b.passenger=null;}
  function resetBootstomp(){brains=new WeakMap();ripples=[];lastErase=false;frameCache.clear();}
  function moveBootstomp(dx,dy){for(const e of hosts()){const b=state(e);for(const p of [...(b.motion.feet||[]),...b.motion.marks]){p.x+=dx;p.y+=dy;if(p.startX!==undefined){p.startX+=dx;p.startY+=dy;}}for(const p of [b.target,b.goal,b.scrape?.a,b.scrape?.b,b.introGoal,b.introStart])if(p){p.x+=dx;p.y+=dy;}if(b.lace){b.lace.x+=dx;b.lace.ex+=dx;b.lace.y+=dy;b.lace.y2+=dy;}}for(const q of ripples){q.x+=dx;q.y+=dy;}}
- function resizeBootstomp(){for(const e of hosts()){const b=state(e);if(b.phase==='intro')continue;b.motion.feet=null;e.x=a.clamp(e.x,Math.min(110,game.state.W*.28),Math.max(game.state.W*.72,game.state.W-110));e.y=a.clamp(e.y,Math.min(145,game.state.H*.32),Math.max(145,game.state.H-95));if(b.phase==='windup'){b.age=0;b.target=landing(e,b.side);}if(['lace','kick'].includes(b.phase)){b.passenger=null;setPhase(e,'lace_rebound');}}}
+ function resizeBootstomp(){for(const e of hosts()){const b=state(e);if(b.phase==='intro'){const p=safePoint(-Math.PI/2);p.x=a.clamp(game.state.W*.25,75,game.state.W-75);b.introGoal={...p};b.introStart={x:p.x,y:-170};e.x=p.x;e.y=p.y;continue;}b.motion.feet=null;e.x=a.clamp(e.x,Math.min(110,game.state.W*.28),Math.max(game.state.W*.72,game.state.W-110));e.y=a.clamp(e.y,Math.min(145,game.state.H*.32),Math.max(145,game.state.H-95));if(b.phase==='windup'){b.age=0;b.target=landing(e,b.side);}if(['lace','kick'].includes(b.phase)){b.passenger=null;setPhase(e,'lace_rebound');}}}
  function sprite(e,p){
   const b=state(e),code=names.map(n=>b.wear[n]).join(''),key=p.key+'/'+code;
   if(frameCache.has(key))return frameCache.get(key);const image=a.doodleArtwork('bootstomp/'+p.f.page);if(!image)return null;
@@ -213,12 +231,16 @@ DoodleDefender.systems.bootstompBoss=function(game){
   ctx.globalAlpha=1;ctx.globalCompositeOperation='source-over';frameCache.set(key,c);if(frameCache.size>40)frameCache.delete(frameCache.keys().next().value);return c;
  }
  function drawBootstomp(e){if(!isBootstomp(e))return false;const b=state(e),p=pose(e),ctx=game.dom.ctx;
-  ctx.save();const image=sprite(e,p);ctx.translate(0,ground());if(p.flip)ctx.scale(-1,1);if(image)ctx.drawImage(image,-p.f.pivot[0]*p.scale,-p.f.pivot[1]*p.scale,p.f.rect[2]*p.scale,p.f.rect[3]*p.scale);else a.drawPaperDoodle?.('bootstomp',-70,-130,140,140);ctx.restore();
+  ctx.save();const image=sprite(e,p);ctx.translate(0,ground());if(b.phase==='intro'){const q=introPose(e);ctx.translate(0,q.offsetY);ctx.rotate(q.angle);ctx.scale(q.sx,q.sy);}if(p.flip)ctx.scale(-1,1);if(image)ctx.drawImage(image,-p.f.pivot[0]*p.scale,-p.f.pivot[1]*p.scale,p.f.rect[2]*p.scale,p.f.rect[3]*p.scale);else a.drawPaperDoodle?.('bootstomp',-70,-130,140,140);ctx.restore();
   if(b.phase==='lace'&&b.lace){ctx.save();ctx.strokeStyle='#49322b';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(b.lace.x-e.x,b.lace.y-e.y);ctx.lineTo(b.lace.ex-e.x,b.lace.y2-e.y);ctx.stroke();ctx.strokeStyle='#f5e8ce';ctx.lineWidth=1;ctx.stroke();ctx.restore();}
   if(b.phase==='down'){const points=partPoints(e,p);ctx.save();ctx.lineWidth=1.5;for(const n of names){if(b.wear[n]>=3)continue;const q=points[n];ctx.strokeStyle=b.swipeCd>0?'#8298a0':'#557bb0';ctx.beginPath();ctx.arc(q.x-e.x,q.y-e.y,Math.max(8,q.rx)+4,-Math.PI/2,-Math.PI/2+Math.PI*2*(3-b.wear[n])/3);ctx.stroke();}ctx.restore();}
   if(b.phase!=='intro'&&b.phase!=='defeat'){const y=Math.max(-e.y+22,['walk','idle','intro'].includes(b.phase)?-86*size()/.38:ground()+(p.f.inkBounds[1]-p.f.pivot[1])*p.scale-15),w=130*size()/.76;ctx.save();ctx.fillStyle='#fff7e8';ctx.fillRect(-w/2-3,y-3,w+6,13);for(let i=0;i<5;i++){ctx.fillStyle='#d3c6ae';ctx.fillRect(-w/2+i*w/5,y,w/5-3,6);ctx.fillStyle='#4268b3';ctx.fillRect(-w/2+i*w/5,y,(w/5-3)*(3-b.wear[names[i]])/3,6);}ctx.restore();}return true;
  }
- function drawBootstompFields(){const ctx=game.dom.ctx;ctx.save();for(const e of hosts()){const b=state(e);if(b.phase==='windup'&&b.target){const p=b.target,ready=pressure(e)>=tune.threshold;ctx.save();ctx.translate(p.x,p.y);ctx.strokeStyle=ready?'#477c72':'#866e51';ctx.fillStyle=ready?'#8ebcab44':'#ead5a033';ctx.lineWidth=2;ctx.setLineDash(ready?[]:[5,4]);ctx.beginPath();ctx.ellipse(0,0,29,39,b.side==='left'?-.15:.15,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.setLineDash([]);for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(-18,i*11);ctx.lineTo(18,i*11);ctx.stroke();}ctx.font='bold 12px "Stevie Pencil", cursive';ctx.textAlign='center';ctx.fillStyle=ready?'#346e5a':'#67533e';ctx.fillText(ready?'KEEP HOLDING!':'HOLD ERASE',0,Math.min(55,game.state.H-p.y-10));ctx.restore();}
+ function drawBootstompFields(){const ctx=game.dom.ctx;ctx.save();for(const e of hosts()){const b=state(e);if(b.phase==='intro'){
+   const p=introPose(e);ctx.save();ctx.translate(e.x,e.y+ground());ctx.fillStyle='#66533f';ctx.globalAlpha=p.landed?.12:.08+p.fall*.12;ctx.beginPath();ctx.ellipse(0,0,17+p.fall*17,5+p.fall*3,0,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+   if(p.landed&&p.after<.5&&!a.enemyMotionReduced()){const t=p.after/.5;ctx.strokeStyle='#9b8c73';ctx.globalAlpha=(1-t)*.65;ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(0,0,27+t*45,8+t*13,0,0,Math.PI*2);ctx.stroke();for(let i=0;i<6;i++){const a=i*Math.PI/3;ctx.beginPath();ctx.moveTo(Math.cos(a)*(27+t*28),Math.sin(a)*(8+t*8));ctx.lineTo(Math.cos(a)*(33+t*40),Math.sin(a)*(11+t*12));ctx.stroke();}}
+   ctx.restore();
+  }if(b.phase==='windup'&&b.target){const p=b.target,ready=pressure(e)>=tune.threshold;ctx.save();ctx.translate(p.x,p.y);ctx.strokeStyle=ready?'#477c72':'#866e51';ctx.fillStyle=ready?'#8ebcab44':'#ead5a033';ctx.lineWidth=2;ctx.setLineDash(ready?[]:[5,4]);ctx.beginPath();ctx.ellipse(0,0,29,39,b.side==='left'?-.15:.15,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.setLineDash([]);for(let i=-2;i<=2;i++){ctx.beginPath();ctx.moveTo(-18,i*11);ctx.lineTo(18,i*11);ctx.stroke();}ctx.font='bold 12px "Stevie Pencil", cursive';ctx.textAlign='center';ctx.fillStyle=ready?'#346e5a':'#67533e';ctx.fillText(ready?'KEEP HOLDING!':'HOLD ERASE',0,Math.min(55,game.state.H-p.y-10));ctx.restore();}
    if(b.phase==='shockwave'&&b.age<.7){ctx.save();ctx.strokeStyle='#a66c44';ctx.lineWidth=3;ctx.setLineDash([7,7]);ctx.beginPath();ctx.moveTo(e.x,e.y+ground());ctx.lineTo(game.state.player.x,game.state.player.y);ctx.stroke();ctx.setLineDash([]);ctx.font='bold 12px "Stevie Pencil", cursive';ctx.textAlign='center';ctx.fillStyle='#855332';ctx.fillText('DOUBLE STOMP!',e.x,e.y-75);ctx.restore();}
    if(b.phase==='kick'&&b.passenger){const p=kickLanding(e,b.passenger);ctx.save();ctx.strokeStyle='#a66c44';ctx.lineWidth=2;ctx.setLineDash([4,4]);ctx.beginPath();ctx.ellipse(p.x,p.y,20,12,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#855332';ctx.font='bold 12px "Stevie Pencil", cursive';ctx.textAlign='center';ctx.fillText('INCOMING!',p.x,p.y-20);ctx.restore();}
    if(b.phase==='lace'&&b.lace){ctx.strokeStyle='#4d3630';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(b.lace.x,b.lace.y);ctx.lineTo(b.lace.ex,b.lace.y2);ctx.stroke();ctx.strokeStyle='#f7efdc';ctx.lineWidth=1;ctx.stroke();ctx.fillStyle='#755d43';ctx.font='bold 12px "Stevie Pencil", cursive';ctx.textAlign='center';ctx.fillText('DRAW ACROSS THE LACE',(b.lace.x+b.lace.ex)/2,b.lace.y-28);}
@@ -226,6 +248,6 @@ DoodleDefender.systems.bootstompBoss=function(game){
   }
   for(const p of ripples){const d=Math.hypot(game.state.player.x-p.x,game.state.player.y-p.y),dx=(game.state.player.x-p.x)/(d||1),dy=(game.state.player.y-p.y)/(d||1);ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(dy,dx)+Math.PI/2);ctx.fillStyle='#fff8e7';ctx.strokeStyle=p.reduced?'#839b9e':'#797568';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-55,5);ctx.bezierCurveTo(-25,-12,25,-12,55,5);ctx.lineTo(55,11);ctx.bezierCurveTo(25,2,-25,2,-55,11);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}ctx.restore();
  }
- const snapshot=e=>{if(!isBootstomp(e))return null;const b=state(e);return {introDuration:b.enterDuration,introStart:{...b.introStart},introGoal:{...b.introGoal},phase:b.phase,age:b.age,time:b.time,side:b.side,target:b.target?{...b.target}:null,wear:{...b.wear},parts:partPoints(e),swipeCd:b.swipeCd,pressure:pressure(e),lace:b.lace?{...b.lace}:null,passenger:b.passenger?.type||null,kickCount:b.kickCount,shockCount:b.shockCount,ripples:ripples.filter(q=>q.owner===e).map(({owner,...q})=>({...q})),frame:pose(e).key,motion:{distance:b.motion.distance,lean:b.motion.lean,blend:b.motion.blend,feet:b.motion.feet?.map(f=>({...f}))||[],marks:b.motion.marks.map(p=>({...p}))},tuning:{...tune}};};
+ const snapshot=e=>{if(!isBootstomp(e))return null;const b=state(e);return {introDuration:b.enterDuration,introStart:{...b.introStart},introGoal:{...b.introGoal},phase:b.phase,age:b.age,time:b.time,side:b.side,target:b.target?{...b.target}:null,wear:{...b.wear},parts:partPoints(e),swipeCd:b.swipeCd,pressure:pressure(e),lace:b.lace?{...b.lace}:null,passenger:b.passenger?.type||null,kickCount:b.kickCount,shockCount:b.shockCount,ripples:ripples.filter(q=>q.owner===e).map(({owner,...q})=>({...q})),frame:pose(e).key,intro:b.phase==='intro'?introPose(e):null,motion:{distance:b.motion.distance,lean:b.motion.lean,blend:b.motion.blend,feet:b.motion.feet?.map(f=>({...f}))||[],marks:b.motion.marks.map(p=>({...p}))},tuning:{...tune}};};
  Object.assign(a,{isBootstomp,initBootstomp,updateBootstomp,bootstompPressTarget,bootstompRubTarget,bootstompFriendHeld,eraseBootstompPath,resetBootstompRub,bootstompEraseHandled:()=>lastErase,counterBootstompStroke,clearBootstomp,resetBootstomp,moveBootstomp,resizeBootstomp,drawBootstomp,drawBootstompFields,bootstompSnapshot:snapshot});return {};
 };

@@ -19,7 +19,7 @@ module.exports=load=>{
  // Missed stomp always reaches Stevie; any number of walls grants one reduction.
  for(const count of [0,1,3]){const r=setup(),{g,a,e}=r;const q=a.bootstompSnapshot(e).target,p=g.state.player;for(let i=1;i<=count;i++)g.state.walls.push(wall(q.x,q.y+(p.y-q.y)*i/(count+1)));const hp=p.hp;step(r,3.3);assert.equal(a.bootstompSnapshot(e).phase,'impact');step(r,1.2);assert.equal(hp-p.hp,count?7:14,'ripple mitigation is applied exactly once');}
  // A shallow hold and an early release fail; old completed dents cannot be banked.
- {const r=setup(),{a,e}=r;a.beginPaperPress(a.bootstompSnapshot(e).target);a.updatePaperPress(2.2);assert(a.bootstompSnapshot(e).pressure<.8);step(r,3.3);assert.equal(a.bootstompSnapshot(e).phase,'impact');}
+ {const r=setup(),{a,e}=r;a.beginPaperPress(a.bootstompSnapshot(e).target);a.updatePaperPress(2);assert(a.bootstompSnapshot(e).pressure<.8);step(r,3.3);assert.equal(a.bootstompSnapshot(e).phase,'impact');}
  {const r=setup(),{a,e}=r;a.beginPaperPress(a.bootstompSnapshot(e).target);a.updatePaperPress(3);a.releasePaperPress();step(r,3.3);assert.equal(a.bootstompSnapshot(e).phase,'impact');}
  // Every part needs three real swipes; all 15 survive across several openings.
  {const saved=new Map(),storage={getItem:k=>saved.get(k)||null,setItem:(k,v)=>saved.set(k,String(v))},r=setup(800,700,storage),{a,e,g}=r;assert.equal(a.shapeStudiesAvailable(),false);let cycles=0;
@@ -48,13 +48,18 @@ module.exports=load=>{
   for(let i=0;i<1600;i++){const before=a.bootstompSnapshot(e),x=e.x,y=e.y;step(r,.025);const after=a.bootstompSnapshot(e);if(before.phase!=='intro')minDistance=Math.min(minDistance,Math.hypot(e.x-g.state.player.x,e.y-g.state.player.y));if(before.phase==='walk'){const distance=Math.hypot(e.x-x,e.y-y);assert(distance<=110*.025+1e-7,'walk retains its 110px/s combat pace');walked+=distance;}}
   assert(walked>150,'boss still relocates between attacks');assert(minDistance>220,'PC route stays well clear of Stevie');assert.equal(e.speed,110);
  }
- // A short top entrance eases in and out, with the same capped walking speed.
- for(const [W,H] of [[1280,800],[393,700]]){const {a,g}=setup(W,H);a.resetRun({skipIntro:true});g.state.W=W;g.state.H=H;g.state.player.x=W/2;g.state.player.y=H/2;g.state.wave=10;a.startWave();g.state.enemies=[];const boss=a.spawnEnemy(true,100,180),s=a.bootstompSnapshot(boss),start={x:boss.x,y:boss.y};
-  assert(start.y<0&&start.x===s.introGoal.x,'short entrance from above rather than a screen-wide horizontal slide');
-  assert(s.introDuration>=1.5*Math.hypot(s.introGoal.x-start.x,s.introGoal.y-start.y)/88,'eased entrance respects capped peak speed');
-  for(let i=0;i<10;i++){const old={x:boss.x,y:boss.y};a.updateBootstomp(boss,.1);assert(Math.hypot(boss.x-old.x,boss.y-old.y)<=8.8+1e-7,'entrance cannot race across a wide screen');}
-  a.updateBootstomp(boss,s.introDuration-1+.01);assert(Math.hypot(boss.x-s.introGoal.x,boss.y-s.introGoal.y)<1e-7);assert.equal(a.bootstompSnapshot(boss).phase,'intro');a.updateBootstomp(boss,1.45);assert.equal(a.bootstompSnapshot(boss).phase,'idle');assert.equal(boss.speed,110);
+ // The fall has visual height, a single heavy impact and no mid-air wall sweep.
+ for(const [W,H] of [[1280,800],[393,700]]){const {a,g}=setup(W,H);a.resetRun({skipIntro:true});g.state.W=W;g.state.H=H;g.state.player.x=W/2;g.state.player.y=H/2;g.state.wave=10;a.startWave();g.state.enemies=[];const boss=a.spawnEnemy(true,100,180),s=a.bootstompSnapshot(boss),sounds=[],play=a.playSound;a.playSound=name=>sounds.push(name);
+  const landAt=s.tuning.introHang+s.tuning.introFall,w={pts:[{x:boss.x-30,y:boss.y},{x:boss.x+30,y:boss.y}],hp:100,maxHp:100,life:100,thick:8};g.state.walls=[w];
+  assert(s.intro.offsetY+boss.y<0,'starts above the page');const start={x:boss.x,y:boss.y};a.updateBootstomp(boss,landAt-.01);let n=a.bootstompSnapshot(boss);assert(n.intro.offsetY<0&&n.intro.offsetY>s.intro.offsetY,'whole sprite falls toward the landing site');assert(g.state.walls.includes(w),'airborne boss cannot erase cover');assert.equal(sounds.filter(n=>n==='woodImpact').length,0);
+  const before=JSON.stringify(n);g.state.paused=true;a.updateBootstomp(boss,.2);assert.equal(JSON.stringify(a.bootstompSnapshot(boss)),before);g.state.paused=false;
+  a.updateBootstomp(boss,.02);n=a.bootstompSnapshot(boss);assert(n.intro.landed);assert.equal(n.intro.offsetY,0);assert.equal(n.frame,'full-motion:28','lands in the compressed hand-on-paper pose');assert.equal(sounds.filter(n=>n==='woodImpact').length,1);assert(!g.state.walls.includes(w),'cover clears at impact');
+  for(let i=0;i<5;i++)a.updateBootstomp(boss,.04);assert.equal(sounds.filter(n=>n==='woodImpact').length,1,'landing thump does not repeat');assert.equal(boss.x,start.x);assert.equal(boss.y,start.y);a.updateBootstomp(boss,s.introDuration+1.45);assert.equal(a.bootstompSnapshot(boss).phase,'idle');assert.equal(boss.speed,110);a.playSound=play;
  }
+ // Quiet mode keeps the arrival on paper without a falling/tilting sprite.
+ {const env=load(true,{reduced:true}),g=env.sandbox.testGame,a=g.api;a.resetRun({skipIntro:true});g.state.wave=10;a.startWave();g.state.enemies=[];const e=a.spawnEnemy(true,100,180),s=a.bootstompSnapshot(e);assert.equal(s.intro.offsetY,0);assert.equal(s.intro.angle,0);assert.equal(s.intro.sx,1);assert.equal(s.intro.sy,1);}
+ // The boss reads the real press tuning: 0.1s delay + 80% of 2.5s growth.
+ {const r=setup(),{a,e}=r;a.beginPaperPress(a.bootstompSnapshot(e).target);a.updatePaperPress(2.09);assert(a.bootstompSnapshot(e).pressure<.8);a.updatePaperPress(.02);assert(a.bootstompSnapshot(e).pressure>=.8);}
  // Helpers keep the same cap, but actual arrivals are spaced farther apart.
  {const r=setup(),{a,e,g}=r,count=()=>g.state.enemies.filter(n=>n.bossOwner===e).length;assert.equal(count(),0);step(r,.2);assert.equal(count(),1);step(r,2);assert.equal(count(),1,'no second helper at the old arrival cadence');step(r,.5);assert.equal(count(),2,'reduced stream continues spawning helpers');}
  console.log('PASS: Bootstomp held-foot counter, 15 persistent real swipes, immunity, one-time ripple mitigation, paid lace counter, full defeat, pause/pure draw and three arena sizes.');

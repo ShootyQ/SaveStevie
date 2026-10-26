@@ -7153,6 +7153,30 @@
         "6": "defeat_flop"
       }
     },
+    "intro_drop": {
+      "frames": [
+        "full-motion:30",
+        "full-motion:26"
+      ],
+      "durations": [
+        0.5,
+        0.42
+      ],
+      "loop": false
+    },
+    "intro_land": {
+      "frames": [
+        "full-motion:28",
+        "full-motion:34",
+        "full-motion:35"
+      ],
+      "durations": [
+        0.19,
+        0.28,
+        0.28
+      ],
+      "loop": false
+    },
     "erase_left_fist": {
       "frames": [
         "erasure:0",
@@ -7288,8 +7312,12 @@
   "scenes": {
     "Intro": [
       [
-        "intro_enter",
-        1.2
+        "intro_drop",
+        0.92
+      ],
+      [
+        "intro_land",
+        0.75
       ],
       [
         "intro_challenge",
