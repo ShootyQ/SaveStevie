@@ -1207,3 +1207,8 @@ sealed work site, the worker approaches the first blocking wall and attacks only
 within body range, then replans once it opens. Reachable detours still preserve
 walls. Desktop/phone regression fixtures cover sealed jobs, ordinary convoy
 followers and existing mouse/touch hard-hat tool counters.
+
+Follow the Underline range (Alpha 0.1.150): balls leaving a line receive one
+normal throw’s flight time and target range from the release point, using their
+captured range upgrades (or their turret’s range). Rail travel time is discarded
+on release, including when the supporting wall breaks.
