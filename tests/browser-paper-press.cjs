@@ -7,13 +7,13 @@ const root=path.resolve(__dirname,'..');
   await page.route('http://stevie.test/**',route=>{const name=new URL(route.request().url()).pathname.slice(1)||'index.html';let body;try{body=fs.readFileSync(path.join(root,name));}catch{return route.fulfill({status:404,body:''});}if(name==='game.js')body=body.toString().replace('const game = DoodleDefender.createGame();','const game = DoodleDefender.createGame();window.testGame=game;');return route.fulfill({body,contentType:({'.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.wav':'audio/wav','.mp3':'audio/mpeg','.ttf':'font/ttf'})[path.extname(name)]||'text/html'});});
   await page.goto('http://stevie.test/',{waitUntil:'domcontentloaded',timeout:120000});await page.waitForFunction(()=>testGame.api.artworkStatus().ready,null,{polling:100,timeout:120000});
   const setup=async()=>{await page.evaluate(()=>{const g=testGame,a=g.api;a.setFirstLessonsEnabled(false);a.setMonsterIntrosEnabled(false);a.setSynergyRevealsEnabled(false);a.resetRun();g.state.enemies=[];g.state.walls=[];g.state.spawnTimer=999999;g.state.timeLeft=300;g.state.stats.rockDamage=0;});return page.evaluate(()=>({x:testGame.state.W*.35,y:testGame.state.player.y-140}));};
-  const tick=async t=>page.evaluate(t=>{for(let i=0;i<Math.round(t/.05);i++)testGame.api.update(.05);testGame.api.draw();},t);
+  const tick=async t=>page.evaluate(t=>{for(let left=t;left>1e-8;left-=.05)testGame.api.update(Math.min(.05,left));testGame.api.draw();},t);
   const point=await setup(),box=await page.locator('#game').boundingBox(),x=box.x+point.x,y=box.y+point.y;
   let cdp,button;
   if(viewport.width<600){cdp=await page.context().newCDPSession(page);const r=await page.locator('#eraserBtn').boundingBox();button={id:11,x:r.x+r.width/2,y:r.y+r.height/2};await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[button,{id:12,x,y}]});}
   else{await page.mouse.move(x,y);await page.mouse.down({button:'right'});}
-  await tick(.35);assert.equal(await page.evaluate(()=>testGame.api.paperPressSnapshot().press.depth),0);await tick(.25);
-  if(cdp){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[button,{id:12,x:x+45,y}]});await page.waitForTimeout(70);const held=await page.evaluate(()=>testGame.api.paperPressSnapshot().press);assert(Math.abs(held.x-point.x)<.01,'real touch drift leaves depression anchored');assert(held.age>=.6,'real touch drift preserves charge');await page.screenshot({path:'/tmp/paper-touch-hold-ring.png'});}
+  await tick(.09);assert.equal(await page.evaluate(()=>testGame.api.paperPressSnapshot().press.depth),0);await tick(.51);
+  if(cdp){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[button,{id:12,x:x+45,y}]});await page.waitForTimeout(70);const held=await page.evaluate(()=>testGame.api.paperPressSnapshot().press);assert(Math.abs(held.x-point.x)<.01,'real touch drift leaves depression anchored');assert(held.age>=.599999,'real touch drift preserves charge');await page.screenshot({path:'/tmp/paper-touch-hold-ring.png'});}
   await tick(2.35);
   await page.evaluate(p=>{const g=testGame;window.bouncer=g.api.spawnEnemy(false,p.x+50,p.y,'grunt');},point);await tick(.3);
   assert(await page.evaluate(()=>testGame.api.paperPressCaptures(bouncer)));await page.screenshot({path:'/tmp/paper-dent-'+viewport.width+'.png'});
