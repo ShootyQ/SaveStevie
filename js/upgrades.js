@@ -300,6 +300,8 @@ const upgradeArtGroups=[
  ['Pocket Rocks','Better Rocks','Emergency Medicine','Really Good Rocks','Stevie Has Had Enough','Loaded Deck','Reroll Coupon','Collector','Greedy Goblin']
 ];
 function upgradeArtworkInfo(u){
+ // This drawing's neighbor spills past the nominal grid boundary.
+ if(u.name==='Stevie Has Had Enough')return {file:'assets/art/upgrades/gallery-3.png',grid:3,x:1,y:1,crop:{x:439,y:423,size:376,sheet:1254}};
  const small=['Eraser Crumbs','Please Form a Line','Connect the Dots'].indexOf(u.name);if(small>=0)return {file:'assets/art/small-utilities.png',grid:2,x:small%2,y:Math.floor(small/2)};
  if(u.name==='Under the Desk')return {file:'assets/art/under-desk.png',grid:3,rows:2,x:2,y:0};
  const toys=['Margin of Error',"Stevie's Terrible Idea",'Spitball Express','Red Pen Corrections'],toy=toys.indexOf(u.name);if(toy>=0)return {file:'assets/art/upgrades/utility-toys.png',grid:2,x:toy%2,y:Math.floor(toy/2)};
@@ -322,7 +324,8 @@ function legacyUpgradeArtwork(u){
 function upgradeArtwork(u){return upgradeArtworkInfo(u)?.file||legacyUpgradeArtwork(u)}
 function upgradeArtworkMarkup(u,size=64){
  const a=upgradeArtworkInfo(u),version=document.documentElement?.dataset?.build,query=version?'?v='+encodeURIComponent(version):'';
- const style=a?`width:${a.grid*100}%;height:${(a.rows||a.grid)*100}%;left:${-a.x*100}%;top:${-a.y*100}%;`:'width:100%;height:100%;left:0;top:0;';
+ const crop=a?.crop;
+ const style=crop?`width:${crop.sheet/crop.size*100}%;height:${crop.sheet/crop.size*100}%;left:${-crop.x/crop.size*100}%;top:${-crop.y/crop.size*100}%;`:a?`width:${a.grid*100}%;height:${(a.rows||a.grid)*100}%;left:${-a.x*100}%;top:${-a.y*100}%;`:'width:100%;height:100%;left:0;top:0;';
  return `<span class="upgrade-illustration" style="--illustration-size:${size}px" aria-hidden="true"><img class="upgrade-art" src="${upgradeArtwork(u)}${query}" data-art-fallback="${legacyUpgradeArtwork(u)}${query}" alt="" width="${size}" height="${size}" style="${style}"></span>`;
 }
 function bindArtworkFallback(container){

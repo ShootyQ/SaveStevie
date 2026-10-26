@@ -179,6 +179,7 @@ function renderBuild(){
 const infoButtons={desktopQuit:'desktopQuitCancel',whiteBrothers:'closeWhiteBrothersBtn',discoveries:'closeDiscoveriesBtn',betaScraps:'closeBetaScrapsBtn',backup:'closeBackupBtn',report:'closeReportBtn',doodle:'doodleTitle',lesson:'lessonTitle',hub:'closeHubBtn',pause:'resumeBtn',build:'closeBuildBtn',changelog:'closeChangelogBtn',compendium:'closeCompendiumBtn',monsterIntro:'continueMonsterIntroBtn',options:'closeOptionsBtn',statistics:'closeStatisticsBtn'};
 function infoOpen(){return activeInfo!==null}
 function openInfo(kind){
+  if(kind==='pause'&&(!game.state.running||game.dom.startOverlay.style.display!=='none'))return;
   if(kind==='notebook')kind='betaScraps';
   if(game.api.wobbleRepairActive?.())return;
   if(activeInfo===kind||activeInfo==='monsterIntro')return;
