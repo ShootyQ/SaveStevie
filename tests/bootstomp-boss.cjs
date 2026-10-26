@@ -2,7 +2,7 @@ const assert=require('assert');
 module.exports=load=>{
  function setup(W=800,H=700,storage){const env=load(true,{images:true,storage}),g=env.sandbox.testGame,a=g.api;a.setFirstLessonsEnabled(false);a.resetRun({skipIntro:true});g.state.wave=10;a.startWave();g.state.W=W;g.state.H=H;g.state.player.x=W/2;g.state.player.y=H/2;g.state.player.hp=g.state.player.maxHp=10000;g.state.timeLeft=0;g.state.enemies=[];g.state.walls=[];g.state.stats.rockRate=0;g.state.stats.playerArmor=0;const e=a.spawnEnemy(true,100,180);a.updateBootstomp(e,a.bootstompSnapshot(e).introDuration+1.45);a.updateBootstomp(e,.81);assert.equal(a.bootstompSnapshot(e).phase,'windup');return {env,g,a,e};}
  function step(r,seconds,hold=false){for(let t=0;t<seconds-.000001;t+=.05){const dt=Math.min(.05,seconds-t);if(hold)r.a.updatePaperPress(dt);r.a.updateBootstomp(r.e,dt);}}
- function down(r){let s=r.a.bootstompSnapshot(r.e);for(let i=0;s.phase!=='windup'&&i<1000;i++){step(r,.05);s=r.a.bootstompSnapshot(r.e);}assert.equal(s.phase,'windup');assert(r.a.beginPaperPress(s.target));step(r,3.3,true);assert.equal(r.a.bootstompSnapshot(r.e).phase,'stumble');step(r,1.3);assert.equal(r.a.bootstompSnapshot(r.e).phase,'down');}
+ function down(r){r.a.resetBootstompRub();let s=r.a.bootstompSnapshot(r.e);for(let i=0;s.phase!=='windup'&&i<1000;i++){step(r,.05);s=r.a.bootstompSnapshot(r.e);}assert.equal(s.phase,'windup');assert(r.a.beginPaperPress(s.target));step(r,3.3,true);assert.equal(r.a.bootstompSnapshot(r.e).phase,'stumble');step(r,1.3);assert.equal(r.a.bootstompSnapshot(r.e).phase,'down');}
  const wall=(x,y)=>({pts:[{x:x-100,y},{x:x+100,y}],hp:100,maxHp:100,life:100,thick:8});
  for(const dims of [[800,700],[393,700],[960,520]]){
   const r=setup(...dims),{g,a,e}=r,s=a.bootstompSnapshot(e);assert.equal(e.type,'bootstomp');assert(s.target.x>=20&&s.target.x<g.state.W-20);assert(s.target.y>20&&s.target.y<g.state.H-10);
@@ -15,6 +15,16 @@ module.exports=load=>{
   const before=JSON.stringify(a.bootstompSnapshot(e)),random=r.env.sandbox.Math.random;let rolls=0;r.env.sandbox.Math.random=()=>{rolls++;return random();};a.draw();a.draw();r.env.sandbox.Math.random=random;assert.equal(rolls,0);assert.equal(JSON.stringify(a.bootstompSnapshot(e)),before,'rendering is pure');
   g.state.paused=true;a.updateBootstomp(e,1);assert.equal(JSON.stringify(a.bootstompSnapshot(e)),before,'pause stops boss clocks');g.state.paused=false;
   step(r,4);assert.equal(a.bootstompSnapshot(e).wear.left_boot,2,'wear survives standing up');a.endDraw();assert.equal(a.paperPressSnapshot().press,null);
+ }
+ // Once rubbing starts on him, drift cannot tear paper, erase nearby walls,
+ // or arm a new paper press; lifting/cancelling restores ordinary erasing.
+ {const r=setup(),{a,e,g}=r;down(r);const q=a.bootstompSnapshot(e).parts.left_boot,parts=JSON.stringify(a.bootstompSnapshot(e).parts),far={x:e.x+170,y:e.y+50},cover=wall(far.x,far.y);g.state.walls=[cover];const surface=JSON.stringify(g.state.paper.surface);
+  assert(a.captureBootstompRub(q));a.eraseWallPath({x:q.x-15,y:q.y},{x:q.x+15,y:q.y},6);step(r,.1);assert.equal(JSON.stringify(a.bootstompSnapshot(e).parts),parts,'rub targets do not jump with a whole-body flinch');
+  assert(!a.beginPaperPress(far),'wandering finger cannot switch into a paper press');
+  for(let i=0;i<20;i++){const from={x:far.x-10,y:far.y},to={x:far.x+10,y:far.y};a.eraseWallPath(from,to,20);a.queuePaperRub(from,to,20);a.updatePaper(.1);}
+  assert.equal(JSON.stringify(g.state.paper.surface),surface,'boss gesture never wears surrounding paper');assert.equal(cover.hp,100);assert(g.state.walls.includes(cover),'boss gesture cannot erase a nearby wall');
+  step(r,3.3);assert(a.bootstompRubActive(),'protection lasts until release even if he stands up');a.cancelDrawingInput();assert(!a.bootstompRubActive());g.state.walls=[];
+  for(let i=0;i<21;i++){a.queuePaperRub({x:far.x-5,y:far.y},{x:far.x+5,y:far.y},20);a.updatePaper(.05);}assert(a.surfaceHoleAt(far.x,far.y),'normal paper erasing returns after release');
  }
  // Missed stomp always reaches Stevie; any number of walls grants one reduction.
  for(const count of [0,1,3]){const r=setup(),{g,a,e}=r;const q=a.bootstompSnapshot(e).target,p=g.state.player;for(let i=1;i<=count;i++)g.state.walls.push(wall(q.x,q.y+(p.y-q.y)*i/(count+1)));const hp=p.hp;step(r,3.3);assert.equal(a.bootstompSnapshot(e).phase,'impact');step(r,1.2);assert.equal(hp-p.hp,count?7:14,'ripple mitigation is applied exactly once');}

@@ -1176,3 +1176,12 @@ fill. Animation uses pool age and seed without combat RNG; reduced motion keeps
 static poses and preserves growth. Lifetime, pool/scar caps and damage stay the
 same. `tests/browser-plaguefire-visuals.cjs` checks real kill drops, visible flame
 and slime pixels, firebreaks, reduced motion and burnout on desktop and phone.
+
+Bootstomp erasing (Alpha 0.1.147): an erase gesture that touches the fallen
+boss stays assigned to him until pointer release, cancellation or a tool change.
+Drifting off his drawing cannot wear the paper, remove nearby walls or arm a
+paper press, including while he stands up. Ordinary erasing resumes after the
+gesture ends. The fallen pose stays fixed so part targets do not jump during
+flinches; graphite crumbs provide hit feedback. Parts still take three swipes
+and retain faint ghosts. Mouse and phone touch regressions include sustained
+overshoot onto bare paper and release cleanup.
