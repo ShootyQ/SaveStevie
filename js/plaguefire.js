@@ -80,6 +80,10 @@ function drawBurnedDesk(ctx){
     // Active burns reveal desk as they grow, not only after burnout. Whole-pixel
     // radii bound cache rebuilds; one union keeps overlapping burns uncluttered.
     for(const p of patches)outline(dc,Math.floor(radius(p)),p,true);
+    // Stroke before the union fill: internal overlapping rims are covered,
+    // leaving one continuous charred paper edge around exposed desk.
+    dc.strokeStyle='#493c2b';dc.lineWidth=5;dc.lineJoin='round';dc.stroke();
+    dc.strokeStyle='#a56a36';dc.lineWidth=2.2;dc.stroke();
     dc.fillStyle='#c59b70';dc.fill();dc.clip();
     dc.lineWidth=1;dc.strokeStyle='rgba(114,77,43,.22)';dc.beginPath();
     for(let y=0;y<H;y+=12){dc.moveTo(0,y);dc.bezierCurveTo(W*.3,y-2,W*.7,y+2,W,y);}
@@ -93,22 +97,30 @@ function drawPlaguefire(){
   for(const p of patches){
     const r=radius(p),fade=Math.min(1,(p.life-p.age)/.8),phase=reduced?0:p.age;
 
-    ctx.save();game.api.clipFirePatch(ctx,p);ctx.translate(p.x,p.y);ctx.globalAlpha=fade*.65;ctx.lineJoin='round';
-    outline(ctx,r,p);ctx.fillStyle='rgba(90,143,48,.18)';ctx.fill();
-    // A liquid shimmer, rising gas bubbles, and green/orange flames.
-    for(let i=0;i<2;i++){
-      const a=i*2.4+p.seed,spread=r*(.22+.11*(i%3)),x=Math.cos(a)*spread,y=Math.sin(a)*spread*.65;
-      const cycle=reduced?.35:(phase*.75+i*.21)%1;
-      const bubble=1.5+(reduced?1:Math.sin(cycle*Math.PI)*3);
-      ctx.beginPath();ctx.arc(x,y-(reduced?0:cycle*7),bubble,0,Math.PI*2);ctx.fillStyle='#cbea73';ctx.fill();ctx.strokeStyle='#52792c';ctx.lineWidth=1;ctx.stroke();
-      if(!reduced&&cycle>.8){ctx.globalAlpha=fade*(1-cycle)*4;ctx.beginPath();ctx.arc(x,y-7,4+(cycle-.8)*12,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=fade*.65}
+    ctx.save();game.api.clipFirePatch(ctx,p);ctx.translate(p.x,p.y);ctx.globalAlpha=fade*.92;ctx.lineJoin='round';
+    // The liquid must read as active Plaguefire above the exposed desk, even
+    // at phone scale. Keep it inside the same world-space eraser firebreaks.
+    outline(ctx,r,p);const liquid=ctx.createRadialGradient(-r*.2,-r*.25,1,0,0,r*1.15);
+    liquid.addColorStop(0,'#c0db48');liquid.addColorStop(.48,'#88ac2e');liquid.addColorStop(1,'#3e641f');ctx.fillStyle=liquid;ctx.fill();
+    ctx.strokeStyle='#385323';ctx.lineWidth=1.4;ctx.stroke();
+    // Slow liquid eddies and warm cracks give the pool movement between pops.
+    ctx.lineWidth=1.2;ctx.strokeStyle='#e2e878';ctx.globalAlpha=fade*.65;
+    for(let i=0;i<3;i++){const a=p.seed+i*2.1+(reduced?0:phase*.35),x=Math.cos(a)*r*.32,y=Math.sin(a)*r*.24;ctx.beginPath();ctx.ellipse(x,y,r*(.23+i*.025),r*.095,a*.2,.15,Math.PI*1.35);ctx.stroke();}
+    for(let i=0;i<7;i++){
+      const a=i*2.4+p.seed,spread=r*(.18+.1*(i%4)),x=Math.cos(a)*spread,y=Math.sin(a)*spread*.72;
+      const cycle=reduced?.35:(phase*(.65+(i%3)*.12)+i*.143+p.seed*.07)%1,lift=reduced?0:cycle*(8+r*.14),bubble=1.8+Math.sin(cycle*Math.PI)*(2+r*.045);
+      ctx.globalAlpha=fade*.95;
+      if(cycle<.8||reduced){ctx.beginPath();ctx.arc(x,y-lift,bubble,0,Math.PI*2);ctx.fillStyle=i%3?'#cfec67':'#e5ef9a';ctx.fill();ctx.strokeStyle='#527b27';ctx.lineWidth=1;ctx.stroke();ctx.beginPath();ctx.arc(x-bubble*.25,y-lift-bubble*.3,Math.max(.6,bubble*.22),0,Math.PI*2);ctx.fillStyle='#fff9c3';ctx.fill();}
+      else{const pop=(cycle-.8)/.2;ctx.globalAlpha=fade*(1-pop)*.8;ctx.strokeStyle='#d8ee78';ctx.lineWidth=1.1;ctx.beginPath();ctx.ellipse(x,y-lift,bubble*(1+pop),bubble*(.5+pop*.3),0,0,Math.PI*2);ctx.stroke();for(const side of [-1,1]){ctx.beginPath();ctx.arc(x+side*(3+pop*6),y-lift-2-pop*4,1.2*(1-pop)+.3,0,Math.PI*2);ctx.fillStyle='#b9dc4a';ctx.fill();}}
     }
-    for(let i=0;i<2;i++){
-      const a=i*Math.PI+.6,x=Math.cos(a)*r*.68,y=Math.sin(a)*r*.5;
-      const h=reduced?9:9+r*.12+Math.sin(phase*7+i+p.seed)*3;
-      ctx.beginPath();ctx.moveTo(x-4,y+2);ctx.quadraticCurveTo(x-7,y-4,x+Math.sin(phase*5+i)*2,y-h);ctx.quadraticCurveTo(x+5,y-4,x+4,y+2);ctx.closePath();
-      ctx.fillStyle='#e18c31';ctx.fill();ctx.strokeStyle='#80522b';ctx.lineWidth=1;ctx.stroke();
-      ctx.beginPath();ctx.moveTo(x-2,y);ctx.lineTo(x,y-h*.65);ctx.lineTo(x+2,y);ctx.closePath();ctx.fillStyle='#d7ed6d';ctx.fill();
+    // Six irregular tongues, orange outside with toxic green/yellow cores.
+    // Fixed phase offsets replace render-time randomness and bound draw cost.
+    for(let i=0;i<6;i++){
+      const a=i*Math.PI/3+.6,x=Math.cos(a)*r*(.58+.12*(i%2)),y=Math.sin(a)*r*.56;
+      const beat=reduced?0:Math.sin(phase*(6+i%3)+i+p.seed),h=10+r*.27+beat*4,w=3.3+r*.035,lean=reduced?0:Math.sin(phase*4+i*1.7)*3;
+      ctx.globalAlpha=fade*(.82+.12*(i%2));ctx.beginPath();ctx.moveTo(x-w,y+2);ctx.bezierCurveTo(x-w*1.8,y-h*.25,x-w*.7,y-h*.48,x+lean,y-h);ctx.bezierCurveTo(x+w*.25,y-h*.55,x+w*1.8,y-h*.25,x+w,y+2);ctx.closePath();ctx.fillStyle=i%2?'#e98828':'#d96a24';ctx.fill();ctx.strokeStyle='#8a5428';ctx.lineWidth=.85;ctx.stroke();
+      ctx.beginPath();ctx.moveTo(x-w*.58,y+1);ctx.quadraticCurveTo(x-w*.8,y-h*.3,x+lean*.55,y-h*.72);ctx.quadraticCurveTo(x+w,y-h*.3,x+w*.58,y+1);ctx.closePath();ctx.fillStyle='#d7ef68';ctx.fill();
+      ctx.beginPath();ctx.moveTo(x-1,y);ctx.quadraticCurveTo(x,y-h*.36,x+1,y-h*.42);ctx.lineTo(x+2,y);ctx.closePath();ctx.fillStyle='#f6f6ad';ctx.fill();
     }
     ctx.restore();
   }

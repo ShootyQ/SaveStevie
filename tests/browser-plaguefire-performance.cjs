@@ -14,7 +14,7 @@ const root=path.resolve(__dirname,'..'),baseline=process.argv[2];
     const drop=(x,y)=>a.dropPlaguefire({x,y,burn:2,poison:2});
     for(let batch=0;batch<2;batch++){for(let i=0;i<12;i++){const angle=i*Math.PI/6;drop(s.player.x+Math.cos(angle)*(65+batch*12),s.player.y+Math.sin(angle)*(65+batch*12));}a.updatePlaguefire(10);}
     for(let i=0;i<12;i++){const angle=i*Math.PI/6;drop(s.player.x+Math.cos(angle)*115,s.player.y+Math.sin(angle)*115);}a.updatePlaguefire(7);
-    for(let i=0;i<80;i++){const angle=i*2.4,r=95+i%5*16,e=a.spawnEnemy(false,s.player.x+Math.cos(angle)*r,s.player.y+Math.sin(angle)*r,['grunt','fast','sniper','bouncer'][i%4]);e.hp=e.maxHp=100000;}
+    for(let i=0;i<80;i++){const angle=i*2.4,r=95+i%5*16,e=a.spawnEnemy(false,s.player.x+Math.cos(angle)*r,s.player.y+Math.sin(angle)*r,['grunt','fast','sniper','bouncer'][i%4]);if(!e)break;e.hp=e.maxHp=100000;}
     for(let i=0;i<12;i++){const angle=i*Math.PI/6,x=s.player.x+Math.cos(angle)*90,y=s.player.y+Math.sin(angle)*90;s.walls.push({pts:[{x:x-20,y:y-10},{x:x+20,y:y+10}],hp:100,maxHp:100,life:100,maxLife:100,thick:5});}
     const snap=a.plaguefireSnapshot();
     function measure(draw=()=>a.draw()){for(let i=0;i<10;i++)draw();const samples=[];for(let pass=0;pass<3;pass++){const start=performance.now();for(let i=0;i<20;i++){draw();g.dom.ctx.getImageData(0,0,1,1);}samples.push((performance.now()-start)/20);}return samples.sort((a,b)=>a-b)[1];}
