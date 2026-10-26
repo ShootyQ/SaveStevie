@@ -15,7 +15,7 @@ DoodleDefender.systems.chonksShield=function(game){
   const ca=Math.cos(p.angle),sa=Math.sin(p.angle);
   return {x:e.x+p.x+x*ca-y*sa,y:e.y+p.y+x*sa+y*ca,angle:p.angle+f.x*.12,sx:p.sx,sy:p.sy};
  }
- function eligible(e){return e.hp>0&&!e.flight&&!e.hurdle&&!game.api.bossFriendHeld(e)&&!game.api.underPaper(e)&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!['tank','boss','eraser'].includes(e.type);}
+ function eligible(e){return e.hp>0&&!e.flight&&!e.hurdle&&!game.api.bossFriendHeld(e)&&!game.api.underPaper(e)&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!['tank','boss','eraser','wallpuller','papertearer'].includes(e.type);}
  function chonksShelterHost(e){
   if(!eligible(e))return null;let best=null,distance=Infinity;
   for(const h of shieldHosts()){const f=front(h),dx=e.x-h.x,dy=e.y-h.y,back=-(dx*f.x+dy*f.y),side=Math.abs(dx*f.y-dy*f.x);if(back>=12&&back<=tuning.shelterLength&&side<=20+back*.45&&back<distance){best=h;distance=back;}}

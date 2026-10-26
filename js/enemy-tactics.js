@@ -49,7 +49,7 @@ DoodleDefender.systems.enemyTactics=function(game){
   if(s.runs>=3)s.phase='join';
   game.api.animateEnemyAction(e,'aim',goal);game.api.floatText(e.x,e.y-e.r-16,s.runs===3?'MY TURN!':'THIS WAY!','#566fb0');
  }
- function eligible(e){return !e.catapultHeld&&!e.specialistJob&&e.hp>0&&!e.waveBoss&&recruits.has(e.type)&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!game.api.feastHost(e)&&!game.api.doodleTarget(e);}
+ function eligible(e){return !['wallpuller','papertearer'].includes(e.type)&&!e.catapultHeld&&!e.specialistJob&&e.hp>0&&!e.waveBoss&&recruits.has(e.type)&&!game.api.underPaper(e)&&!e.flight&&!e.hurdle&&!game.api.feastHost(e)&&!game.api.doodleTarget(e);}
  function routeEntries(includeEmpty=false){const entries=[...leaders].map(([e,s])=>[e,s,s.order]).filter(entry=>includeEmpty||entry[2]);for(const [o,e] of stolen)if(!entries.some(entry=>entry[2]===o))entries.push([e,{order:o,speech:0,phase:'archived'},o]);return entries;}
  function orderValid(owner,order){return stolen.has(order);}
  function finishOrder(o){stolen.delete(o);for(const s of leaders.values())if(s.order===o){retireOrder(s);s.wait=1;}for(const n of game.state.enemies)if(followers.get(n)?.order===o)followers.delete(n);}
@@ -221,8 +221,16 @@ DoodleDefender.systems.enemyTactics=function(game){
   let nav=specialistNav.get(e);if(!nav){nav={nav:null};specialistNav.set(e,nav);}
   if(nav.nav&&Math.hypot(e.x-nav.nav.goal.x,e.y-nav.nav.goal.y)>6&&Math.hypot(nav.nav.goal.x-goal.x,nav.nav.goal.y-goal.y)<16)goal=nav.nav.goal;
   if(navigate(e,nav,goal,dt,speed))return true;
-  // A fully enclosed job must not hang forever: chew the actual blocking wall.
-  const hit=game.api.nearestWallHit(e);if(hit&&e.freeze<=0&&e.stun<=0){e.attackCd-=dt;if(e.attackCd<=0){game.api.damageWall(hit.wall,e.dmg,e.x,e.y);game.api.playMonsterWall(e);e.attackCd=.42;}}
+  // A failed plan can leave a worker far short of the barrier: nearestWallHit
+  // only sees existing contact. Approach the first real obstruction, then chew
+  // it from body range rather than waiting forever or crossing solid ink.
+  const hit=game.api.nearestWallHit(e)||game.api.bossShotWallHit(e,goal.x,goal.y);
+  if(hit&&e.freeze<=0&&e.stun<=0){
+   const q=game.api.nearestPointOnWall(e,hit.wall),reach=e.r+hit.wall.thick/2+1;
+   if(q){const dx=q.x-e.x,dy=q.y-e.y,d=Math.hypot(dx,dy),step=Math.min(Math.max(0,d-reach),e.speed*speed*game.api.enemyMoveScale(e)*(1-game.api.clamp(e.gravitySlow,0,.7))*dt);if(step>0)game.api.moveEnemySafely(e,dx/d*step,dy/d*step);
+    if(Math.hypot(q.x-e.x,q.y-e.y)<=reach+2){e.attackCd-=dt;if(e.attackCd<=0){game.api.damageWall(hit.wall,e.dmg,e.x,e.y);game.api.playMonsterWall(e);game.api.animateEnemyAction(e,'bite');e.attackCd=.42;}}
+   }
+  }
   return false;
  }
  function sneakyRoutesSnapshot(){return [...stolen].map(([o,e])=>({id:o.id,completed:o.completed,ownerAlive:e.hp>0&&game.state.enemies.includes(e),hijacked:!!o.hijacked,points:o.points.map(p=>({...p}))}));}
