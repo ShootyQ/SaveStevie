@@ -1212,3 +1212,9 @@ Follow the Underline range (Alpha 0.1.150): balls leaving a line receive one
 normal throw’s flight time and target range from the release point, using their
 captured range upgrades (or their turret’s range). Rail travel time is discarded
 on release, including when the supporting wall breaks.
+
+Late-wave crowd cap (Alpha 0.1.151): waves 15–20 allow at most 83 living
+non-boss enemies, the scheduled allowance of a standard 60-second wave 15.
+Scheduled arrivals, reinforcements and split offspring share the cap. Bosses
+do not consume minion slots. Spawn timing, total arrival budgets and HP scaling
+are unchanged; defeats free slots. Other waves retain their existing limits.
