@@ -1237,3 +1237,10 @@ On this cloud Chromium run, growing mixed effect time fell from about 18 to 2 ms
 at desktop size and 9 to 0.8 ms at phone size. These are isolated browser effect
 measurements, not device FPS guarantees. The regression also checks that growing
 burns never resize a full-page canvas.
+
+Bootstomp lace pass (Alpha 0.1.155): stomp windup is 2.95s (previously 3.25s).
+Lace throws occupy every other special attack, starting with attack two. A paid
+stroke across the taut lace triggers rebound, fall and the normal 3.2s erasing
+opening, dealing 10 permanent damage on landing. Lace damage combines with
+erased parts and never resets on later swipes. Uncut throws, missing passengers,
+resize cancellations and outside attacks do not award counter damage.
