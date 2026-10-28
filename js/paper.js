@@ -44,7 +44,7 @@ function updatePaperEnemy(e,dt){
  if(e.eraseStumble>0)e.eraseStumble=Math.max(0,e.eraseStumble-dt);
  let t=e.paperTunnel;
  if(!t){
-  if(e.paperTripUsed||e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.hurdle||e.thermalShock?.phase==='pressure'||['catapulter','wallpuller','papertearer','wobble-tooth'].includes(e.type)||e.catapultHeld||e.specialistJob?.kind==='catapult'||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
+  if(e.bootstompBuffer||e.paperTripUsed||e.waveBoss||['boss','eraser'].includes(e.type)||game.catalog.enemyDefs[e.type]?.boss||e.flight||e.hurdle||e.thermalShock?.phase==='pressure'||['catapulter','wallpuller','papertearer','wobble-tooth'].includes(e.type)||e.catapultHeld||e.specialistJob?.kind==='catapult'||e.type==='jamling'||e.stun>0||e.freeze>0||e.paperCooldown>0||game.api.bossFriendHeld(e))return false;
   const holes=game.state.paper.holes,player=game.state.player,entry=holes.find(h=>game.api.paperHoleFits(h,e,tunnelClearance(e)))||game.api.plaguefireEntranceAt(e,tunnelClearance(e));
   if(e.paperEncounter&&!holes.some(h=>h.id===e.paperEncounter&&game.api.paperHoleContains(h,e,e.r*.35+18))&&!game.api.plaguefireOpeningContains(e.paperEncounter,e,e.r*.35+18))delete e.paperEncounter;
   if(!entry||e.paperEncounter===entry.id)return false;

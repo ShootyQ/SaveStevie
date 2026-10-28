@@ -112,6 +112,7 @@ function update(dt){
     if(game.api.paperPressCaptures(e)){const hit=game.api.nearestWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
     if(game.api.heldByCatapulter(e))continue;
     if(game.api.bossFriendHeld(e))continue; // Held helpers still take status damage above, but do not walk or attack.
+    if(game.api.updateBootstompBuffer(e,dt))continue;
     if(game.api.smallUtilityWaiting(e)||game.api.gravityWhirlpoolPulling(e)){const hit=game.api.nearestWallHit(e);if(hit)game.api.dealDamage(e,game.api.applyInkContact(e,dt,hit.wall)*dt,'physical');continue;}
     game.api.applyCircleEnclosure(e,dt);if(e.hp<=0)continue;
     game.api.circleTurretContact(e,dt);if(e.hp<=0)continue;

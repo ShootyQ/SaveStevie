@@ -53,7 +53,7 @@ function eraseWallPath(a,b,r=20,options={}){
  if(!game.state.running||(game.state.paused&&!lesson)||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
  if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
  game.api.resetUtilityEraseHandled?.();game.api.resetUnderDeskEraseHandled?.();
- if(!options.enemy&&!lesson){const bossErase=game.api.eraseBootstompPath?.(a,b,r);if(game.api.bootstompEraseHandled?.())return !!bossErase;const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;if(game.api.utilityErase?.(a,b,r))return true;if(game.api.underDeskErase?.(a,b,r))return true;}
+ if(!options.enemy&&!lesson){if(game.api.redirectBootstompCrew(a,b,r))return true;const bossErase=game.api.eraseBootstompPath?.(a,b,r);if(game.api.bootstompEraseHandled?.())return !!bossErase;const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;if(game.api.utilityErase?.(a,b,r))return true;if(game.api.underDeskErase?.(a,b,r))return true;}
  let changed=false,recovered=0;const result=[];
  for(const wall of game.state.walls){
   if(options.onlyWall&&wall!==options.onlyWall){result.push(wall);continue;}

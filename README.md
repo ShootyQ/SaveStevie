@@ -1244,3 +1244,23 @@ stroke across the taut lace triggers rebound, fall and the normal 3.2s erasing
 opening, dealing 10 permanent damage on landing. Lace damage combines with
 erased parts and never resets on later swipes. Uncut throws, missing passengers,
 resize cancellations and outside attacks do not award counter damage.
+
+Bootstomp eraser crew (Alpha 0.1.158): player rubbing no longer removes boss
+parts; it still protects the surrounding paper during a boss-body gesture.
+Three encounter-only Boot Buffers use Rubble Ruff's silhouette with cached
+orange/green team colors. A moving player eraser rub redirects them for 12s;
+they stage near the boss, then scrub one chunk in 0.55s while he is down and
+wear out. Three crew chunks remove a part. Their hits count as counter damage.
+Friendly crew are excluded from nearest-target selection and player damage.
+They do not burrow or get used as lace/kick passengers. Their pathfinding does
+not damage player walls while friendly. Hostile crew scrub defenses and can
+reach Stevie when cover is gone.
+
+The boss warns for 0.8s before sending a 240px/s paper wave toward a converted
+eraser; a wall catches it at a 40% wall-HP cost. An unblocked wave turns its target
+hostile. Ordinary stomp ripples can also turn green crew orange when crossing
+them. The boss keeps his damaging stomp, lace throws, lace-counter damage and
+kicks. Blue Gribbles reserve eleven of the existing fourteen helper slots, with
+three slots for erasers. Ground time is 2.72s (15% less); the boss-only press
+startup is 0.25s, making a ready dent take about 0.45s. Ordinary paper pressing
+keeps its existing timing. Crew/waves reset with the run and disappear on defeat.

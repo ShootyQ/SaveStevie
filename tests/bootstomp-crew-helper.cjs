@@ -1,0 +1,1 @@
+module.exports=function crewScrub(r,p){const a=r.a,s=r.g.state,n=a.spawnEnemy(false,p.x,p.y,'boot-buffer');n.bossOwner=r.e;n.bootstompBuffer=true;n.bufferFriendly=false;n.bufferLife=12;n.bufferScrub=0;n.bufferLock=0;a.eraseWallPath({x:p.x-16,y:p.y},{x:p.x+16,y:p.y},8);a.updateBootstompBuffer(n,.56);return n;};

@@ -5,6 +5,7 @@ const defs=game.catalog.enemyDefs={
     grunt:{r:11,hp:20,speed:30,dmg:6,color:'#cf5b51'},
     wallpuller:{r:12,hp:52,speed:86,dmg:6,color:'#3bbcb8'},
     papertearer:{r:12,hp:60,speed:30,dmg:6,color:'#9d66cb'},
+    'boot-buffer':{r:12,hp:60,speed:105,dmg:6,color:'#cb8b57'},
     scrubber:{r:11,hp:18,speed:70,dmg:0,color:'#89ad3f'},
     fast:{r:8,hp:18,speed:60,dmg:7,color:'#d8893c'},
     bouncer:{r:10,hp:28,speed:44,dmg:8,color:'#2e9f92'},
@@ -40,7 +41,7 @@ game.catalog.enemyGuide=game.catalog.monsters.filter(m=>['wardling','sprinter','
 
 // Keep late waves focused on the early cast and interactive wall counters.
 const lateRoster=new Set([...game.catalog.monsters.filter(m=>m.wave<=9&&!['splitter','mini','boss'].includes(m.type)).map(m=>m.type),'wallpuller','catapulter','papertearer','gnawer']);
-function scheduledTypeAvailable(type){return (!['wallpuller','catapulter','papertearer','gnawer'].includes(type)||game.state.wave>=game.catalog.monsters.find(m=>m.type===type).wave)&&!game.catalog.monsters.find(m=>m.type===type)?.pausedFromWaves&&(game.state.wave<11||lateRoster.has(type));}
+function scheduledTypeAvailable(type){return (!['wallpuller','catapulter','papertearer','gnawer'].includes(type)||game.state.wave>=game.catalog.monsters.find(m=>m.type===type).wave)&&!game.catalog.monsters.find(m=>m.type===type)?.pausedFromWaves&&!game.catalog.monsters.find(m=>m.type===type)?.encounterOnly&&(game.state.wave<11||lateRoster.has(type));}
 function enemyType(){
   const pool=game.state.wave>=12?['grunt']:['grunt','grunt'];
   for(const m of game.catalog.monsters){
@@ -254,7 +255,7 @@ function updateTwicey(e,dt){
 function nearestEnemy(x,y,maxD,eligible=null){
   let bestE=null,bestD=maxD;
   for(const e of game.state.enemies){
-    if(e.hp<=0||eligible&&!eligible(e)||game.api.gravityCaptured(e)||game.api.lunchCaptured(e)||game.api.catapulterAway(e))continue;
+    if(e.hp<=0||e.bootstompBuffer&&e.bufferFriendly||eligible&&!eligible(e)||game.api.gravityCaptured(e)||game.api.lunchCaptured(e)||game.api.catapulterAway(e))continue;
     const d=game.api.dist(x,y,e.x,e.y);if(d<bestD){bestD=d;bestE=e}
   }
   return bestE;
