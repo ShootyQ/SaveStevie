@@ -217,10 +217,10 @@ DoodleDefender.systems.enemyTactics=function(game){
  }
  function moveEnemyTactics(dx,dy){specialistNav=new WeakMap();for(const s of leaders.values()){s.nav=null;if(s.exit){s.exit.x+=dx;s.exit.y+=dy;}}for(const [,,o] of routeEntries()){if(o.gap)for(const p of [o.gap.start,o.gap.end]){p.x+=dx;p.y+=dy;}for(const p of o.points){p.x+=dx;p.y+=dy;}}for(const e of game.state.enemies){if(e.hurdle)for(const p of [e.hurdle.from,e.hurdle.to]){p.x+=dx;p.y+=dy;}for(const aim of [e.sniperErase,e.sniperAim])if(aim){aim.x+=dx;aim.y+=dy;}}}
  function stolenRouteSnapshot(){return [...stolen.keys()].filter(o=>o.hijacked).map(o=>({id:o.id,age:o.hijackAge,points:o.points.map(p=>({...p}))}));}
- function navigateSpecialist(e,goal,dt,speed=1){
+ function navigateSpecialist(e,goal,dt,speed=1,chew=true){
   let nav=specialistNav.get(e);if(!nav){nav={nav:null};specialistNav.set(e,nav);}
   if(nav.nav&&Math.hypot(e.x-nav.nav.goal.x,e.y-nav.nav.goal.y)>6&&Math.hypot(nav.nav.goal.x-goal.x,nav.nav.goal.y-goal.y)<16)goal=nav.nav.goal;
-  if(navigate(e,nav,goal,dt,speed))return true;
+  if(navigate(e,nav,goal,dt,speed))return true;if(!chew)return false;
   // A failed plan can leave a worker far short of the barrier: nearestWallHit
   // only sees existing contact. Approach the first real obstruction, then chew
   // it from body range rather than waiting forever or crossing solid ink.

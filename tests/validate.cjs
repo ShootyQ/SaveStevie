@@ -534,7 +534,7 @@ const storage={getItem:key=>saved.get(key)??null,setItem:(key,value)=>{saved.set
 const env=load(true,{intros:true,storage}),g=env.sandbox.testGame;
 assert.equal(g.api.monsterIntrosEnabled(),true,'introductions default on');
 assert.equal(g.state.best,14,'existing record survives');
-assert.equal(g.catalog.monsters.length,31);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,31);
+assert.equal(g.catalog.monsters.length,32);assert.equal(new Set(g.catalog.monsters.map(m=>m.name)).size,32);
 assert.deepEqual(g.catalog.monsters.map(m=>m.type).sort(),Object.keys(g.catalog.enemyDefs).sort(),'every combat type has a guide entry');
 const expected={1:['grunt'],2:['scrubber'],3:['sprinter'],4:['bouncer'],5:['boss'],6:['tank'],7:['flanker'],8:['splitter','mini'],9:['sniper'],10:['bootstomp'],11:['wallpuller','bulwark'],12:['gnawer'],13:['catapulter','basil','medic'],14:['papertearer','brute'],15:['crayon','sapper'],16:['elite'],20:['mr-glue','eraser']};
 g.api.resetRun();
@@ -660,7 +660,7 @@ console.log('PASS: artwork for every upgrade, rendered reward pictures, current 
 // A mixed-status crowd must reuse its tinted sprites instead of allocating each frame.
 {
 const env=load(true,{images:true}),g=env.sandbox.testGame;g.api.resetRun();
-const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['catapulter','basil','scrubber','flanker','wallpuller','papertearer','bootstomp','wobblechomp','wobble-tooth','eraser','mr-glue','gnawer'].includes(type));
+const types=g.catalog.monsters.map(m=>m.type).filter(type=>!['boot-buffer','catapulter','basil','scrubber','flanker','wallpuller','papertearer','bootstomp','wobblechomp','wobble-tooth','eraser','mr-glue','gnawer'].includes(type));
 for(let i=0;i<76;i++){
  const type=types[i%types.length],e=g.api.spawnEnemy(false,100+i,200,type==='sniper'?'grunt':type),mask=[3,7,19,27][Math.floor(i/types.length)%4];
  e.type=types[i%types.length]; // Rendering fixture deliberately exceeds normal encounter limits.
@@ -2089,7 +2089,7 @@ require('./wobblechomp-overhaul.cjs')(loadRetiredWobble);
  const env=load(true),g=env.sandbox.testGame;
  for(let wave=1;wave<=10;wave++){
   g.api.resetRun();g.state.wave=wave;g.api.startWave();g.api.closeInfo();g.state.paused=false;
-  const entries=g.catalog.monsters.filter(m=>!m.pausedFromWaves&&m.wave===wave&&!['mini','stapler','jamling','wobble-tooth'].includes(m.type));
+  const entries=g.catalog.monsters.filter(m=>!m.pausedFromWaves&&!m.encounterOnly&&m.wave===wave&&!['mini','stapler','jamling','wobble-tooth'].includes(m.type));
   assert.ok(entries.length,'new monster on wave '+wave);
   const normal=entries.filter(m=>!['boss','bootstomp','wobblechomp'].includes(m.type));
   for(const m of normal){g.state.spawnTimer=0;g.api.spawnWaveEnemies(0);assert.ok(g.state.enemies.some(e=>e.type===m.type),'guaranteed '+m.type);}
@@ -2697,3 +2697,5 @@ require('./late-minion-cap.cjs')(load);
 require('./plaguefire-entrances.cjs')(load);
 
 require('./bootstomp-laces.cjs')(load);
+
+require('./bootstomp-crew.cjs')(load);

@@ -432,16 +432,20 @@ function crewUniformDoodle(name){
  if(pixels?.data){for(let py=y;py<bottom;py++)for(let px=x;px<right;px++){const i=(py*160+px)*4,r=pixels.data[i],g=pixels.data[i+1],b=pixels.data[i+2];if(pixels.data[i+3]&&r>60&&g>50&&b<Math.min(r,g)*.75&&r>g*.8&&r<g*1.7){const light=r*.29+g*.57+b*.14;pixels.data[i]=light*.18;pixels.data[i+1]=light*.82;pixels.data[i+2]=light*.76;}}c.putImageData(pixels,0,0);}
  c.save();c.translate(left+(f[8]-f[0])*.32,top+(f[9]-f[1])*.32);c.rotate(f[10]);c.fillStyle='#fff5d9';c.strokeStyle='#3a5a55';c.lineWidth=1.4;c.beginPath();c.roundRect(-10,-13,20,26,3);c.fill();c.stroke();c.drawImage(portrait,portrait.naturalWidth*.27,0,portrait.naturalWidth*.57,portrait.naturalHeight*.64,-8,-11,16,22);c.restore();doodles[key]=canvas;return key;
 }
+function bootUniformDoodle(name,color){
+ const key=name+'-boot-'+color;if(doodles[key])return key;const source=doodles[name];if(!source)return name;
+ const canvas=tintedDoodle(name,[color]);canvas.naturalWidth=source.naturalWidth;canvas.naturalHeight=source.naturalHeight;doodles[key]=canvas;return key;
+}
 function drawDoodleEnemy(e,hpRatio,showHealth=true){
  if(game.api.drawChompzilla?.(e)){game.api.drawBlackIceLimbs(e);game.api.drawThermalShockEnemy(e);if(showHealth)drawEnemyHealthBar(e,hpRatio);return true;}
  if(game.api.drawWhiteBrotherBody?.(e))return true;
  if(game.api.drawCrayonWaxling(e))return true;
-  const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),original=doodles[action]?action:e.type,name=e.crayonCatapultCrew?crewUniformDoodle(original):original,image=doodles[name];if(!image)return false;
+  const action=e.type==='scrubber'&&e.eraseHits?'scrubber-wiped-'+Math.min(2,e.eraseHits):enemySpriteFrame(e)||enemyActionFrame(e),original=e.bootstompBuffer?'scrubber':doodles[action]?action:e.type,name=e.bootstompBuffer?bootUniformDoodle(original,e.bufferFriendly?'#54a98c':'#cd8d50'):e.bootstompBlue?bootUniformDoodle(original,'#418ec4'):e.crayonCatapultCrew?crewUniformDoodle(original):original,image=doodles[name];if(!image)return false;
   const framed=/^(catapulter|grunt|fast|sprinter|sniper|boss)-frame-/.test(name),base=framed?image:doodles[e.type]||image;
-  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['catapulter','wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?3.4:e.type==='flanker'?4.1:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:e.type==='scrubber'?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
+  const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['catapulter','wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?3.4:e.type==='flanker'?4.1:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:(e.type==='scrubber'||e.bootstompBuffer)?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
-  ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);
+  ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);if(e.bufferSpent){ctx.globalAlpha=Math.max(0,e.bufferFade/.45);ctx.scale(.5,.4);}else if(e.bootstompBuffer&&e.bufferScrub>0&&!motionReduced){ctx.translate(Math.sin(e.bufferScrub*55)*3,0);ctx.rotate(Math.sin(e.bufferScrub*38)*.15);}
   if(e.type==='papertearer'){const p=game.api.papertearerPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
   if(e.type==='wallpuller'){const p=game.api.yankPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
   if(e.type==='catapulter'){const p=game.api.catapulterPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
@@ -1020,7 +1024,7 @@ function draw(){
     if(stapleIntro.stage!=='punch'){ctx.save();ctx.scale(stapleIntro.scale,stapleIntro.scale);ctx.rotate(stapleIntro.angle);drawDoodleEnemy({type:'stapler',r:30,x:stapleIntro.x,y:stapleIntro.y,hp:1,maxHp:1,freeze:0,stun:0},1,false);ctx.restore()}
     if(stapleIntro.stage==='snap'){ctx.font='bold 22px "Stevie Pencil",cursive';ctx.textAlign='center';ctx.fillStyle='#995c29';ctx.fillText(stapleIntro.age<2.55?'CLACK!':'CLACK CLACK!',0,-60)}ctx.restore();
   }
-  game.api.drawThrowAim?.();
+  game.api.drawBootstompCrew();game.api.drawThrowAim?.();
   game.api.drawEraserCursor?.();game.api.drawWhiteBrothersHud?.();
   // Collectible notes stay above all world art, under the same camera transform.
   game.api.drawWaveFinale(drawDoodleEnemy);game.api.drawDoodleScraps();game.dom.ctx.restore();game.api.drawBossVictory();

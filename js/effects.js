@@ -69,6 +69,7 @@ function damageNumber(enemy,amount,kind='physical',finishing=false){
   }
 }
 function dealDamage(enemy,amount,kind='physical',source=null){
+  if(enemy.bootstompBuffer&&enemy.bufferFriendly)return;
   if(game.api.lunchCaptured?.(enemy))return;
   if(game.api.gravityCaptured?.(enemy)&&!source?.gravityGulp)return;
   if(game.api.isBootstomp?.(enemy))return;
