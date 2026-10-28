@@ -756,7 +756,7 @@ function draw(){
   game.dom.ctx.strokeStyle='rgba(212,76,76,.35)';game.dom.ctx.lineWidth=2;
   game.dom.ctx.beginPath();game.dom.ctx.moveTo(47,0);game.dom.ctx.lineTo(47,game.state.H);game.dom.ctx.stroke();
 
-  game.api.drawPaper();game.api.drawDoodleScraps();
+  game.api.drawPaper();
   game.api.drawPlaguefire();game.api.drawPaperPress();
   game.api.drawLaunchGround();game.api.drawChemistryGround();game.api.drawLunchGround();game.api.drawBlackIce();
 
@@ -1022,7 +1022,8 @@ function draw(){
   }
   game.api.drawThrowAim?.();
   game.api.drawEraserCursor?.();game.api.drawWhiteBrothersHud?.();
-  game.api.drawWaveFinale(drawDoodleEnemy);game.dom.ctx.restore();game.api.drawBossVictory();
+  // Collectible notes stay above all world art, under the same camera transform.
+  game.api.drawWaveFinale(drawDoodleEnemy);game.api.drawDoodleScraps();game.dom.ctx.restore();game.api.drawBossVictory();
   game.api.drawFirstLesson();
   if(game.state.paused&&!game.api.firstLessonActive()){
     game.dom.ctx.fillStyle='rgba(20,25,28,.38)';game.dom.ctx.fillRect(0,0,game.state.W,game.state.H);
