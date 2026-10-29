@@ -1264,3 +1264,18 @@ kicks. Blue Gribbles reserve eleven of the existing fourteen helper slots, with
 three slots for erasers. Ground time is 2.72s (15% less); the boss-only press
 startup is 0.25s, making a ready dent take about 0.45s. Ordinary paper pressing
 keeps its existing timing. Crew/waves reset with the run and disappear on defeat.
+
+Eraser crew hunters (Alpha 0.1.159): five active erasers arrive every 3s, with
+nine blue Gribbles retaining the fourteen-helper crowd budget. Friendly erasers
+scrub ordinary visible monsters within 180px for one third of maximum HP per
+0.55s pass, with normal damage/kill/reward handling. They remain usable after
+ordinary erasing; only scrubbing a boss part wears one out. Fallen Bootstomp
+immediately preempts any monster target and resets partial scrub progress.
+Bosses, other erasers, shielded/underground/captured/flying creatures are excluded.
+
+Moving helpers pencil faint 160px approach trails from their actual navigation
+waypoints. A moving player eraser cuts a trail and makes its helper hesitate
+for 1.5s, then redraw its route. Crew-body redirection takes priority over trail
+cuts. These gestures do not erase cover or wear paper underneath, and do not
+extend the helper's 12s allegiance. Trails clear on movement/resize, turning,
+arrival, confusion, consumption and run reset. Rendering does not change routes.

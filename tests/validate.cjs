@@ -2699,3 +2699,5 @@ require('./plaguefire-entrances.cjs')(load);
 require('./bootstomp-laces.cjs')(load);
 
 require('./bootstomp-crew.cjs')(load);
+
+require('./bootstomp-crew-hunters.cjs')(load);

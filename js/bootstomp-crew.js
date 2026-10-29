@@ -1,19 +1,23 @@
 /* Bootstomp's eraser crew: rub off their orders, then protect the helpers. */
 DoodleDefender.systems.bootstompCrew=function(game){
- const a=game.api,s=game.state,tune={cap:3,spawn:4.5,loyalty:12,scrub:.55,waveGap:3.5,waveWarn:.8,waveSpeed:240};
- let jobs=new WeakMap(),waves=[];
+ const a=game.api,s=game.state,tune={cap:5,spawn:3,enemyRange:180,routePause:1.5,loyalty:12,scrub:.55,waveGap:3.5,waveWarn:.8,waveSpeed:240};
+ let jobs=new WeakMap(),victims=new WeakMap(),waves=[],eraseHandled=false;
  const crew=host=>s.enemies.filter(n=>n.bootstompBuffer&&n.hp>0&&!n.bufferSpent&&n.bossOwner===host);
  function job(host){let b=jobs.get(host);if(!b){b={spawn:.7,wave:2,warning:null,serial:0};jobs.set(host,b);}return b;}
- function turn(n,friendly){n.bufferFriendly=friendly;n.bufferLife=tune.loyalty;n.bufferScrub=0;n.bufferLock=.4;n.stun=n.freeze=0;if(friendly){n.burn=n.poison=0;}a.burst(n.x,n.y,friendly?'#63b49a':'#ce8d59',8);a.floatText(n.x,n.y-30,friendly?'→ BOOTSTOMP!':'→ STEVIE! ',friendly?'#36846b':'#ac6338');}
+ function turn(n,friendly){victims.delete(n);n.bufferTask=null;n.bufferRoute=[];n.bufferLost=0;n.bufferFriendly=friendly;n.bufferLife=tune.loyalty;n.bufferScrub=0;n.bufferLock=.4;n.stun=n.freeze=0;if(friendly){n.burn=n.poison=0;}a.burst(n.x,n.y,friendly?'#63b49a':'#ce8d59',8);a.floatText(n.x,n.y-30,friendly?'→ BOOTSTOMP!':'→ STEVIE! ',friendly?'#36846b':'#ac6338');}
  function updateBootstompCrewSpawns(host,dt){
   const phase=a.bootstompSnapshot(host)?.phase;if(['intro','defeat'].includes(phase))return;const b=job(host);b.spawn-=dt;if(b.spawn>0)return;b.spawn=tune.spawn;if(crew(host).length>=tune.cap)return;
   const p=s.player,angle=Math.atan2(host.y-p.y,host.x-p.x)+(b.serial++%2?.8:-.8),n=a.spawnEnemy(false,a.clamp(host.x+Math.cos(angle)*105,28,s.W-28),a.clamp(host.y+Math.sin(angle)*105,100,s.H-35),'boot-buffer');
   if(n){n.bossOwner=host;n.bootstompBuffer=true;n.bufferFriendly=false;n.bufferLife=tune.loyalty;n.bufferScrub=0;n.bufferLock=0;n.scrubOrbit=0;}
  }
  function redirectBootstompCrew(from,to,r){
-  if(Math.hypot(to.x-from.x,to.y-from.y)<6)return false;let touched=false;
+  eraseHandled=false;if(Math.hypot(to.x-from.x,to.y-from.y)<6)return false;let touched=false;
   for(const n of s.enemies)if(n.bootstompBuffer&&n.hp>0&&!n.bufferSpent&&!n.flight&&a.pointSegDist(n.x,n.y,from.x,from.y,to.x,to.y)<=r+n.r*.7){touched=true;if(!n.bufferFriendly&&!(n.bufferLock>0))turn(n,true);}
-  return touched;
+  if(touched){eraseHandled=true;return true;}
+  for(const n of s.enemies){if(!n.bootstompBuffer||!n.bufferFriendly||n.hp<=0||n.bufferSpent||n.bufferLost>0||!n.bufferRoute?.length)continue;
+   const points=[n,...n.bufferRoute];if(!points.slice(1).some((p,i)=>a.segmentIntersection(from,to,points[i],p)||Math.min(a.pointSegDist(from.x,from.y,points[i].x,points[i].y,p.x,p.y),a.pointSegDist(to.x,to.y,points[i].x,points[i].y,p.x,p.y),a.pointSegDist(points[i].x,points[i].y,from.x,from.y,to.x,to.y),a.pointSegDist(p.x,p.y,from.x,from.y,to.x,to.y))<=r+2))continue;
+   n.bufferLost=tune.routePause;n.bufferRoute=[];n.bufferScrub=0;victims.delete(n);a.cancelPaperRub();a.cancelPaperPress();a.floatText(n.x,n.y-28,'WHERE WAS I?','#7b7985');eraseHandled=true;
+  }return eraseHandled;
  }
  function updateBootstompBuffer(n,dt){
   if(!n.bootstompBuffer)return false;const host=n.bossOwner,phase=a.bootstompSnapshot(host)?.phase;
@@ -24,12 +28,23 @@ DoodleDefender.systems.bootstompCrew=function(game){
    if(s.walls.length||a.shapeBarrierWalls().length)a.updateScrubber(n,dt);else{a.navigateSpecialist(n,s.player,dt,1,false);a.contactStevie(n);}return true;
   }
   n.bufferLife-=dt;if(n.bufferLife<=0){turn(n,false);return true;}
-  if(phase!=='down')n.bufferScrub=0;
-  const q=a.bootstompSnapshot(host),parts=Object.keys(q.wear).filter(k=>q.wear[k]<3).map(k=>q.parts[k]).sort((x,y)=>Math.hypot(n.x-x.x,n.y-x.y)-Math.hypot(n.x-y.x,n.y-y.y));
-  const angle=Math.atan2(n.y-host.y,n.x-host.x),goal=phase==='down'&&parts.length?parts[0]:{x:a.clamp(host.x+Math.cos(angle)*85,24,s.W-24),y:a.clamp(host.y+Math.sin(angle)*85,96,s.H-30)};
-  const d=Math.hypot(n.x-goal.x,n.y-goal.y);if(d>n.r+12){n.bufferScrub=0;a.navigateSpecialist(n,goal,dt,1.2,false);return true;}
-  if(phase==='down'){n.bufferScrub+=dt;a.animateEnemyAction(n,'strike',goal);if(n.bufferScrub>=tune.scrub&&a.bootstompCrewScrub(host,n)){n.bufferSpent=true;n.bufferFade=.45;a.burst(n.x,n.y,'#e6bba0',10);}}return true;
+  if(n.bufferLost>0){n.bufferLost=Math.max(0,n.bufferLost-dt);n.bufferRoute=[];return true;}
+  const q=phase==='down'?a.bootstompSnapshot(host):null,parts=q?Object.keys(q.wear).filter(k=>q.wear[k]<3).map(k=>q.parts[k]).sort((x,y)=>Math.hypot(n.x-x.x,n.y-x.y)-Math.hypot(n.x-y.x,n.y-y.y)):[];
+  let victim=null;if(phase!=='down'){victim=victims.get(n);if(!eligibleVictim(victim,n)||Math.hypot(victim.x-n.x,victim.y-n.y)>tune.enemyRange*1.25){victim=s.enemies.filter(e=>eligibleVictim(e,n)&&Math.hypot(e.x-n.x,e.y-n.y)<=tune.enemyRange).sort((x,y)=>Math.hypot(x.x-n.x,x.y-n.y)-Math.hypot(y.x-n.x,y.y-n.y))[0]||null;}}
+  const task=parts.length?'boss':victim?'enemy':'stage';if(n.bufferTask!==task||(victims.get(n)||null)!==victim){n.bufferScrub=0;n.bufferTask=task;}if(victim)victims.set(n,victim);else victims.delete(n);
+  const angle=Math.atan2(n.y-host.y,n.x-host.x),goal=task==='boss'?parts[0]:victim||{x:a.clamp(host.x+Math.cos(angle)*85,24,s.W-24),y:a.clamp(host.y+Math.sin(angle)*85,96,s.H-30)},reach=task==='enemy'?n.r+victim.r+8:n.r+12;
+  const d=Math.hypot(n.x-goal.x,n.y-goal.y);if(d>reach){n.bufferScrub=0;a.navigateSpecialist(n,goal,dt,1.2,false);n.bufferRoute=shortRoute(n,a.specialistRoute(n));return true;}
+  n.bufferRoute=[];if(task==='stage'){n.bufferScrub=0;return true;}
+  if(task==='enemy'&&a.bossShotWallHit({x:n.x,y:n.y,r:2},goal.x,goal.y)){n.bufferScrub=0;return true;}
+  n.bufferScrub+=dt;a.animateEnemyAction(n,'strike',goal);
+  if(n.bufferScrub>=tune.scrub){
+   if(task==='boss'&&a.bootstompCrewScrub(host,n)){n.bufferSpent=true;n.bufferFade=.45;a.burst(n.x,n.y,'#e6bba0',10);}
+   else if(task==='enemy'){n.bufferScrub=0;victim.bufferEraseMark=true;a.burst(victim.x,victim.y,'#e6bba0',8);a.playSound('erase');a.dealDamage(victim,victim.maxHp/3+1e-6,'erase',{bossCounter:true});if(victim.hp<=0){a.killEnemy(victim);victims.delete(n);}}
+  }return true;
  }
+ function eligibleVictim(e,n){return !!e&&e!==n&&e.hp>0&&s.enemies.includes(e)&&!e.bootstompBuffer&&!e.waveBoss&&!game.catalog.enemyDefs[e.type]?.boss&&!a.abilityImmune(e)&&!e.flight&&!e.hurdle&&!e.catapultHeld&&!a.underPaper(e)&&!a.bossFriendHeld(e)&&!a.heldUnderDesk(e)&&!a.gravityCaptured(e)&&!a.lunchCaptured(e)&&!a.chonksProtected(e);}
+ function shortRoute(n,points){const route=[];let from=n,left=160;for(const p of points){const d=Math.hypot(p.x-from.x,p.y-from.y);if(d<.1)continue;if(d>=left){route.push({x:from.x+(p.x-from.x)*left/d,y:from.y+(p.y-from.y)*left/d});break;}route.push({x:p.x,y:p.y});left-=d;from=p;if(route.length>=6)break;}return route;}
+
  function bootstompCrewWaveContact(host,q,from,to){for(const n of crew(host))if(n.bufferFriendly&&a.pointSegDist(n.x,n.y,from.x,from.y,to.x,to.y)<=n.r+10)turn(n,false);}
  function updateBootstompCrewWaves(host,dt){
   const b=job(host),phase=a.bootstompSnapshot(host)?.phase,active=!['intro','defeat','down','fall','stumble','lace_rebound'].includes(phase);b.wave-=dt;
@@ -41,8 +56,13 @@ DoodleDefender.systems.bootstompCrew=function(game){
    if(a.pointSegDist(n.x,n.y,w.x,w.y,to.x,to.y)<=n.r+10){turn(n,false);w.done=true;}w.x=to.x;w.y=to.y;w.age+=dt;if(w.age>5)w.done=true;
   }waves=waves.filter(w=>!w.done&&s.enemies.includes(w.host)&&w.host.hp>0);
  }
- function drawBootstompCrew(){const ctx=game.dom.ctx;ctx.save();for(const host of s.enemies.filter(a.isBootstomp)){const w=jobs.get(host)?.warning;if(w&&w.n.bufferFriendly){ctx.strokeStyle='#bf7b48';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(host.x,host.y);ctx.lineTo(w.n.x,w.n.y);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#a9693e';ctx.font='14px "Stevie Pencil",sans-serif';ctx.textAlign='center';ctx.fillText('TURN BACK!',w.n.x,w.n.y-45);}}
+ function drawBootstompCrew(){const ctx=game.dom.ctx;ctx.save();
+  for(const n of s.enemies)if(n.bootstompBuffer&&n.bufferFriendly&&n.hp>0&&!n.bufferSpent){
+   if(n.bufferLost>0){ctx.fillStyle='#7b7985';ctx.font='bold 22px sans-serif';ctx.textAlign='center';ctx.fillText('?',n.x,n.y-35);continue;}
+   if(!n.bufferRoute?.length)continue;ctx.save();ctx.strokeStyle='#5c9b80';ctx.globalAlpha=.65;ctx.lineWidth=1.2;ctx.setLineDash([3,5]);ctx.beginPath();ctx.moveTo(n.x,n.y);for(const p of n.bufferRoute)ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);const end=n.bufferRoute.at(-1),prev=n.bufferRoute.at(-2)||n,angle=Math.atan2(end.y-prev.y,end.x-prev.x);ctx.translate(end.x,end.y);ctx.rotate(angle);ctx.beginPath();ctx.moveTo(-5,-4);ctx.lineTo(0,0);ctx.lineTo(-5,4);ctx.stroke();ctx.restore();
+  }
+  for(const host of s.enemies.filter(a.isBootstomp)){const w=jobs.get(host)?.warning;if(w&&w.n.bufferFriendly){ctx.strokeStyle='#bf7b48';ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(host.x,host.y);ctx.lineTo(w.n.x,w.n.y);ctx.stroke();ctx.setLineDash([]);ctx.fillStyle='#a9693e';ctx.font='14px "Stevie Pencil",sans-serif';ctx.textAlign='center';ctx.fillText('TURN BACK!',w.n.x,w.n.y-45);}}
   for(const w of waves){ctx.save();ctx.translate(w.x,w.y);ctx.rotate(Math.atan2(w.target.y-w.y,w.target.x-w.x)+Math.PI/2);ctx.fillStyle='#fff6df';ctx.strokeStyle='#ad7947';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-27,4);ctx.bezierCurveTo(-12,-9,12,-9,27,4);ctx.lineTo(27,10);ctx.bezierCurveTo(12,1,-12,1,-27,10);ctx.closePath();ctx.fill();ctx.stroke();ctx.restore();}
-  for(const n of s.enemies)if(n.bootstompBuffer&&!n.bufferSpent){ctx.fillStyle=n.bufferFriendly?'#337e68':'#a6693f';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(n.bufferFriendly?'→ BOOT':'ERASE ORDERS',n.x,n.y-n.r-20);if(n.bufferFriendly&&n.bufferScrub>0){ctx.strokeStyle='#4fa98a';ctx.lineWidth=3;ctx.beginPath();ctx.arc(n.x,n.y,n.r+9,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.bufferScrub/tune.scrub));ctx.stroke();}}ctx.restore();}
- Object.assign(a,{resetBootstompCrew:()=>{jobs=new WeakMap();waves=[];},clearBootstompCrew:host=>{waves=waves.filter(w=>w.host!==host);jobs.delete(host);},moveBootstompCrew:(dx,dy)=>{for(const w of waves){w.x+=dx;w.y+=dy;}},updateBootstompCrewSpawns,redirectBootstompCrew,updateBootstompBuffer,updateBootstompCrewWaves,bootstompCrewWaveContact,drawBootstompCrew,bootstompCrewSnapshot:()=>({crew:s.enemies.filter(n=>n.bootstompBuffer).map(n=>({x:n.x,y:n.y,friendly:n.bufferFriendly,life:n.bufferLife,scrub:n.bufferScrub,spent:!!n.bufferSpent})),waves:waves.map(w=>({x:w.x,y:w.y,age:w.age})),tuning:{...tune}})});return {};
+  for(const n of s.enemies)if(n.bootstompBuffer&&!n.bufferSpent){ctx.fillStyle=n.bufferFriendly?'#337e68':'#a6693f';ctx.font='bold 11px sans-serif';ctx.textAlign='center';ctx.fillText(n.bufferFriendly?(n.bufferTask==='enemy'?'SCRUB CREW':'→ BOOT'):'ERASE ORDERS',n.x,n.y-n.r-20);if(n.bufferFriendly&&n.bufferScrub>0){ctx.strokeStyle='#4fa98a';ctx.lineWidth=3;ctx.beginPath();ctx.arc(n.x,n.y,n.r+9,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,n.bufferScrub/tune.scrub));ctx.stroke();}}ctx.restore();}
+ Object.assign(a,{bootstompCrewRouteAt:p=>s.enemies.some(n=>n.bootstompBuffer&&n.bufferFriendly&&n.hp>0&&!n.bufferSpent&&!(n.bufferLost>0)&&n.bufferRoute?.some((q,i)=>a.pointSegDist(p.x,p.y,(i?n.bufferRoute[i-1]:n).x,(i?n.bufferRoute[i-1]:n).y,q.x,q.y)<=12)),bootstompCrewEraseHandled:()=>eraseHandled,resetBootstompCrew:()=>{jobs=new WeakMap();victims=new WeakMap();waves=[];eraseHandled=false;},clearBootstompCrew:host=>{waves=waves.filter(w=>w.host!==host);jobs.delete(host);},moveBootstompCrew:(dx,dy)=>{for(const n of s.enemies)if(n.bootstompBuffer)n.bufferRoute=[];for(const w of waves){w.x+=dx;w.y+=dy;}},updateBootstompCrewSpawns,redirectBootstompCrew,updateBootstompBuffer,updateBootstompCrewWaves,bootstompCrewWaveContact,drawBootstompCrew,bootstompCrewSnapshot:()=>({crew:s.enemies.filter(n=>n.bootstompBuffer).map(n=>({x:n.x,y:n.y,friendly:n.bufferFriendly,life:n.bufferLife,scrub:n.bufferScrub,spent:!!n.bufferSpent,task:n.bufferTask||null,lost:n.bufferLost||0,route:n.bufferRoute?.map(p=>({...p}))||[]})),waves:waves.map(w=>({x:w.x,y:w.y,age:w.age})),tuning:{...tune}})});return {};
 };
