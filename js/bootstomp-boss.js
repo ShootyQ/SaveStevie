@@ -130,7 +130,7 @@ DoodleDefender.systems.bootstompBoss=function(game){
   const d=Math.hypot(target.x-e.x,target.y-e.y),step=Math.min(d,speed*dt),old={x:e.x,y:e.y};if(d){const nx=e.x+(target.x-e.x)/d*step,ny=e.y+(target.y-e.y)/d*step;if(Math.hypot(nx-p.x,ny-p.y)>=clear){e.x=nx;e.y=ny;}}sweep(e,old,e);return Math.hypot(final.x-e.x,final.y-e.y)<4;}
  function helpers(e,dt){const b=state(e);if(['defeat','intro'].includes(b.phase))return;b.helperCd-=dt;if(b.helperCd>0)return;
   b.helperCd=a.firstBossTuning(e).helperGap/(2*tune.helperRate);
-  if(game.state.enemies.filter(n=>n.bossOwner===e&&!n.bootstompBuffer&&n.hp>0).length>=tune.helperCap-3)return;
+  if(game.state.enemies.filter(n=>n.bossOwner===e&&!n.bootstompBuffer&&n.hp>0).length>=tune.helperCap-5)return;
   const i=b.helperSerial++%4,{W,H}=game.state;
   const n=a.spawnEnemy(false,i===1?W+26:i===3?-26:W*(i===0?.25:.75),i===0?-26:i===2?H+26:H*(i===1?.3:.7),'grunt');if(n){n.bossOwner=e;n.bootstompBlue=true;}
  }

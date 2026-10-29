@@ -157,7 +157,7 @@ game.dom.canvas.addEventListener('pointermove',e=>{
   if(!erasePoint)erasePoint={...lastPoint};
   if(!pressing&&game.api.dist(erasePoint.x,erasePoint.y,p.x,p.y)>=6){
    game.api.sustainSound('erase');game.api.eraseWallPath(erasePoint,p,20);
-   if(!bossRub&&!game.api.whiteToolsEraseHandled?.()&&!game.api.bootstompEraseHandled?.()&&!game.api.utilityEraseHandled?.()&&!game.api.underDeskEraseHandled?.())game.api.queuePaperRub(erasePoint,p,20);
+   if(!bossRub&&!game.api.whiteToolsEraseHandled?.()&&!game.api.bootstompEraseHandled?.()&&!game.api.bootstompCrewEraseHandled?.()&&!game.api.utilityEraseHandled?.()&&!game.api.underDeskEraseHandled?.())game.api.queuePaperRub(erasePoint,p,20);
    erasePoint={...p};
   }
   cursor={...p,r:20};

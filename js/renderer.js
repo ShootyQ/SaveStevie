@@ -445,7 +445,7 @@ function drawDoodleEnemy(e,hpRatio,showHealth=true){
   const ctx=game.dom.ctx,colors=enemyStatusColors(e),width=e.r*(['catapulter','wallpuller','papertearer'].includes(e.type)?3.6:e.type==='sprinter'?3.4:e.type==='flanker'?4.1:name.startsWith('sniper-frame-')?3.8:name.startsWith('fast-frame-')?4:name.startsWith('boss-frame-')?3:framed?3.25:e.type==='sniper'?3.4:(e.type==='scrubber'||e.bootstompBuffer)?3.8:2.7),height=width*base.naturalHeight/base.naturalWidth;
   const left=-width*(e.type==='sniper'?.4:.5),top=-height*.54;
   const pose=enemyAnimationPose(e);
-  ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);if(e.bufferSpent){ctx.globalAlpha=Math.max(0,e.bufferFade/.45);ctx.scale(.5,.4);}else if(e.bootstompBuffer&&e.bufferScrub>0&&!motionReduced){ctx.translate(Math.sin(e.bufferScrub*55)*3,0);ctx.rotate(Math.sin(e.bufferScrub*38)*.15);}
+  ctx.save();ctx.translate(pose.x,pose.y);ctx.rotate(pose.angle);if(e.bufferEraseMark)ctx.globalAlpha=Math.max(.45,e.hp/e.maxHp);if(e.bufferSpent){ctx.globalAlpha=Math.max(0,e.bufferFade/.45);ctx.scale(.5,.4);}else if(e.bootstompBuffer&&e.bufferScrub>0&&!motionReduced){ctx.translate(Math.sin(e.bufferScrub*55)*3,0);ctx.rotate(Math.sin(e.bufferScrub*38)*.15);}
   if(e.type==='papertearer'){const p=game.api.papertearerPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
   if(e.type==='wallpuller'){const p=game.api.yankPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}
   if(e.type==='catapulter'){const p=game.api.catapulterPose(e);ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.scale(p.sx,p.sy);}

@@ -234,5 +234,5 @@ DoodleDefender.systems.enemyTactics=function(game){
   return false;
  }
  function sneakyRoutesSnapshot(){return [...stolen].map(([o,e])=>({id:o.id,completed:o.completed,ownerAlive:e.hp>0&&game.state.enemies.includes(e),hijacked:!!o.hijacked,points:o.points.map(p=>({...p}))}));}
- const api={navigateSpecialist,sneakyRoutesSnapshot,stolenRouteSnapshot,separateEnemies,updateSneakyOrders,sneakFollowTarget,eraseSneakyRoutes,sneakyRouteEndpoint,redirectSneakyRoute,sneakySnapshot,drawSneakyRoutes,moveEnemyTactics,resetEnemyTactics,updateSneaky,updateDash,eraseSniperLane,sneakRoute};Object.assign(game.api,api);return api;
+ const api={specialistRoute:e=>specialistNav.get(e)?.nav?.path?.map(p=>({...p}))||[],navigateSpecialist,sneakyRoutesSnapshot,stolenRouteSnapshot,separateEnemies,updateSneakyOrders,sneakFollowTarget,eraseSneakyRoutes,sneakyRouteEndpoint,redirectSneakyRoute,sneakySnapshot,drawSneakyRoutes,moveEnemyTactics,resetEnemyTactics,updateSneaky,updateDash,eraseSniperLane,sneakRoute};Object.assign(game.api,api);return api;
 };
