@@ -209,9 +209,9 @@ DoodleDefender.systems.enemyTactics=function(game){
   return true;
  }
  function eraseSniperLane(e,dt,host=null){
-  if(!game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y,3)){delete e.sniperErase;return false;}
+  if(!e.sniperErase?.cleanup&&!game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y,3)){delete e.sniperErase;return false;}
   let aim=e.sniperErase;if(!aim){aim=e.sniperErase={x:game.state.player.x,y:game.state.player.y,age:0};game.api.animateEnemyAction(e,'erase',aim);}
-  aim.x=game.state.player.x;aim.y=game.state.player.y;aim.age+=dt;
+  if(!aim.cleanup){aim.x=game.state.player.x;aim.y=game.state.player.y;}aim.age+=dt;
   if(aim.age>=.7){game.api.fireSniper(e,true,host);delete e.sniperErase;e.sniperFollowUp=1.5;e.shootCd=1.5;}
   return true;
  }

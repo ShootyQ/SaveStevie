@@ -1279,3 +1279,7 @@ for 1.5s, then redraw its route. Crew-body redirection takes priority over trail
 cuts. These gestures do not erase cover or wear paper underneath, and do not
 extend the helper's 12s allegiance. Trails clear on movement/resize, turning,
 arrival, confusion, consumption and run reset. Rendering does not change routes.
+
+### Alpha 0.1.160 playtest tuning
+
+Redirected Boot Buffers rally to Bootstomp before hunting other monsters; their new route is protected until the redirecting eraser gesture ends. Wave 12 arrival pacing/budget is reduced 32%, waves 13+ 40%, and waves 12–20 cap living minions at 50. Interactive specialists receive four pool tickets instead of three; health scaling stays unchanged. Pew Pew prepares a telegraphed wall-cleaning eraser shot after three normal shots if a wall is within range.

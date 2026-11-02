@@ -46,7 +46,7 @@ function enemyType(){
   const pool=game.state.wave>=12?['grunt']:['grunt','grunt'];
   for(const m of game.catalog.monsters){
     if(m.type==='catapulter'&&!game.api.canSpawnCatapulter())continue;
-    if(m.wave<=game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','bootstomp','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser','mr-glue'].includes(m.type)){pool.push(m.type);if(game.state.wave>=12&&['sniper','flanker','wallpuller','catapulter','papertearer'].includes(m.type))pool.push(m.type,m.type);}
+    if(m.wave<=game.state.wave&&scheduledTypeAvailable(m.type)&&!['grunt','mini','boss','bootstomp','wobblechomp','wobble-tooth','stapler','jamling','crayon','eraser','mr-glue'].includes(m.type)){pool.push(m.type);if(game.state.wave>=12&&['sniper','flanker','wallpuller','catapulter','papertearer'].includes(m.type))pool.push(m.type,m.type,m.type);}
   }
   const weighted=game.state.wave>=11?pool.flatMap(type=>type==='grunt'?[type]:[type,type]):pool;
   return game.api.pick(weighted.filter(type=>type!=='flanker'||game.state.enemies.filter(e=>e.type==='flanker'&&e.hp>0).length<2).filter(type=>type!=='sniper'||canSpawnSniper()).filter(type=>type!=='gnawer'||game.state.enemies.filter(e=>e.type==='gnawer'&&e.hp>0).length<2).filter(type=>!['wallpuller','papertearer'].includes(type)||!game.state.enemies.some(e=>e.type===type&&e.hp>0)).filter(type=>type!=='basil'||game.state.enemies.filter(e=>e.type==='basil'&&e.hp>0).length<2));
@@ -99,8 +99,8 @@ function updateBossAbility(e,dt){
   e.bossWindup=1.2;
 }
 
-// Wave 15's standard 60-second budget is 83; hold that crowd size through 20.
-function minionLimit(wave=game.state.wave){return wave>=15&&wave<=20?83:pressure.maxEnemies;}
+// Leave room to draw during the specialist-heavy late campaign.
+function minionLimit(wave=game.state.wave){return wave>=12&&wave<=20?50:pressure.maxEnemies;}
 function livingMinions(){return game.state.enemies.filter(e=>e.hp>0&&!e.waveBoss&&!defs[e.type]?.boss).length;}
 function spawnEnemy(forceBoss=false,x=null,y=null,typeOverride=null,encounterOwner=null){
   if(!forceBoss&&game.state.enemies.length>=pressure.maxEnemies)return null;
@@ -377,11 +377,11 @@ function shotBlocked(x,y,nx,ny,r=3,ignored=null){
   return false;
 }
 function fireSniper(e,eraser=false,host=null){
-  const aim=!eraser&&e.sniperAim||game.state.player,dx=aim.x-e.x,dy=aim.y-e.y,d=Math.hypot(dx,dy)||1;
+  const aim=(eraser?e.sniperErase:e.sniperAim)||game.state.player,dx=aim.x-e.x,dy=aim.y-e.y,d=Math.hypot(dx,dy)||1;
   if(!eraser)delete e.sniperAim;
   if(eraser){const tankRadius=game.catalog.enemyDefs.tank.r,side=host?Math.abs((e.x-host.x)*dy/d-(e.y-host.y)*dx/d):0,radius=Math.max(tankRadius,host?.r||0)+8+Math.min(22,side);
    game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*240,vy:dy/d*240,life:Math.min(game.api.desktopUiEnabled?.()?12:6,(d+100)/240),r:5,damage:0,eraser:true,eraseRadius:radius,sniperOwner:e,reflected:false});game.api.playSound('pencil');
-  }else{game.api.playSound('pewShot');game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:Math.max(2,Math.min(game.api.desktopUiEnabled?.()?12:6,(d+30)/150)),r:3,damage:7,sniperOwner:e,reflected:false});}
+  }else{e.sniperRounds=(e.sniperRounds||0)+1;game.api.playSound('pewShot');game.state.enemyShots.push({x:e.x,y:e.y,vx:dx/d*150,vy:dy/d*150,life:Math.max(2,Math.min(game.api.desktopUiEnabled?.()?12:6,(d+30)/150)),r:3,damage:7,sniperOwner:e,reflected:false});}
   game.api.animateEnemyAction(e,'fire');
   game.api.burst(e.x,e.y,'#4b79d8',3);
 }
@@ -567,7 +567,7 @@ function specialistTarget(e){const job=e.specialistJob;if(!job)return null;
  delete e.specialistJob;return null;
 }
 function canSpawnSniper(){return game.state.enemies.filter(e=>e.type==='sniper'&&e.hp>0).length<(sniperAppearances<6?3:1)}
-function lateWaveGrowth(wave=game.state.wave){return 1+.25*game.api.clamp((wave-8)/12,0,1)+Math.max(0,wave-20)*.02}
+function lateWaveGrowth(wave=game.state.wave){return (1+.25*game.api.clamp((wave-8)/12,0,1)+Math.max(0,wave-20)*.02)*(wave===12?.68:wave>=13?.6:1)}
 function scheduledWaveBudget(wave=game.state.wave){return wave<8?Infinity:Math.round((game.state.waveTime||60)*(1.05*wavePressure(8)/(1.48-8*.034))*lateWaveGrowth(wave))+4}
 function spawnScheduledEnemy(x=null,y=null,type=null,protectedIntro=false){
  if(type&&!scheduledTypeAvailable(type))return null;
@@ -640,7 +640,7 @@ function updateFeast(e,dt){
 }
 // Rubble Ruff hunts ink instead of attacking the fort. The same swept brush
 // removes wall geometry, but enemy erasing never refunds the player's ink.
-function resetScrubberRub(){for(const e of game.state.enemies)if(e.type==='scrubber')e.eraseBrushInside=false;}
+function resetScrubberRub(){game.api.resetBootstompCrewStroke?.();for(const e of game.state.enemies)if(e.type==='scrubber')e.eraseBrushInside=false;}
 function eraseScrubber(e){
  if(e.type!=='scrubber'||e.hp<=0||game.api.underPaper(e))return false;
  e.eraseHits=(e.eraseHits||0)+1;
@@ -747,6 +747,10 @@ function updateSniper(e,dt,options=null){
  }
  if(e.sniperAim){e.shootCd-=attackDt;if(e.shootCd<=0){fireSniper(e);e.shootCd=1.7;}return true;}
  if(e.sniperErase)return game.api.eraseSniperLane(e,attackDt,options?.host);
+ if((e.sniperRounds||0)>=3&&sniperOnPage(e)){
+  const targets=game.state.walls.filter(w=>w.hp>0&&w.pts?.length>1).map(w=>game.api.nearestPointOnWall(e,w)).filter(p=>Math.hypot(p.x-e.x,p.y-e.y)<=sniperRange()).sort((p,q)=>Math.hypot(p.x-e.x,p.y-e.y)-Math.hypot(q.x-e.x,q.y-e.y));
+  if(targets.length){e.sniperRounds=0;e.sniperErase={x:targets[0].x,y:targets[0].y,age:0,cleanup:true};game.api.animateEnemyAction(e,'erase',e.sniperErase);return game.api.eraseSniperLane(e,attackDt,options?.host);}
+ }
  if(convoy&&game.api.shotBlocked(e.x,e.y,game.state.player.x,game.state.player.y,3)){sniperRoutes.delete(e);return game.api.eraseSniperLane(e,attackDt,options.host);}
  if(convoy||sniperCanAim(e)){
   sniperRoutes.delete(e);delete e.sniperErase;e.shootCd-=attackDt;if(e.shootCd<=.6)e.sniperAim={x:game.state.player.x,y:game.state.player.y};

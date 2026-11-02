@@ -2701,3 +2701,5 @@ require('./bootstomp-laces.cjs')(load);
 require('./bootstomp-crew.cjs')(load);
 
 require('./bootstomp-crew-hunters.cjs')(load);
+
+require('./late-wave-room.cjs')(load);
