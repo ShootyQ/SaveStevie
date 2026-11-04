@@ -50,7 +50,7 @@ DoodleDefender.systems.desktopUi=function(game){
   const overlay=kind?game.dom.$(kind+'Overlay'):null;
   for(const card of (overlay||document).querySelectorAll('.cardbox')){
    if(!card.getClientRects().length||card.closest('#betaScrapsOverlay,#wobbleRepairOverlay,#startOverlay'))continue;
-   if(card.closest('#discoveriesOverlay,#compendiumOverlay,#whiteBrothersOverlay,#monsterIntroOverlay,#waveOverlay,#specializeOverlay,#desktopQuitOverlay,#pauseOverlay'))continue;
+   if(card.closest('#buildOverlay,#discoveriesOverlay,#compendiumOverlay,#whiteBrothersOverlay,#monsterIntroOverlay,#waveOverlay,#specializeOverlay,#desktopQuitOverlay,#pauseOverlay'))continue;
    if(card.closest('#hubOverlay')){card.classList.add('desktop-hub');continue;}
    if(card.closest('#optionsOverlay')){prepareSettings(card);continue;}
    if(card.closest('#upgradeOverlay')){prepareDesktopRewards(card);continue;}

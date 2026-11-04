@@ -1287,3 +1287,7 @@ Phase one adds eight post-wave-20 color nodes to the Scrap Tree. Collect ranks a
 ### Active ink bottles · Alpha 0.1.162
 
 The selected color now tints preview and drawn walls, retaining elemental glyphs, and supplies its +1% per-rank bonus for that run. One bottle is captured at run start; see the active-color details in [the Scrap Tree guide](docs/BETA_SCRAP_TREE.md).
+
+### Tabbed build inspector · Alpha 0.1.163
+
+Your Tool & Build is one sheet with Tool, Upgrades, Synergies and Stats tabs on desktop and touch. It bypasses automatic notebook pagination, keeps Close and the tabs fixed, and scrolls only the selected tab content. Every opening returns to the tool summary at the top. Tabs support Left/Right and Home/End navigation.
