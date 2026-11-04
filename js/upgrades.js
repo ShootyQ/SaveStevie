@@ -106,7 +106,7 @@ function upgradePreview(u){
     return {...pair('Closed-shape durability',s.closedBonus,s.closedBonus+durability*levels,'×'),beforeDetail:detail(a),afterDetail:detail(b)};
   }
   const previews={
-    'Bigger Ink Tank':()=>pair('Maximum ink',s.maxInk,s.maxInk+35*levels),
+    'Bigger Ink Tank':()=>pair('Maximum ink',s.maxInk,s.maxInk+35*levels*game.api.inkColorFactor('blue')),
     'Quick Refill':()=>pair('Ink regeneration',s.inkRegen,s.inkRegen+regen(u.name),' /s'),
     'Thick Ink':()=>pair('Base wall durability',s.wallHp,s.wallHp+20*levels,' HP'),
     'First Aid':()=>pair('Stevie maximum health',p.maxHp,p.maxHp+18*levels,' HP'),
@@ -120,7 +120,7 @@ function upgradePreview(u){
     'Patch Job':()=>pair('Repair per kill per wall',s.repairOnKill,s.repairOnKill+2.5*levels,' HP'),
     'Freehand':()=>pair('Free-ink bank size',s.freehandLevel?s.freehandBankSize:0,40+(s.freehandLevel+levels-1)*20),
     'Living Fountain Pen':()=>pair('Ink regeneration',s.inkRegen,s.inkRegen*regen(u.name),' /s'),
-    'Bottomless Pen':()=>pair('Maximum ink',s.maxInk,s.maxInk+40*levels),
+    'Bottomless Pen':()=>pair('Maximum ink',s.maxInk,s.maxInk+40*levels*game.api.inkColorFactor('blue')),
     'Fortress Geometry':()=>loopPreview(.5),
     'Bandages':()=>pair('Between-wave healing',5+s.playerRegen,5+s.playerRegen+8*levels,' HP'),
     'Helmet':()=>pair('Contact damage reduction',s.playerArmor*100,Math.min(.55,s.playerArmor+.1*levels)*100,'%'),
@@ -198,7 +198,7 @@ function rarityRoll(forceRare=false){
 
 game.catalog.upgrades = [
   // Core / drawing
-  {name:'Bigger Ink Tank',cat:'draw',desc:'+35 max ink.',apply:()=>game.state.stats.maxInk+=35},
+  {name:'Bigger Ink Tank',cat:'draw',desc:'+35 max ink.',apply:()=>game.state.stats.maxInk+=35*game.api.inkColorFactor('blue')},
   {name:'Quick Refill',cat:'draw',desc:'Adds ink regeneration: +2 ink/s first pick, smaller bonuses on repeats.',apply:()=>game.state.stats.inkRegen+=game.api.regenPick('Quick Refill')},
   {name:'Thick Ink',cat:'defense',desc:'+20 base wall durability. Long strokes multiply this further.',apply:()=>game.state.stats.wallHp+=20},
   {name:'First Aid',cat:'stevie',desc:'+18 max HP and heal 18.',apply:()=>{game.state.player.maxHp+=18;game.state.player.hp+=18}},
@@ -213,7 +213,7 @@ game.catalog.upgrades = [
   {name:'Patch Job',cat:'defense',desc:'Every kill repairs walls by up to 2.5 HP each, sharing a 10 wall HP/s budget.',apply:()=>game.state.stats.repairOnKill+=2.5},
   {name:'Freehand',cat:'draw',desc:'Spend 80 real ink to charge a limited free-ink bank. Stacking increases the free bank.',apply:()=>{game.state.stats.freehandLevel++;game.state.stats.freehandBankSize=40+(game.state.stats.freehandLevel-1)*20;game.state.stats.freehandCharge=Math.min(game.state.stats.freehandCharge,game.state.stats.freehandThreshold)}},
   {name:'Living Fountain Pen',cat:'draw',desc:'28% faster ink regeneration on the first pick; smaller multipliers on repeats.',apply:()=>game.state.stats.inkRegen*=game.api.regenPick('Living Fountain Pen')},
-  {name:'Bottomless Pen',cat:'draw',desc:'Per level: +40 max ink and +2 ink/s at first, with smaller regeneration bonuses on repeats.',apply:()=>{game.state.stats.maxInk+=40;game.state.stats.inkRegen+=game.api.regenPick('Bottomless Pen')}},
+  {name:'Bottomless Pen',cat:'draw',desc:'Per level: +40 max ink and +2 ink/s at first, with smaller regeneration bonuses on repeats.',apply:()=>{game.state.stats.maxInk+=40*game.api.inkColorFactor('blue');game.state.stats.inkRegen+=game.api.regenPick('Bottomless Pen')}},
   {name:'Fortress Geometry',cat:'defense',desc:'Per level: +50% closed-shape durability. Shares Closed Loop’s diminishing ink refund, completion repair and enclosed-enemy damage bonus (15% / 15% / 10% at the first utility level).',apply:()=>game.state.stats.closedBonus+=.5},
 
   // Stevie

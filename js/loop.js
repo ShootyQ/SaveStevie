@@ -95,14 +95,14 @@ function update(dt){
     if(game.api.isWhiteBrother?.(e)){game.api.updateWhiteBrothers(e,dt);continue;}
     if(game.api.updatePaperEnemy(e,dt))continue;
     if(e.freeze>0||e.stun>0||game.api.smallUtilityWaiting(e)||game.api.gravityWhirlpoolPulling(e))game.api.recordSupport('control',Math.min(dt,Math.max(e.freeze||0,e.stun||0,(game.api.smallUtilityWaiting(e)||game.api.gravityWhirlpoolPulling(e))?dt:0)));
-    if(e.shockRest>0)e.shockRest=Math.max(0,e.shockRest-dt);e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt);e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt);
+    if(e.shockRest>0)e.shockRest=Math.max(0,e.shockRest-dt);e.stun=Math.max(0,e.stun-dt);e.freeze=Math.max(0,e.freeze-dt/game.api.inkColorFactor('purple'));e.chainCd=Math.max(0,e.chainCd-dt);e.thermalCd=Math.max(0,(e.thermalCd||0)-dt);e.charged=Math.max(0,(e.charged||0)-dt/game.api.inkColorFactor('purple'));
     e.gravitySlow=Math.max(0,e.gravitySlow-dt*.15);
     game.api.updateSupportInkEnemy(e,dt);game.api.updateThermalShockEnemy(e,dt);
 
-    if(e.burn>0){e.burn-=dt;game.api.dealDamage(e,e.burnDps*dt,'fire')}
+    if(e.burn>0){e.burn-=dt/game.api.inkColorFactor('purple');game.api.dealDamage(e,e.burnDps*dt,'fire')}
     if(e.poison>0){
       const decay=(game.state.synergies.has('Venom Ice')&&e.freeze>0)?.08:.28;
-      e.poison=Math.max(0,e.poison-dt*decay);
+      e.poison=Math.max(0,e.poison-dt*decay/game.api.inkColorFactor('purple'));
       game.api.dealDamage(e,e.poisonDps*e.poison*.24*dt,'poison')
     }
     if(game.api.waveFinaleActive())break;

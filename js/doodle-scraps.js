@@ -32,7 +32,7 @@ DoodleDefender.systems.doodleScraps=function(game){
  function noteLevel(id){return counts[id]||0;}
  function paperPayload(){return {...counts};}
  function paperRange(payload=counts){return 210*(1+.8*(1-Math.pow(.75,payload.range||0)));}
- function paperThrowInterval(payload=counts){return game.state.stats.rockRate/(1+.05*(payload.quick||0));}
+ function paperThrowInterval(payload=counts){return game.state.stats.rockRate/((1+.05*(payload.quick||0))*game.api.inkColorFactor('yellow'));}
  function startDoodleWave(){drop=null;offers=[];waveDrops=0;waveKills=0;plannedWave=game.state.wave;game.api.resetDoodleTricks?.();game.api.resetPaperTricks?.();
   if(!unlocked()||game.api.devRunActive()||game.api.testLabActive?.()){waveBudget=0;return;}
   const roll=Math.random();waveBudget=roll<.1?3:roll<.35?2:roll<.75?1:0;

@@ -26,6 +26,7 @@ game.state.projectiles = [];
 game.state.enemyShots = [];
 game.state.drawing = false;
 game.state.currentWall = null;
+game.state.inkBottle = null;
 game.state.tool = {name:'Pencil',slots:2,rank:0};
 game.state.legendaryWave = 0;
 game.state.legendaryOffered = false;

@@ -52,6 +52,7 @@ function eraseWallPath(a,b,r=20,options={}){
  const lesson=options.lesson===true&&game.api.lessonCanPaint?.('erase');
  if(!game.state.running||(game.state.paused&&!lesson)||game.state.inUpgrade||game.state.betweenWaves||game.state.awaitingSpec||game.api.synergyRevealActive()||game.api.waveFinaleActive()||game.api.wobbleRepairActive()||game.api.bossEntranceActive())return false;
  if(![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||r<=0)return false;
+ if(!options.enemy&&!lesson)r*=game.api.inkColorFactor('orange');
  game.api.resetUtilityEraseHandled?.();game.api.resetUnderDeskEraseHandled?.();
  if(!options.enemy&&!lesson){if(game.api.redirectBootstompCrew(a,b,r))return true;const bossErase=game.api.eraseBootstompPath?.(a,b,r);if(game.api.bootstompEraseHandled?.())return !!bossErase;const special=game.api.whiteGluePath?.(a,b,r);if(special!==null&&special!==undefined)return special;if(game.api.utilityErase?.(a,b,r))return true;if(game.api.underDeskErase?.(a,b,r))return true;}
  let changed=false,recovered=0;const result=[];
@@ -376,7 +377,7 @@ function closeCreatedWall(t){
 }
 
 let liveStroke=null;
-function wallHpForLength(length,closed=false,intersections=0){return game.api.icebergMultiplier()*game.state.stats.wallHp*(length/180)*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);}
+function wallHpForLength(length,closed=false,intersections=0){return game.api.icebergMultiplier()*game.state.stats.wallHp*game.api.inkColorFactor('gray')*(length/180)*(closed?game.state.stats.closedBonus:1)*(1+intersections*game.state.stats.intersectBonus);}
 function createWall(points,options={}){
   if(points.length<2)return;
   const crayonDraft=game.api.crayonStrokeSource(points[0]);if(crayonDraft){game.api.extendCrayonStroke(crayonDraft,points);return {crayonDraft,strokePts:points.map(p=>({...p})),paid:0};}
@@ -496,11 +497,11 @@ function liveWallActive(){return liveStroke!==null;}
 
 function applyInkContact(e,dt,wall=null){
   if(game.api.enclosureAlreadyHit(e))return 0;
-  if(wall?.shapeTurret)return game.api.chonksProtected(e)?0:game.state.stats.wallDamage;
+  if(wall?.shapeTurret)return game.api.chonksProtected(e)?0:game.state.stats.wallDamage*game.api.inkColorFactor('red');
   if(game.api.chonksProtected(e))return 0;
   if(game.api.underPaper(e))return 0;
-  if(game.api.abilityImmune(e))return game.state.stats.wallDamage;
-  let dps=game.state.stats.wallDamage;
+  if(game.api.abilityImmune(e))return game.state.stats.wallDamage*game.api.inkColorFactor('red');
+  let dps=game.state.stats.wallDamage*game.api.inkColorFactor('red');
 
   if(game.state.synergies.has('Ring of Fire')&&wall&&wall.closed){
     e.burn=Math.max(e.burn,2.3);

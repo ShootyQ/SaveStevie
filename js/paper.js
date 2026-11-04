@@ -17,7 +17,7 @@ function queuePaperRub(a,b,r=20){
  if(!paperActive()||game.api.bootstompRubActive?.()||![a.x,a.y,b.x,b.y,r].every(Number.isFinite)||Math.hypot(b.x-a.x,b.y-a.y)<.05)return;
  // Adjacent pointer samples share one frame's time budget. Bound work even
  // on devices delivering thousands of coalesced moves.
- if(pending.length>=128)pending.shift();pending.push({a:{...a},b:{...b},r});
+ if(pending.length>=128)pending.shift();pending.push({a:{...a},b:{...b},r:r*game.api.inkColorFactor('orange')});
 }
 function rubTouches(p,paths,extra=0){return paths.some(s=>game.api.pointSegDist(p.x,p.y,s.a.x,s.a.y,s.b.x,s.b.y)<=s.r+extra);}
 function updatePaper(dt){

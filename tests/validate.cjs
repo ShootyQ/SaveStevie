@@ -57,7 +57,7 @@ b.sandbox.testGame.api.damageNumber=()=>{};
 // Legacy parity deliberately retains the old force movement; wall-aware pulls
 // are a gameplay fix exercised independently below.
 b.sandbox.testGame.api.moveEnemySafely=(e,dx,dy)=>{e.x+=dx;e.y+=dy;return true};
-function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['strokeId','blastAge','startingUpgrade','startingUpgradeSkipIntro','scoring','doubleLine','tripleLine','paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>['doubleLine','tripleLine','synergySplashTimer'].includes(key)?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
+function compare(label){assert.deepStrictEqual(JSON.parse(b.snapshot(),(key,value)=>['inkBottle','strokeId','blastAge','startingUpgrade','startingUpgradeSkipIntro','scoring','doubleLine','tripleLine','paperElement','electricRocks','electricLevel','paper','doodleStitch','eraseInk','eraseRefund','enemyShots','tool','legendaryWave','legendaryOffered','waveElapsed','synergySplashTimer'].includes(key)?undefined:value),JSON.parse(a.snapshot(),(key,value)=>['doubleLine','tripleLine','synergySplashTimer'].includes(key)?undefined:value),label+' state');// Tool strokes and upgraded artwork intentionally differ; retain state and HUD parity.
 for(const id of ['wave','score','kills','inkText','hpText','timeText','message'].filter(id=>id!=='message'||label!=='upgrade'))assert.equal(b.node(id).textContent,a.node(id).textContent,label+' '+id);checks++;}
 function both(f){f(a);f(b);}
 compare('startup');both(e=>e.node('startBtn').onclick());compare('start run');
@@ -2703,3 +2703,5 @@ require('./bootstomp-crew.cjs')(load);
 require('./bootstomp-crew-hunters.cjs')(load);
 
 require('./ink-club.cjs')(load);
+
+require('./active-ink-colors.cjs')(load);

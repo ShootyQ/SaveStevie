@@ -114,6 +114,7 @@ function resetRun(options={}){
   for(const k in game.state.stacks)delete game.state.stacks[k];
   game.state.player.maxHp=75;game.state.player.hp=75;game.state.player.rockCd=0;
   game.state.drawing=false;game.state.currentWall=null;
+  game.state.inkBottle=null;
   game.api.beginDevRun();
   if(options.skipNotebook)game.state.tool={name:"Pencil",rank:0,slots:2};else game.api.applyNotebookLoadout();game.api.beginScrapRun();game.api.resetRewardPlan();
   game.state.running=true;game.state.paused=false;game.state.inUpgrade=false;game.state.betweenWaves=false;game.state.awaitingSpec=false;

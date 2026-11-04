@@ -34,7 +34,7 @@ DoodleDefender.systems.betaScraps=function(game){
   {id:'health',perk:'health',name:'Lunchbox Band-Aids',parent:'start',branch:'survival',x:1610,y:1006,w:300},
   {id:'starterEraser',perk:'starterEraser',name:'Starter Eraser',parent:'health',branch:'survival',x:1980,y:786,w:300},
   {id:'luck',perk:'luck',name:'Lucky Eraser',parent:'health',branch:'survival',x:1980,y:1246,w:300},
-  {id:'inkLater',name:'Weird Ink Club',desc:'Not school approved. Beat wave 20 to open your ink collection. One color slot, free switching between runs, and endless ranks at +1 percentage point each. Phase 1: collect, rank up and save your selection here. Combat bonuses and colored drawing are coming in the next phase.',parent:'start',club:true,branch:'elements',x:1410,y:1596,w:300},
+  {id:'inkLater',name:'Weird Ink Club',desc:'Not school approved. Beat wave 20 to open your ink collection. One color slot, free switching between runs, and endless ranks at +1 percentage point each. Equip one bottle before a run: its color changes your drawn ink and its ranks grant a bonus. Switching bottles between runs is free.',parent:'start',club:true,branch:'elements',x:1410,y:1596,w:300},
   {id:'circles',perk:'circles',name:'Circle Studies',parent:'start',branch:'shapes',x:650,y:1596,w:300},
   {id:'turretRange',perk:'turretRange',name:'Long Paper Barrel',parent:'circles',branch:'shapes',x:100,y:1906,w:300},
   {id:'turretDuration',perk:'turretDuration',name:'Stubborn Folds',parent:'circles',branch:'shapes',x:500,y:1906,w:300},
@@ -75,7 +75,7 @@ DoodleDefender.systems.betaScraps=function(game){
  function buyBetaNode(id){
   const state=betaNodeState(id);if(!state?.canBuy)return false;
   const n=nodes.get(id);const bought=n.club?game.api.claimInkClub():n.color?game.api.buyInkColor(n.color.id):id==='start'?game.api.claimBetaPencil():game.api.buyNotebookPerk(state.perk.id);
-  if(bought){selected=id;renderBetaTree();$('betaTreeStatus').textContent=(id==='start'?'Pencil acquired! Choose a branch.':n.color?n.name+' rank '+(state.rank+1)+' saved. Color and bonus activation arrive next phase.':n.club?'Weird Ink Club opened. Choose an ink bottle.':state.perk.name+' is ready for your next run.')+(game.api.notebookSnapshot().storageIssue?' Saving is unavailable; this lasts for this visit.':'');($('betaBuyNode').disabled?$('betaFoldNote'):$('betaBuyNode')).focus?.({preventScroll:true});game.api.syncScrapTutorial();}
+  if(bought){selected=id;renderBetaTree();$('betaTreeStatus').textContent=(id==='start'?'Pencil acquired! Choose a branch.':n.color?n.name+' rank '+(state.rank+1)+' saved. Equip this bottle to use its color and bonus next run.':n.club?'Weird Ink Club opened. Choose an ink bottle.':state.perk.name+' is ready for your next run.')+(game.api.notebookSnapshot().storageIssue?' Saving is unavailable; this lasts for this visit.':'');($('betaBuyNode').disabled?$('betaFoldNote'):$('betaBuyNode')).focus?.({preventScroll:true});game.api.syncScrapTutorial();}
   return bought;
  }
  function pencilCollection(rank){
@@ -85,10 +85,10 @@ DoodleDefender.systems.betaScraps=function(game){
  function renderDetails(){
   const n=nodes.get(selected),s=betaNodeState(selected),p=game.api.notebookSnapshot();
   $('betaNodeTitle').textContent=n.name;$('betaNodeTier').textContent=n.id==='start'?'START HERE · FREE':n.later?'STEVIE’S FUTURE HOMEWORK':(branches.find(b=>b.id===n.branch)?.title||'Pencil Case')+' · Rank '+s.rank+' / '+(n.color?'∞':s.max);
-  $('betaNodeDescription').textContent=n.color?'Plan: +1 percentage point of '+n.color.benefit+' per rank, while this color is equipped. Next rank costs 5 × rank² scraps. Phase 1 saves your purchases and selection; combat bonuses and colored strokes arrive next phase.':s.perk?s.perk.desc:n.desc;
-  $('betaNodeEffect').textContent=n.color?'Saved rank '+s.rank+' · Planned +'+s.rank+'% '+n.color.benefit:s.perk?s.perk.effect(s.rank):n.link?'+'+p.levels.tool*8+' base wall HP from your drawing tool':'';
+  $('betaNodeDescription').textContent=n.color?'+1 percentage point of '+n.color.benefit+' per rank, while this color is equipped. Next rank costs 5 × rank² scraps. Your drawn lines take this color; elemental effects keep their own animations.':s.perk?s.perk.desc:n.desc;
+  $('betaNodeEffect').textContent=n.color?'Rank '+s.rank+' · +'+s.rank+'% '+n.color.benefit:s.perk?s.perk.effect(s.rank):n.link?'+'+p.levels.tool*8+' base wall HP from your drawing tool':'';
   const children=definitions.filter(d=>d.parent===n.id&&!d.later),childNames=children.map(d=>d.name).join(' and ');
-  $('betaNodeRequirement').textContent=s.reason||(children.length&&s.rank===0?'One rank opens '+childNames+'. ':'')+'Next: '+(n.color?'rank '+(s.rank+1)+' · planned +'+(s.rank+1)+'%':s.perk?s.perk.effect(s.rank+1):'Open the branches');
+  $('betaNodeRequirement').textContent=s.reason||(children.length&&s.rank===0?'One rank opens '+childNames+'. ':'')+'Next: '+(n.color?'rank '+(s.rank+1)+' · +'+(s.rank+1)+'%':s.perk?s.perk.effect(s.rank+1):'Open the branches');
   $('betaNodeNote').classList?.toggle('pencil-case-note',n.id==='tool');
   $('betaNodeArt').innerHTML=n.color?'<div class="ink-bottle" style="--bottle:'+n.color.hex+'" aria-hidden="true"><span>INK</span></div>':n.id==='tool'?pencilCollection(p.levels.tool):'';
   const equip=$('betaEquipInk');equip.hidden=!n.color;equip.disabled=!s.unlocked||s.rank===0||!game.api.canSpendScraps();equip.textContent=p.inkColor===n.color?.id?'✓ Selected · put this bottle back':'Choose this color · one slot';equip.onclick=()=>game.api.selectInkColor(p.inkColor===n.color.id?null:n.color.id);
@@ -133,7 +133,7 @@ DoodleDefender.systems.betaScraps=function(game){
    const title=document.createElement('strong'),label=document.createElement('span');title.textContent=n.name;label.textContent=n.color?'Rank '+state.rank+' · '+state.price+' scraps'+(p.inkColor===n.color.id?' · SELECTED':''):n.club?(state.owned?'✓ Collection open':game.api.inkClubAvailable()?'Free · open collection':'Beat wave 20 · locked'):n.perk==='circles'&&!game.api.shapeStudiesAvailable()?'Beat wave 10 · Shapes locked':n.later?'later…':n.id==='start'?(state.owned?'✓ Start complete':'0 scraps · start here'):state.owned?'✓ Complete':!state.unlocked&&state.rank===0?'After '+nodes.get(n.parent).name:state.rank+' / '+state.max+' · '+state.price+' scraps';button.appendChild(title);label.className='beta-node-state';button.appendChild(label);const cue=document.createElement('span');cue.className='beta-node-action';cue.textContent=n.later?'Preview →':state.owned?'✓ View →':!state.unlocked?'🔒 Inspect →':'Open →';button.appendChild(cue);button.setAttribute?.('aria-label',n.name+'. '+label.textContent+'. Open to inspect.'+(state.reason?' '+state.reason:''));button.onclick=()=>selectBetaNode(n.id);list.appendChild(button);
   }
   for(const element of list.querySelectorAll?.('.beta-branch-title,strong,.beta-tree-node > span')||[])handwrite(element);
-  renderPaths();renderDetails();positionNote();$('betaTreeStatus').textContent=p.storageIssue?'Saving is unavailable; purchases last for this visit.':nodes.get(selected)?.color||nodes.get(selected)?.club?'Ink Club · collection phase. Combat bonuses and colored strokes arrive next phase.':'Permanent upgrades apply to your next run. Follow the lines to open connected scraps.';
+  renderPaths();renderDetails();positionNote();$('betaTreeStatus').textContent=p.storageIssue?'Saving is unavailable; purchases last for this visit.':nodes.get(selected)?.color||nodes.get(selected)?.club?'One bottle per run. Your selected color and its bonus apply when you start.':'Permanent upgrades apply to your next run. Follow the lines to open connected scraps.';
  }
  function renderPaths(){
   const p=game.api.notebookSnapshot(),parts=['<defs><marker id="betaArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="m1 1 7 4-7 4" fill="none" stroke="context-stroke" stroke-width="1.5"/></marker></defs>'];
