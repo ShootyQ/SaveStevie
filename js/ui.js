@@ -156,8 +156,18 @@ function upgradeEffect(name,n=game.state.stacks[name]||0){
   return effects[name]?effects[name]():game.catalog.upgrades.find(u=>u.name===name)?.desc||'Active';
 }
 let activeInfo=null,pausedBeforeInfo=false,focusBeforeInfo=null,returnInfo=[];
+const buildTabs=['tool','upgrades','synergies','stats'];
+function selectBuildTab(id,focus=false){
+ if(!buildTabs.includes(id))return false;
+ for(const name of buildTabs){const active=name===id,button=game.dom.$('buildTab-'+name);button.setAttribute?.('aria-selected',String(active));button.tabIndex=active?0:-1;game.dom.$('buildPanel-'+name).hidden=!active;}
+ game.dom.$('buildInspectorBody').scrollTop=0;if(focus)game.dom.$('buildTab-'+id).focus?.({preventScroll:true});return true;
+}
+for(const [index,id] of buildTabs.entries()){
+ const button=game.dom.$('buildTab-'+id);button.onclick=()=>selectBuildTab(id);
+ button.addEventListener('keydown',e=>{const next=e.key==='ArrowRight'?(index+1)%buildTabs.length:e.key==='ArrowLeft'?(index+buildTabs.length-1)%buildTabs.length:e.key==='Home'?0:e.key==='End'?buildTabs.length-1:null;if(next!==null){e.preventDefault();selectBuildTab(buildTabs[next],true);}});
+}
 function renderBuild(){
-  game.api.renderTool('buildTool');
+  selectBuildTab('tool');game.api.renderTool('buildTool');
   const s=game.state.stats,f=v=>Number(v.toFixed(2));
   const totals=[['Max ink',s.maxInk],['Ink regeneration',f(s.inkRegen)+' /s'],['Stroke cost',f(s.lineCost)+' ink/pixel'],
     ['Wall damage',f(s.wallDamage*game.api.inkColorFactor('red'))+' /s'],['Base wall HP',f(s.wallHp*game.api.inkColorFactor('gray'))],['Wall lifetime',s.wallLife+'s'],['Line width',s.lineWidth+'px'],
@@ -167,6 +177,9 @@ function renderBuild(){
     ['Walls per stroke',1],['Erase recovery',Math.round(s.eraseRefund*100)+'%'],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
     ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','4.5 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','10 HP/s shared']];
   const bottle=game.api.activeInkColor();totals.unshift(['Ink bottle',bottle?bottle.name+' · rank '+bottle.rank+' · +'+bottle.rank+'% '+bottle.benefit:'Graphite · no color bonus']);
+  game.dom.$('buildInkBottle').textContent=bottle?bottle.name+' · Rank '+bottle.rank+' · +'+bottle.rank+'% '+bottle.benefit:'Graphite ink · No color bottle equipped';
+  const highlights=[['Wall damage',f(s.wallDamage*game.api.inkColorFactor('red'))+' /s'],['Wall HP',f(s.wallHp*game.api.inkColorFactor('gray'))],['Ink capacity',f(s.maxInk)],['Ink refill',f(s.inkRegen)+' /s'],['Paper damage',f(s.rockDamage*game.api.inkColorFactor('brown'))],['Throw interval',s.rockRate?f(game.api.paperThrowInterval())+'s':'Not unlocked']];
+  game.dom.$('buildHighlights').innerHTML=highlights.map(([name,value])=>'<div><span>'+name+'</span><strong>'+value+'</strong></div>').join('');
   game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
   game.dom.$('buildStats').innerHTML=totals.map(([name,value])=>`<div class="build-stat">${name}<strong>${value}</strong></div>`).join('');
   game.dom.$('buildUpgrades').innerHTML=Object.entries(game.state.stacks).map(([name,n])=>{
@@ -203,6 +216,7 @@ function openInfo(kind){
   if(kind==='backup')game.api.renderSaveBackup();
   if(kind==='statistics')game.api.renderStatistics();
   game.dom.$(kind+'Overlay').style.display='grid';game.api.updateScoreHUD();
+  if(kind==='build')selectBuildTab('tool');
   if(kind==='betaScraps')game.api.openBetaTreeView();
   if(kind==='whiteBrothers')game.api.startWhiteBrothersPreview();
   game.dom.$(infoButtons[kind]).focus?.({preventScroll:true});
@@ -260,7 +274,7 @@ function closeBuild(){if(activeInfo==='build')closeInfo()}
 function openChangelog(){openInfo('changelog')}
 function closeChangelog(){if(activeInfo==='changelog')closeInfo()}
 
-const api = { synergyRevealActive, resetSynergyReveals, setSynergyRevealsEnabled, beginSynergyReveal, continueSynergyReveal, openInfo, closeInfo, infoOpen, handleInfoKey, openCompendium, closeCompendium, openChangelog, closeChangelog, upgradeEffect, renderBuild, openBuild, closeBuild, setMsg, updateUI, roman, showSynergySplash };
+const api = { selectBuildTab, synergyRevealActive, resetSynergyReveals, setSynergyRevealsEnabled, beginSynergyReveal, continueSynergyReveal, openInfo, closeInfo, infoOpen, handleInfoKey, openCompendium, closeCompendium, openChangelog, closeChangelog, upgradeEffect, renderBuild, openBuild, closeBuild, setMsg, updateUI, roman, showSynergySplash };
 Object.assign(game.api, api);
 return api;
 };

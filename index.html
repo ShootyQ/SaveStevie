@@ -83,7 +83,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button><button class="paper-slip desktop-quit-entry" id="splashQuitBtn" hidden>Quit to desktop</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.162</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.163</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -214,17 +214,33 @@
 <audio id="gameMusic" src="assets/audio/save-stevie-splash.mp3" preload="none" loop></audio>
 
 <div class="overlay build-overlay" id="buildOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="buildTitle">
-  <div class="cardbox build-box">
-    <div class="build-heading"><h2 id="buildTitle">Your Tool &amp; Build</h2><button id="closeBuildBtn">Close</button></div>
-    <p>The game pauses while you review. Totals include Notebook perks, run upgrades, and your specialization.</p>
-    <p class="option-help">Notebook · <span id="buildScraps">0</span> banked scraps. Spend them from the home screen.</p>
-    <h3>Current totals</h3><section id="buildTool" class="tool-panel" aria-label="Your drawing tool"></section>
-    <div id="buildStats" class="build-stats"></div>
-    <h3>Luck &amp; rewards</h3><p id="buildLuck" class="build-luck"></p>
-    <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
-    <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
-    <h3>Doodle Scraps</h3><div id="buildDoodleScraps" class="build-upgrades"></div>
-    <h3>Monster notes</h3><p>Open Monster notes from Pause or My notebook for the full illustrated compendium.</p>
+  <div class="cardbox build-box build-inspector">
+    <div class="build-heading"><div><span class="section-kicker">STEVIE’S PENCIL CASE</span><h2 id="buildTitle">Your Tool &amp; Build</h2></div><button id="closeBuildBtn">Close</button></div>
+    <p class="build-inspector-help">Your run pauses while you look. Everything here is already in your build.</p>
+    <nav class="build-inspector-tabs" role="tablist" aria-label="Build sections">
+      <button id="buildTab-tool" role="tab" aria-controls="buildPanel-tool" aria-selected="true">Tool</button>
+      <button id="buildTab-upgrades" role="tab" aria-controls="buildPanel-upgrades" aria-selected="false" tabindex="-1">Upgrades</button>
+      <button id="buildTab-synergies" role="tab" aria-controls="buildPanel-synergies" aria-selected="false" tabindex="-1">Synergies</button>
+      <button id="buildTab-stats" role="tab" aria-controls="buildPanel-stats" aria-selected="false" tabindex="-1">Stats</button>
+    </nav>
+    <div id="buildInspectorBody" class="build-inspector-body">
+      <section id="buildPanel-tool" role="tabpanel" aria-labelledby="buildTab-tool" tabindex="0">
+        <section id="buildTool" class="tool-panel" aria-label="Your drawing tool"></section>
+        <p id="buildInkBottle" class="build-ink-bottle"></p><div id="buildHighlights" class="build-highlights"></div>
+        <p class="option-help">Notebook · <span id="buildScraps">0</span> banked scraps. Spend them from the home screen.</p>
+      </section>
+      <section id="buildPanel-upgrades" role="tabpanel" aria-labelledby="buildTab-upgrades" tabindex="0" hidden>
+        <h3>Upgrades &amp; stacks</h3><div id="buildUpgrades" class="build-upgrades"></div>
+        <h3>Doodle Scraps</h3><div id="buildDoodleScraps" class="build-upgrades"></div>
+      </section>
+      <section id="buildPanel-synergies" role="tabpanel" aria-labelledby="buildTab-synergies" tabindex="0" hidden>
+        <h3>Active synergies</h3><div id="buildSynergies" class="build-upgrades"></div>
+      </section>
+      <section id="buildPanel-stats" role="tabpanel" aria-labelledby="buildTab-stats" tabindex="0" hidden>
+        <h3>Current totals</h3><p class="option-help">Includes Notebook perks, your ink bottle, run upgrades, and specialization.</p><div id="buildStats" class="build-stats"></div>
+        <h3>Luck &amp; rewards</h3><p id="buildLuck" class="build-luck"></p>
+      </section>
+    </div>
   </div>
 </div>
 <div class="overlay build-overlay" id="hubOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="hubTitle">
@@ -431,6 +447,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.163 · One pencil case, four tabs</h3><p>Your Tool &amp; Build is now one notebook panel with Tool, Upgrades, Synergies and Stats tabs on desktop and mobile. Your pencil, effect slots, ink bottle and key totals appear immediately. Long lists scroll inside the panel; the Close button and tabs stay visible. Removed the automatic page splitting that could leave the first page blank.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.162 · Put that ink to work</h3><p>Your equipped Weird Ink Club bottle now colors your drawn lines and grants +1% per rank to its specialty: wall damage, ink capacity, paper-ball firing speed, elemental status duration, turret lifetime, eraser radius, wall durability or paper-ball damage. One bottle is locked in when a run starts; elemental animations keep their familiar colors. Inspect your build to see the active bottle and bonus.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.161 · Weird Ink Club: the collection</h3><p>Beat wave 20 to open eight colored ink bottles on the Scrap Tree. Each has uncapped saved ranks costing 5 × next rank² scraps, plus one freely switchable color slot. Phase 1 builds the collection: colored drawing and the planned +1% bonus per rank arrive in the next phase. Existing final-chapter report cards also open the club.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.159 · Scrub the whole classroom</h3><p>Bootstomp now brings up to five erasers, arriving faster. Friendly crew scrub nearby ordinary monsters while he is standing, then immediately prioritize him when he falls. Their faint green approach trails can be erased to make them hesitate for 1.5 seconds before redrawing a route.</p></article>

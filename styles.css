@@ -1905,3 +1905,27 @@ html.desktop-ui #app > .hud{width:100%;max-width:1286px;align-self:center}
 .ink-bottle span{display:block;background:#fff4dc;color:#45453c;margin:14px 6px 0;font:22px 'Stevie Pencil',cursive;transform:rotate(4deg);text-align:center;}
 .ink-color-note #betaNodeArt{display:block;}
 #betaEquipInk[hidden]{display:none;}
+
+/* A single inspector sheet. Only its tab content scrolls. */
+#buildOverlay .build-inspector{display:flex;flex-direction:column;width:min(100%,1020px);height:min(800px,calc(100dvh - 32px));max-height:calc(100dvh - 32px);min-height:0;overflow:hidden;text-align:left;padding:22px 26px;background:repeating-linear-gradient(0deg,transparent 0 31px,#9ab9cc15 31px 32px),#fffaf0;}
+#buildOverlay .build-heading{flex-shrink:0;align-items:center;gap:12px;margin:0;}
+#buildOverlay .build-heading h2{font-family:'Stevie Pencil',cursive;font-size:35px;margin:2px 0 0;}
+#buildOverlay .build-inspector-help{flex-shrink:0;font-size:14px;margin:8px 0 14px;color:#5b6971;}
+.build-inspector-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;flex-shrink:0;padding:0 2px 9px;border-bottom:1px dashed #b9aa87;}
+.build-inspector-tabs button{min-width:0;min-height:44px;font:23px 'Stevie Pencil',cursive;color:#4b5b65;background:#eee7d5;border:1px solid #bcaf91;border-radius:7px 10px 0 0;box-shadow:0 2px #c3b79e;}
+.build-inspector-tabs button[aria-selected=true]{color:#285a38;background:#e2edcf;border:2px solid #59714d;box-shadow:0 2px #59714d;}
+.build-inspector-tabs button:focus-visible{outline:3px dashed #315eb3;outline-offset:2px;}
+.build-inspector-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding:12px 5px 8px;}
+.build-inspector-body [role=tabpanel][hidden]{display:none!important;}
+.build-inspector-body [role=tabpanel]{outline-offset:-3px;}
+#buildOverlay #buildTool{margin:0 0 12px;}
+#buildOverlay .instrument-hero{width:min(100%,430px);}
+.build-ink-bottle{font:20px 'Stevie Pencil',cursive;color:#466043;padding:9px 12px;background:#e7ecd9;border-left:3px solid #72875d;}
+.build-highlights{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0;}
+.build-highlights>div{padding:10px 12px;border:1px solid #c7b998;border-radius:5px;background:#fffdf4;}
+.build-highlights span{display:block;font-size:13px;color:#627076;}.build-highlights strong{display:block;font:25px 'Stevie Pencil',cursive;color:#2d424b;margin-top:4px;}
+#buildOverlay .build-stats{grid-template-columns:repeat(3,minmax(0,1fr));}
+#buildOverlay .build-upgrades{grid-template-columns:repeat(2,minmax(0,1fr));}
+@media(max-width:600px){#buildOverlay .build-inspector{height:calc(100dvh - 20px);max-height:calc(100dvh - 20px);padding:15px 12px;}#buildOverlay .build-heading h2{font-size:28px;}#buildOverlay .section-kicker{font-size:11px;}#buildOverlay .build-inspector-help{font-size:12px;margin:7px 0 11px;}.build-inspector-tabs{gap:5px;}.build-inspector-tabs button{font-size:19px;padding:7px 2px;}.build-highlights,#buildOverlay .build-stats{grid-template-columns:repeat(2,minmax(0,1fr));}#buildOverlay .build-upgrades{grid-template-columns:1fr;}.build-ink-bottle{font-size:18px;}.build-inspector-body{padding:12px 2px 5px;}#buildOverlay #closeBuildBtn{min-height:44px;padding:8px 12px;}}
+@media(min-width:601px){#buildOverlay .instrument-hero{width:min(100%,320px);}#buildOverlay .tool-slots{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}#buildOverlay .build-highlights>div{padding:8px 12px;}}
+@media(min-width:601px){#buildOverlay #buildTool .instrument-hero{margin:-12px auto;}}
