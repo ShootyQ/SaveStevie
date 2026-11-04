@@ -2,14 +2,14 @@
 DoodleDefender.systems.notebook = function createNotebook(game) {
 const key='saveStevieNotebookV1',costs=[5,12,24,40,60],maxCurrency=1e9;
 const toolForRank=rank=>rank>=10?{name:'Scented Sharpie',slots:4}:rank>=6?{name:'Simple Pen',slots:3}:rank>=3?{name:'Mechanical Pencil',slots:2}:{name:'Pencil',slots:2};
-// Phase one saves the collection; combat bonuses and stroke tint arrive next.
+// One bottle is captured at run start; rank bonuses never stack across colors.
 const inkColors=game.catalog.inkColors=[
  {id:'red',name:'Detention Red',hex:'#b84a43',benefit:'wall contact damage'},
  {id:'blue',name:'Notebook Blue',hex:'#3e6ca8',benefit:'ink capacity'},
  {id:'yellow',name:'School Bus Yellow',hex:'#c89b28',benefit:'paper-ball firing speed'},
- {id:'purple',name:'Suspicious Purple',hex:'#80609c',benefit:'elemental effect duration'},
+ {id:'purple',name:'Suspicious Purple',hex:'#80609c',benefit:'burn, poison, frost and charge duration'},
  {id:'pink',name:'Bubblegum Pink',hex:'#c56e97',benefit:'turret lifetime'},
- {id:'orange',name:'Eraser Orange',hex:'#c77a3e',benefit:'erasing effectiveness'},
+ {id:'orange',name:'Eraser Orange',hex:'#c77a3e',benefit:'eraser brush radius'},
  {id:'gray',name:'Graphite Gray',hex:'#66716e',benefit:'wall durability'},
  {id:'brown',name:'Lunchbox Brown',hex:'#8a654b',benefit:'paper-ball damage'}
 ];
@@ -91,14 +91,18 @@ function finishScrapRun(victory=false,consolation=true){
 }
 function applyNotebookLoadout(){
   const l=progress.levels,s=game.state.stats,p=game.state.player;
+  const color=inkColors.find(c=>c.id===progress.inkColor);game.state.inkBottle=inkClubAvailable()&&progress.inkClubClaimed&&color&&progress.inkColors[color.id]>0?{...color,rank:progress.inkColors[color.id]}:null;
   game.state.tool={...toolForRank(l.tool),rank:l.tool};
   s.eraseRefund+=.05*l.starterEraser;
   s.inkRegen+=l.inkRegen;s.extraChoice=!!l.extraChoice;
-  s.maxInk+=l.inkTank*20;s.ink=s.maxInk;s.wallHp+=l.tool*8;
+  s.maxInk=(s.maxInk+l.inkTank*20)*inkColorFactor('blue');s.ink=s.maxInk;s.wallHp+=l.tool*8;
   p.maxHp+=l.health*8;p.hp=p.maxHp;
   s.rockDamage=l.rocks*2;s.rockRate=l.rocks?Number((1.6-.1*l.rocks).toFixed(1)):0;
   s.luck+=l.luck*2;game.state.rerolls+=l.rerolls;
 }
+function inkColorFactor(id){return 1+(game.state.inkBottle?.id===id?game.state.inkBottle.rank/100:0);}
+function activeInkColor(){return game.state.inkBottle?{...game.state.inkBottle}:null;}
+function inkEraserRadius(){return 20*inkColorFactor('orange');}
 function canSpendScraps(){return !game.state.running}
 function doubleSpeedUnlocked(){return progress.speedUnlocked===true||game.state.best>5;}
 function recordSpeedVictory(e){
@@ -167,6 +171,6 @@ function syncScrapTutorial(){
 function finishScrapTutorial(){if(!progress.betaPencilClaimed&&!progress.levels.starterEraser)return false;progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial();return true;}
 function openNotebook(){game.api.openInfo('betaScraps')}
 function closeNotebook(){game.api.closeInfo()}
-const api={inkClubAvailable,inkColorPrice,claimInkClub,buyInkColor,selectInkColor,cleanInkProgress,doubleSpeedUnlocked,recordSpeedVictory,shapeStudiesAvailable,recordShapeVictory,claimBetaPencil,notebookPerkPrice,adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
+const api={inkStrokeColor:()=>game.state.inkBottle?.hex||null,inkColorFactor,activeInkColor,inkEraserRadius,inkClubAvailable,inkColorPrice,claimInkClub,buyInkColor,selectInkColor,cleanInkProgress,doubleSpeedUnlocked,recordSpeedVictory,shapeStudiesAvailable,recordShapeVictory,claimBetaPencil,notebookPerkPrice,adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;
 };

@@ -7,7 +7,7 @@ DoodleDefender.systems.circleShapes=function(game){
  const turretsAllowed=()=>!game.api.bossEntranceActive()&&((game.state.wave%5!==0||game.api.bossWavePhase()==='timed')&&!game.state.enemies.some(e=>e.waveBoss&&e.hp>0)||game.state.enemies.some(e=>e.hp>0&&game.api.isCrayonBoss?.(e))&&!game.state.enemies.some(e=>e.waveBoss&&e.hp>0&&!game.api.isCrayonBoss?.(e)));
  const turretTarget=e=>!e.waveBoss&&!game.api.abilityImmune(e);
  const enabled=()=>game.api.notebookSnapshot().levels.circles>0||game.api.devRunActive()&&!!game.state.stacks['Spitball Express'];
- function turretSettings(){const l=game.api.notebookSnapshot().levels;return {...tuning,range:tuning.range+30*(l.turretRange||0),seconds:tuning.seconds+3*(l.turretDuration||0),capacity:Math.max(1+(l.turretCapacity||0),game.state.stacks['Spitball Express']?2:1),interval:tuning.interval-.1*(l.turretRate||0),choiceSeconds:tuning.choiceSeconds-(l.turretFold||0)};}
+ function turretSettings(){const l=game.api.notebookSnapshot().levels;return {...tuning,range:tuning.range+30*(l.turretRange||0),seconds:(tuning.seconds+3*(l.turretDuration||0))*game.api.inkColorFactor('pink'),capacity:Math.max(1+(l.turretCapacity||0),game.state.stacks['Spitball Express']?2:1),interval:tuning.interval-.1*(l.turretRate||0),choiceSeconds:tuning.choiceSeconds-(l.turretFold||0)};}
  function circleGeometry(points,allowLarge=false){
   if(!Array.isArray(points)||points.length<6||points.some(p=>!Number.isFinite(p.x)||!Number.isFinite(p.y)))return null;
   const g=game.api.wallGeometry(points),width=g.maxX-g.minX,height=g.maxY-g.minY,diameter=Math.max(width,height),r=(width+height)/4;
@@ -97,7 +97,7 @@ DoodleDefender.systems.circleShapes=function(game){
   game.api.moveEnemySafely(e,dx/n*step,dy/n*step);return true;
  }
  function constrainCircleTurret(){if(!turrets.length||!turretsAllowed())return;for(const t of turrets){const c=t.circle;for(const e of game.state.enemies){if(!surface(e)||e.waveBoss||e.hurdle||e.wobbleLanding)continue;const dx=e.x-c.x,dy=e.y-c.y,d=Math.hypot(dx,dy),r=c.r+e.r+5;if(d<r){const angle=d?Math.atan2(dy,dx):Math.atan2(e.y-game.state.player.y,e.x-game.state.player.x);e.x=c.x+Math.cos(angle)*r;e.y=c.y+Math.sin(angle)*r;}}}}
- function circleTurretContact(e,dt){if(!turrets.length||!turretsAllowed()||!surface(e)||game.api.chonksProtected(e))return;if(turrets.some(t=>Math.abs(Math.hypot(e.x-t.circle.x,e.y-t.circle.y)-t.circle.r)<=e.r+t.wall.thick/2+8))game.api.dealDamage(e,game.state.stats.wallDamage*dt,'physical');}
+ function circleTurretContact(e,dt){if(!turrets.length||!turretsAllowed()||!surface(e)||game.api.chonksProtected(e))return;if(turrets.some(t=>Math.abs(Math.hypot(e.x-t.circle.x,e.y-t.circle.y)-t.circle.r)<=e.r+t.wall.thick/2+8))game.api.dealDamage(e,game.state.stats.wallDamage*game.api.inkColorFactor('red')*dt,'physical');}
  function moveCircleShapes(dx,dy){if(placementHint){placementHint.x+=dx;placementHint.y+=dy;}const circles=new Set(game.state.walls.map(w=>w.circleShape).filter(Boolean));if(pending)circles.add(pending.circle);for(const t of turrets){circles.add(t.circle);t.wall.pts=t.wall.pts.map(p=>({x:p.x+dx,y:p.y+dy}));}for(const c of circles){c.x+=dx;c.y+=dy;}syncCirclePrompt();}
  function drawCircleShapes(){
   syncCirclePrompt();const ctx=game.dom.ctx,reduced=game.api.enemyMotionReduced();ctx.save();

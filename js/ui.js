@@ -160,12 +160,13 @@ function renderBuild(){
   game.api.renderTool('buildTool');
   const s=game.state.stats,f=v=>Number(v.toFixed(2));
   const totals=[['Max ink',s.maxInk],['Ink regeneration',f(s.inkRegen)+' /s'],['Stroke cost',f(s.lineCost)+' ink/pixel'],
-    ['Wall damage',f(s.wallDamage)+' /s'],['Base wall HP',s.wallHp],['Wall lifetime',s.wallLife+'s'],['Line width',s.lineWidth+'px'],
+    ['Wall damage',f(s.wallDamage*game.api.inkColorFactor('red'))+' /s'],['Base wall HP',f(s.wallHp*game.api.inkColorFactor('gray'))],['Wall lifetime',s.wallLife+'s'],['Line width',s.lineWidth+'px'],
     ['Closed-wall multiplier','×'+f(s.closedBonus)],['Intersection bonus',f(s.intersectBonus*100)+'% each'],
     ['Stevie max HP',game.state.player.maxHp],['Damage reduction',f(s.playerArmor*100)+'%'],
-    ['Doodle Scraps',Object.values(game.api.paperPayload()).reduce((sum,n)=>sum+n,0)+' collected'],['Throw reach',Math.round(game.api.paperRange())+'px'],['Paper-ball damage',s.rockDamage],['Throw interval',s.rockRate?f(game.api.paperThrowInterval())+'s':'Not unlocked'],
+    ['Doodle Scraps',Object.values(game.api.paperPayload()).reduce((sum,n)=>sum+n,0)+' collected'],['Throw reach',Math.round(game.api.paperRange())+'px'],['Paper-ball damage',f(s.rockDamage*game.api.inkColorFactor('brown'))],['Throw interval',s.rockRate?f(game.api.paperThrowInterval())+'s':'Not unlocked'],
     ['Walls per stroke',1],['Erase recovery',Math.round(s.eraseRefund*100)+'%'],['Ink per kill',s.refund],['Healing per kill',s.killHeal+' HP'],
     ['Between-wave healing',(5+s.playerRegen)+' HP'],['Luck',s.luck],['Rerolls available',game.state.rerolls],['Combat healing budget','4.5 HP/s'],['Kill ink refund budget','8 ink/s'],['Kill wall repair budget','10 HP/s shared']];
+  const bottle=game.api.activeInkColor();totals.unshift(['Ink bottle',bottle?bottle.name+' · rank '+bottle.rank+' · +'+bottle.rank+'% '+bottle.benefit:'Graphite · no color bonus']);
   game.dom.$('buildLuck').textContent='Your Luck: '+s.luck+'. '+game.api.luckExplanation();
   game.dom.$('buildStats').innerHTML=totals.map(([name,value])=>`<div class="build-stat">${name}<strong>${value}</strong></div>`).join('');
   game.dom.$('buildUpgrades').innerHTML=Object.entries(game.state.stacks).map(([name,n])=>{

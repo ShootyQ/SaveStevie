@@ -768,8 +768,8 @@ function draw(){
     const hpRatio=game.api.clamp(w.hp/w.maxHp,0,1);
     const lifeRatio=game.api.clamp(w.life/w.maxLife,0,1);
     const visualRatio=Math.min(hpRatio,lifeRatio);
-    let col='#343638';
-    if(!w.wobbleBumper&&game.state.inks.chaos>0)col=`hsl(${(performance.now()/30+w.hp)%360},55%,30%)`;
+    let col=w.wobbleBumper?'#343638':game.api.inkStrokeColor()||'#343638';
+    if(!w.wobbleBumper&&!game.api.inkStrokeColor()&&game.state.inks.chaos>0)col=`hsl(${(performance.now()/30+w.hp)%360},55%,30%)`;
     drawToolStroke(w.pts,w.thick,.08+.92*visualRatio,col);
 
     if(!w.wobbleBumper)drawWallTextures(w.pts,w.thick,.08+.92*visualRatio);else continue;
@@ -798,7 +798,7 @@ function draw(){
   if(game.state.currentWall&&game.state.currentWall.length>1&&!game.api.liveWallActive()){
     // The preview grows in place; refresh both presentation caches.
     wallSamples.delete(game.state.currentWall);graphiteGrain.delete(game.state.currentWall);
-    drawToolStroke(game.state.currentWall,game.state.stats.lineWidth,.72,'#343638');
+    drawToolStroke(game.state.currentWall,game.state.stats.lineWidth,.72,game.api.inkStrokeColor()||'#343638');
     drawWallTextures(game.state.currentWall,game.state.stats.lineWidth,.72)
   }
 
