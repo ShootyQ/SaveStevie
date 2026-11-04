@@ -2,6 +2,21 @@
 DoodleDefender.systems.notebook = function createNotebook(game) {
 const key='saveStevieNotebookV1',costs=[5,12,24,40,60],maxCurrency=1e9;
 const toolForRank=rank=>rank>=10?{name:'Scented Sharpie',slots:4}:rank>=6?{name:'Simple Pen',slots:3}:rank>=3?{name:'Mechanical Pencil',slots:2}:{name:'Pencil',slots:2};
+// Phase one saves the collection; combat bonuses and stroke tint arrive next.
+const inkColors=game.catalog.inkColors=[
+ {id:'red',name:'Detention Red',hex:'#b84a43',benefit:'wall contact damage'},
+ {id:'blue',name:'Notebook Blue',hex:'#3e6ca8',benefit:'ink capacity'},
+ {id:'yellow',name:'School Bus Yellow',hex:'#c89b28',benefit:'paper-ball firing speed'},
+ {id:'purple',name:'Suspicious Purple',hex:'#80609c',benefit:'elemental effect duration'},
+ {id:'pink',name:'Bubblegum Pink',hex:'#c56e97',benefit:'turret lifetime'},
+ {id:'orange',name:'Eraser Orange',hex:'#c77a3e',benefit:'erasing effectiveness'},
+ {id:'gray',name:'Graphite Gray',hex:'#66716e',benefit:'wall durability'},
+ {id:'brown',name:'Lunchbox Brown',hex:'#8a654b',benefit:'paper-ball damage'}
+];
+function cleanInkProgress(saved={}){
+ const ranks={};for(const c of inkColors)ranks[c.id]=Number.isSafeInteger(saved.inkColors?.[c.id])&&saved.inkColors[c.id]>=0?saved.inkColors[c.id]:0;
+ return {inkClubClaimed:saved.inkClubClaimed===true,inkClubVictory:saved.inkClubVictory===true,inkColors:ranks,inkColor:inkColors.some(c=>c.id===saved.inkColor)&&ranks[saved.inkColor]>0?saved.inkColor:null};
+}
 const toolCosts=[5,8,12,16,20,24,30,36,44,55];
 const turretPrices={turretRange:[10,20,35],turretDuration:[10,20,35],turretCapacity:[30,60],turretRate:[10,20,35],turretFold:[15,30]};
 const perkPrice=(perk,rank)=>turretPrices[perk.id]?.[rank]??(perk.id==='startingUpgrade'?45:perk.id==='starterEraser'?0:perk.id==='tool'?toolCosts[rank]:['circles','extraChoice','doodleScraps'].includes(perk.id)?25:costs[rank]);
@@ -30,7 +45,7 @@ const cleanNumber=n=>Number.isSafeInteger(n)&&n>=0?Math.min(maxCurrency,n):0;
 try{
   const saved=JSON.parse(localStorage.getItem(key)||'null');
   if(saved&&[1,2].includes(saved.version)&&typeof saved.levels==='object'&&saved.levels!==null){
-    progress.scrapTutorialDone=saved.scrapTutorialDone===true;
+    Object.assign(progress,cleanInkProgress(saved));progress.scrapTutorialDone=saved.scrapTutorialDone===true;
     progress.speedUnlocked=saved.speedUnlocked===true;progress.betaPencilClaimed=saved.betaPencilClaimed===true;if(saved.wobbleDefeated===true)progress.wobbleDefeated=true;
     progress.scraps=cleanNumber(saved.scraps);progress.lifetimeScraps=Math.max(progress.scraps,cleanNumber(saved.lifetimeScraps));
     for(const p of perks)progress.levels[p.id]=Math.min(p.max,cleanNumber(saved.levels[p.id]));
@@ -40,12 +55,13 @@ try{
     }
   }
 }catch{storageIssue=true}
+Object.assign(progress,cleanInkProgress(progress));
 for(const p of perks)progress.levels[p.id]??=0;
 function saveNotebook(){
   try{localStorage.setItem(key,JSON.stringify(progress));storageIssue=false}catch{storageIssue=true}
 }
-function adoptNotebookBackup(saved){progress={...saved,levels:{...saved.levels}};storageIssue=false;migrationRefund=0;runScraps=0;killScraps=0;runActive=false;updateScrapCounters();}
-function notebookSnapshot(){return {...progress,levels:{...progress.levels},runScraps,runActive,storageIssue}}
+function adoptNotebookBackup(saved){progress={...saved,...cleanInkProgress(saved),levels:{...saved.levels}};storageIssue=false;migrationRefund=0;runScraps=0;killScraps=0;runActive=false;updateScrapCounters();}
+function notebookSnapshot(){return {...progress,inkColors:{...progress.inkColors},levels:{...progress.levels},runScraps,runActive,storageIssue}}
 function updateScrapCounters(){
   for(const id of ['splashScraps','buildScraps','deathBankScraps','victoryBankScraps','betaTreeBank'])game.dom.$(id).textContent=progress.scraps;
   for(const id of ['waveRunScraps','deathRunScraps','victoryRunScraps'])game.dom.$(id).textContent=runScraps;
@@ -69,6 +85,7 @@ function awardWaveScraps(){
 }
 function finishScrapRun(victory=false,consolation=true){
   if(!runActive)return;
+  if(victory&&!game.api.testLabActive?.()&&game.state.wave===20&&!game.state.endless){progress.inkClubVictory=true;saveNotebook();}
   if(victory)awardScraps(game.catalog.balance.victoryScraps);else if(consolation&&runScraps===0)awardScraps(1);
   runActive=false;updateScrapCounters();
 }
@@ -88,6 +105,11 @@ function recordSpeedVictory(e){
  if(game.api.devRunActive()||game.api.testLabActive?.()||game.state.endless||game.state.wave!==5||!e.waveBoss||e.type!=='boss'||e.hp>0||doubleSpeedUnlocked())return false;
  progress.speedUnlocked=true;saveNotebook();game.api.setMsg('2× speed unlocked! Change game speed in Pause on any run.');return true;
 }
+function inkClubAvailable(){return progress.inkClubVictory===true||game.state.best>20||!!game.api.reportRecords?.()[3];}
+function inkColorPrice(id){if(!inkColors.some(c=>c.id===id))return null;const price=5*(progress.inkColors[id]+1)**2;return Number.isSafeInteger(price)?price:Infinity;}
+function claimInkClub(){if(!canSpendScraps()||!inkClubAvailable()||!progress.betaPencilClaimed||progress.inkClubClaimed)return false;progress.inkClubClaimed=true;saveNotebook();renderNotebook();return true;}
+function buyInkColor(id){const price=inkColorPrice(id);if(!canSpendScraps()||!inkClubAvailable()||!progress.betaPencilClaimed||!progress.inkClubClaimed||price===null||price>progress.scraps)return false;progress.scraps-=price;progress.inkColors[id]++;saveNotebook();updateScrapCounters();renderNotebook();return true;}
+function selectInkColor(id){if(!canSpendScraps()||!inkClubAvailable()||!progress.inkClubClaimed||id!==null&&(!inkColors.some(c=>c.id===id)||!progress.inkColors[id]))return false;progress.inkColor=id;saveNotebook();renderNotebook();return true;}
 function shapeStudiesAvailable(){return progress.wobbleDefeated===true||game.state.best>10||progress.levels.circles>0;}
 function recordShapeVictory(e){if(game.api.devRunActive()||game.state.endless||game.state.wave!==10||!e.waveBoss||!['wobblechomp','bootstomp'].includes(e.type)||e.hp>0)return false;progress.wobbleDefeated=true;saveNotebook();return true;}
 function buyNotebookPerk(id){
@@ -118,7 +140,7 @@ function resetNotebookProgress(){
     game.dom.$('optionsStorageNote').textContent='Could not reset saved progress. Check this browser’s storage settings and try again.';
     return false;
   }
-  game.api.resetReportRecords?.();progress=fresh;migrationRefund=0;storageIssue=false;game.api.resetFirstLessons?.();
+  game.api.resetReportRecords?.();progress={...fresh,...cleanInkProgress()};migrationRefund=0;storageIssue=false;game.api.resetFirstLessons?.();
   game.api.closeInfo();game.state.best=1;game.api.resetRun();game.api.closeInfo();
   game.state.running=false;game.state.paused=false;runActive=false;runScraps=0;killScraps=0;
   game.api.selectMusicTrack('splash');
@@ -145,6 +167,6 @@ function syncScrapTutorial(){
 function finishScrapTutorial(){if(!progress.betaPencilClaimed&&!progress.levels.starterEraser)return false;progress.scrapTutorialDone=true;saveNotebook();syncScrapTutorial();return true;}
 function openNotebook(){game.api.openInfo('betaScraps')}
 function closeNotebook(){game.api.closeInfo()}
-const api={doubleSpeedUnlocked,recordSpeedVictory,shapeStudiesAvailable,recordShapeVictory,claimBetaPencil,notebookPerkPrice,adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
+const api={inkClubAvailable,inkColorPrice,claimInkClub,buyInkColor,selectInkColor,cleanInkProgress,doubleSpeedUnlocked,recordSpeedVictory,shapeStudiesAvailable,recordShapeVictory,claimBetaPencil,notebookPerkPrice,adoptNotebookBackup,scrapLessonPending,syncScrapTutorial,finishScrapTutorial,awardWaveScraps,resetNotebookProgress,notebookSnapshot,updateScrapCounters,beginScrapRun,resumeScrapRun,awardScraps,awardKillScraps,finishScrapRun,applyNotebookLoadout,canSpendScraps,buyNotebookPerk,renderNotebook,openNotebook,closeNotebook};
 Object.assign(game.api,api);updateScrapCounters();return api;
 };
