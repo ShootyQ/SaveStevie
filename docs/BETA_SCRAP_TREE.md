@@ -27,8 +27,8 @@ new prerequisite paths. Already purchased partial ranks may continue upgrading
 without repurchasing an ancestor. This does not grant missing parent ranks or
 stats. Unpurchased follow-up skills need their named parent rank.
 
-Weird Ink Club remains a future direction below Stevie. Shape Studies opens after a normal wave-10 Wobblechomp victory (or an existing best wave beyond 10). Claim the free root, then buy Circle Studies once for **25 scraps**. The saved `wobbleDefeated` flag travels with backups; test runs do not unlock it.
-Weird Ink Club cannot be purchased yet. Other speculative nodes were removed from this view.
+Weird Ink Club now opens a post-wave-20 color collection (see phase-one details below). Shape Studies opens after a normal wave-10 Wobblechomp victory (or an existing best wave beyond 10). Claim the free root, then buy Circle Studies once for **25 scraps**. The saved `wobbleDefeated` flag travels with backups; test runs do not unlock it.
+The club root is free after victory; individual color ranks use the saved scrap bank. Other speculative nodes were removed from this view.
 Existing ink rewards, synergies and legendary discoveries keep their current
 access; they are not gated by the later scraps.
 
@@ -75,3 +75,9 @@ next-run reroll, choice, Luck, health and ink bonuses.
 Alpha 0.1.68 expands Shape Studies below Circle Studies: Long Paper Barrel → Busy Barrels, Stubborn Folds → Quick Origami, and Cannon Club. The page grows to 2400 × 2600 to keep these taped scraps apart; the existing zoom, pan and branch jumps remain. Prices and effects are listed in `CIRCLE_STUDIES.md`.
 
 Alpha 0.1.69 adds five familiar monster sketches, two crossed-out rejected doodles, crooked handwritten reminders and a faint chocolate-milk stain in unused margins. The static decorations are hidden from assistive technology and ignore pointer input. The CSS paper size and SVG arrow viewBox both match the 2400 × 2600 tree, including the turret branch.
+
+## Weird Ink Club · Alpha 0.1.161 · phase one
+
+The former placeholder is a free club root after normal wave-20 victory. An existing final-chapter report card or best wave beyond 20 also qualifies; reaching/dying on wave 20 alone does not. Eight color nodes branch from it: Detention Red (wall contact damage), Notebook Blue (ink capacity), School Bus Yellow (paper-ball firing speed), Suspicious Purple (element duration), Bubblegum Pink (turret lifetime), Eraser Orange (erasing effectiveness), Graphite Gray (wall durability), Lunchbox Brown (paper-ball damage). These bonuses are planned for phase two.
+
+Each rank costs `5 * nextRank ** 2`; no design rank cap. Total spent at ranks 1/5/10/15/20: 5/275/1925/6200/14350 scraps. Only one color selection is saved; switching or deselecting is free between runs. Rank purchases and selection persist locally and through backup/restore. Phase one does not change combat stats or drawing colors. Existing Quick Origami behavior is unchanged in this phase.

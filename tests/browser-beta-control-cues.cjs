@@ -23,7 +23,7 @@ const root=path.resolve(process.argv[2]||path.join(__dirname,'..'));
  await page.click('#betaBuyNode');assert.equal(await page.evaluate(()=>testGame.api.notebookSnapshot().scraps),cost-5);
  await page.evaluate(()=>testGame.api.selectBetaNode('inkLater'));
  assert.equal(await page.locator('#betaBuyNode').isDisabled(),true);
- assert.match(await page.locator('#beta-node-inkLater .beta-node-action').textContent(),/Preview/);
+ assert.match(await page.locator('#beta-node-inkLater .beta-node-action').textContent(),/Inspect/);
  await page.evaluate(()=>{testGame.api.foldBetaNote();testGame.api.fitBetaTree()});
  await page.screenshot({path:'/tmp/beta-clear-map-'+viewport.width+'.png'});
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

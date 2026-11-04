@@ -1279,3 +1279,7 @@ for 1.5s, then redraw its route. Crew-body redirection takes priority over trail
 cuts. These gestures do not erase cover or wear paper underneath, and do not
 extend the helper's 12s allegiance. Trails clear on movement/resize, turning,
 arrival, confusion, consumption and run reset. Rendering does not change routes.
+
+## Weird Ink Club collection · Alpha 0.1.161
+
+Phase one adds eight post-wave-20 color nodes to the Scrap Tree. Collect ranks at `5 × nextRank²` scraps and save one color selection between runs. Purchases and selection survive local reloads and backup/restore. Combat bonuses and colored ink rendering are deferred to phase two; see [the Scrap Tree guide](docs/BETA_SCRAP_TREE.md#weird-ink-club--alpha-01161--phase-one).

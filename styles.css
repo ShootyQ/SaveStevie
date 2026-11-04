@@ -1896,3 +1896,12 @@ html.desktop-ui #app > .hud{width:100%;max-width:1286px;align-self:center}
 
 /* Keep continuation outside the scrolling report on touch screens, too. */
 #waveOverlay .wave-clear-book{display:flex;flex-direction:column;max-height:calc(100dvh - 28px);overflow:hidden;box-sizing:border-box}#waveOverlay .wave-summary-body{flex:1 1 auto;min-height:0;overflow-y:auto}#waveOverlay #continueBtn,#waveOverlay #waveRestartTestBtn{flex-shrink:0}
+
+/* Ink Club keeps its swatches visible on touch as well as desktop. */
+.beta-tree-node.ink-color-node{border-left:9px solid var(--ink-color);border-radius:5px;box-shadow:inset 3px 0 0 #fff8;}
+.beta-tree-node.ink-color-node strong{color:var(--ink-color);text-shadow:0 1px #fff;}
+.ink-bottle{--bottle:#66716e;position:relative;width:65px;height:55px;margin:23px auto 12px;border:3px solid #47443c;border-radius:16px 13px 12px 10px;background:var(--bottle);transform:rotate(-5deg);box-shadow:inset 5px 0 #fff3,2px 3px #51453133;}
+.ink-bottle::before{content:'';position:absolute;width:37px;height:13px;left:11px;top:-16px;border:3px solid #47443c;border-radius:4px;background:repeating-linear-gradient(90deg,#786f60 0 3px,#514b42 3px 5px);}
+.ink-bottle span{display:block;background:#fff4dc;color:#45453c;margin:14px 6px 0;font:22px 'Stevie Pencil',cursive;transform:rotate(4deg);text-align:center;}
+.ink-color-note #betaNodeArt{display:block;}
+#betaEquipInk[hidden]{display:none;}

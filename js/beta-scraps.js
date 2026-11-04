@@ -34,7 +34,7 @@ DoodleDefender.systems.betaScraps=function(game){
   {id:'health',perk:'health',name:'Lunchbox Band-Aids',parent:'start',branch:'survival',x:1610,y:1006,w:300},
   {id:'starterEraser',perk:'starterEraser',name:'Starter Eraser',parent:'health',branch:'survival',x:1980,y:786,w:300},
   {id:'luck',perk:'luck',name:'Lucky Eraser',parent:'health',branch:'survival',x:1980,y:1246,w:300},
-  {id:'inkLater',name:'Weird Ink Club',desc:'New elemental unlocks are still being designed. This branch has room to grow. Your current elemental rewards and synergies work as usual.',parent:'start',later:true,branch:'elements',x:1410,y:1596,w:300},
+  {id:'inkLater',name:'Weird Ink Club',desc:'Not school approved. Beat wave 20 to open your ink collection. One color slot, free switching between runs, and endless ranks at +1 percentage point each. Phase 1: collect, rank up and save your selection here. Combat bonuses and colored drawing are coming in the next phase.',parent:'start',club:true,branch:'elements',x:1410,y:1596,w:300},
   {id:'circles',perk:'circles',name:'Circle Studies',parent:'start',branch:'shapes',x:650,y:1596,w:300},
   {id:'turretRange',perk:'turretRange',name:'Long Paper Barrel',parent:'circles',branch:'shapes',x:100,y:1906,w:300},
   {id:'turretDuration',perk:'turretDuration',name:'Stubborn Folds',parent:'circles',branch:'shapes',x:500,y:1906,w:300},
@@ -42,12 +42,23 @@ DoodleDefender.systems.betaScraps=function(game){
   {id:'turretRate',perk:'turretRate',name:'Busy Barrels',parent:'turretRange',branch:'shapes',x:220,y:2276,w:300},
   {id:'turretFold',perk:'turretFold',name:'Quick Origami',parent:'turretDuration',branch:'shapes',x:740,y:2276,w:300}
  ];
+ for(const [i,c] of game.catalog.inkColors.entries())definitions.push({id:'ink-'+c.id,name:c.name,color:c,parent:'inkLater',branch:'elements',x:1330+i%3*350,y:1906+Math.floor(i/3)*244,w:300});
  const nodes=new Map(definitions.map(n=>[n.id,n]));
- const nodeRank=(id,p)=>id==='start'?Number(p.betaPencilClaimed===true):p.levels[nodes.get(id)?.perk]||0;
+ const nodeRank=(id,p)=>id==='start'?Number(p.betaPencilClaimed===true):id==='inkLater'?Number(p.inkClubClaimed===true):nodes.get(id)?.color?p.inkColors[nodes.get(id).color.id]||0:p.levels[nodes.get(id)?.perk]||0;
  let selected='start',noteOpen=false,view={scale:1,x:0,y:0},pointers=new Map(),gesture=null,suppressClick=false,touchGesture=false,lastViewport=null,tapTarget=null,gestureConsumed=false,ignoreNativeClickUntil=0;
  function betaNodeState(id){
   const n=nodes.get(id);if(!n)return null;
-  const p=game.api.notebookSnapshot(),perk=game.catalog.notebookPerks.find(k=>k.id===n.perk),rank=perk?p.levels[n.perk]:id==='start'?Number(p.betaPencilClaimed===true):0;
+  const p=game.api.notebookSnapshot();
+  if(n.club||n.color){const rank=n.club?Number(p.inkClubClaimed):p.inkColors[n.color.id],max=n.club?1:Infinity,price=n.club?0:game.api.inkColorPrice(n.color.id);let reason='';
+   if(!game.api.inkClubAvailable())reason='Beat wave 20 to open Weird Ink Club';
+   else if(n.club&&rank)reason='Collection open';
+   else if(!game.api.canSpendScraps())reason='Finish this run before purchasing';
+   else if(!p.betaPencilClaimed)reason='Claim the free Fresh Pencil first';
+   else if(n.color&&!p.inkClubClaimed)reason='Open Weird Ink Club first';
+   else if(price>p.scraps)reason='Need '+(price-p.scraps)+' more scraps';
+   return {id,rank,max,price,reason,canBuy:!reason,owned:n.club&&!!rank,perk:null,parent:n.parent,unlocked:game.api.inkClubAvailable()&&p.betaPencilClaimed&&(n.club||p.inkClubClaimed)};
+  }
+  const perk=game.catalog.notebookPerks.find(k=>k.id===n.perk),rank=perk?p.levels[n.perk]:id==='start'?Number(p.betaPencilClaimed===true):0;
   const price=id==='start'?0:perk?game.api.notebookPerkPrice(n.perk):null,max=perk?.max??1;
   let reason='';
   if(n.later)reason='Coming later · not purchasable';
@@ -63,8 +74,8 @@ DoodleDefender.systems.betaScraps=function(game){
  }
  function buyBetaNode(id){
   const state=betaNodeState(id);if(!state?.canBuy)return false;
-  const bought=id==='start'?game.api.claimBetaPencil():game.api.buyNotebookPerk(state.perk.id);
-  if(bought){selected=id;renderBetaTree();$('betaTreeStatus').textContent=(id==='start'?'Pencil acquired! Choose a branch.':state.perk.name+' is ready for your next run.')+(game.api.notebookSnapshot().storageIssue?' Saving is unavailable; this lasts for this visit.':'');($('betaBuyNode').disabled?$('betaFoldNote'):$('betaBuyNode')).focus?.({preventScroll:true});game.api.syncScrapTutorial();}
+  const n=nodes.get(id);const bought=n.club?game.api.claimInkClub():n.color?game.api.buyInkColor(n.color.id):id==='start'?game.api.claimBetaPencil():game.api.buyNotebookPerk(state.perk.id);
+  if(bought){selected=id;renderBetaTree();$('betaTreeStatus').textContent=(id==='start'?'Pencil acquired! Choose a branch.':n.color?n.name+' rank '+(state.rank+1)+' saved. Color and bonus activation arrive next phase.':n.club?'Weird Ink Club opened. Choose an ink bottle.':state.perk.name+' is ready for your next run.')+(game.api.notebookSnapshot().storageIssue?' Saving is unavailable; this lasts for this visit.':'');($('betaBuyNode').disabled?$('betaFoldNote'):$('betaBuyNode')).focus?.({preventScroll:true});game.api.syncScrapTutorial();}
   return bought;
  }
  function pencilCollection(rank){
@@ -73,15 +84,17 @@ DoodleDefender.systems.betaScraps=function(game){
  }
  function renderDetails(){
   const n=nodes.get(selected),s=betaNodeState(selected),p=game.api.notebookSnapshot();
-  $('betaNodeTitle').textContent=n.name;$('betaNodeTier').textContent=n.id==='start'?'START HERE · FREE':n.later?'STEVIE’S FUTURE HOMEWORK':(branches.find(b=>b.id===n.branch)?.title||'Pencil Case')+' · Rank '+s.rank+' / '+s.max;
-  $('betaNodeDescription').textContent=s.perk?s.perk.desc:n.desc;
-  $('betaNodeEffect').textContent=s.perk?s.perk.effect(s.rank):n.link?'+'+p.levels.tool*8+' base wall HP from your drawing tool':'';
+  $('betaNodeTitle').textContent=n.name;$('betaNodeTier').textContent=n.id==='start'?'START HERE · FREE':n.later?'STEVIE’S FUTURE HOMEWORK':(branches.find(b=>b.id===n.branch)?.title||'Pencil Case')+' · Rank '+s.rank+' / '+(n.color?'∞':s.max);
+  $('betaNodeDescription').textContent=n.color?'Plan: +1 percentage point of '+n.color.benefit+' per rank, while this color is equipped. Next rank costs 5 × rank² scraps. Phase 1 saves your purchases and selection; combat bonuses and colored strokes arrive next phase.':s.perk?s.perk.desc:n.desc;
+  $('betaNodeEffect').textContent=n.color?'Saved rank '+s.rank+' · Planned +'+s.rank+'% '+n.color.benefit:s.perk?s.perk.effect(s.rank):n.link?'+'+p.levels.tool*8+' base wall HP from your drawing tool':'';
   const children=definitions.filter(d=>d.parent===n.id&&!d.later),childNames=children.map(d=>d.name).join(' and ');
-  $('betaNodeRequirement').textContent=s.reason||(children.length&&s.rank===0?'One rank opens '+childNames+'. ':'')+'Next: '+(s.perk?s.perk.effect(s.rank+1):'Open the branches');
+  $('betaNodeRequirement').textContent=s.reason||(children.length&&s.rank===0?'One rank opens '+childNames+'. ':'')+'Next: '+(n.color?'rank '+(s.rank+1)+' · planned +'+(s.rank+1)+'%':s.perk?s.perk.effect(s.rank+1):'Open the branches');
   $('betaNodeNote').classList?.toggle('pencil-case-note',n.id==='tool');
-  $('betaNodeArt').innerHTML=n.id==='tool'?pencilCollection(p.levels.tool):'';
+  $('betaNodeArt').innerHTML=n.color?'<div class="ink-bottle" style="--bottle:'+n.color.hex+'" aria-hidden="true"><span>INK</span></div>':n.id==='tool'?pencilCollection(p.levels.tool):'';
+  const equip=$('betaEquipInk');equip.hidden=!n.color;equip.disabled=!s.unlocked||s.rank===0||!game.api.canSpendScraps();equip.textContent=p.inkColor===n.color?.id?'✓ Selected · put this bottle back':'Choose this color · one slot';equip.onclick=()=>game.api.selectInkColor(p.inkColor===n.color.id?null:n.color.id);
+  $('betaNodeNote').classList?.toggle('ink-color-note',!!n.color);
   for(const element of $('betaNodeArt').querySelectorAll?.('.case-owner,.case-scribble,.case-tool b')||[])handwrite(element);
-  const button=$('betaBuyNode');button.disabled=!s.canBuy;button.textContent=n.link?'View Pencil Case →':s.reason||('Spend '+s.price+' scraps → '+(n.id==='start'?'grab my pencil':'rank '+(s.rank+1)));
+  const button=$('betaBuyNode');button.disabled=!s.canBuy;button.textContent=n.link?'View Pencil Case →':s.reason||('Spend '+s.price+' scraps → '+(n.club?'open the club':n.id==='start'?'grab my pencil':'rank '+(s.rank+1)));
   if(n.link){button.disabled=false;button.onclick=()=>selectBetaNode(n.link,true);}else button.onclick=()=>buyBetaNode(selected);
  }
  function positionNote(){
@@ -114,12 +127,13 @@ DoodleDefender.systems.betaScraps=function(game){
   for(const b of branches){const heading=document.createElement('button');heading.className='beta-branch-title';heading.id='beta-branch-'+b.id;heading.setAttribute?.('aria-label',b.title+' branch');heading.style.left=b.x+'px';heading.style.top=(b.y-4)+'px';heading.style.width=b.w+'px';heading.textContent=b.name;heading.onclick=()=>selectBetaNode(b.first);list.appendChild(heading);}
   for(const n of definitions){const state=betaNodeState(n.id),button=document.createElement('button');button.id='beta-node-'+n.id;button.className='beta-tree-node'+(n.later?' future':state.rank>0?' owned':state.canBuy?' available':' locked');
    button.setAttribute?.('data-buyable',String(state.canBuy));
+   if(n.color){button.classList?.add('ink-color-node');button.style.setProperty?.('--ink-color',n.color.hex);}
    button.style.left=n.x+'px';button.style.top=n.y+'px';button.style.width=n.w+'px';button.setAttribute?.('aria-pressed',String(noteOpen&&selected===n.id));
    if(n.id==='tool'){const preview=document.createElement('div');preview.className='case-node-preview';preview.innerHTML=game.api.toolIllustration(p.levels.tool,'');button.appendChild(preview);}
-   const title=document.createElement('strong'),label=document.createElement('span');title.textContent=n.name;label.textContent=n.perk==='circles'&&!game.api.shapeStudiesAvailable()?'Beat wave 10 · Shapes locked':n.later?'later…':n.id==='start'?(state.owned?'✓ Start complete':'0 scraps · start here'):state.owned?'✓ Complete':!state.unlocked&&state.rank===0?'After '+nodes.get(n.parent).name:state.rank+' / '+state.max+' · '+state.price+' scraps';button.appendChild(title);label.className='beta-node-state';button.appendChild(label);const cue=document.createElement('span');cue.className='beta-node-action';cue.textContent=n.later?'Preview →':state.owned?'✓ View →':!state.unlocked?'🔒 Inspect →':'Open →';button.appendChild(cue);button.setAttribute?.('aria-label',n.name+'. '+label.textContent+'. Open to inspect.'+(state.reason?' '+state.reason:''));button.onclick=()=>selectBetaNode(n.id);list.appendChild(button);
+   const title=document.createElement('strong'),label=document.createElement('span');title.textContent=n.name;label.textContent=n.color?'Rank '+state.rank+' · '+state.price+' scraps'+(p.inkColor===n.color.id?' · SELECTED':''):n.club?(state.owned?'✓ Collection open':game.api.inkClubAvailable()?'Free · open collection':'Beat wave 20 · locked'):n.perk==='circles'&&!game.api.shapeStudiesAvailable()?'Beat wave 10 · Shapes locked':n.later?'later…':n.id==='start'?(state.owned?'✓ Start complete':'0 scraps · start here'):state.owned?'✓ Complete':!state.unlocked&&state.rank===0?'After '+nodes.get(n.parent).name:state.rank+' / '+state.max+' · '+state.price+' scraps';button.appendChild(title);label.className='beta-node-state';button.appendChild(label);const cue=document.createElement('span');cue.className='beta-node-action';cue.textContent=n.later?'Preview →':state.owned?'✓ View →':!state.unlocked?'🔒 Inspect →':'Open →';button.appendChild(cue);button.setAttribute?.('aria-label',n.name+'. '+label.textContent+'. Open to inspect.'+(state.reason?' '+state.reason:''));button.onclick=()=>selectBetaNode(n.id);list.appendChild(button);
   }
   for(const element of list.querySelectorAll?.('.beta-branch-title,strong,.beta-tree-node > span')||[])handwrite(element);
-  renderPaths();renderDetails();positionNote();$('betaTreeStatus').textContent=p.storageIssue?'Saving is unavailable; purchases last for this visit.':'Permanent upgrades apply to your next run. Follow the lines to open connected scraps.';
+  renderPaths();renderDetails();positionNote();$('betaTreeStatus').textContent=p.storageIssue?'Saving is unavailable; purchases last for this visit.':nodes.get(selected)?.color||nodes.get(selected)?.club?'Ink Club · collection phase. Combat bonuses and colored strokes arrive next phase.':'Permanent upgrades apply to your next run. Follow the lines to open connected scraps.';
  }
  function renderPaths(){
   const p=game.api.notebookSnapshot(),parts=['<defs><marker id="betaArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="m1 1 7 4-7 4" fill="none" stroke="context-stroke" stroke-width="1.5"/></marker></defs>'];
@@ -127,8 +141,8 @@ DoodleDefender.systems.betaScraps=function(game){
    if(!n.parent)continue;const parent=nodes.get(n.parent),root=n.parent==='start',from=root?hub:{x:parent.x+parent.w/2,y:parent.y+44},to={x:n.x+n.w/2,y:n.y+44},dx=to.x-from.x,dy=to.y-from.y,length=Math.hypot(dx,dy)||1,ux=dx/length,uy=dy/length;
    // Leave and enter at paper edges, so paths do not cross the labels.
    const edge=(w,h)=>Math.min((w/2+14)/Math.max(Math.abs(ux),.001),(h/2+14)/Math.max(Math.abs(uy),.001));
-   const leave=root?180:edge(parent.w,88),enter=edge(n.w,88),x=from.x+ux*leave,y=from.y+uy*leave,tx=to.x-ux*enter,ty=to.y-uy*enter,open=!n.later&&(nodeRank(n.parent,p)>0||nodeRank(n.id,p)>0);
-   const path=`M${x.toFixed(1)} ${y.toFixed(1)} Q${((x+tx)/2-uy*18).toFixed(1)} ${((y+ty)/2+ux*18).toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)}`;
+   const leave=root?180:edge(parent.w,88),enter=edge(n.w,88),x=from.x+ux*leave,y=from.y+uy*leave,tx=to.x-ux*enter,ty=to.y-uy*enter,open=(n.club||n.color)?betaNodeState(n.id).unlocked:!n.later&&(nodeRank(n.parent,p)>0||nodeRank(n.id,p)>0);
+   const path=n.color?`M${parent.x+parent.w+12} ${parent.y+44} H2370 V${n.y-28} H${n.x+n.w/2} V${n.y-12}`:`M${x.toFixed(1)} ${y.toFixed(1)} Q${((x+tx)/2-uy*18).toFixed(1)} ${((y+ty)/2+ux*18).toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)}`;
    parts.push(`<path data-from="${n.parent}" data-to="${n.id}" d="${path}" fill="none" stroke="${open?'#557045':'#9b9587'}" stroke-width="${open?3:2}" ${open?'':'stroke-dasharray="7 7"'} marker-end="url(#betaArrow)"/>`);
   }
   $('betaTreePaths').innerHTML=parts.join('');

@@ -83,7 +83,7 @@
         <button class="paper-slip" id="startBtn">Play <span aria-hidden="true">→</span></button>
         <button class="paper-slip" id="splashHubBtn">Notebook</button>
         <button class="paper-slip" id="splashOptionsBtn">Settings</button><button class="paper-slip desktop-quit-entry" id="splashQuitBtn" hidden>Quit to desktop</button>
-        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.159</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
+        <div class="splash-footer"><span id="appVersion" class="alpha-version">Alpha 0.1.161</span><small class="copyright-notice">© 2026 ShootyQ. All rights reserved.</small></div>
       </div>
     </div>
 
@@ -386,11 +386,11 @@
    <figure class="beta-margin-monster beta-new-doodle" style="left:1720px;top:880px;--tilt:-7deg"><img src="assets/art/tank.png" alt="" draggable="false"><figcaption>tiny legs. big plans.</figcaption></figure>
    <figure class="beta-margin-monster beta-new-doodle" style="left:180px;top:1530px;--tilt:-13deg"><img src="assets/art/scrubber.png" alt="" draggable="false"><figcaption>do NOT erase homework</figcaption></figure>
    <figure class="beta-margin-monster beta-new-doodle" style="left:2080px;top:270px;--tilt:11deg"><img src="assets/art/catapulter.png" alt="" draggable="false"><figcaption>probably safe?</figcaption></figure>
-   <figure class="beta-margin-monster beta-new-doodle" style="left:2010px;top:1940px;--tilt:-8deg"><img src="assets/art/school-catapult.png" alt="" draggable="false"><figcaption>tested on lunch peas</figcaption></figure>
+   <figure class="beta-margin-monster beta-new-doodle" style="left:2020px;top:1650px;--tilt:-8deg"><img src="assets/art/school-catapult.png" alt="" draggable="false"><figcaption>tested on lunch peas</figcaption></figure>
    <p class="beta-margin-note beta-new-note" style="left:110px;top:2420px;--tilt:-8deg">math later. monsters NOW.</p>
    <p class="beta-margin-note beta-new-note" style="left:1260px;top:2360px;--tilt:12deg">if it looks silly, keep it.</p>
    <p class="beta-margin-note beta-new-note" style="left:2070px;top:150px;--tilt:7deg">DO NOT lend to Max</p>
-   <p class="beta-margin-note beta-new-note" style="left:1660px;top:1870px;--tilt:-12deg">a very normal school project</p>
+   <p class="beta-margin-note beta-new-note" style="left:1710px;top:1780px;--tilt:-12deg">a very normal school project</p>
    <p class="beta-margin-note beta-new-note" style="left:230px;top:620px;--tilt:-8deg">needs more bounce?</p>
   </div><svg id="betaTreePaths" viewBox="0 0 2400 2600" aria-hidden="true"></svg><img class="beta-tree-stevie" src="assets/art/stevie.png" alt="Stevie" draggable="false"><div id="betaHeldTool" aria-hidden="true"></div><div id="betaTreeNodes"></div></div>
   <h2 id="betaTreeTitle" class="beta-map-title">Scrap Tree</h2>
@@ -400,7 +400,7 @@
   <button id="betaFit" class="beta-map-note beta-map-fit">see whole page ↗</button>
  </div>
   <section id="betaNodeNote" class="beta-node-note" aria-labelledby="betaNodeTitle" hidden>
-   <span id="betaNodeTier" class="beta-note-kicker"></span><h3 id="betaNodeTitle"></h3><div id="betaNodeArt"></div><p id="betaNodeDescription"></p><p id="betaNodeEffect"></p><p id="betaNodeRequirement"></p><button id="betaBuyNode" class="beta-paper-action"></button><p id="betaTreeStatus" role="status" aria-live="polite"></p><button id="betaFoldNote" class="beta-fold-note">fold this back ↶</button>
+   <span id="betaNodeTier" class="beta-note-kicker"></span><h3 id="betaNodeTitle"></h3><div id="betaNodeArt"></div><p id="betaNodeDescription"></p><p id="betaNodeEffect"></p><p id="betaNodeRequirement"></p><button id="betaBuyNode" class="beta-paper-action"></button><button id="betaEquipInk" class="beta-paper-action" hidden></button><p id="betaTreeStatus" role="status" aria-live="polite"></p><button id="betaFoldNote" class="beta-fold-note">fold this back ↶</button>
   </section>
 </div>
 <div class="overlay build-overlay" id="compendiumOverlay" style="display:none" role="dialog" aria-modal="true" aria-labelledby="compendiumTitle">
@@ -431,6 +431,7 @@
     <p>Recent updates, newest first. Your run pauses while this screen is open.</p>
     <!-- CHANGELOG: prepend a new article for each future player-facing update. Keep older entries. -->
     <div id="changelogEntries" class="build-upgrades">
+      <article class="build-entry"><h3>Alpha 0.1.161 · Weird Ink Club: the collection</h3><p>Beat wave 20 to open eight colored ink bottles on the Scrap Tree. Each has uncapped saved ranks costing 5 × next rank² scraps, plus one freely switchable color slot. Phase 1 builds the collection: colored drawing and the planned +1% bonus per rank arrive in the next phase. Existing final-chapter report cards also open the club.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.159 · Scrub the whole classroom</h3><p>Bootstomp now brings up to five erasers, arriving faster. Friendly crew scrub nearby ordinary monsters while he is standing, then immediately prioritize him when he falls. Their faint green approach trails can be erased to make them hesitate for 1.5 seconds before redrawing a route.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.158 · Erase his orders</h3><p>Bootstomp now brings his own orange eraser crew. Rub them to turn them green: they stage near him and scrub a chunk off his fallen patches before wearing out. Your eraser cannot hurt him directly. Catch his warned paper waves with walls to keep the crew on your side. Blue Gribbles keep coming, his ground time is 15% shorter, and preparing his footprint takes 0.15 seconds longer.</p></article>
       <article class="build-entry"><h3>Alpha 0.1.157 · Smaller impostors, visible scraps</h3><p>Ash Impostors are now 30% smaller, including their shadows and visual effects. Their distraction range, duration, and behavior stay the same. Doodle Scrap drops and collection labels now draw above monsters, fire, walls, and other battlefield effects.</p></article>
